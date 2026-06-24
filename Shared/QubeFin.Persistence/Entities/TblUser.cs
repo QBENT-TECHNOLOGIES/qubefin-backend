@@ -1,0 +1,37 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace QubeFin.Persistence.Entities;
+
+public partial class TblUser
+{
+    public Guid Id { get; set; }
+
+    public string UserName { get; set; } = null!;
+
+    public string Password { get; set; } = null!;
+
+    public Guid? EmployeeId { get; set; }
+
+    public bool IsActive { get; set; }
+
+    public bool IsSuperAdmin { get; set; }
+
+    public bool HasMfaEnabled { get; set; }
+
+    public string MfaSecret { get; set; } = null!;
+
+    public DateTime CreatedOn { get; set; }
+
+    public Guid CreatedBy { get; set; }
+
+    public DateTime? LastModifiedOn { get; set; }
+
+    public Guid? LastModifiedBy { get; set; }
+
+    public byte[] RowVersion { get; set; } = null!;
+
+    public virtual TblEmployee? Employee { get; set; }
+
+    public virtual ICollection<TblUserMenu> TblUserMenus { get; set; } = new List<TblUserMenu>();
+}
