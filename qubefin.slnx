@@ -7,9 +7,16 @@
     <Project Path="Host/QubeFin.ServiceDefaults/QubeFin.ServiceDefaults.csproj" Id="1477ff41-cddf-4a38-8ed1-aacd2f4fcd77" />
   </Folder>
   <Folder Name="/Microservices/" />
+  <Folder Name="/Microservices/App/">
+    <Project Path="Microservices/App/QubeFin.App.Api/QubeFin.App.Api.csproj" />
+    <Project Path="Microservices/App/QubeFin.App.Application/QubeFin.App.Application.csproj" Id="cba4d1d3-7263-4d67-b2a6-dd882f886703" />
+    <Project Path="Microservices/App/QubeFin.App.Infrastructure/QubeFin.App.Infrastructure.csproj" Id="e536939c-3953-489b-bfbb-34bf3d1f9e6c" />
+    <Project Path="Microservices/App/QubeFin.App.Persistence/QubeFin.App.Persistence.csproj" Id="ba0f343d-3f04-45d0-8642-771b3a6a80f3" />
+  </Folder>
   <Folder Name="/Microservices/Auth/">
-    <Project Path="Microservices/Auth/QubeFin.Auh.Application/QubeFin.Auh.Application.csproj" Id="7d7ae312-05b2-4f32-8551-90c2f46a4e3c" />
     <Project Path="Microservices/Auth/QubeFin.Auth.Api/QubeFin.Auth.Api.csproj" />
+    <Project Path="Microservices/Auth/QubeFin.Auth.Application/QubeFin.Auth.Application.csproj" Id="7d7ae312-05b2-4f32-8551-90c2f46a4e3c" />
+    <Project Path="Microservices/Auth/QubeFin.Auth.Infrastructure/QubeFin.Auth.Infrastructure.csproj" Id="0056c456-19ed-4744-bb8e-829d8815cc86" />
     <Project Path="Microservices/Auth/QubeFin.Auth.Persistence/QubeFin.Auth.Persistence.csproj" Id="b8a3183d-dae5-4b18-97e9-bd1cf2a11582" />
   </Folder>
   <Folder Name="/Shared/">

@@ -12,5 +12,7 @@
 
 	<ItemGroup>
 	  <PackageReference Include="FluentResults" Version="4.0.0" />
+	  <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.19.1" />
+	  <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.19.1" />
 	</ItemGroup>
 </Project>

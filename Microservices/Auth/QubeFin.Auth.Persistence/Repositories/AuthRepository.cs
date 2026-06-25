@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Mappers.App;
 using QubeFin.Persistence.Models.App;
 
 namespace QubeFin.Auth.Persistence.Repositories;
@@ -31,6 +32,6 @@ public class AuthRepository(QubeFinDataContext context) : IAuthRepository
             return null;
         }
 
-        return new User(userEntity.Id, userEntity.UserName, userEntity.IsActive);
+        return userEntity.ToDomain();
     }
 }

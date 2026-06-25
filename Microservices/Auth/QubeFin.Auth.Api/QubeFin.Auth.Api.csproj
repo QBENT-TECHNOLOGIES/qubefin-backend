@@ -17,9 +17,12 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Scalar.AspNetCore" Version="2.16.5" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\QubeFin.Auth.Application\QubeFin.Auth.Application.csproj" />
+    <ProjectReference Include="..\QubeFin.Auth.Infrastructure\QubeFin.Auth.Infrastructure.csproj" />
     <ProjectReference Include="..\QubeFin.Auth.Persistence\QubeFin.Auth.Persistence.csproj" />
   </ItemGroup>
 

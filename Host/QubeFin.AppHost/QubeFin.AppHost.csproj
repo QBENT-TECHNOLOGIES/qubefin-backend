@@ -14,6 +14,7 @@
 	</ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Microservices\App\QubeFin.App.Api\QubeFin.App.Api.csproj" />
     <ProjectReference Include="..\..\Microservices\Auth\QubeFin.Auth.Api\QubeFin.Auth.Api.csproj" />
     <ProjectReference Include="..\..\Gateway\QubeFin.Gateway\QubeFin.Gateway.csproj" />
   </ItemGroup>
