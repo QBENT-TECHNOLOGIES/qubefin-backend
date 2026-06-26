@@ -17,7 +17,8 @@ public class User
 
     private User() { }
 
-    public User(Guid id, string username, string password, Guid? employeeId, bool isActive, bool isSuperAdmin, bool hasMfaEnabled, string mfaSecret)
+    public User(Guid id, string username, string password, Guid? employeeId, bool isActive, bool isSuperAdmin, bool hasMfaEnabled, string mfaSecret,
+        Guid createdBy, DateTime createdOn, Guid? lastModifiedBy, DateTime? lastModifiedOn)
     {
         Id = id;
         UserName = username;
@@ -27,6 +28,10 @@ public class User
         IsSuperAdmin = isSuperAdmin;
         HasMfaEnabled = hasMfaEnabled;
         MfaSecret = mfaSecret;
+        CreatedBy = createdBy;
+        CreatedOn = createdOn;
+        LastModifiedBy = lastModifiedBy;
+        LastModifiedOn = lastModifiedOn;
     }
 
     public static User Create(Guid id, string username, string password, Guid? employeeId, string mfaSecret, Guid createdBy)

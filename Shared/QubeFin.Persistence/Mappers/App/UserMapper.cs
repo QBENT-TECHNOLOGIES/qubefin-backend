@@ -15,7 +15,11 @@ public static class UserMapper
             entity.IsActive,
             entity.IsSuperAdmin,
             entity.HasMfaEnabled,
-            entity.MfaSecret);
+            entity.MfaSecret,
+            entity.CreatedBy,
+            entity.CreatedOn,
+            entity.LastModifiedBy,
+            entity.LastModifiedOn);
     }
 
     public static Entity ToEntity(this User domain)
@@ -30,6 +34,10 @@ public static class UserMapper
             MfaSecret = domain.MfaSecret,
             IsActive = domain.IsActive,
             IsSuperAdmin = domain.IsSuperAdmin,
+            CreatedBy = domain.CreatedBy,
+            CreatedOn = domain.CreatedOn,
+            LastModifiedBy = domain.LastModifiedBy,
+            LastModifiedOn = domain.LastModifiedOn
         };
     }
 }
