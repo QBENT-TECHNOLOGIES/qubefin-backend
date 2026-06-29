@@ -51,4 +51,10 @@ public class User
 
         return user;
     }
+
+    public void EnableMfa()
+    {
+        HasMfaEnabled = true;
+        //MfaRegisterTime = DateTime.Now;
+    }
 }

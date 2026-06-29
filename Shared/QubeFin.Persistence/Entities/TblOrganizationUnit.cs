@@ -23,8 +23,6 @@ public partial class TblOrganizationUnit
 
     public Guid? LastModifiedBy { get; set; }
 
-    public byte[] RowVersion { get; set; } = null!;
-
     public virtual ICollection<TblOrganizationUnit> InverseParent { get; set; } = new List<TblOrganizationUnit>();
 
     public virtual TblOrganizationUnitType OrganizationUnitType { get; set; } = null!;

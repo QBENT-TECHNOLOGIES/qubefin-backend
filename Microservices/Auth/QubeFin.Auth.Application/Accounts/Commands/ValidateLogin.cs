@@ -4,6 +4,7 @@ using QubeFin.Auth.Persistence.Repositories;
 using QubeFin.Core.Results;
 using QubeFin.Core.Security;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Models.App;
 
 namespace QubeFin.Auh.Application.Accounts.Commands;
 
@@ -34,9 +35,9 @@ internal class ValidtateLoginCommandHandler(IAuthRepository authRepository, IUni
 
         var sessionToken = SecureTokenGenerator.Generate(32);
 
-        //var userSession = UserSession.Create(new UserSessionId(Guid.NewGuid()), user.Id, sessionToken);
-        //await authRepository.CreateUserSessionAsync(userSession);
-        //await unitOfWork.SaveChangesAsync(cancellationToken);
+        var userSession = UserSession.Create(Guid.NewGuid(), user.Id, sessionToken);
+        await authRepository.CreateUserSessionAsync(userSession);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Ok(new ValidtateLoginResponse(sessionToken));
     }

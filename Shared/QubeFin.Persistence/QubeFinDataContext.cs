@@ -36,15 +36,21 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblOrganizationUnitType> TblOrganizationUnitTypes { get; set; }
 
+    public virtual DbSet<TblPermission> TblPermissions { get; set; }
+
     public virtual DbSet<TblPost> TblPosts { get; set; }
 
     public virtual DbSet<TblRole> TblRoles { get; set; }
 
     public virtual DbSet<TblRoleMenu> TblRoleMenus { get; set; }
 
+    public virtual DbSet<TblRolePermission> TblRolePermissions { get; set; }
+
     public virtual DbSet<TblUser> TblUsers { get; set; }
 
     public virtual DbSet<TblUserMenu> TblUserMenus { get; set; }
+
+    public virtual DbSet<TblUserSession> TblUserSessions { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
@@ -60,9 +66,6 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
             entity.Property(e => e.Name).HasMaxLength(50);
-            entity.Property(e => e.RowVersion)
-                .IsRowVersion()
-                .IsConcurrencyToken();
 
             entity.HasOne(d => d.AdministrativeUnitType).WithMany(p => p.TblAdministrativeUnits)
                 .HasForeignKey(d => d.AdministrativeUnitTypeId)
@@ -185,9 +188,6 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
             entity.Property(e => e.Name).HasMaxLength(50);
-            entity.Property(e => e.RowVersion)
-                .IsRowVersion()
-                .IsConcurrencyToken();
 
             entity.HasOne(d => d.OrganizationUnitType).WithMany(p => p.TblOrganizationUnits)
                 .HasForeignKey(d => d.OrganizationUnitTypeId)
@@ -205,6 +205,22 @@ public partial class QubeFinDataContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Name).HasMaxLength(30);
+        });
+
+        modelBuilder.Entity<TblPermission>(entity =>
+        {
+            entity.ToTable("Tbl_Permission", "Auth");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.AccessFunction)
+                .HasMaxLength(30)
+                .HasDefaultValue("");
+            entity.Property(e => e.AccessToken)
+                .HasMaxLength(10)
+                .HasDefaultValue("");
+            entity.Property(e => e.Name)
+                .HasMaxLength(41)
+                .HasComputedColumnSql("(([AccessFunction]+'.')+[AccessToken])", false);
         });
 
         modelBuilder.Entity<TblPost>(entity =>
@@ -250,6 +266,17 @@ public partial class QubeFinDataContext : DbContext
                 .HasConstraintName("FK_Tbl_RoleMenu_Tbl_Role");
         });
 
+        modelBuilder.Entity<TblRolePermission>(entity =>
+        {
+            entity.ToTable("Tbl_RolePermission", "Auth");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+
+            entity.HasOne(d => d.Permission).WithMany(p => p.TblRolePermissions).HasForeignKey(d => d.PermissionId);
+
+            entity.HasOne(d => d.Role).WithMany(p => p.TblRolePermissions).HasForeignKey(d => d.RoleId);
+        });
+
         modelBuilder.Entity<TblUser>(entity =>
         {
             entity.ToTable("Tbl_User", "Auth");
@@ -257,9 +284,6 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.MfaSecret).HasMaxLength(50);
             entity.Property(e => e.Password).HasMaxLength(500);
-            entity.Property(e => e.RowVersion)
-                .IsRowVersion()
-                .IsConcurrencyToken();
             entity.Property(e => e.UserName).HasMaxLength(30);
 
             entity.HasOne(d => d.Employee).WithMany(p => p.TblUsers)
@@ -282,6 +306,18 @@ public partial class QubeFinDataContext : DbContext
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_UserMenu_Tbl_User");
+        });
+
+        modelBuilder.Entity<TblUserSession>(entity =>
+        {
+            entity.ToTable("Tbl_UserSession", "Auth");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.AccessToken).HasMaxLength(4000);
+            entity.Property(e => e.RefreshToken).HasMaxLength(50);
+            entity.Property(e => e.SessionToken).HasMaxLength(50);
+
+            entity.HasOne(d => d.User).WithMany(p => p.TblUserSessions).HasForeignKey(d => d.UserId);
         });
 
         OnModelCreatingPartial(modelBuilder);

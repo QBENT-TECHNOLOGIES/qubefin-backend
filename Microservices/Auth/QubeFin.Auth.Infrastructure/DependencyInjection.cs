@@ -13,7 +13,7 @@ public static class DependencyInjection
         services.AddCors(options =>
         {
             options.AddPolicy(
-                name: "QbentNetCorsPolicy",
+                name: "QubeFinCorsPolicy",
                 corsBuilder =>
                 {
                     corsBuilder.AllowAnyOrigin()

@@ -29,9 +29,9 @@ public partial class TblUser
 
     public Guid? LastModifiedBy { get; set; }
 
-    public byte[] RowVersion { get; set; } = null!;
-
     public virtual TblEmployee? Employee { get; set; }
 
     public virtual ICollection<TblUserMenu> TblUserMenus { get; set; } = new List<TblUserMenu>();
+
+    public virtual ICollection<TblUserSession> TblUserSessions { get; set; } = new List<TblUserSession>();
 }

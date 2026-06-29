@@ -32,4 +32,14 @@ public static class AdministrativeUnitMapper
             LastModifiedOn = domain.LastModifiedOn
         };
     }
+
+    public static IEnumerable<AdministrativeUnit> ToDomain(this IEnumerable<Entity> entities)
+    {
+        return entities.Select(e => e.ToDomain());
+    }
+
+    public static IEnumerable<Entity> ToEntity(this IEnumerable<AdministrativeUnit> domains)
+    {
+        return domains.Select(d => d.ToEntity());
+    }
 }

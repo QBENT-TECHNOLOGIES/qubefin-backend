@@ -1,41 +1,80 @@
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Net.Http.Headers;
+using Yarp.ReverseProxy.Transforms;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(
+        name: "QubeFinCorsPolicy",
+        corsBuilder =>
+        {
+            corsBuilder.AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .WithExposedHeaders("Content-Disposition", "X-File-Name");
+        });
+});
+
+builder.Services.AddRateLimiter(rateLimiterOptions =>
+{
+    rateLimiterOptions.AddFixedWindowLimiter("fixed", options =>
+    {
+        options.Window = TimeSpan.FromSeconds(10);
+        options.PermitLimit = 50;
+    });
+});
+
+builder.Services.AddReverseProxy()
+    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"))
+    .AddTransforms(builderContext =>
+    {
+        builderContext.AddRequestTransform(async transformContext =>
+        {
+            var httpRequest = transformContext.HttpContext.Request;
+
+            if (httpRequest.ContentType != null)
+            {
+                if (transformContext.ProxyRequest.Content == null)
+                {
+                    // Force YARP to create a stream content
+                    transformContext.ProxyRequest.Content =
+                        new StreamContent(httpRequest.Body);
+                }
+
+                transformContext.ProxyRequest.Content.Headers.ContentType =
+                    MediaTypeHeaderValue.Parse(httpRequest.ContentType);
+            }
+        });
+    });
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+app.UsePathBase("/gateway");
 
-app.MapGet("/weatherforecast", () =>
+app.MapReverseProxy();
+
+app.UseCors("QubeFinCorsPolicy");
+
+app.UseRateLimiter();
+
+app.Use(async (context, next) =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+    var max = context.Features.Get<IHttpMaxRequestBodySizeFeature>();
+    if (max != null)
+    {
+        max.MaxRequestBodySize = null; // unlimited
+    }
+    await next();
+});
+
+
+
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

@@ -17,6 +17,16 @@ public class AdministrativeUnitEndpoints : IEndpoint
         //.RequireAuthorization("Permission:Users.View")
         .WithSummary("Get Administrative Unit By Id");
 
+        app.MapGet("administrative-units/tree", async (ISender sender, CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(new GetAdministrativeUnitsQuery(), cancellationToken);
+            if (result.IsFailed)
+            {
+                return Results.StatusCode(500);
+            }
+            return Results.Ok(result.Value);
+        });
+
         app.MapPost("administrative-units", async (CreateAdministrativeUnitCommand command, ISender sender) =>
         {
             await sender.Send(command);
