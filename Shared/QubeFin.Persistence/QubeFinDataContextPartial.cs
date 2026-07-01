@@ -1,7 +1,18 @@
-﻿namespace QubeFin.Persistence;
+﻿using Microsoft.EntityFrameworkCore;
+using QubeFin.Persistence.Models.Global;
 
-public partial class QubeFinDataContext : IUnitOfWork
+namespace QubeFin.Persistence;
+
+public partial class QubeFinDataContext : DbContext, IUnitOfWork
 {
+
+    partial void OnModelCreatingPartial(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AdministrativeHierarchyItem>()
+            .HasNoKey()
+            .ToView(null);
+    }
+
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         return base.SaveChangesAsync(cancellationToken);

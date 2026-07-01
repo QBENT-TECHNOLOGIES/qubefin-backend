@@ -22,13 +22,17 @@ public class AdministrativeUnitRepository(QubeFinDataContext context) : IAdminis
     {
         var administrativeUnitEntities = await context
             .TblAdministrativeUnits
+            .Include(m => m.AdministrativeUnitType)
             .AsNoTracking()
             .Select(m => new AdministrativeUnitTree
             {
                 Id = m.Id,
                 AdministrativeUnitTypeId = m.AdministrativeUnitTypeId,
+                AdministrativeUnitTypeIcon = m.AdministrativeUnitType.Icon,
+                AdministrativeUnitTypeName = m.AdministrativeUnitType.Name,
                 Name = m.Name,
-                ParentId = m.ParentId
+                ParentId = m.ParentId,
+                IsActive = m.IsActive
             })
             .ToListAsync(cancellationToken);
 

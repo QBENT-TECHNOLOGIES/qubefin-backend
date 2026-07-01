@@ -83,6 +83,7 @@ public partial class QubeFinDataContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Category).HasMaxLength(10);
+            entity.Property(e => e.Icon).HasMaxLength(30);
             entity.Property(e => e.Name).HasMaxLength(30);
         });
 

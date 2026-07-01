@@ -13,6 +13,8 @@ public partial class TblAdministrativeUnit
 
     public Guid? ParentId { get; set; }
 
+    public bool IsActive { get; set; }
+
     public DateTime CreatedOn { get; set; }
 
     public Guid CreatedBy { get; set; }

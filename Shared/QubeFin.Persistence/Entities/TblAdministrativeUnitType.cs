@@ -9,6 +9,8 @@ public partial class TblAdministrativeUnitType
 
     public string Name { get; set; } = null!;
 
+    public string Icon { get; set; } = null!;
+
     public int LevelNo { get; set; }
 
     public string Category { get; set; } = null!;

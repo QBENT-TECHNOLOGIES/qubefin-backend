@@ -19,7 +19,7 @@ public class AdministrativeUnitEndpoints : IEndpoint
 
         app.MapGet("administrative-units/tree", async (ISender sender, CancellationToken cancellationToken) =>
         {
-            var result = await sender.Send(new GetAdministrativeUnitsQuery(), cancellationToken);
+            var result = await sender.Send(new GetAdministrativeUnitTreeQuery(), cancellationToken);
             if (result.IsFailed)
             {
                 return Results.StatusCode(500);
