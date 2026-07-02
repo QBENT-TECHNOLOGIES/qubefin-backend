@@ -42,6 +42,11 @@ public class UserRepository(QubeFinDataContext context) : IUserRepository
             .Where(m => m.Id == userSessionEntity.UserId)
             .FirstOrDefaultAsync();
 
+        if (userEntity is null)
+        {
+            return null;
+        }
+
         return userEntity.ToDomain();
     }
 

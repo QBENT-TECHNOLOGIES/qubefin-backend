@@ -25,6 +25,12 @@
     <Project Path="Microservices/Global/QubeFin.Global.Infrastructure/QubeFin.Global.Infrastructure.csproj" Id="7bd2ee6c-c9a9-4c07-815c-56fd1b0d09bf" />
     <Project Path="Microservices/Global/QubeFin.Global.Persistence/QubeFin.Global.Persistence.csproj" Id="f164e30f-89b7-4565-8075-46789cb002b1" />
   </Folder>
+  <Folder Name="/Microservices/Hrms/">
+    <Project Path="Microservices/Hrms/QubeFin.Hrms.Api/QubeFin.Hrms.Api.csproj" />
+    <Project Path="Microservices/Hrms/QubeFin.Hrms.Application/QubeFin.Hrms.Application.csproj" Id="55c0f782-e5e2-43ee-ae55-cdf79bd233e4" />
+    <Project Path="Microservices/Hrms/QubeFin.Hrms.Infrastructure/QubeFin.Hrms.Infrastructure.csproj" Id="892df1f0-0e55-433c-8dde-53c9d6806e1a" />
+    <Project Path="Microservices/Hrms/QubeFin.Hrms.Persistence/QubeFin.Hrms.Persistence.csproj" Id="8dbea010-610c-4b8f-8c22-fdc35be0df91" />
+  </Folder>
   <Folder Name="/Shared/">
     <Project Path="Shared/QubeFin.Core/QubeFin.Core.csproj" Id="62c1de18-e482-453c-9a21-7026846522c6" />
     <Project Path="Shared/QubeFin.Persistence/QubeFin.Persistence.csproj" Id="85068673-5466-4a06-8539-f22197f39896" />

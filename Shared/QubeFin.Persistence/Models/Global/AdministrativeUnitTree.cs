@@ -27,7 +27,7 @@ public static class AdministrativeUnitTreeBuilder
 
         var roots = new List<AdministrativeUnitTree>();
 
-        foreach (var item in lookup.Values)
+        foreach (var item in lookup.Values.OrderBy(m => m.Name))
         {
             if (item.ParentId == null)
             {

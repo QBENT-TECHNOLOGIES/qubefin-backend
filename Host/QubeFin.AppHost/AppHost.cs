@@ -8,4 +8,6 @@ builder.AddProject<Projects.QubeFin_App_Api>("qubefin-app-api");
 
 builder.AddProject<Projects.QubeFin_Global_Api>("qubefin-global-api");
 
+builder.AddProject<Projects.QubeFin_Hrms_Api>("qubefin-hrms-api");
+
 builder.Build().Run();

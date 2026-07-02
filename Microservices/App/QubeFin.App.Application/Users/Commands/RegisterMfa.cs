@@ -17,7 +17,7 @@ public record RegisterMfaResponse(string MfaKey, string QrCodeImageUrl, string S
 #endregion
 
 #region --- HANDLER ---
-internal sealed class RegisterMfaCommandHandler(IUserRepository userRepository, IUnitOfWork unitOfWork)
+internal sealed class RegisterMfaCommandHandler(IUserRepository userRepository)
     : IRequestHandler<RegisterMfaCommand, Result<RegisterMfaResponse>>
 {
     public async Task<Result<RegisterMfaResponse>> Handle(RegisterMfaCommand request, CancellationToken cancellationToken)

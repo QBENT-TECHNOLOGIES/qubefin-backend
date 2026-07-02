@@ -10,7 +10,7 @@
 
 	<ItemGroup>
 		<!-- Force a safe, non-vulnerable version of MessagePack -->
-		<PackageReference Include="MessagePack" Version="2.5.302" />
+		<PackageReference Include="MessagePack" Version="3.1.7" />
 	</ItemGroup>
 
   <ItemGroup>
@@ -18,6 +18,7 @@
     <ProjectReference Include="..\..\Microservices\Auth\QubeFin.Auth.Api\QubeFin.Auth.Api.csproj" />
     <ProjectReference Include="..\..\Gateway\QubeFin.Gateway\QubeFin.Gateway.csproj" />
     <ProjectReference Include="..\..\Microservices\Global\QubeFin.Global.Api\QubeFin.Global.Api.csproj" />
+    <ProjectReference Include="..\..\Microservices\Hrms\QubeFin.Hrms.Api\QubeFin.Hrms.Api.csproj" />
   </ItemGroup>
 
 </Project>
