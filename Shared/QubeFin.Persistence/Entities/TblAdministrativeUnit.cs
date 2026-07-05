@@ -28,4 +28,10 @@ public partial class TblAdministrativeUnit
     public virtual ICollection<TblAdministrativeUnit> InverseParent { get; set; } = new List<TblAdministrativeUnit>();
 
     public virtual TblAdministrativeUnit? Parent { get; set; }
+
+    public virtual ICollection<TblEmployee> TblEmployeePermanentAdministrativeUnits { get; set; } = new List<TblEmployee>();
+
+    public virtual ICollection<TblEmployee> TblEmployeePresentAdministrativeUnits { get; set; } = new List<TblEmployee>();
+
+    public virtual ICollection<TblPoliceStation> TblPoliceStations { get; set; } = new List<TblPoliceStation>();
 }

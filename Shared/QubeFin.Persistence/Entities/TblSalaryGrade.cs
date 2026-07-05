@@ -3,11 +3,13 @@ using System.Collections.Generic;
 
 namespace QubeFin.Persistence.Entities;
 
-public partial class TblRole
+public partial class TblSalaryGrade
 {
     public Guid Id { get; set; }
 
     public string Name { get; set; } = null!;
+
+    public string Code { get; set; } = null!;
 
     public bool IsActive { get; set; }
 
@@ -19,9 +21,5 @@ public partial class TblRole
 
     public Guid? LastModifiedBy { get; set; }
 
-    public virtual ICollection<TblDesignationRole> TblDesignationRoles { get; set; } = new List<TblDesignationRole>();
-
-    public virtual ICollection<TblRoleMenu> TblRoleMenus { get; set; } = new List<TblRoleMenu>();
-
-    public virtual ICollection<TblRolePermission> TblRolePermissions { get; set; } = new List<TblRolePermission>();
+    public virtual ICollection<TblSalaryStructure> TblSalaryStructures { get; set; } = new List<TblSalaryStructure>();
 }

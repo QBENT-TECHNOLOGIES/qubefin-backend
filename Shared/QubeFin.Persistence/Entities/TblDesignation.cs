@@ -23,11 +23,11 @@ public partial class TblDesignation
 
     public Guid? LastModifiedBy { get; set; }
 
-    public byte[] RowVersion { get; set; } = null!;
-
     public virtual TblOrganizationUnit OrganizationUnit { get; set; } = null!;
 
     public virtual TblPost Post { get; set; } = null!;
 
     public virtual ICollection<TblDesignationRole> TblDesignationRoles { get; set; } = new List<TblDesignationRole>();
+
+    public virtual ICollection<TblEmployee> TblEmployees { get; set; } = new List<TblEmployee>();
 }

@@ -3,19 +3,12 @@
 public sealed class AdministrativeUnitTree
 {
     public Guid Id { get; set; }
-
     public Guid AdministrativeUnitTypeId { get; set; }
-
     public string AdministrativeUnitTypeIcon { get; set; } = string.Empty;
-
     public string AdministrativeUnitTypeName { get; set; } = string.Empty;
-
     public string Name { get; set; } = string.Empty;
-
     public Guid? ParentId { get; set; }
-
     public bool IsActive { get; set; }
-
     public List<AdministrativeUnitTree> Children { get; set; } = [];
 }
 

@@ -13,7 +13,7 @@ public partial class TblMenu
 
     public string? Target { get; set; }
 
-    public Guid MenuGroupId { get; set; }
+    public Guid? ParentId { get; set; }
 
     public int DisplayPosition { get; set; }
 
@@ -27,7 +27,9 @@ public partial class TblMenu
 
     public DateTime? LastModifiedOn { get; set; }
 
-    public virtual TblMenuGroup MenuGroup { get; set; } = null!;
+    public virtual ICollection<TblMenu> InverseParent { get; set; } = new List<TblMenu>();
+
+    public virtual TblMenu? Parent { get; set; }
 
     public virtual ICollection<TblRoleMenu> TblRoleMenus { get; set; } = new List<TblRoleMenu>();
 

@@ -30,4 +30,6 @@ public partial class TblOrganizationUnit
     public virtual TblOrganizationUnit? Parent { get; set; }
 
     public virtual ICollection<TblDesignation> TblDesignations { get; set; } = new List<TblDesignation>();
+
+    public virtual ICollection<TblEmployee> TblEmployees { get; set; } = new List<TblEmployee>();
 }

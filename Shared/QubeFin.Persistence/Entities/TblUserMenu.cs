@@ -9,11 +9,9 @@ public partial class TblUserMenu
 
     public Guid MenuId { get; set; }
 
-    public bool HasReadAccess { get; set; }
+    public DateTime CreatedOn { get; set; }
 
-    public bool HasWriteAccess { get; set; }
-
-    public bool HasFullAccess { get; set; }
+    public Guid CreatedBy { get; set; }
 
     public virtual TblMenu Menu { get; set; } = null!;
 
