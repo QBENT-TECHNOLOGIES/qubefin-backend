@@ -1,0 +1,158 @@
+﻿using QubeFin.Persistence.Models.Global;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace QubeFin.Persistence.Models.Hrms
+{
+    public class Employee
+    {
+        public Guid Id { get; set; }
+
+        public string? Salutation { get; set; }
+
+        public string FirstName { get; set; } = null!;
+
+        public string? MiddleName { get; set; }
+
+        public string LastName { get; set; } = null!;
+
+        public string Code { get; set; } = null!;
+
+        public string? FatherName { get; set; }
+
+        public string? MotherName { get; set; }
+
+        public Guid OrganizationUnitId { get; set; }
+
+        public Guid DepartmentId { get; set; }
+
+        public Guid DesignationId { get; set; }
+
+        public string? EmployementType { get; set; }
+
+        public DateOnly DateOfJoining { get; set; }
+
+        public DateOnly? DateOfConfirmation { get; set; }
+
+        public DateOnly DateOfBirth { get; set; }
+
+        public string Gender { get; set; } = null!;
+
+        public string Religion { get; set; } = null!;
+
+        public string? Caste { get; set; }
+
+        public string Nationality { get; set; } = null!;
+
+        public string BloodGroup { get; set; } = null!;
+
+        public string? DisablityType { get; set; }
+
+        public string? MaritalStatus { get; set; }
+
+        public string MobileNo { get; set; } = null!;
+
+        public string? PersonalEmail { get; set; }
+
+        public string? EmergencyContactRelation1 { get; set; }
+
+        public string? EmergencyContactName1 { get; set; }
+
+        public string? EmergencyContactMobile1 { get; set; }
+
+        public string? EmergencyContactRelation2 { get; set; }
+
+        public string? EmergencyContactName2 { get; set; }
+
+        public string? EmergencyContactMobile2 { get; set; }
+
+        public string? PermanentHouseNo { get; set; }
+
+        public string? PermanentRoadName { get; set; }
+
+        public string? PermanentLandMark { get; set; }
+
+        public Guid? PermanentAdministrativeUnitId { get; set; }
+
+        public Guid? PermanentPoliceStationId { get; set; }
+
+        public Guid? PermanentPostOfficeId { get; set; }
+
+        public string? PermanentPinCode { get; set; }
+
+        public string? PermanentOwnerShipOfHouse { get; set; }
+
+        public int? PermanentDurationOfStayInMonths { get; set; }
+
+        public string PresentHouseNo { get; set; } = null!;
+
+        public string? PresentRoadName { get; set; }
+
+        public string? PresentLandMark { get; set; }
+
+        public Guid? PresentAdministrativeUnitId { get; set; }
+
+        public Guid? PresentPoliceStationId { get; set; }
+
+        public Guid? PresentPostOfficeId { get; set; }
+
+        public string? PresentPinCode { get; set; }
+
+        public string? PresentOwnerShipOfHouse { get; set; }
+
+        public int? PresentDurationOfStayInMonths { get; set; }
+
+        public Guid? BankId { get; set; }
+
+        public long? BankAccountNo { get; set; }
+
+        public string? BankHolderName { get; set; }
+
+        public string? BankBranch { get; set; }
+
+        public string? BankAccountType { get; set; }
+
+        public string? OfficialEmail { get; set; }
+
+        public bool? IsActive { get; set; }
+
+        public bool? IsPayrollActive { get; set; }
+
+        public Guid? CompanyId { get; set; }
+
+        public DateOnly? SeparationDate { get; set; }
+
+        public Guid? ReferedBy { get; set; }
+
+        public string? HowYouKnow { get; set; }
+
+        private Employee() { }
+
+        //public Employee(Guid id, string? Salutation, string name, Guid createdBy, DateTime createdOn, Guid? lastModifiedBy, DateTime? lastModifiedOn)
+        //{
+        //    Id = id;
+        //    Salutation = Salutation;
+        //    Name = name;
+        //    CreatedOn = createdOn;
+        //    CreatedBy = createdBy;
+        //    LastModifiedOn = lastModifiedOn;
+        //    LastModifiedBy = lastModifiedBy;
+        //}
+
+        //public static Employee Create(Guid id, string? Salutation, string name, Guid? parentId, Guid createdBy)
+        //{
+        //    var administrativeUnit = new AdministrativeUnit
+        //    {
+        //        Id = id,
+        //        Salutation = Salutation,
+        //        Name = name,
+        //        ParentId = parentId,
+        //        CreatedBy = createdBy,
+        //        CreatedOn = DateTime.Now
+        //    };
+
+        //    return administrativeUnit;
+        //}
+    }
+}
