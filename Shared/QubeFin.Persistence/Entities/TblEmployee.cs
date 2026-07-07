@@ -123,6 +123,14 @@ public partial class TblEmployee
 
     public string? HowYouKnow { get; set; }
 
+    public Guid? CreatedBy { get; set; }
+
+    public DateTime? CreatedDate { get; set; }
+
+    public DateTime? LastModifiedOn { get; set; }
+
+    public Guid? LastModifiedBy { get; set; }
+
     public virtual TblFinancialInstitute? Bank { get; set; }
 
     public virtual TblCompany? Company { get; set; }
