@@ -15,6 +15,8 @@ public interface IAuthRepository
     Task<User?> GetUserBySessionTokenAsync(string sessionToken);
     Task<List<string>> GetPermissionsAsync(Guid userId);
     void UpdateSession(UserSession userSession);
+    Task<bool?> ValidateDevice(Guid UserId, string DeviceId);
+    void RegisterDevice(UserDevice userDevice);
 }
 
 public class AuthRepository(QubeFinDataContext context) : IAuthRepository
@@ -122,6 +124,31 @@ public class AuthRepository(QubeFinDataContext context) : IAuthRepository
             return null;
         }
 
+
         return userEntity.ToDomain();
+    }
+
+    public async Task<bool?> ValidateDevice(Guid UserId, string DeviceId)
+    {
+        var userDeviceEntity = await context.TblUserDevices.AsNoTracking()
+            .Where(m => m.DeviceId == DeviceId && !m.IsReleased).FirstOrDefaultAsync();
+
+        if (userDeviceEntity is null)
+        {
+            return null;
+        }
+        if (userDeviceEntity.UserId == UserId) 
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public async void RegisterDevice(UserDevice userDevice)
+    {
+        context.TblUserDevices.Add(userDevice.ToEntity());
     }
 }

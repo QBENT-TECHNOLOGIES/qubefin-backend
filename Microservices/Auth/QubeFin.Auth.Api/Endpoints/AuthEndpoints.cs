@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using QubeFin.Auh.Application.Accounts.Commands;
 using QubeFin.Auth.Application.Accounts.Commands;
 using QubeFin.Core.Endpoint;
@@ -10,8 +11,13 @@ public class AuthEndpoints : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("validate-login", async (ValidtateLoginCommand request, ISender sender, IPublisher publisher) =>
+        app.MapPost("validate-login", async (ValidtateLoginCommand request, [FromHeader(Name = "Device-Id")] string? deviceId, ISender sender, IPublisher publisher) =>
         {
+
+            request = request with
+            {
+                DeviceId = deviceId
+            };
             var result = await sender.Send(request);
             if (result.IsFailed)
             {

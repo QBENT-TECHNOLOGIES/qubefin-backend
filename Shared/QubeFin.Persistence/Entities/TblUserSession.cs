@@ -21,5 +21,9 @@ public partial class TblUserSession
 
     public DateTime? LogoutTime { get; set; }
 
+    public string? DeviceId { get; set; }
+
+    public string? UserAgent { get; set; }
+
     public virtual TblUser User { get; set; } = null!;
 }
