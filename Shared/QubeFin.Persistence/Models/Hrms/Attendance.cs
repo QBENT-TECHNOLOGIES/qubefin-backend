@@ -7,25 +7,25 @@ namespace QubeFin.Persistence.Models.Hrms
 {
     public class Attendance
     {
-        public Guid Id { get; set; }
+        public Guid Id { get; private set; }
 
-        public Guid EmployeeId { get; set; }
+        public Guid EmployeeId { get; private set; }
 
-        public Guid? OrganizationUnitId { get; set; }
+        public Guid? OrganizationUnitId { get; private set; }
 
-        public DateOnly AttendanceDate { get; set; }
+        public DateOnly AttendanceDate { get; private set; }
 
-        public TimeOnly? ExpectedInTime { get; set; }
+        public TimeOnly? ExpectedInTime { get; private set; }
 
-        public TimeOnly? ExpectedOutTime { get; set; }
+        public TimeOnly? ExpectedOutTime { get; private set; }
 
-        public TimeOnly ActualInTime { get; set; }
+        public TimeOnly ActualInTime { get; private set; }
 
-        public TimeOnly? ActualOutTime { get; set; }
+        public TimeOnly? ActualOutTime { get; private set; }
 
-        public bool IsEarlyLeave { get; set; }
+        public bool IsEarlyLeave { get; private set; }
 
-        public bool IsLateEntry { get; set; }
+        public bool IsLateEntry { get; private set; }
         public Attendance()
         {
 
