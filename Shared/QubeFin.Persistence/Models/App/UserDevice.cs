@@ -6,19 +6,19 @@ namespace QubeFin.Persistence.Models.App
 {
     public class UserDevice
     {
-        public Guid Id { get; set; }
+        public Guid Id { get; private set; }
 
-        public Guid UserId { get; set; }
+        public Guid UserId { get; private set; }
 
-        public string DeviceId { get; set; } = null!;
+        public string DeviceId { get; private set; } = null!;
 
-        public DateTime? AssignDate { get; set; }
+        public DateTime? AssignDate { get; private set; }
 
-        public bool IsReleased { get; set; }
+        public bool IsReleased { get; private set; }
 
-        public DateTime? ReleaseDate { get; set; }
+        public DateTime? ReleaseDate { get; private set; }
 
-        public Guid? ReleaseBy { get; set; }
+        public Guid? ReleaseBy { get; private set; }
 
         private UserDevice() { }
 
