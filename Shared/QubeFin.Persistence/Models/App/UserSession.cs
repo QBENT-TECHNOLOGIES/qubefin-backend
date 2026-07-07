@@ -10,10 +10,12 @@ public class UserSession
     public string? RefreshToken { get; private set; }
     public DateTime LoginTime { get; private set; }
     public DateTime? LogoutTime { get; private set; }
+    public string? DeviceId { get; set; }
+    public string? UserAgent { get; set; }
 
     private UserSession() { }
 
-    public UserSession(Guid id, Guid userId, string sessionToken, bool isMfaVerified, string? accessToken, string? refreshToken, DateTime loginTime, DateTime? logoutTime)
+    public UserSession(Guid id, Guid userId, string sessionToken, bool isMfaVerified, string? accessToken, string? refreshToken, DateTime loginTime, DateTime? logoutTime, string? deviceId, string? userAgent)
     {
         Id = id;
         UserId = userId;
@@ -23,9 +25,11 @@ public class UserSession
         RefreshToken = refreshToken;
         LoginTime = loginTime;
         LogoutTime = logoutTime;
+        DeviceId = deviceId;
+        UserAgent = userAgent;
     }
 
-    public static UserSession Create(Guid id, Guid userId, string sessionToken)
+    public static UserSession Create(Guid id, Guid userId, string sessionToken, string? deviceId, string? userAgent)
     {
         var userSession = new UserSession
         {
@@ -33,7 +37,9 @@ public class UserSession
             UserId = userId,
             SessionToken = sessionToken,
             IsMfaVerified = false,
-            LoginTime = DateTime.Now
+            LoginTime = DateTime.UtcNow,
+            DeviceId = deviceId,
+            UserAgent = userAgent
         };
 
         return userSession;

@@ -11,12 +11,13 @@ public class AuthEndpoints : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("validate-login", async (ValidtateLoginCommand request, [FromHeader(Name = "Device-Id")] string? deviceId, ISender sender, IPublisher publisher) =>
+        app.MapPost("validate-login", async (HttpContext httpContext, ValidtateLoginCommand request, [FromHeader(Name = "Device-Id")] string? deviceId, ISender sender, IPublisher publisher) =>
         {
-
+            var userAgent = httpContext.Request.Headers.UserAgent.ToString();
             request = request with
             {
-                DeviceId = deviceId
+                DeviceId = deviceId,
+                UserAgent = userAgent
             };
             var result = await sender.Send(request);
             if (result.IsFailed)

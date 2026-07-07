@@ -34,11 +34,15 @@ public class AuthRepository(QubeFinDataContext context) : IAuthRepository
 
         if (userEntity == null)
         {
-            return new List<string>();
+            return [];
         }
-        if (userEntity.EmployeeId == null)
+        if (userEntity.IsSuperAdmin)
         {
-            return new List<string>();
+            return await context.TblRolePermissions
+                .AsNoTracking()
+                .Select(m => m.Permission.Name)
+                .Distinct()
+                .ToListAsync();
         }
 
         var employeeEntity = await context
@@ -47,16 +51,22 @@ public class AuthRepository(QubeFinDataContext context) : IAuthRepository
 
         if (employeeEntity == null)
         {
-            return await context.TblRolePermissions
+            return [];
+        }
+
+        var roleEntity = await context.TblEmployeeDesignations
             .AsNoTracking()
-            .Select(m => m.Permission.Name)
-            .Distinct()
-            .ToListAsync();
+            .Where(m => m.EmployeeId == userEntity.EmployeeId && m.EffectiveTo == null)
+            .FirstOrDefaultAsync();
+
+        if (roleEntity == null)
+        {
+            return [];
         }
 
         return await context.TblRolePermissions
             .AsNoTracking()
-            //.Where(m => m.RoleId == userEntity.RoleId)
+            .Where(m => m.RoleId == roleEntity.Id)
             .Select(m => m.Permission.Name)
             .Distinct()
             .ToListAsync();
