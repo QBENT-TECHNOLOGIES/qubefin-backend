@@ -18,6 +18,7 @@ public class AuthEndpoints : IEndpoint
             {
                 DeviceId = deviceId
             };
+
             var result = await sender.Send(request);
             if (result.IsFailed)
             {

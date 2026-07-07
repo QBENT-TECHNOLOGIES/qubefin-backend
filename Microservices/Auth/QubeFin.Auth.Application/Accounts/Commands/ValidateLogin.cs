@@ -55,7 +55,6 @@ internal class ValidtateLoginCommandHandler(IAuthRepository authRepository, IUni
         }
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-
         return Result.Ok(new ValidtateLoginResponse(sessionToken));
     }
 }
