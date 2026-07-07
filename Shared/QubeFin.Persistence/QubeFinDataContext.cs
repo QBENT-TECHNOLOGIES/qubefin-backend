@@ -82,9 +82,13 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblUser> TblUsers { get; set; }
 
+    public virtual DbSet<TblUserDevice> TblUserDevices { get; set; }
+
     public virtual DbSet<TblUserMenu> TblUserMenus { get; set; }
 
     public virtual DbSet<TblUserSession> TblUserSessions { get; set; }
+
+  
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -122,6 +126,10 @@ public partial class QubeFinDataContext : DbContext
             entity.ToTable("Tbl_Attendance", "Hrms");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
+
+            entity.HasOne(d => d.OrganizationUnit).WithMany(p => p.TblAttendances)
+                .HasForeignKey(d => d.OrganizationUnitId)
+                .HasConstraintName("FK_Tbl_Attendance_Tbl_OrganizationUnit");
         });
 
         modelBuilder.Entity<TblCompany>(entity =>
@@ -639,6 +647,16 @@ public partial class QubeFinDataContext : DbContext
             entity.HasOne(d => d.Employee).WithMany(p => p.TblUsers)
                 .HasForeignKey(d => d.EmployeeId)
                 .HasConstraintName("FK_Tbl_User_Tbl_Employee");
+        });
+
+        modelBuilder.Entity<TblUserDevice>(entity =>
+        {
+            entity.ToTable("Tbl_UserDevice", "Auth");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.AssignDate).HasColumnType("datetime");
+            entity.Property(e => e.DeviceId).HasMaxLength(100);
+            entity.Property(e => e.ReleaseDate).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<TblUserMenu>(entity =>

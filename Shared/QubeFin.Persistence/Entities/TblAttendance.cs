@@ -9,11 +9,21 @@ public partial class TblAttendance
 
     public Guid EmployeeId { get; set; }
 
+    public Guid? OrganizationUnitId { get; set; }
+
     public DateOnly AttendanceDate { get; set; }
 
-    public TimeOnly InTime { get; set; }
+    public TimeOnly? ExpectedInTime { get; set; }
 
-    public TimeOnly? OutTime { get; set; }
+    public TimeOnly? ExpectedOutTime { get; set; }
 
-    public bool HasShortAttendance { get; set; }
+    public TimeOnly ActualInTime { get; set; }
+
+    public TimeOnly? ActualOutTime { get; set; }
+
+    public bool IsEarlyLeave { get; set; }
+
+    public bool IsLateEntry { get; set; }
+
+    public virtual TblOrganizationUnit? OrganizationUnit { get; set; }
 }
