@@ -15,7 +15,8 @@ public static class AdministrativeUnitMapper
             entity.CreatedBy,
             entity.CreatedOn,
             entity.LastModifiedBy,
-            entity.LastModifiedOn);
+            entity.LastModifiedOn
+            );
     }
 
     public static Entity ToEntity(this AdministrativeUnit domain)

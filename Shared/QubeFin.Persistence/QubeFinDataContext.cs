@@ -90,6 +90,7 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblUserSession> TblUserSessions { get; set; }
 
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<TblAdministrativeUnit>(entity =>
@@ -218,6 +219,7 @@ public partial class QubeFinDataContext : DbContext
                 .IsFixedLength();
             entity.Property(e => e.Caste).HasMaxLength(50);
             entity.Property(e => e.Code).HasMaxLength(20);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.DisablityType).HasMaxLength(50);
             entity.Property(e => e.EmergencyContactMobile1)
                 .HasMaxLength(10)
@@ -237,6 +239,7 @@ public partial class QubeFinDataContext : DbContext
                 .IsUnicode(false)
                 .IsFixedLength();
             entity.Property(e => e.HowYouKnow).HasMaxLength(200);
+            entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
             entity.Property(e => e.LastName).HasMaxLength(30);
             entity.Property(e => e.MaritalStatus)
                 .HasMaxLength(10)

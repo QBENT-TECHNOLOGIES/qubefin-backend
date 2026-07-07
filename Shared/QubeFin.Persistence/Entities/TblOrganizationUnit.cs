@@ -23,6 +23,10 @@ public partial class TblOrganizationUnit
 
     public Guid? LastModifiedBy { get; set; }
 
+    public TimeOnly? AttendanceInTime { get; set; }
+
+    public TimeOnly? AttendanceOutTime { get; set; }
+
     public virtual ICollection<TblOrganizationUnit> InverseParent { get; set; } = new List<TblOrganizationUnit>();
 
     public virtual TblOrganizationUnitType OrganizationUnitType { get; set; } = null!;

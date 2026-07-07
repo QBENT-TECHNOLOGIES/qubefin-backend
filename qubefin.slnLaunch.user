@@ -1,0 +1,23 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "Gateway\\QubeFin.Gateway\\QubeFin.Gateway.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "Microservices\\App\\QubeFin.App.Api\\QubeFin.App.Api.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "Microservices\\Auth\\QubeFin.Auth.Api\\QubeFin.Auth.Api.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "Microservices\\Global\\QubeFin.Global.Api\\QubeFin.Global.Api.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]
