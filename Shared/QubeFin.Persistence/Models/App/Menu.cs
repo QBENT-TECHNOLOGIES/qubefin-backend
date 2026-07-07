@@ -35,7 +35,7 @@ public class Menu
         LastModifiedOn = lastModifiedOn;
     }
 
-    public static Menu Create(Guid id, string name, string icon, string target, Guid? parentId, int position, Guid createdBy)
+    public static Menu Create(Guid id, string name, string icon, string? target, Guid? parentId, int position, Guid createdBy)
     {
         var menu = new Menu
         {

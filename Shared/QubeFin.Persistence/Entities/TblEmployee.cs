@@ -25,8 +25,6 @@ public partial class TblEmployee
 
     public Guid DepartmentId { get; set; }
 
-    public Guid DesignationId { get; set; }
-
     public string? EmployementType { get; set; }
 
     public DateOnly DateOfJoining { get; set; }
@@ -131,13 +129,13 @@ public partial class TblEmployee
 
     public virtual TblDepartment Department { get; set; } = null!;
 
-    public virtual TblDesignation Designation { get; set; } = null!;
-
     public virtual TblOrganizationUnit OrganizationUnit { get; set; } = null!;
 
     public virtual TblAdministrativeUnit? PermanentAdministrativeUnit { get; set; }
 
     public virtual TblAdministrativeUnit? PresentAdministrativeUnit { get; set; }
+
+    public virtual ICollection<TblEmployeeDesignation> TblEmployeeDesignations { get; set; } = new List<TblEmployeeDesignation>();
 
     public virtual ICollection<TblEmployeeDocument> TblEmployeeDocuments { get; set; } = new List<TblEmployeeDocument>();
 

@@ -34,6 +34,8 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblEmployee> TblEmployees { get; set; }
 
+    public virtual DbSet<TblEmployeeDesignation> TblEmployeeDesignations { get; set; }
+
     public virtual DbSet<TblEmployeeDocument> TblEmployeeDocuments { get; set; }
 
     public virtual DbSet<TblEmployeeEmployment> TblEmployeeEmployments { get; set; }
@@ -87,8 +89,6 @@ public partial class QubeFinDataContext : DbContext
     public virtual DbSet<TblUserMenu> TblUserMenus { get; set; }
 
     public virtual DbSet<TblUserSession> TblUserSessions { get; set; }
-
-  
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -278,11 +278,6 @@ public partial class QubeFinDataContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_Employee_Tbl_Department");
 
-            entity.HasOne(d => d.Designation).WithMany(p => p.TblEmployees)
-                .HasForeignKey(d => d.DesignationId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Tbl_Employee_Tbl_Designation");
-
             entity.HasOne(d => d.OrganizationUnit).WithMany(p => p.TblEmployees)
                 .HasForeignKey(d => d.OrganizationUnitId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -295,6 +290,23 @@ public partial class QubeFinDataContext : DbContext
             entity.HasOne(d => d.PresentAdministrativeUnit).WithMany(p => p.TblEmployeePresentAdministrativeUnits)
                 .HasForeignKey(d => d.PresentAdministrativeUnitId)
                 .HasConstraintName("FK_Tbl_Employee_Tbl_AdministrativeUnit1");
+        });
+
+        modelBuilder.Entity<TblEmployeeDesignation>(entity =>
+        {
+            entity.ToTable("Tbl_EmployeeDesignation", "Hrms");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+
+            entity.HasOne(d => d.Designation).WithMany(p => p.TblEmployeeDesignations)
+                .HasForeignKey(d => d.DesignationId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_EmployeeDesignation_Tbl_Designation");
+
+            entity.HasOne(d => d.Employee).WithMany(p => p.TblEmployeeDesignations)
+                .HasForeignKey(d => d.EmployeeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_EmployeeDesignation_Tbl_Employee");
         });
 
         modelBuilder.Entity<TblEmployeeDocument>(entity =>
@@ -684,8 +696,10 @@ public partial class QubeFinDataContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.AccessToken).HasMaxLength(4000);
+            entity.Property(e => e.DeviceId).HasMaxLength(100);
             entity.Property(e => e.RefreshToken).HasMaxLength(50);
             entity.Property(e => e.SessionToken).HasMaxLength(50);
+            entity.Property(e => e.UserAgent).HasMaxLength(500);
 
             entity.HasOne(d => d.User).WithMany(p => p.TblUserSessions).HasForeignKey(d => d.UserId);
         });

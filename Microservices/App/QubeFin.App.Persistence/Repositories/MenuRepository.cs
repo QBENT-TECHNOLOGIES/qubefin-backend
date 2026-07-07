@@ -69,6 +69,6 @@ public class MenuRepository(QubeFinDataContext context) : IMenuRepository
 
     public void Update(Menu menu)
     {
-        throw new NotImplementedException();
+        context.TblMenus.Update(menu.ToEntity());
     }
 }

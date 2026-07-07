@@ -29,5 +29,5 @@ public partial class TblDesignation
 
     public virtual ICollection<TblDesignationRole> TblDesignationRoles { get; set; } = new List<TblDesignationRole>();
 
-    public virtual ICollection<TblEmployee> TblEmployees { get; set; } = new List<TblEmployee>();
+    public virtual ICollection<TblEmployeeDesignation> TblEmployeeDesignations { get; set; } = new List<TblEmployeeDesignation>();
 }
