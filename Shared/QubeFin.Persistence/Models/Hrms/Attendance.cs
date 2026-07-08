@@ -23,11 +23,15 @@ public class Attendance
     public bool IsEarlyLeave { get; private set; }
 
     public bool IsLateEntry { get; private set; }
+    public decimal? InTimeLat {  get; private set; }
+    public decimal? InTimeLong { get; private set; }
+    public decimal? OutTimeLat { get; private set; }
+    public decimal? OutTimeLong { get; private set; }
     public Attendance()
     {
 
     }
-    public Attendance(Guid id, Guid employeeId, Guid? organizationUnitId, DateOnly attendanceDate, TimeOnly? expectedInTime, TimeOnly? expectedOutTime, TimeOnly actualInTime, TimeOnly? actualOutTime, bool isEarlyLeave, bool isLateEntry)
+    public Attendance(Guid id, Guid employeeId, Guid? organizationUnitId, DateOnly attendanceDate, TimeOnly? expectedInTime, TimeOnly? expectedOutTime, TimeOnly actualInTime, TimeOnly? actualOutTime, bool isEarlyLeave, bool isLateEntry, decimal? intimeLat, decimal? intimeLong, decimal? outTimeLat, decimal? outTimeLong)
     {
         Id = id;
         EmployeeId = employeeId;
@@ -39,8 +43,12 @@ public class Attendance
         ActualOutTime = actualOutTime;
         IsEarlyLeave = isEarlyLeave;
         IsLateEntry = isLateEntry;
+        InTimeLat = intimeLat;
+        InTimeLong = intimeLong;
+        OutTimeLat = outTimeLat;
+        OutTimeLong = outTimeLong;
     }
-    public static Attendance MarkCheckInCheckOut(Guid id, Guid employeeId,  TimeOnly InTime, TimeOnly? OutTime, Guid? organizationUnitId, TimeOnly? expectedInTime, TimeOnly? expectedOutTime)
+    public static Attendance MarkCheckInCheckOut(Guid id, Guid employeeId,  TimeOnly InTime, TimeOnly? OutTime, Guid? organizationUnitId, TimeOnly? expectedInTime, TimeOnly? expectedOutTime, decimal? InTimeLat, decimal? InTimeLong, decimal? OutTimeLat, decimal? OutTimeLong)
     {
         var attendance = new Attendance()
         {
@@ -50,7 +58,11 @@ public class Attendance
             ActualOutTime = OutTime,
             OrganizationUnitId = organizationUnitId,
             ExpectedInTime = expectedInTime,
-            ExpectedOutTime = expectedOutTime
+            ExpectedOutTime = expectedOutTime,
+            InTimeLat = InTimeLat,
+            InTimeLong = InTimeLong,
+            OutTimeLat = OutTimeLat,
+            OutTimeLong = OutTimeLong
         };
 
         return attendance;

@@ -18,7 +18,12 @@ public static class AttendanceMapper
             entity.ActualInTime,
             entity.ActualOutTime,
             entity.IsEarlyLeave,
-            entity.IsLateEntry
+            entity.IsLateEntry,
+            entity.InTimeLat,
+            entity.InTimeLong,
+            entity.OutTimeLat,
+            entity.OutTimeLong
+            
             );
     }
 
@@ -30,12 +35,16 @@ public static class AttendanceMapper
             EmployeeId = domain.EmployeeId,
             OrganizationUnitId = domain.OrganizationUnitId,
             ExpectedInTime = domain.ExpectedInTime,
-            ExpectedOutTime  = domain.ExpectedOutTime,
+            ExpectedOutTime = domain.ExpectedOutTime,
             ActualInTime = domain.ActualInTime,
             ActualOutTime = domain.ActualOutTime,
             AttendanceDate = domain.AttendanceDate,
             IsEarlyLeave = domain.IsEarlyLeave,
-            IsLateEntry = domain.IsLateEntry
+            IsLateEntry = domain.IsLateEntry,
+            InTimeLat = domain.InTimeLat,
+            InTimeLong = domain.InTimeLong,
+            OutTimeLat = domain.OutTimeLat,
+            OutTimeLong = domain.OutTimeLong,
         };
     }
 }

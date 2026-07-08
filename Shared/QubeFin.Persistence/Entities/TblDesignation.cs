@@ -30,4 +30,8 @@ public partial class TblDesignation
     public virtual ICollection<TblDesignationRole> TblDesignationRoles { get; set; } = new List<TblDesignationRole>();
 
     public virtual ICollection<TblEmployeeDesignation> TblEmployeeDesignations { get; set; } = new List<TblEmployeeDesignation>();
+
+    public virtual ICollection<TblGroup> TblGroups { get; set; } = new List<TblGroup>();
+
+    public virtual ICollection<TblMember> TblMembers { get; set; } = new List<TblMember>();
 }
