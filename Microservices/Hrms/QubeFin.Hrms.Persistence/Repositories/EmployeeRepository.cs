@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Mappers.App;
 using QubeFin.Persistence.Mappers.Hrms;
+using QubeFin.Persistence.Models.App;
 using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Persistence.Repositories
@@ -13,10 +14,9 @@ namespace QubeFin.Hrms.Persistence.Repositories
     }
     public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepository
     {
-        public Task CreateEmployee(Employee employee)
+        public async Task CreateEmployee(Employee employee)
         {
-            context.TblEmployees.Add(employee.ToEntity());
-            return Task.CompletedTask;
+            await context.TblEmployees.AddAsync(employee.ToEntity());
         }
     }
 }

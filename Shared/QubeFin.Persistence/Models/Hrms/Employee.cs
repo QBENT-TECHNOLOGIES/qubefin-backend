@@ -269,7 +269,6 @@ namespace QubeFin.Persistence.Models.Hrms
             string? motherName,
             Guid organizationUnitId,
             Guid departmentId,
-            Guid designationId,
             string? employementType,
             DateOnly dateOfJoining,
             DateOnly? dateOfConfirmation,
@@ -393,6 +392,79 @@ namespace QubeFin.Persistence.Models.Hrms
             return employee;
 
         }
+
+        public static Employee AddEmployee(Employee emp)
+        {
+            var employeeCreate = new Employee
+            {
+                Id = Guid.NewGuid(),
+                Salutation = emp.Salutation,
+                FirstName = emp.FirstName,
+                MiddleName = emp.MiddleName,
+                LastName = emp.LastName,
+                Code = emp.Code,
+
+                FatherName = emp.FatherName,
+                MotherName = emp.MotherName,
+                OrganizationUnitId = emp.OrganizationUnitId,
+                DepartmentId = emp.DepartmentId,
+                EmployementType = emp.EmployementType,
+                DateOfJoining = emp.DateOfJoining,
+                DateOfConfirmation = emp.DateOfConfirmation,
+                DateOfBirth = emp.DateOfBirth,
+                Gender = emp.Gender,
+                Religion = emp.Religion,
+                Caste = emp.Caste,
+                Nationality = emp.Nationality,
+                BloodGroup = emp.BloodGroup,
+                DisablityType = emp.DisablityType,
+                MaritalStatus = emp.MaritalStatus,
+                MobileNo = emp.MobileNo,
+                PersonalEmail = emp.PersonalEmail,
+                EmergencyContactRelation1 = emp.EmergencyContactRelation1,
+                EmergencyContactName1 = emp.EmergencyContactName1,
+                EmergencyContactMobile1 = emp.EmergencyContactMobile1,
+                EmergencyContactRelation2 = emp.EmergencyContactRelation2,
+                EmergencyContactName2 = emp.EmergencyContactName2,
+                EmergencyContactMobile2 = emp.EmergencyContactMobile2,
+                PermanentHouseNo = emp.PermanentHouseNo,
+                PermanentRoadName = emp.PermanentRoadName,
+                PermanentLandMark = emp.PermanentLandMark,
+                PermanentAdministrativeUnitId = emp.PermanentAdministrativeUnitId,
+                PermanentPoliceStationId = emp.PermanentPoliceStationId,
+                PermanentPostOfficeId = emp.PermanentPostOfficeId,
+                PermanentPinCode = emp.PermanentPinCode,
+                PermanentOwnerShipOfHouse = emp.PermanentOwnerShipOfHouse,
+                PermanentDurationOfStayInMonths = emp.PermanentDurationOfStayInMonths,
+                PresentHouseNo = emp.PresentHouseNo,
+                PresentRoadName = emp.PresentRoadName,
+                PresentLandMark = emp.PresentLandMark,
+                PresentAdministrativeUnitId = emp.PresentAdministrativeUnitId,
+                PresentPoliceStationId = emp.PresentPoliceStationId,
+                PresentPostOfficeId = emp.PresentPostOfficeId,
+                PresentPinCode = emp.PresentPinCode,
+                PresentOwnerShipOfHouse = emp.PresentOwnerShipOfHouse,
+                PresentDurationOfStayInMonths = emp.PresentDurationOfStayInMonths,
+                BankId = emp.BankId,
+                BankAccountNo = emp.BankAccountNo,
+                BankHolderName = emp.BankHolderName,
+                BankBranch = emp.BankBranch,
+                BankAccountType = emp.BankAccountType,
+                OfficialEmail = emp.OfficialEmail,
+                IsActive = true,
+                IsPayrollActive = true,
+                CompanyId = emp.CompanyId,
+
+                SeparationDate = emp.SeparationDate,
+                ReferedBy = emp.ReferedBy,
+                HowYouKnow = emp.HowYouKnow,
+                CreatedBy = emp.CreatedBy,
+                CreatedDate = DateTime.Now
+            };
+
+            return employeeCreate;
+        }
+
 
     }
 }
