@@ -9,6 +9,7 @@ namespace QubeFin.Hrms.Persistence.Repositories
 {
     public interface IEmployeeRepository
     {
+        Task CreateEmployee(Employee employee);
     }
     public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepository
     {
