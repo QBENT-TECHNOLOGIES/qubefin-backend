@@ -1,53 +1,49 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace QubeFin.Persistence.Models.Hrms
+﻿namespace QubeFin.Persistence.Models.Hrms
 {
     public class SalaryComponent
     {
-        public Guid Id { get; set; }
+        public Guid Id { get; private set; }
 
-        public string Name { get; set; } = null!;
+        public string Name { get; private set; } = null!;
 
-        public string Code { get; set; } = null!;
+        public string Code { get; private set; } = null!;
 
-        public Guid CategoryId { get; set; }
+        public Guid CategoryId { get; private set; }
 
-        public bool IsTaxable { get; set; }
+        public bool IsTaxable { get; private set; }
 
-        public bool IsPfapplicable { get; set; }
+        public bool IsPfapplicable { get; private set; }
 
-        public bool IsEsiapplicable { get; set; }
+        public bool IsEsiapplicable { get; private set; }
 
-        public bool IsCtccomponent { get; set; }
+        public bool IsCtccomponent { get; private set; }
 
-        public bool IsActive { get; set; }
+        public bool IsActive { get; private set; }
 
-        public int DisplayOrder { get; set; }
+        public int DisplayOrder { get; private set; }
 
-        public DateTime CreatedOn { get; set; }
+        public DateTime CreatedOn { get; private set; }
 
-        public Guid CreatedBy { get; set; }
+        public Guid CreatedBy { get; private set; }
 
-        public DateTime? LastModifiedOn { get; set; }
+        public DateTime? LastModifiedOn { get; private set; }
 
-        public Guid? LastModifiedBy { get; set; }
+        public Guid? LastModifiedBy { get; private set; }
         private SalaryComponent() { }
         public SalaryComponent(
-            Guid id, 
-            string name, 
-            string code, 
-            Guid categoryId, 
-            bool isTaxable, 
-            bool isPfapplicable, 
-            bool isEsiapplicable, 
-            bool isCtccomponent, 
-            bool isActive, 
-            int displayOrder, 
-            DateTime createdOn, 
-            Guid createdBy, 
-            DateTime? lastModifiedOn, 
+            Guid id,
+            string name,
+            string code,
+            Guid categoryId,
+            bool isTaxable,
+            bool isPfapplicable,
+            bool isEsiapplicable,
+            bool isCtccomponent,
+            bool isActive,
+            int displayOrder,
+            DateTime createdOn,
+            Guid createdBy,
+            DateTime? lastModifiedOn,
             Guid? lastModifiedBy)
         {
             Id = id;
@@ -76,11 +72,10 @@ namespace QubeFin.Persistence.Models.Hrms
             bool isCtccomponent,
             bool isActive,
             int displayOrder,
-            DateTime createdOn,
             Guid createdBy)
         {
-            var salaryComponent = new SalaryComponent 
-            { 
+            var salaryComponent = new SalaryComponent
+            {
                 Id = id,
                 Name = name,
                 Code = code,
@@ -91,10 +86,34 @@ namespace QubeFin.Persistence.Models.Hrms
                 IsCtccomponent = isCtccomponent,
                 IsActive = isActive,
                 DisplayOrder = displayOrder,
-                CreatedOn = createdOn,
+                CreatedOn = DateTime.Now,
                 CreatedBy = createdBy
-                };
+            };
             return salaryComponent;
+        }
+        public void Update(
+            string name,
+            string code,
+            Guid categoryId,
+            bool isTaxable,
+            bool isPfapplicable,
+            bool isEsiapplicable,
+            bool isCtccomponent,
+            bool isActive,
+            int displayOrder,
+            Guid? lastModifiedBy)
+        {
+            Name = name;
+            Code = code;
+            CategoryId = categoryId;
+            IsTaxable = isTaxable;
+            IsPfapplicable = isPfapplicable;
+            IsEsiapplicable = isEsiapplicable;
+            IsCtccomponent = isCtccomponent;
+            IsActive = isActive;
+            DisplayOrder = displayOrder;
+            LastModifiedOn = DateTime.Now;
+            LastModifiedBy = lastModifiedBy;
         }
     }
 }
