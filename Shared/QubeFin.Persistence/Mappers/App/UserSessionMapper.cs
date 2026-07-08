@@ -15,7 +15,9 @@ public static class UserSessionMapper
             entity.AccessToken,
             entity.RefreshToken,
             entity.LoginTime,
-            entity.LogoutTime);
+            entity.LogoutTime,
+            entity.DeviceId,
+            entity.UserAgent);
     }
 
     public static Entity ToEntity(this UserSession domain)
@@ -29,7 +31,9 @@ public static class UserSessionMapper
             AccessToken = domain.AccessToken,
             RefreshToken = domain.RefreshToken,
             LoginTime = domain.LoginTime,
-            LogoutTime = domain.LogoutTime
+            LogoutTime = domain.LogoutTime,
+            DeviceId = domain.DeviceId,
+            UserAgent = domain.UserAgent
         };
     }
 }

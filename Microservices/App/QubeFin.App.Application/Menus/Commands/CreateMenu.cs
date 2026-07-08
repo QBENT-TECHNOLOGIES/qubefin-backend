@@ -7,7 +7,7 @@ using QubeFin.Persistence.Models.App;
 namespace QubeFin.App.Application.Menus.Commands;
 
 #region --- COMMAND ---
-public record CreateMenuCommand(string Name, string Icon, string? Target, Guid ParentId, Guid CreatedBy) : IRequest<Result<CreateMenuResponse>>;
+public record CreateMenuCommand(string Name, string Icon, string? Target, Guid ParentId, Guid UserId) : IRequest<Result<CreateMenuResponse>>;
 #endregion
 
 #region --- RESPONSE ---
@@ -21,7 +21,7 @@ internal sealed class CreateMenuCommandHandler(IMenuRepository menuRepository, I
     public async Task<Result<CreateMenuResponse>> Handle(CreateMenuCommand request, CancellationToken cancellationToken)
     {
         var maxPosition = await menuRepository.GetMaxMenuPositionAsync();
-        var menu = Menu.Create(Guid.NewGuid(), request.Name, request.Icon, request.Target, request.ParentId, maxPosition + 1, request.CreatedBy);
+        var menu = Menu.Create(Guid.NewGuid(), request.Name, request.Icon, request.Target, request.ParentId, maxPosition + 1, request.UserId);
         await menuRepository.AddAsync(menu);
         await unitOfWork.SaveChangesAsync();
         return Result.Ok(new CreateMenuResponse(true));
