@@ -10,18 +10,15 @@ namespace QubeFin.Hrms.Persistence.Repositories
 {
     public interface IAttendanceRepository
     {
-        Task CreateAttendance(Attendance attendance);
+        Task Create(Attendance attendance);
         Task<Attendance> GetTodayAttendanceData(Guid EmployeeId);
+        Task Update(Attendance attendance);
     }
-    public class AuthRepository(QubeFinDataContext context) : IAttendanceRepository
+    public class AttendanceRepository(QubeFinDataContext context) : IAttendanceRepository
     {
-        public Task CreateAttendance(Attendance attendance)
+        public Task Create(Attendance attendance)
         {
-            var employeeOrganizationUnit = context.TblEmployees.Include(m => m.OrganizationUnit).Single(m => m.Id == attendance.EmployeeId);
-
-            var newAttendance = Attendance.MarkCheckIn(Guid.NewGuid(), attendance.EmployeeId, attendance.ActualInTime, employeeOrganizationUnit.OrganizationUnitId, employeeOrganizationUnit.OrganizationUnit?.AttendanceInTime, employeeOrganizationUnit.OrganizationUnit?.AttendanceOutTime);
-
-            context.TblAttendances.Add(newAttendance.ToEntity());
+            context.TblAttendances.Add(attendance.ToEntity());
             return Task.CompletedTask;
         }
         public async Task<Attendance> GetTodayAttendanceData(Guid EmployeeId)
@@ -34,5 +31,13 @@ namespace QubeFin.Hrms.Persistence.Repositories
 
             return attendanceEntity.ToDomain();
         }
+
+        public Task Update(Attendance attendance)
+        {
+            context.TblAttendances.Update(attendance.ToEntity());
+            return Task.CompletedTask;
+        }
+
+
     }
 }

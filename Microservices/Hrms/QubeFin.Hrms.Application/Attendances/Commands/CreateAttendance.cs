@@ -16,26 +16,28 @@ namespace QubeFin.Hrms.Application.Attendances.Commands
     #endregion
 
     #region --- HANDLER ---
-    internal sealed class CreateAttendanceCommandHandler(IAttendanceRepository attendanceRepository, IUnitOfWork unitOfWork)
+    internal sealed class CreateAttendanceCommandHandler(IAttendanceRepository attendanceRepository, IEmployeeRepository employeeRepository, IUnitOfWork unitOfWork)
         : IRequestHandler<CreateAttendanceCommand, Result<CreateAttendanceResponse>>
     {
         public async Task<Result<CreateAttendanceResponse>> Handle(CreateAttendanceCommand request, CancellationToken cancellationToken)
         {
-            var todayAttendance = attendanceRepository.GetTodayAttendanceData(request.EmployeeId);
+            var todayAttendance = await attendanceRepository.GetTodayAttendanceData(request.EmployeeId);
 
             if (todayAttendance is null)
             {
-               
-                var attendance = Attendance.MarkCheckIn(Guid.NewGuid(), request.EmployeeId, request.time, null, null, null);
+               var employeeOrganization = await employeeRepository.GetEmployeeOrganization(request.EmployeeId);
+               var attendance = Attendance.MarkCheckInCheckOut(Guid.NewGuid(), request.EmployeeId, request.time, null, employeeOrganization?.OrganizationUnitId, employeeOrganization?.AttendanceInTime, employeeOrganization?.AttendanceOutTime);
+                await attendanceRepository.Create(attendance);
             }
             else
             {
-                //var attendance = Attendance.Update(Guid.NewGuid(), request.EmployeeId, request.time);
+                var attendance = Attendance.MarkCheckInCheckOut(todayAttendance.Id, request.EmployeeId, todayAttendance.ActualInTime, request.time, todayAttendance.OrganizationUnitId, todayAttendance.ExpectedInTime, todayAttendance.ExpectedOutTime);
+                await attendanceRepository.Update(attendance);
             }
 
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return Result.Ok();
+            return Result.Ok(new CreateAttendanceResponse(true));
 
         }
     }
