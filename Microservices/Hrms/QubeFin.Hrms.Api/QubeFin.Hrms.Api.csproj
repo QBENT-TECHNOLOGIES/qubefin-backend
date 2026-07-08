@@ -13,6 +13,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Host\QubeFin.ServiceDefaults\QubeFin.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\..\Shared\QubeFin.Core\QubeFin.Core.csproj" />
+    <ProjectReference Include="..\..\..\Shared\QubeFin.Persistence\QubeFin.Persistence.csproj" />
+    <ProjectReference Include="..\QubeFin.Hrms.Application\QubeFin.Hrms.Application.csproj" />
+    <ProjectReference Include="..\QubeFin.Hrms.Persistence\QubeFin.Hrms.Persistence.csproj" />
   </ItemGroup>
 
 </Project>
