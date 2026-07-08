@@ -138,6 +138,8 @@ public static class EmployeeMapper
             SeparationDate = domain.SeparationDate,
             ReferedBy = domain.ReferedBy,
             HowYouKnow = domain.HowYouKnow,
+            CreatedBy = domain.CreatedBy,
+            CreatedDate = domain.CreatedDate,
             LastModifiedBy = domain.LastModifiedBy,
             LastModifiedOn = domain.LastModifiedOn
         };

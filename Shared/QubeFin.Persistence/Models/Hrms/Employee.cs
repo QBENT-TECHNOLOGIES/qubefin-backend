@@ -272,7 +272,6 @@ namespace QubeFin.Persistence.Models.Hrms
             string? motherName,
             Guid organizationUnitId,
             Guid departmentId,
-            Guid designationId,
             string? employementType,
             DateOnly dateOfJoining,
             DateOnly? dateOfConfirmation,
@@ -322,8 +321,7 @@ namespace QubeFin.Persistence.Models.Hrms
             DateOnly? separationDate,
             Guid? referedBy,
             string? howYouKnow,
-            Guid? createdBy,
-            DateTime? createdDate
+            Guid? createdBy
         )
         {
             var employee = new Employee
@@ -394,6 +392,137 @@ namespace QubeFin.Persistence.Models.Hrms
             };
 
             return employee;
+
+        }
+
+        public void UpdateEmployee(
+            string? salutation,
+            string firstName,
+            string? middleName,
+            string lastName,
+
+            string? fatherName,
+            string? motherName,
+            Guid organizationUnitId,
+            Guid departmentId,
+            string? employementType,
+            DateOnly dateOfJoining,
+            DateOnly? dateOfConfirmation,
+            DateOnly dateOfBirth,
+            string gender,
+            string religion,
+            string? caste,
+            string nationality,
+            string bloodGroup,
+            string? disablityType,
+            string? maritalStatus,
+            string mobileNo,
+            string? personalEmail,
+            string? emergencyContactRelation1,
+            string? emergencyContactName1,
+            string? emergencyContactMobile1,
+            string? emergencyContactRelation2,
+            string? emergencyContactName2,
+            string? emergencyContactMobile2,
+            string? permanentHouseNo,
+            string? permanentRoadName,
+            string? permanentLandMark,
+            Guid? permanentAdministrativeUnitId,
+            Guid? permanentPoliceStationId,
+            Guid? permanentPostOfficeId,
+            string? permanentPinCode,
+            string? permanentOwnerShipOfHouse,
+            int? permanentDurationOfStayInMonths,
+            string presentHouseNo,
+            string? presentRoadName,
+            string? presentLandMark,
+            Guid? presentAdministrativeUnitId,
+            Guid? presentPoliceStationId,
+            Guid? presentPostOfficeId,
+            string? presentPinCode,
+            string? presentOwnerShipOfHouse,
+            int? presentDurationOfStayInMonths,
+            Guid? bankId,
+            long? bankAccountNo,
+            string? bankHolderName,
+            string? bankBranch,
+            string? bankAccountType,
+            string? officialEmail,
+            bool? isActive,
+            bool? isPayrollActive,
+            Guid? companyId,
+            DateOnly? separationDate,
+            Guid? referedBy,
+            string? howYouKnow,
+            Guid? lastModifiedBy
+        )
+        {
+            Salutation = salutation;
+            FirstName = firstName;
+            MiddleName = middleName;
+            LastName = lastName;
+
+            FatherName = fatherName;
+            MotherName = motherName;
+            OrganizationUnitId = organizationUnitId;
+            DepartmentId = departmentId;
+            EmployementType = employementType;
+            DateOfJoining = dateOfJoining;
+            DateOfConfirmation = dateOfConfirmation;
+            DateOfBirth = dateOfBirth;
+            Gender = gender;
+            Religion = religion;
+            Caste = caste;
+            Nationality = nationality;
+            BloodGroup = bloodGroup;
+            DisablityType = disablityType;
+            MaritalStatus = maritalStatus;
+            MobileNo = mobileNo;
+            PersonalEmail = personalEmail;
+
+            EmergencyContactRelation1 = emergencyContactRelation1;
+            EmergencyContactName1 = emergencyContactName1;
+            EmergencyContactMobile1 = emergencyContactMobile1;
+            EmergencyContactRelation2 = emergencyContactRelation2;
+            EmergencyContactName2 = emergencyContactName2;
+            EmergencyContactMobile2 = emergencyContactMobile2;
+
+            PermanentHouseNo = permanentHouseNo;
+            PermanentRoadName = permanentRoadName;
+            PermanentLandMark = permanentLandMark;
+            PermanentAdministrativeUnitId = permanentAdministrativeUnitId;
+            PermanentPoliceStationId = permanentPoliceStationId;
+            PermanentPostOfficeId = permanentPostOfficeId;
+            PermanentPinCode = permanentPinCode;
+            PermanentOwnerShipOfHouse = permanentOwnerShipOfHouse;
+            PermanentDurationOfStayInMonths = permanentDurationOfStayInMonths;
+
+            PresentHouseNo = presentHouseNo;
+            PresentRoadName = presentRoadName;
+            PresentLandMark = presentLandMark;
+            PresentAdministrativeUnitId = presentAdministrativeUnitId;
+            PresentPoliceStationId = presentPoliceStationId;
+            PresentPostOfficeId = presentPostOfficeId;
+            PresentPinCode = presentPinCode;
+            PresentOwnerShipOfHouse = presentOwnerShipOfHouse;
+            PresentDurationOfStayInMonths = presentDurationOfStayInMonths;
+
+            BankId = bankId;
+            BankAccountNo = bankAccountNo;
+            BankHolderName = bankHolderName;
+            BankBranch = bankBranch;
+            BankAccountType = bankAccountType;
+            OfficialEmail = officialEmail;
+            IsActive = isActive;
+            IsPayrollActive = isPayrollActive;
+            CompanyId = companyId;
+
+            SeparationDate = separationDate;
+            ReferedBy = referedBy;
+            HowYouKnow = howYouKnow;
+            LastModifiedBy = lastModifiedBy;
+            LastModifiedOn = DateTime.Now;
+
         }
     }
     public class EmployeeOrganizationTiming
@@ -403,4 +532,6 @@ namespace QubeFin.Persistence.Models.Hrms
         public TimeOnly? AttendanceOutTime { get; set; }
     }
 
+
+    
 }

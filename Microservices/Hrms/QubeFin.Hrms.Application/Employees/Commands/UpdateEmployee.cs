@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Mappers.Hrms;
 using QubeFin.Persistence.Models.App;
 using QubeFin.Persistence.Models.Hrms;
 using System.Text.RegularExpressions;
@@ -13,12 +14,12 @@ namespace QubeFin.Hrms.Application.Employees.Commands
 {
 
     #region --- COMMAND ---
-    public record CreateEmployeeCommand(Employee employee) : IRequest<Result<CreateEmployeeResponse>>;
+    public record UpdateEmployeeCommand(Employee employee) : IRequest<Result<UpdateEmployeeResponse>>;
     #endregion
     #region --- VALIDATION ---
-    public class CreateEmployeeCommandValidator : AbstractValidator<CreateEmployeeCommand>
+    public class UpdateEmployeeCommandValidator : AbstractValidator<UpdateEmployeeCommand>
     {
-        public CreateEmployeeCommandValidator()
+        public UpdateEmployeeCommandValidator()
         {
             RuleFor(x => x.employee.FirstName)
                 .Must(value => !string.IsNullOrWhiteSpace(value)
@@ -31,36 +32,33 @@ namespace QubeFin.Hrms.Application.Employees.Commands
                 .NotEmpty()
                 .Matches("^[A-Za-z]{3,30}$")
                 .WithMessage("Last name must contain only letters and be between 3 and 30 characters long.");
-            RuleFor(x => x.employee.Code)
-                .NotEmpty()
-                .Matches("^[0-9]{6}$")
-                .WithMessage("Code must contain only numbers (0–9) and 6 digits long.");
+            
         }
     }
     #endregion
 
     #region --- RESPONSE ---
-    public record CreateEmployeeResponse(bool Created);
+    public record UpdateEmployeeResponse(bool Created);
     #endregion
 
     #region --- HANDLER ---
-    internal sealed class CreateEmployeeCommandHandler(IEmployeeRepository employeeRepository, IUnitOfWork unitOfWork, QubeFinDataContext context)
-        : IRequestHandler<CreateEmployeeCommand, Result<CreateEmployeeResponse>>
+    internal sealed class UpdateEmployeeCommandHandler(IEmployeeRepository employeeRepository, IUnitOfWork unitOfWork, QubeFinDataContext context)
+        : IRequestHandler<UpdateEmployeeCommand, Result<UpdateEmployeeResponse>>
     {
-        public async Task<Result<CreateEmployeeResponse>> Handle(CreateEmployeeCommand request, CancellationToken cancellationToken)
+        public async Task<Result<UpdateEmployeeResponse>> Handle(UpdateEmployeeCommand request, CancellationToken cancellationToken)
         {
-            var existingEmployee = await context.TblEmployees.FirstOrDefaultAsync(m => m.Code == request.employee.Code);
-            if(existingEmployee != null)
+            var existingEmployee = await employeeRepository.GetById(request.employee.Id);
+            if (existingEmployee == null)
             {
-                return new ValidationError("Employee already exist with same code.");
+                return new ValidationError("Employee not exist given id.");
             }
-            var employee = Employee.Create(
-                Guid.NewGuid(),
+
+
+            existingEmployee.UpdateEmployee(
                 request.employee.Salutation,
                 request.employee.FirstName,
                 request.employee.MiddleName,
                 request.employee.LastName,
-                request.employee.Code,
                 request.employee.FatherName,
                 request.employee.MotherName,
                 request.employee.OrganizationUnitId,
@@ -108,18 +106,18 @@ namespace QubeFin.Hrms.Application.Employees.Commands
                 request.employee.BankBranch,
                 request.employee.BankAccountType,
                 request.employee.OfficialEmail,
+                request.employee.IsActive,
+                request.employee.IsPayrollActive,
                 request.employee.CompanyId,
                 request.employee.SeparationDate,
                 request.employee.ReferedBy,
                 request.employee.HowYouKnow,
-                request.employee.CreatedBy
+                request.employee.LastModifiedBy
                 );
-            //var employeeCreate = Employee.AddEmployee(request.employee);
-            //await employeeRepository.CreateEmployee(employeeCreate);
-            await employeeRepository.CreateEmployee(employee);
+            employeeRepository.UpdateEmployee(existingEmployee);
 
             await unitOfWork.SaveChangesAsync();
-            return Result.Ok(new CreateEmployeeResponse(true));
+            return Result.Ok(new UpdateEmployeeResponse(true));
 
 
         }
