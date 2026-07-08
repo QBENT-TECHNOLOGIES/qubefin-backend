@@ -9,7 +9,7 @@ using QubeFin.Persistence.Models.App;
 namespace QubeFin.Auh.Application.Accounts.Commands;
 
 #region --- COMMAND ---
-public record ValidtateLoginCommand(string UserName, string Password, string? DeviceId) : IRequest<Result<ValidtateLoginResponse>>;
+public record ValidtateLoginCommand(string UserName, string Password, string? DeviceId, string? UserAgent) : IRequest<Result<ValidtateLoginResponse>>;
 #endregion
 
 #region --- RESPONSE ---
@@ -35,24 +35,23 @@ internal class ValidtateLoginCommandHandler(IAuthRepository authRepository, IUni
 
         var sessionToken = SecureTokenGenerator.Generate(32);
 
-        var userSession = UserSession.Create(Guid.NewGuid(), user.Id, sessionToken);
+        var userSession = UserSession.Create(Guid.NewGuid(), user.Id, sessionToken, request.DeviceId, request.UserAgent);
         await authRepository.CreateUserSessionAsync(userSession);
        
-
         if (request.DeviceId is not null)
         {
             var deviceStatus = await authRepository.ValidateDevice(user.Id, request.DeviceId);
             if (deviceStatus is null) 
             {
                 var newDevice = UserDevice.Create(Guid.NewGuid(), user.Id, request.DeviceId);
-                authRepository.RegisterDevice(newDevice);
-               
+                authRepository.RegisterDevice(newDevice);        
             }
             else if (!deviceStatus.Value)
             {
                 return new ValidationError("Device is allocated to another user, please contact admin !");
             }
         }
+
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Ok(new ValidtateLoginResponse(sessionToken));
