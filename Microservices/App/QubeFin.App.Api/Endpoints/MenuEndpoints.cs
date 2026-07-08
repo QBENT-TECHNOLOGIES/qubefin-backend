@@ -55,7 +55,7 @@ public class MenuEndpoints : IEndpoint
             await sender.Send(new CreateMenuCommand(menu.Name, menu.Icon, menu.Target, menu.ParentId, userId));
             return Results.Ok();
         })
-            .WithSummary("Create Menu");
+       .WithSummary("Create Menu");
 
         app.MapPut("menus/{id:guid}", async (ClaimsPrincipal principal, ISender sender, [FromRoute] Guid id, [FromBody] MenuRequest menu) =>
         {
@@ -68,6 +68,6 @@ public class MenuEndpoints : IEndpoint
             await sender.Send(new UpdateMenuCommand(id, menu.Name, menu.Icon, menu.Target, menu.ParentId, userId));
             return Results.Ok();
         })
-            .WithSummary("Update Menu");
+        .WithSummary("Update Menu");
     }
 }

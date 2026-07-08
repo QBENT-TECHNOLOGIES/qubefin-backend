@@ -22,4 +22,8 @@ public partial class TblPost
     public byte[] RowVersion { get; set; } = null!;
 
     public virtual ICollection<TblDesignation> TblDesignations { get; set; } = new List<TblDesignation>();
+
+    public virtual ICollection<TblLoanProductQuestion> TblLoanProductQuestions { get; set; } = new List<TblLoanProductQuestion>();
+
+    public virtual ICollection<TblLoanWorkflow> TblLoanWorkflows { get; set; } = new List<TblLoanWorkflow>();
 }

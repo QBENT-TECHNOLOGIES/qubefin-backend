@@ -18,4 +18,6 @@ public partial class TblCreditOrganization
     public Guid? LastModifiedBy { get; set; }
 
     public DateTime? LastModifiedOn { get; set; }
+
+    public virtual ICollection<TblCreditDatum> TblCreditData { get; set; } = new List<TblCreditDatum>();
 }
