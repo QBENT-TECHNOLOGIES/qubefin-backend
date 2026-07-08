@@ -321,8 +321,7 @@ namespace QubeFin.Persistence.Models.Hrms
             DateOnly? separationDate,
             Guid? referedBy,
             string? howYouKnow,
-            Guid? createdBy,
-            DateTime? createdDate
+            Guid? createdBy
         )
         {
             var employee = new Employee

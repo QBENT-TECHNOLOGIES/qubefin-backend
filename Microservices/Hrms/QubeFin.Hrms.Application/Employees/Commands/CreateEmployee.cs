@@ -112,8 +112,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
                 request.employee.SeparationDate,
                 request.employee.ReferedBy,
                 request.employee.HowYouKnow,
-                request.employee.CreatedBy,
-                DateTime.Now
+                request.employee.CreatedBy
                 );
             //var employeeCreate = Employee.AddEmployee(request.employee);
             //await employeeRepository.CreateEmployee(employeeCreate);
