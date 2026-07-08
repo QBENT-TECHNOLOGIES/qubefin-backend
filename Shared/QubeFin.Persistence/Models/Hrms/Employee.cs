@@ -127,6 +127,8 @@ namespace QubeFin.Persistence.Models.Hrms
         public DateTime? CreatedDate { get; private set; }
         public DateTime? LastModifiedOn { get; private set; }
         public Guid? LastModifiedBy { get; private set; }
+        public TimeOnly? ExpectedInTime { get; private set; }
+        public TimeOnly? ExpectedOutTime { get; private set; }
 
         private Employee() { }
 
@@ -257,6 +259,7 @@ namespace QubeFin.Persistence.Models.Hrms
             LastModifiedBy = lastModifiedBy;
             LastModifiedOn = lastModifiedOn;
         }
+        
 
         public static Employee Create(
             Guid id,
@@ -464,7 +467,15 @@ namespace QubeFin.Persistence.Models.Hrms
 
             return employeeCreate;
         }
-
-
+        
     }
+    public class EmployeeOrganizationTiming
+    {
+        public Guid OrganizationUnitId { get; set; }
+        public TimeOnly? AttendanceInTime { get; set; }
+        public TimeOnly? AttendanceOutTime { get; set; }
+    }
+
+
+    
 }

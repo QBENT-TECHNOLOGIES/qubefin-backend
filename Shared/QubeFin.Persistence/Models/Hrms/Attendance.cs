@@ -40,13 +40,14 @@ public class Attendance
         IsEarlyLeave = isEarlyLeave;
         IsLateEntry = isLateEntry;
     }
-    public static Attendance MarkCheckIn(Guid id, Guid employeeId,  TimeOnly time, Guid? organizationUnitId, TimeOnly? expectedInTime, TimeOnly? expectedOutTime)
+    public static Attendance MarkCheckInCheckOut(Guid id, Guid employeeId,  TimeOnly InTime, TimeOnly? OutTime, Guid? organizationUnitId, TimeOnly? expectedInTime, TimeOnly? expectedOutTime)
     {
         var attendance = new Attendance()
         {
             Id = id,
             EmployeeId = employeeId,
-            ActualInTime = time,
+            ActualInTime = InTime,
+            ActualOutTime = OutTime,
             OrganizationUnitId = organizationUnitId,
             ExpectedInTime = expectedInTime,
             ExpectedOutTime = expectedOutTime
