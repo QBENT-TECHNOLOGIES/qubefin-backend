@@ -395,78 +395,135 @@ namespace QubeFin.Persistence.Models.Hrms
 
         }
 
-        public static Employee AddEmployee(Employee emp)
+        public void UpdateEmployee(
+            string? salutation,
+            string firstName,
+            string? middleName,
+            string lastName,
+
+            string? fatherName,
+            string? motherName,
+            Guid organizationUnitId,
+            Guid departmentId,
+            string? employementType,
+            DateOnly dateOfJoining,
+            DateOnly? dateOfConfirmation,
+            DateOnly dateOfBirth,
+            string gender,
+            string religion,
+            string? caste,
+            string nationality,
+            string bloodGroup,
+            string? disablityType,
+            string? maritalStatus,
+            string mobileNo,
+            string? personalEmail,
+            string? emergencyContactRelation1,
+            string? emergencyContactName1,
+            string? emergencyContactMobile1,
+            string? emergencyContactRelation2,
+            string? emergencyContactName2,
+            string? emergencyContactMobile2,
+            string? permanentHouseNo,
+            string? permanentRoadName,
+            string? permanentLandMark,
+            Guid? permanentAdministrativeUnitId,
+            Guid? permanentPoliceStationId,
+            Guid? permanentPostOfficeId,
+            string? permanentPinCode,
+            string? permanentOwnerShipOfHouse,
+            int? permanentDurationOfStayInMonths,
+            string presentHouseNo,
+            string? presentRoadName,
+            string? presentLandMark,
+            Guid? presentAdministrativeUnitId,
+            Guid? presentPoliceStationId,
+            Guid? presentPostOfficeId,
+            string? presentPinCode,
+            string? presentOwnerShipOfHouse,
+            int? presentDurationOfStayInMonths,
+            Guid? bankId,
+            long? bankAccountNo,
+            string? bankHolderName,
+            string? bankBranch,
+            string? bankAccountType,
+            string? officialEmail,
+            bool? isActive,
+            bool? isPayrollActive,
+            Guid? companyId,
+            DateOnly? separationDate,
+            Guid? referedBy,
+            string? howYouKnow,
+            Guid? lastModifiedBy
+        )
         {
-            var employeeCreate = new Employee
-            {
-                Id = Guid.NewGuid(),
-                Salutation = emp.Salutation,
-                FirstName = emp.FirstName,
-                MiddleName = emp.MiddleName,
-                LastName = emp.LastName,
-                Code = emp.Code,
+            Salutation = salutation;
+            FirstName = firstName;
+            MiddleName = middleName;
+            LastName = lastName;
 
-                FatherName = emp.FatherName,
-                MotherName = emp.MotherName,
-                OrganizationUnitId = emp.OrganizationUnitId,
-                DepartmentId = emp.DepartmentId,
-                EmployementType = emp.EmployementType,
-                DateOfJoining = emp.DateOfJoining,
-                DateOfConfirmation = emp.DateOfConfirmation,
-                DateOfBirth = emp.DateOfBirth,
-                Gender = emp.Gender,
-                Religion = emp.Religion,
-                Caste = emp.Caste,
-                Nationality = emp.Nationality,
-                BloodGroup = emp.BloodGroup,
-                DisablityType = emp.DisablityType,
-                MaritalStatus = emp.MaritalStatus,
-                MobileNo = emp.MobileNo,
-                PersonalEmail = emp.PersonalEmail,
-                EmergencyContactRelation1 = emp.EmergencyContactRelation1,
-                EmergencyContactName1 = emp.EmergencyContactName1,
-                EmergencyContactMobile1 = emp.EmergencyContactMobile1,
-                EmergencyContactRelation2 = emp.EmergencyContactRelation2,
-                EmergencyContactName2 = emp.EmergencyContactName2,
-                EmergencyContactMobile2 = emp.EmergencyContactMobile2,
-                PermanentHouseNo = emp.PermanentHouseNo,
-                PermanentRoadName = emp.PermanentRoadName,
-                PermanentLandMark = emp.PermanentLandMark,
-                PermanentAdministrativeUnitId = emp.PermanentAdministrativeUnitId,
-                PermanentPoliceStationId = emp.PermanentPoliceStationId,
-                PermanentPostOfficeId = emp.PermanentPostOfficeId,
-                PermanentPinCode = emp.PermanentPinCode,
-                PermanentOwnerShipOfHouse = emp.PermanentOwnerShipOfHouse,
-                PermanentDurationOfStayInMonths = emp.PermanentDurationOfStayInMonths,
-                PresentHouseNo = emp.PresentHouseNo,
-                PresentRoadName = emp.PresentRoadName,
-                PresentLandMark = emp.PresentLandMark,
-                PresentAdministrativeUnitId = emp.PresentAdministrativeUnitId,
-                PresentPoliceStationId = emp.PresentPoliceStationId,
-                PresentPostOfficeId = emp.PresentPostOfficeId,
-                PresentPinCode = emp.PresentPinCode,
-                PresentOwnerShipOfHouse = emp.PresentOwnerShipOfHouse,
-                PresentDurationOfStayInMonths = emp.PresentDurationOfStayInMonths,
-                BankId = emp.BankId,
-                BankAccountNo = emp.BankAccountNo,
-                BankHolderName = emp.BankHolderName,
-                BankBranch = emp.BankBranch,
-                BankAccountType = emp.BankAccountType,
-                OfficialEmail = emp.OfficialEmail,
-                IsActive = true,
-                IsPayrollActive = true,
-                CompanyId = emp.CompanyId,
+            FatherName = fatherName;
+            MotherName = motherName;
+            OrganizationUnitId = organizationUnitId;
+            DepartmentId = departmentId;
+            EmployementType = employementType;
+            DateOfJoining = dateOfJoining;
+            DateOfConfirmation = dateOfConfirmation;
+            DateOfBirth = dateOfBirth;
+            Gender = gender;
+            Religion = religion;
+            Caste = caste;
+            Nationality = nationality;
+            BloodGroup = bloodGroup;
+            DisablityType = disablityType;
+            MaritalStatus = maritalStatus;
+            MobileNo = mobileNo;
+            PersonalEmail = personalEmail;
 
-                SeparationDate = emp.SeparationDate,
-                ReferedBy = emp.ReferedBy,
-                HowYouKnow = emp.HowYouKnow,
-                CreatedBy = emp.CreatedBy,
-                CreatedDate = DateTime.Now
-            };
+            EmergencyContactRelation1 = emergencyContactRelation1;
+            EmergencyContactName1 = emergencyContactName1;
+            EmergencyContactMobile1 = emergencyContactMobile1;
+            EmergencyContactRelation2 = emergencyContactRelation2;
+            EmergencyContactName2 = emergencyContactName2;
+            EmergencyContactMobile2 = emergencyContactMobile2;
 
-            return employeeCreate;
+            PermanentHouseNo = permanentHouseNo;
+            PermanentRoadName = permanentRoadName;
+            PermanentLandMark = permanentLandMark;
+            PermanentAdministrativeUnitId = permanentAdministrativeUnitId;
+            PermanentPoliceStationId = permanentPoliceStationId;
+            PermanentPostOfficeId = permanentPostOfficeId;
+            PermanentPinCode = permanentPinCode;
+            PermanentOwnerShipOfHouse = permanentOwnerShipOfHouse;
+            PermanentDurationOfStayInMonths = permanentDurationOfStayInMonths;
+
+            PresentHouseNo = presentHouseNo;
+            PresentRoadName = presentRoadName;
+            PresentLandMark = presentLandMark;
+            PresentAdministrativeUnitId = presentAdministrativeUnitId;
+            PresentPoliceStationId = presentPoliceStationId;
+            PresentPostOfficeId = presentPostOfficeId;
+            PresentPinCode = presentPinCode;
+            PresentOwnerShipOfHouse = presentOwnerShipOfHouse;
+            PresentDurationOfStayInMonths = presentDurationOfStayInMonths;
+
+            BankId = bankId;
+            BankAccountNo = bankAccountNo;
+            BankHolderName = bankHolderName;
+            BankBranch = bankBranch;
+            BankAccountType = bankAccountType;
+            OfficialEmail = officialEmail;
+            IsActive = isActive;
+            IsPayrollActive = isPayrollActive;
+            CompanyId = companyId;
+
+            SeparationDate = separationDate;
+            ReferedBy = referedBy;
+            HowYouKnow = howYouKnow;
+            LastModifiedBy = lastModifiedBy;
+            LastModifiedOn = DateTime.Now;
+
         }
-        
     }
     public class EmployeeOrganizationTiming
     {
