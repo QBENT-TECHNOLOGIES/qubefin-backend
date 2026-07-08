@@ -6,4 +6,15 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+    <PackageReference Include="MediatR" Version="14.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Shared\QubeFin.Core\QubeFin.Core.csproj" />
+    <ProjectReference Include="..\..\..\Shared\QubeFin.Persistence\QubeFin.Persistence.csproj" />
+    <ProjectReference Include="..\QubeFin.Hrms.Persistence\QubeFin.Hrms.Persistence.csproj" />
+  </ItemGroup>
+
 </Project>
