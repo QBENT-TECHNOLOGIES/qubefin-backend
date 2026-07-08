@@ -9,13 +9,13 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
     <PackageReference Include="Microsoft.OpenApi" Version="2.9.0" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.16.10" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Host\QubeFin.ServiceDefaults\QubeFin.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\..\..\Shared\QubeFin.Core\QubeFin.Core.csproj" />
-    <ProjectReference Include="..\..\..\Shared\QubeFin.Persistence\QubeFin.Persistence.csproj" />
     <ProjectReference Include="..\QubeFin.Hrms.Application\QubeFin.Hrms.Application.csproj" />
+    <ProjectReference Include="..\QubeFin.Hrms.Infrastructure\QubeFin.Hrms.Infrastructure.csproj" />
     <ProjectReference Include="..\QubeFin.Hrms.Persistence\QubeFin.Hrms.Persistence.csproj" />
   </ItemGroup>
 
