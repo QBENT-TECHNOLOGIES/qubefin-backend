@@ -19,5 +19,7 @@ public partial class TblFinancialInstitute
 
     public DateTime? LastModifiedOn { get; set; }
 
+    public virtual ICollection<TblCompanyBankAccount> TblCompanyBankAccounts { get; set; } = new List<TblCompanyBankAccount>();
+
     public virtual ICollection<TblEmployee> TblEmployees { get; set; } = new List<TblEmployee>();
 }

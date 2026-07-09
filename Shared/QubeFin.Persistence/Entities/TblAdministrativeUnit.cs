@@ -33,5 +33,9 @@ public partial class TblAdministrativeUnit
 
     public virtual ICollection<TblEmployee> TblEmployeePresentAdministrativeUnits { get; set; } = new List<TblEmployee>();
 
+    public virtual ICollection<TblGroup> TblGroups { get; set; } = new List<TblGroup>();
+
+    public virtual ICollection<TblMemberAddress> TblMemberAddresses { get; set; } = new List<TblMemberAddress>();
+
     public virtual ICollection<TblPoliceStation> TblPoliceStations { get; set; } = new List<TblPoliceStation>();
 }

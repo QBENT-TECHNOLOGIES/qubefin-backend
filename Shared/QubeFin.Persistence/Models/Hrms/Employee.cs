@@ -23,12 +23,12 @@ namespace QubeFin.Persistence.Models.Hrms
 
         public string? MotherName { get; private set; }
 
-        public Guid OrganizationUnitId { get; private set; }
+        public Guid? OrganizationUnitId { get; private set; }
 
-        public Guid DepartmentId { get; private set; }
+        public Guid? DepartmentId { get; private set; }
         public string? EmployementType { get; private set; }
 
-        public DateOnly DateOfJoining { get; private set; }
+        public DateOnly? DateOfJoining { get; private set; }
 
         public DateOnly? DateOfConfirmation { get; private set; }
 
@@ -142,10 +142,10 @@ namespace QubeFin.Persistence.Models.Hrms
             string code,
             string? fatherName,
             string? motherName,
-            Guid organizationUnitId,
-            Guid departmentId,
+            Guid? organizationUnitId,
+            Guid? departmentId,
             string? employementType,
-            DateOnly dateOfJoining,
+            DateOnly? dateOfJoining,
             DateOnly? dateOfConfirmation,
             DateOnly dateOfBirth,
             string gender,

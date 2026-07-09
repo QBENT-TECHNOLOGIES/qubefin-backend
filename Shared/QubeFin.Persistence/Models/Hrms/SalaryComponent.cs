@@ -9,6 +9,7 @@
         public string Code { get; private set; } = null!;
 
         public Guid CategoryId { get; private set; }
+        public string? CategoryName { get; private set; }
 
         public bool IsTaxable { get; private set; }
 
@@ -114,6 +115,10 @@
             DisplayOrder = displayOrder;
             LastModifiedOn = DateTime.Now;
             LastModifiedBy = lastModifiedBy;
+        }
+        public void SetCategoryName(string categoryName)
+        {
+            CategoryName = categoryName;
         }
     }
 }

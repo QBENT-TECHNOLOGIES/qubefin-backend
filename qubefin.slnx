@@ -31,6 +31,12 @@
     <Project Path="Microservices/Hrms/QubeFin.Hrms.Infrastructure/QubeFin.Hrms.Infrastructure.csproj" Id="892df1f0-0e55-433c-8dde-53c9d6806e1a" />
     <Project Path="Microservices/Hrms/QubeFin.Hrms.Persistence/QubeFin.Hrms.Persistence.csproj" Id="8dbea010-610c-4b8f-8c22-fdc35be0df91" />
   </Folder>
+  <Folder Name="/Microservices/Payroll/">
+    <Project Path="QubeFin.Payroll.Api/QubeFin.Payroll.Api.csproj" />
+    <Project Path="QubeFin.Payroll.Application/QubeFin.Payroll.Application.csproj" Id="d4f4029f-4401-4a7c-b0fa-aa91b0c3577b" />
+    <Project Path="QubeFin.Payroll.Infrastructure/QubeFin.Payroll.Infrastructure.csproj" Id="40e109ae-dd73-47f1-8a3f-f739d4503711" />
+    <Project Path="QubeFin.Payroll.Persistence/QubeFin.Payroll.Persistence.csproj" Id="8d19c213-023c-4351-81e4-7c96da028839" />
+  </Folder>
   <Folder Name="/Shared/">
     <Project Path="Shared/QubeFin.Core/QubeFin.Core.csproj" Id="62c1de18-e482-453c-9a21-7026846522c6" />
     <Project Path="Shared/QubeFin.Persistence/QubeFin.Persistence.csproj" Id="85068673-5466-4a06-8539-f22197f39896" />

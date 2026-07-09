@@ -31,6 +31,8 @@ public partial class TblUser
 
     public virtual TblEmployee? Employee { get; set; }
 
+    public virtual ICollection<TblLoanApplicationWorkflow> TblLoanApplicationWorkflows { get; set; } = new List<TblLoanApplicationWorkflow>();
+
     public virtual ICollection<TblUserMenu> TblUserMenus { get; set; } = new List<TblUserMenu>();
 
     public virtual ICollection<TblUserSession> TblUserSessions { get; set; } = new List<TblUserSession>();

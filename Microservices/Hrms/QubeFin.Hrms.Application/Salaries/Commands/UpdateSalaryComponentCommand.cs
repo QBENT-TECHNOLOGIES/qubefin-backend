@@ -31,6 +31,8 @@ namespace QubeFin.Hrms.Application.Salaries.Commands
         {   
             var existingSalaryComponent = await salaryRepository.GetSalaryComponentById(request.Id);
             if(existingSalaryComponent is null) return new RecordNotFoundError("Salary Component not found");
+            var duplicateName = await salaryRepository.ExistsByNameAsync(request.Name, request.CategoryId, request.Id);
+            if (duplicateName) return new ValidationError("A salary component with this name already exists in the selected category.");
             existingSalaryComponent.Update(
                 name: request.Name,
                 code: request.Code,

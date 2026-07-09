@@ -1,11 +1,9 @@
 ﻿using FluentResults;
 using MediatR;
+using QubeFin.Core.Results;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Hrms;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace QubeFin.Hrms.Application.Salaries.Commands
 {
@@ -27,7 +25,9 @@ namespace QubeFin.Hrms.Application.Salaries.Commands
     internal sealed class CreateSalaryComponentCommandHandler(ISalaryComponentRepository salaryRepository, IUnitOfWork unitOfWork) : IRequestHandler<CreateSalaryComponentCommand, Result<CreateSalaryComponentResponse>>
     {
         public async Task<Result<CreateSalaryComponentResponse>> Handle(CreateSalaryComponentCommand request, CancellationToken cancellationToken)
-        {
+        {   
+            var duplicateName = await salaryRepository.ExistsByNameAsync(request.Name, request.CategoryId);
+            if(duplicateName) return new ValidationError("A salary component with this name already exists in the selected category.");
             var createSalaryComponent = SalaryComponent.Create(
                 id: Guid.NewGuid(),
                 name: request.Name,

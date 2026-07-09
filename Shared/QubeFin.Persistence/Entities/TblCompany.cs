@@ -10,4 +10,6 @@ public partial class TblCompany
     public string Name { get; set; } = null!;
 
     public virtual ICollection<TblEmployee> TblEmployees { get; set; } = new List<TblEmployee>();
+
+    public virtual ICollection<TblPayRoll> TblPayRolls { get; set; } = new List<TblPayRoll>();
 }

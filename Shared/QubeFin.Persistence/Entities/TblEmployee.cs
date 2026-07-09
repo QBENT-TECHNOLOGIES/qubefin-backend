@@ -21,13 +21,13 @@ public partial class TblEmployee
 
     public string? MotherName { get; set; }
 
-    public Guid OrganizationUnitId { get; set; }
+    public Guid? OrganizationUnitId { get; set; }
 
-    public Guid DepartmentId { get; set; }
+    public Guid? DepartmentId { get; set; }
 
     public string? EmployementType { get; set; }
 
-    public DateOnly DateOfJoining { get; set; }
+    public DateOnly? DateOfJoining { get; set; }
 
     public DateOnly? DateOfConfirmation { get; set; }
 
@@ -81,7 +81,7 @@ public partial class TblEmployee
 
     public int? PermanentDurationOfStayInMonths { get; set; }
 
-    public string PresentHouseNo { get; set; } = null!;
+    public string? PresentHouseNo { get; set; }
 
     public string? PresentRoadName { get; set; }
 
@@ -135,9 +135,9 @@ public partial class TblEmployee
 
     public virtual TblCompany? Company { get; set; }
 
-    public virtual TblDepartment Department { get; set; } = null!;
+    public virtual TblDepartment? Department { get; set; }
 
-    public virtual TblOrganizationUnit OrganizationUnit { get; set; } = null!;
+    public virtual TblOrganizationUnit? OrganizationUnit { get; set; }
 
     public virtual TblAdministrativeUnit? PermanentAdministrativeUnit { get; set; }
 
@@ -152,6 +152,8 @@ public partial class TblEmployee
     public virtual ICollection<TblEmployeeQualification> TblEmployeeQualifications { get; set; } = new List<TblEmployeeQualification>();
 
     public virtual ICollection<TblEmployeeReference> TblEmployeeReferences { get; set; } = new List<TblEmployeeReference>();
+
+    public virtual ICollection<TblPayRoll> TblPayRolls { get; set; } = new List<TblPayRoll>();
 
     public virtual ICollection<TblUser> TblUsers { get; set; } = new List<TblUser>();
 }

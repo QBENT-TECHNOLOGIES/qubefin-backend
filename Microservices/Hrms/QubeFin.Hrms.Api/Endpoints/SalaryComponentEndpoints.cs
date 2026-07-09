@@ -3,6 +3,7 @@ using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
 using QubeFin.Hrms.Application.Salaries.Commands;
 using QubeFin.Hrms.Application.Salaries.Queries;
+using QubeFin.Hrms.Application.Salaries.SalaryCategory.Queries;
 using System.Security.Claims;
 
 namespace QubeFin.Hrms.Api.Endpoints
@@ -52,6 +53,13 @@ namespace QubeFin.Hrms.Api.Endpoints
                 return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Errors);
             }).WithSummary("Update an existing salary component")
               .WithDescription("Updates an existing salary component in the system.")
+              .WithTags("Salary Components");
+            app.MapGet("salary-components/categories", async (ISender sender, CancellationToken cancellationToken) =>
+            {
+                var result = await sender.Send(new GetAllSalaryComponentCategoriesQuery(), cancellationToken);
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Errors);
+            }).WithSummary("Get all salary component categories")
+              .WithDescription("Retrieves a list of all salary component categories in the system.")
               .WithTags("Salary Components");
         }
     }

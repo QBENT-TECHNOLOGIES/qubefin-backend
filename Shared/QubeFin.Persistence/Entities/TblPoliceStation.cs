@@ -20,4 +20,6 @@ public partial class TblPoliceStation
     public Guid? LastModifiedBy { get; set; }
 
     public virtual TblAdministrativeUnit District { get; set; } = null!;
+
+    public virtual ICollection<TblMemberAddress> TblMemberAddresses { get; set; } = new List<TblMemberAddress>();
 }

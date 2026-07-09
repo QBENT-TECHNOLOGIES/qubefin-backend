@@ -10,7 +10,7 @@ namespace QubeFin.Persistence.Mappers.Hrms
     {
         public static SalaryComponent ToDomain(this Entity entity)
         {
-            return new SalaryComponent(
+            var domain =  new SalaryComponent(
                 entity.Id,
                 entity.Name,
                 entity.Code,
@@ -26,6 +26,8 @@ namespace QubeFin.Persistence.Mappers.Hrms
                 entity.LastModifiedOn,
                 entity.LastModifiedBy
             );
+            domain.SetCategoryName(entity.Category.Name);
+            return domain;
         }
         public static Entity ToEntity(this SalaryComponent domain)
         {

@@ -14,6 +14,7 @@ namespace QubeFin.Hrms.Persistence.Repositories
         Task UpdateSalaryComponent(SalaryComponent salaryComponent);
         Task <SalaryComponent?> GetSalaryComponentById(Guid id);
         Task <IEnumerable<SalaryComponent>> GetAllSalaryComponents();
+        Task<bool> ExistsByNameAsync(string name, Guid categoryId, Guid? excludeId = null);
     }
     public class SalaryComponentRepository(QubeFinDataContext context) : ISalaryComponentRepository
     {
@@ -28,13 +29,21 @@ namespace QubeFin.Hrms.Persistence.Repositories
         }
         public async Task<SalaryComponent?> GetSalaryComponentById(Guid id)
         {
-            var entity = await context.TblSalaryComponents.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+            var entity = await context.TblSalaryComponents.Include(m => m.Category).AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
             return entity?.ToDomain();
         }
         public async Task<IEnumerable<SalaryComponent>> GetAllSalaryComponents()
         {
-            var entities = await context.TblSalaryComponents.AsNoTracking().ToListAsync();
+            var entities = await context.TblSalaryComponents.Include(m => m.Category).AsNoTracking().ToListAsync();
             return entities.Select(e => e.ToDomain());
+        }
+        public async Task<bool> ExistsByNameAsync(string name, Guid categoryId, Guid? excludeId = null)
+        {
+            return await context.TblSalaryComponents
+                .AsNoTracking()
+                .AnyAsync(x => x.CategoryId == categoryId
+                    && x.Name.ToLower() == name.ToLower()
+                    && (!excludeId.HasValue || x.Id != excludeId.Value));
         }
     }
 }
