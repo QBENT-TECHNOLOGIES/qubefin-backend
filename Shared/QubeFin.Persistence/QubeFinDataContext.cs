@@ -66,6 +66,8 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblEmployee> TblEmployees { get; set; }
 
+    public virtual DbSet<TblEmployeeAttendanceException> TblEmployeeAttendanceExceptions { get; set; }
+
     public virtual DbSet<TblEmployeeDesignation> TblEmployeeDesignations { get; set; }
 
     public virtual DbSet<TblEmployeeDocument> TblEmployeeDocuments { get; set; }
@@ -667,6 +669,15 @@ public partial class QubeFinDataContext : DbContext
             entity.HasOne(d => d.PresentAdministrativeUnit).WithMany(p => p.TblEmployeePresentAdministrativeUnits)
                 .HasForeignKey(d => d.PresentAdministrativeUnitId)
                 .HasConstraintName("FK_Tbl_Employee_Tbl_AdministrativeUnit1");
+        });
+
+        modelBuilder.Entity<TblEmployeeAttendanceException>(entity =>
+        {
+            entity.ToTable("Tbl_EmployeeAttendanceException", "Payroll");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.ApprovedOn).HasColumnType("datetime");
+            entity.Property(e => e.NegativeElcount).HasColumnName("NegativeELCount");
         });
 
         modelBuilder.Entity<TblEmployeeDesignation>(entity =>
@@ -1358,6 +1369,15 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
             entity.Property(e => e.Name).HasMaxLength(50);
 
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.TblOrganizationUnitCreatedByNavigations)
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("Fk_Tbl_User_Tbl_OrganizationUnit");
+
+            entity.HasOne(d => d.LastModifiedByNavigation).WithMany(p => p.TblOrganizationUnitLastModifiedByNavigations)
+                .HasForeignKey(d => d.LastModifiedBy)
+                .HasConstraintName("Fk_Tbl_User2_Tbl_OrganizationUnit");
+
             entity.HasOne(d => d.OrganizationUnitType).WithMany(p => p.TblOrganizationUnits)
                 .HasForeignKey(d => d.OrganizationUnitTypeId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -1417,6 +1437,16 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Amount).HasColumnType("numeric(18, 2)");
             entity.Property(e => e.Percentage).HasColumnType("numeric(9, 2)");
+
+            entity.HasOne(d => d.PayRoll).WithMany(p => p.TblPayRollComponents)
+                .HasForeignKey(d => d.PayRollId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_PayRollComponent_Tbl_PayRoll");
+
+            entity.HasOne(d => d.SalaryComponent).WithMany(p => p.TblPayRollComponents)
+                .HasForeignKey(d => d.SalaryComponentId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_PayRollComponent_Tbl_SalaryComponent");
         });
 
         modelBuilder.Entity<TblPermission>(entity =>

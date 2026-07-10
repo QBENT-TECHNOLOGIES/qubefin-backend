@@ -1,10 +1,16 @@
 ﻿using QubeFin.Persistence.Models.Payroll;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Entity = QubeFin.Persistence.Entities.TblPayRoll;
 
 namespace QubeFin.Persistence.Mappers.Payrolls
 {
     public static class PayrollMapper
     {
+        private const string EarningCategory = "Earning";
+        private const string DeductionCategory = "Deduction";
+
         public static PayrollModel ToDomain(this Entity entity)
         {
             var domain = new PayrollModel(
@@ -19,30 +25,79 @@ namespace QubeFin.Persistence.Mappers.Payrolls
                 entity.FinYearId,
                 entity.DayCount
             );
+
             string fullName = string.Join(" ", new[]
             {
                 entity.Employee.FirstName,
                 entity.Employee.MiddleName,
                 entity.Employee.LastName
             }.Where(s => !string.IsNullOrWhiteSpace(s)));
-            domain.SetNames(fullName, entity.FinYear.Caption, entity.Designation.Name, entity.Company.Name);
+
+            domain.SetNames(entity.OrganizationUnit.Name, fullName, entity.FinYear.Caption, entity.Designation.Name, entity.Company.Name);
+
+            domain.SetComponents(entity.TblPayRollComponents.Select(c =>
+            {
+                var componentModel = new PayrollComponentModel(c.Id, c.SalaryComponentId, c.Percentage, c.Amount);
+                componentModel.SetNames(c.SalaryComponent.Name, c.SalaryComponent.Category.Name);
+                return componentModel;
+            }));
+
             return domain;
         }
-        public static Entity ToEntity(this PayrollModel domain)
+
+        public static MonthlyPayroll ToMonthlyPayroll(this IEnumerable<PayrollModel> payrolls, int month, int year)
         {
-            return new Entity
+            if (payrolls == null || !payrolls.Any())
             {
-                Id = domain.Id,
-                PayrollMonth = domain.PayrollMonth,
-                PayrollYear = domain.PayrollYear,
-                EmployeeId = domain.EmployeeId,
-                OrganizationUnitId = domain.OrganizationUnitId,
-                DesignationId = domain.DesignationId,
-                CompanyId = domain.CompanyId,
-                IsLocked = domain.IsLocked,
-                FinYearId = domain.FinYearId,
-                DayCount = domain.DayCount
+                return new MonthlyPayroll
+                {
+                    PayrollMonth = month,
+                    PayrollYear = year,
+                    PayrollMonthYear = $"{month:D2}-{year}",
+                    IsLocked = false,
+                    Headers = new List<MonthlyPayrollHeader>()
+                };
+            }
+
+            var result = new MonthlyPayroll
+            {
+                PayrollMonth = month,
+                PayrollYear = year,
+                PayrollMonthYear = $"{month:D2}-{year}",
+                IsLocked = payrolls.First().IsLocked,
+                Headers = payrolls
+                    .GroupBy(p => p.OrganizationUnitId)
+                    .Select(group =>
+                    {
+                        var details = group.Select(item => new MonthlyPayrollLineItem
+                        {
+                            Id = item.Id,
+                            EmployeeId = item.EmployeeId,
+                            EmployeeName = item.EmployeeName,
+                            DesignationId = item.DesignationId,
+                            DesignationTitle = item.Designation,
+                            CompanyId = item.CompanyId,
+                            CompanyName = item.Company,
+                            TotalEarnings = item.Components
+                                .Where(c => string.Equals(c.CategoryName, EarningCategory, StringComparison.OrdinalIgnoreCase))
+                                .Sum(c => c.Amount),
+                            TotalDeductions = item.Components
+                                .Where(c => string.Equals(c.CategoryName, DeductionCategory, StringComparison.OrdinalIgnoreCase))
+                                .Sum(c => c.Amount)
+                        }).ToList();
+
+                        return new MonthlyPayrollHeader
+                        {
+                            OrganizationUnitId = group.Key,
+                            OrganizationUnitName = group.First().OrganizationUnitName ?? string.Empty,
+                            TotalEarnings = details.Sum(d => d.TotalEarnings),
+                            TotalDeductions = details.Sum(d => d.TotalDeductions),
+                            Details = details
+                        };
+                    }).ToList()
             };
+
+            return result;
         }
     }
 }

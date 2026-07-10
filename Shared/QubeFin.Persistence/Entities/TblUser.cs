@@ -33,6 +33,10 @@ public partial class TblUser
 
     public virtual ICollection<TblLoanApplicationWorkflow> TblLoanApplicationWorkflows { get; set; } = new List<TblLoanApplicationWorkflow>();
 
+    public virtual ICollection<TblOrganizationUnit> TblOrganizationUnitCreatedByNavigations { get; set; } = new List<TblOrganizationUnit>();
+
+    public virtual ICollection<TblOrganizationUnit> TblOrganizationUnitLastModifiedByNavigations { get; set; } = new List<TblOrganizationUnit>();
+
     public virtual ICollection<TblUserMenu> TblUserMenus { get; set; } = new List<TblUserMenu>();
 
     public virtual ICollection<TblUserSession> TblUserSessions { get; set; } = new List<TblUserSession>();

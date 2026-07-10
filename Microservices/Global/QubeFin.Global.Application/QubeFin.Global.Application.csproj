@@ -17,4 +17,8 @@
     <ProjectReference Include="..\QubeFin.Global.Persistence\QubeFin.Global.Persistence.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="OrganizationUnits\Queries\" />
+  </ItemGroup>
+
 </Project>

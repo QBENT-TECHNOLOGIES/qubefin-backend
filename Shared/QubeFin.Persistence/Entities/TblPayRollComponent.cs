@@ -14,4 +14,8 @@ public partial class TblPayRollComponent
     public decimal Percentage { get; set; }
 
     public decimal Amount { get; set; }
+
+    public virtual TblPayRoll PayRoll { get; set; } = null!;
+
+    public virtual TblSalaryComponent SalaryComponent { get; set; } = null!;
 }

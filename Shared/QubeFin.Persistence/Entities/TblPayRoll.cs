@@ -25,6 +25,8 @@ public partial class TblPayRoll
 
     public int? DayCount { get; set; }
 
+    public Guid? SalaryGradeId { get; set; }
+
     public virtual TblCompany Company { get; set; } = null!;
 
     public virtual TblDesignation Designation { get; set; } = null!;
@@ -34,4 +36,6 @@ public partial class TblPayRoll
     public virtual TblFinancialYear FinYear { get; set; } = null!;
 
     public virtual TblOrganizationUnit OrganizationUnit { get; set; } = null!;
+
+    public virtual ICollection<TblPayRollComponent> TblPayRollComponents { get; set; } = new List<TblPayRollComponent>();
 }

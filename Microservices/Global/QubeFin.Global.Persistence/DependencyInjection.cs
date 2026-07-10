@@ -20,7 +20,8 @@ public static class DependencyInjection
 
         services.AddScoped<ITokenGenerator, TokenGenerator>();
         services.AddScoped<IAdministrativeUnitRepository, AdministrativeUnitRepository>();
-
+        services.AddScoped<IOrganizationUnitTypeRepository, OrganizationUnitTypeRepository>();
+        services.AddScoped<IOrganizationUnitRepository, OrganizationUnitRepository>();
         return services;
     }
 }

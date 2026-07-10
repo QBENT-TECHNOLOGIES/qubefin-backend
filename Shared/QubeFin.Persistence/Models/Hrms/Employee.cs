@@ -398,7 +398,7 @@ namespace QubeFin.Persistence.Models.Hrms
     }
     public class EmployeeOrganizationTiming
     {
-        public Guid OrganizationUnitId { get; set; }
+        public Guid? OrganizationUnitId { get; set; }
         public TimeOnly? AttendanceInTime { get; set; }
         public TimeOnly? AttendanceOutTime { get; set; }
     }
