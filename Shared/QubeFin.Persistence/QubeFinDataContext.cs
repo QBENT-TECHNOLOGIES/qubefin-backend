@@ -20,6 +20,8 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblAdministrativeUnitType> TblAdministrativeUnitTypes { get; set; }
 
+    public virtual DbSet<TblAnswer> TblAnswers { get; set; }
+
     public virtual DbSet<TblApplicationStep> TblApplicationSteps { get; set; }
 
     public virtual DbSet<TblApplicatoinDocument> TblApplicatoinDocuments { get; set; }
@@ -29,6 +31,18 @@ public partial class QubeFinDataContext : DbContext
     public virtual DbSet<TblCoBorrower> TblCoBorrowers { get; set; }
 
     public virtual DbSet<TblCompany> TblCompanies { get; set; }
+
+    public virtual DbSet<TblCreditDataAccount> TblCreditDataAccounts { get; set; }
+
+    public virtual DbSet<TblCreditDataAddress> TblCreditDataAddresses { get; set; }
+
+    public virtual DbSet<TblCreditDataAlert> TblCreditDataAlerts { get; set; }
+
+    public virtual DbSet<TblCreditDataDependent> TblCreditDataDependents { get; set; }
+
+    public virtual DbSet<TblCreditDataIdentity> TblCreditDataIdentities { get; set; }
+
+    public virtual DbSet<TblCreditDataIncome> TblCreditDataIncomes { get; set; }
 
     public virtual DbSet<TblCreditDatum> TblCreditData { get; set; }
 
@@ -60,11 +74,15 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblHoliday> TblHolidays { get; set; }
 
-    public virtual DbSet<TblHouseVisitAnswer> TblHouseVisitAnswers { get; set; }
-
-    public virtual DbSet<TblHouseVisitQuestion> TblHouseVisitQuestions { get; set; }
-
     public virtual DbSet<TblKycDocument> TblKycDocuments { get; set; }
+
+    public virtual DbSet<TblLoanApplication> TblLoanApplications { get; set; }
+
+    public virtual DbSet<TblLoanApplicationWorkflow> TblLoanApplicationWorkflows { get; set; }
+
+    public virtual DbSet<TblLoanApplicationWorkflowDocument> TblLoanApplicationWorkflowDocuments { get; set; }
+
+    public virtual DbSet<TblLoanApplicationWorkflowStep> TblLoanApplicationWorkflowSteps { get; set; }
 
     public virtual DbSet<TblLoanProduct> TblLoanProducts { get; set; }
 
@@ -92,6 +110,8 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblOrganizationUnitType> TblOrganizationUnitTypes { get; set; }
 
+    public virtual DbSet<TblPayRoll> TblPayRolls { get; set; }
+
     public virtual DbSet<TblPermission> TblPermissions { get; set; }
 
     public virtual DbSet<TblPoliceStation> TblPoliceStations { get; set; }
@@ -99,6 +119,8 @@ public partial class QubeFinDataContext : DbContext
     public virtual DbSet<TblPost> TblPosts { get; set; }
 
     public virtual DbSet<TblPostOffice> TblPostOffices { get; set; }
+
+    public virtual DbSet<TblQuestion> TblQuestions { get; set; }
 
     public virtual DbSet<TblRole> TblRoles { get; set; }
 
@@ -126,6 +148,7 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblUserSession> TblUserSessions { get; set; }
 
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<TblAdministrativeUnit>(entity =>
@@ -155,6 +178,21 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Category).HasMaxLength(10);
             entity.Property(e => e.Icon).HasMaxLength(30);
             entity.Property(e => e.Name).HasMaxLength(30);
+        });
+
+        modelBuilder.Entity<TblAnswer>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_Tbl_HouseVisitAnswer");
+
+            entity.ToTable("Tbl_Answer", "Loan");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Descripton).HasMaxLength(100);
+
+            entity.HasOne(d => d.Question).WithMany(p => p.TblAnswers)
+                .HasForeignKey(d => d.QuestionId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_HouseVisitAnswer_Tbl_HouseVisitQuestion");
         });
 
         modelBuilder.Entity<TblApplicationStep>(entity =>
@@ -219,6 +257,124 @@ public partial class QubeFinDataContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Name).HasMaxLength(200);
+        });
+
+        modelBuilder.Entity<TblCreditDataAccount>(entity =>
+        {
+            entity.ToTable("Tbl_CreditDataAccounts", "Global");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.AccountNumber).HasMaxLength(50);
+            entity.Property(e => e.CloseDate).HasColumnType("datetime");
+            entity.Property(e => e.CurrentBalance).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.DisburseAmount).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.InstallAmount).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.Institution).HasMaxLength(200);
+            entity.Property(e => e.KeyPersonName).HasMaxLength(100);
+            entity.Property(e => e.KeyPersonRel).HasMaxLength(50);
+            entity.Property(e => e.LastPayment).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.LastPaymentDate).HasColumnType("datetime");
+            entity.Property(e => e.LoanCategory).HasMaxLength(100);
+            entity.Property(e => e.LoanCycleId).HasMaxLength(50);
+            entity.Property(e => e.LoanPurpose).HasMaxLength(100);
+            entity.Property(e => e.NoOfActiveAcc).HasDefaultValue(0, "DF_Tbl_CreditDataAccounts_NoOfActiveAcc_1");
+            entity.Property(e => e.NoOfClosedAcc).HasDefaultValue(0, "DF_Tbl_CreditDataAccounts_NoOfClosedAcc_1");
+            entity.Property(e => e.NoOfPastDueAcc).HasDefaultValue(0, "DF_Tbl_CreditDataAccounts_NoOfPastDueAcc_1");
+            entity.Property(e => e.NoOfWrittenOffAcc).HasDefaultValue(0, "DF_Tbl_CreditDataAccounts_NoOfWrittenOffAcc_1");
+            entity.Property(e => e.NomineeName).HasMaxLength(100);
+            entity.Property(e => e.NomineeRel).HasMaxLength(50);
+            entity.Property(e => e.OpenDate).HasColumnType("datetime");
+            entity.Property(e => e.PastDueAmount).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.RepaymentFreq).HasMaxLength(50);
+            entity.Property(e => e.ReportDate).HasColumnType("datetime");
+            entity.Property(e => e.SanctionAmount).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.SanctionDate).HasColumnType("datetime");
+            entity.Property(e => e.Status).HasMaxLength(50);
+            entity.Property(e => e.TotalAcc).HasDefaultValue(0, "DF_Tbl_CreditDataAccounts_TotalAcc_1");
+            entity.Property(e => e.WriteoffAmount).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.WriteoffDate).HasColumnType("datetime");
+            entity.Property(e => e.WriteoffReason).HasMaxLength(200);
+
+            entity.HasOne(d => d.CreditData).WithMany(p => p.TblCreditDataAccounts)
+                .HasForeignKey(d => d.CreditDataId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_CreditDataAccounts_Tbl_CreditData");
+        });
+
+        modelBuilder.Entity<TblCreditDataAddress>(entity =>
+        {
+            entity.ToTable("Tbl_CreditDataAddress", "Global");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Address).HasMaxLength(500);
+            entity.Property(e => e.ReportDate).HasColumnType("datetime");
+            entity.Property(e => e.State).HasMaxLength(50);
+            entity.Property(e => e.Type).HasMaxLength(50);
+
+            entity.HasOne(d => d.CreditData).WithMany(p => p.TblCreditDataAddresses)
+                .HasForeignKey(d => d.CreditDataId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_CreditDataAddress_Tbl_CreditData");
+        });
+
+        modelBuilder.Entity<TblCreditDataAlert>(entity =>
+        {
+            entity.ToTable("Tbl_CreditDataAlert", "Global");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.AlertMsg).HasMaxLength(500);
+            entity.Property(e => e.Sequence).ValueGeneratedOnAdd();
+
+            entity.HasOne(d => d.CreditData).WithMany(p => p.TblCreditDataAlerts)
+                .HasForeignKey(d => d.CreditDataId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_CreditDataAlert_Tbl_CreditData");
+        });
+
+        modelBuilder.Entity<TblCreditDataDependent>(entity =>
+        {
+            entity.ToTable("Tbl_CreditDataDependents", "Global");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Name).HasMaxLength(50);
+            entity.Property(e => e.Relation).HasMaxLength(50);
+
+            entity.HasOne(d => d.CreditData).WithMany(p => p.TblCreditDataDependents)
+                .HasForeignKey(d => d.CreditDataId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_CreditDataDependents_Tbl_CreditData");
+        });
+
+        modelBuilder.Entity<TblCreditDataIdentity>(entity =>
+        {
+            entity.ToTable("Tbl_CreditDataIdentities", "Global");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.IdentityNo).HasMaxLength(50);
+            entity.Property(e => e.IdentityType).HasMaxLength(50);
+            entity.Property(e => e.ReportDate).HasColumnType("datetime");
+
+            entity.HasOne(d => d.CreditData).WithMany(p => p.TblCreditDataIdentities)
+                .HasForeignKey(d => d.CreditDataId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_CreditDataIdentities_Tbl_CreditData");
+        });
+
+        modelBuilder.Entity<TblCreditDataIncome>(entity =>
+        {
+            entity.ToTable("Tbl_CreditDataIncomes", "Global");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.AssetOwnership).HasMaxLength(50);
+            entity.Property(e => e.MonthlyExpense).HasMaxLength(30);
+            entity.Property(e => e.MonthlyIncome).HasMaxLength(30);
+            entity.Property(e => e.Occupation).HasMaxLength(50);
+            entity.Property(e => e.ReportDate).HasColumnType("datetime");
+
+            entity.HasOne(d => d.CreditData).WithMany(p => p.TblCreditDataIncomes)
+                .HasForeignKey(d => d.CreditDataId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_CreditDataIncomes_Tbl_CreditData");
         });
 
         modelBuilder.Entity<TblCreditDatum>(entity =>
@@ -410,12 +566,10 @@ public partial class QubeFinDataContext : DbContext
 
             entity.HasOne(d => d.Department).WithMany(p => p.TblEmployees)
                 .HasForeignKey(d => d.DepartmentId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_Employee_Tbl_Department");
 
             entity.HasOne(d => d.OrganizationUnit).WithMany(p => p.TblEmployees)
                 .HasForeignKey(d => d.OrganizationUnitId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_Employee_Tbl_OrganizationUnit");
 
             entity.HasOne(d => d.PermanentAdministrativeUnit).WithMany(p => p.TblEmployeePermanentAdministrativeUnits)
@@ -557,8 +711,8 @@ public partial class QubeFinDataContext : DbContext
                 .IsFixedLength();
             entity.Property(e => e.LandMark).HasMaxLength(100);
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
-            entity.Property(e => e.Lat).HasMaxLength(100);
-            entity.Property(e => e.Lon).HasMaxLength(100);
+            entity.Property(e => e.Latitude).HasMaxLength(100);
+            entity.Property(e => e.Longitude).HasMaxLength(100);
             entity.Property(e => e.MobileNo).HasMaxLength(15);
             entity.Property(e => e.Name).HasMaxLength(50);
             entity.Property(e => e.PhotoScan).HasMaxLength(500);
@@ -566,7 +720,7 @@ public partial class QubeFinDataContext : DbContext
                 .HasMaxLength(6)
                 .IsFixedLength();
             entity.Property(e => e.VerifiedOn).HasColumnType("datetime");
-            entity.Property(e => e.VerifiedReason).HasMaxLength(200);
+            entity.Property(e => e.VerifiedRemarks).HasMaxLength(200);
 
             entity.HasOne(d => d.AdministrativeUnit).WithMany(p => p.TblGroups)
                 .HasForeignKey(d => d.AdministrativeUnitId)
@@ -591,35 +745,156 @@ public partial class QubeFinDataContext : DbContext
                 .IsConcurrencyToken();
         });
 
-        modelBuilder.Entity<TblHouseVisitAnswer>(entity =>
-        {
-            entity.ToTable("Tbl_HouseVisitAnswer", "Loan");
-
-            entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.Descripton).HasMaxLength(100);
-
-            entity.HasOne(d => d.Question).WithMany(p => p.TblHouseVisitAnswers)
-                .HasForeignKey(d => d.QuestionId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Tbl_HouseVisitAnswer_Tbl_HouseVisitQuestion");
-        });
-
-        modelBuilder.Entity<TblHouseVisitQuestion>(entity =>
-        {
-            entity.ToTable("Tbl_HouseVisitQuestion", "Loan");
-
-            entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
-            entity.Property(e => e.Description).HasMaxLength(500);
-            entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
-        });
-
         modelBuilder.Entity<TblKycDocument>(entity =>
         {
             entity.ToTable("Tbl_KycDocument", "Global");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Name).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<TblLoanApplication>(entity =>
+        {
+            entity.ToTable("Tbl_LoanApplication", "Loan");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.AdjustedAmount).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.ApplicationAmount).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.ApplicationNo).HasMaxLength(20);
+            entity.Property(e => e.ApprovedFlatRate).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.ApprovedInterestRate).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.AprovedAmount).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.BorCoBorRelation).HasMaxLength(50);
+            entity.Property(e => e.BpiAmount).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.CersaiCgstamount)
+                .HasComputedColumnSql("(([CersaiCharge]*[CersaiCGSTPercent])/(100))", false)
+                .HasColumnType("numeric(38, 6)")
+                .HasColumnName("CersaiCGSTAmount");
+            entity.Property(e => e.CersaiCgstpercent)
+                .HasColumnType("numeric(18, 2)")
+                .HasColumnName("CersaiCGSTPercent");
+            entity.Property(e => e.CersaiCharge).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.CersaiSgstamount)
+                .HasComputedColumnSql("(([CersaiCharge]*[CersaiSGSTPercent])/(100))", false)
+                .HasColumnType("numeric(38, 6)")
+                .HasColumnName("CersaiSGSTAmount");
+            entity.Property(e => e.CersaiSgstpercent)
+                .HasColumnType("numeric(18, 2)")
+                .HasColumnName("CersaiSGSTPercent");
+            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.DisbursedAmount).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.DisbursedOn).HasColumnType("datetime");
+            entity.Property(e => e.DocumentCharge).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.DownloadFileName).HasMaxLength(30);
+            entity.Property(e => e.EnachComplete).HasMaxLength(10);
+            entity.Property(e => e.InspectionChargeAmount).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.InspectionChargePercent).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.InstallmentInYear).HasColumnType("numeric(2, 1)");
+            entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
+            entity.Property(e => e.LoanApprovedDate).HasColumnType("datetime");
+            entity.Property(e => e.LoginFees).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.MortalityCoverageAmount).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.MortalityCoveragePercent).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.Neftno)
+                .HasMaxLength(50)
+                .HasColumnName("NEFTNo");
+            entity.Property(e => e.OngikarnamaPhoto).HasMaxLength(500);
+            entity.Property(e => e.PaymentSchedule)
+                .HasMaxLength(1)
+                .IsFixedLength();
+            entity.Property(e => e.ProcessingFeeAmount)
+                .HasComputedColumnSql("(([AprovedAmount]*[ProcessingFeePercent])/(100))", false)
+                .HasColumnType("numeric(38, 6)");
+            entity.Property(e => e.ProcessingFeeCgstamount)
+                .HasComputedColumnSql("(((([AprovedAmount]*[ProcessingFeePercent])/(100))*[ProcessingFeeCGSTPercent])/(100))", false)
+                .HasColumnType("numeric(38, 6)")
+                .HasColumnName("ProcessingFeeCGSTAmount");
+            entity.Property(e => e.ProcessingFeeCgstpercent)
+                .HasColumnType("numeric(18, 2)")
+                .HasColumnName("ProcessingFeeCGSTPercent");
+            entity.Property(e => e.ProcessingFeeIgstamount)
+                .HasComputedColumnSql("(((([AprovedAmount]*[ProcessingFeePercent])/(100))*[ProcessingFeeIGSTPercent])/(100))", false)
+                .HasColumnType("numeric(38, 6)")
+                .HasColumnName("ProcessingFeeIGSTAmount");
+            entity.Property(e => e.ProcessingFeeIgstpercent)
+                .HasColumnType("numeric(18, 2)")
+                .HasColumnName("ProcessingFeeIGSTPercent");
+            entity.Property(e => e.ProcessingFeePercent).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.ProcessingFeeSgstamount)
+                .HasComputedColumnSql("(((([AprovedAmount]*[ProcessingFeePercent])/(100))*[ProcessingFeeSGSTPercent])/(100))", false)
+                .HasColumnType("numeric(38, 6)")
+                .HasColumnName("ProcessingFeeSGSTAmount");
+            entity.Property(e => e.ProcessingFeeSgstpercent)
+                .HasColumnType("numeric(18, 2)")
+                .HasColumnName("ProcessingFeeSGSTPercent");
+            entity.Property(e => e.ProposedEmi)
+                .HasColumnType("numeric(18, 2)")
+                .HasColumnName("ProposedEMI");
+            entity.Property(e => e.Remarks).HasMaxLength(500);
+            entity.Property(e => e.TotalCharges).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.TotalMortalityAmount)
+                .HasComputedColumnSql("([MortalityCoverageAmount]*case when [CoBorrowerMortalityApplied]=(1) then (2) else (1) end)", false)
+                .HasColumnType("numeric(29, 2)");
+            entity.Property(e => e.UdyamRegNo).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<TblLoanApplicationWorkflow>(entity =>
+        {
+            entity.ToTable("Tbl_LoanApplicationWorkflow", "Loan");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.EndDate).HasColumnType("datetime");
+            entity.Property(e => e.Otp).HasMaxLength(6);
+            entity.Property(e => e.StartDate).HasColumnType("datetime");
+            entity.Property(e => e.WorkflowComment).HasMaxLength(500);
+
+            entity.HasOne(d => d.LoanApplication).WithMany(p => p.TblLoanApplicationWorkflows)
+                .HasForeignKey(d => d.LoanApplicationId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_LoanApplicationWorkflow_Tbl_LoanApplication");
+
+            entity.HasOne(d => d.Workflow).WithMany(p => p.TblLoanApplicationWorkflows)
+                .HasForeignKey(d => d.WorkflowId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_LoanApplicationWorkflow_Tbl_LoanWorkflow");
+        });
+
+        modelBuilder.Entity<TblLoanApplicationWorkflowDocument>(entity =>
+        {
+            entity.ToTable("Tbl_LoanApplicationWorkflowDocument", "Loan");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.FileName).HasMaxLength(500);
+            entity.Property(e => e.FileSequence).HasMaxLength(500);
+            entity.Property(e => e.UploadOn).HasColumnType("datetime");
+
+            entity.HasOne(d => d.Document).WithMany(p => p.TblLoanApplicationWorkflowDocuments)
+                .HasForeignKey(d => d.DocumentId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_LoanApplicationWorkflowDocument_Tbl_ApplicatoinDocument");
+
+            entity.HasOne(d => d.LoanApplicationWorkflow).WithMany(p => p.TblLoanApplicationWorkflowDocuments)
+                .HasForeignKey(d => d.LoanApplicationWorkflowId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_LoanApplicationWorkflowDocument_Tbl_LoanApplicationWorkflow");
+        });
+
+        modelBuilder.Entity<TblLoanApplicationWorkflowStep>(entity =>
+        {
+            entity.ToTable("Tbl_LoanApplicationWorkflowStep", "Loan");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.CompletedOn).HasColumnType("datetime");
+
+            entity.HasOne(d => d.ApplicationStep).WithMany(p => p.TblLoanApplicationWorkflowSteps)
+                .HasForeignKey(d => d.ApplicationStepId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_LoanApplicationWorkflowStep_Tbl_ApplicationStep");
+
+            entity.HasOne(d => d.LoanApplicationWorkflow).WithMany(p => p.TblLoanApplicationWorkflowSteps)
+                .HasForeignKey(d => d.LoanApplicationWorkflowId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_LoanApplicationWorkflowStep_Tbl_LoanApplicationWorkflow");
         });
 
         modelBuilder.Entity<TblLoanProduct>(entity =>
@@ -807,7 +1082,6 @@ public partial class QubeFinDataContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.AadharNo).HasMaxLength(12);
-            entity.Property(e => e.Abbreviation).HasMaxLength(10);
             entity.Property(e => e.Caste)
                 .HasMaxLength(50)
                 .IsUnicode(false);
@@ -818,8 +1092,8 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.FirstName).HasMaxLength(30);
             entity.Property(e => e.FullName)
-                .HasMaxLength(103)
-                .HasComputedColumnSql("((isnull([Abbreviation]+' ','')+(([FirstName]+' ')+isnull([MiddleName]+' ','')))+[LastName])", false);
+                .HasMaxLength(104)
+                .HasComputedColumnSql("((isnull([Salutaion]+' ','')+(([FirstName]+' ')+isnull([MiddleName]+' ','')))+isnull([LastName]+' ',''))", false);
             entity.Property(e => e.Gender)
                 .HasMaxLength(50)
                 .IsUnicode(false);
@@ -843,6 +1117,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Religion)
                 .HasMaxLength(50)
                 .IsUnicode(false);
+            entity.Property(e => e.Salutaion).HasMaxLength(10);
             entity.Property(e => e.SpouseName).HasMaxLength(100);
 
             entity.HasOne(d => d.Designation).WithMany(p => p.TblMembers)
@@ -925,6 +1200,33 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Name).HasMaxLength(30);
         });
 
+        modelBuilder.Entity<TblPayRoll>(entity =>
+        {
+            entity.ToTable("Tbl_PayRoll", "Payroll");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+
+            entity.HasOne(d => d.Company).WithMany(p => p.TblPayRolls)
+                .HasForeignKey(d => d.CompanyId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_PayRoll_Tbl_Company");
+
+            entity.HasOne(d => d.Designation).WithMany(p => p.TblPayRolls)
+                .HasForeignKey(d => d.DesignationId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_PayRoll_Tbl_Designation");
+
+            entity.HasOne(d => d.Employee).WithMany(p => p.TblPayRolls)
+                .HasForeignKey(d => d.EmployeeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_PayRoll_Tbl_Employee");
+
+            entity.HasOne(d => d.IdNavigation).WithOne(p => p.TblPayRoll)
+                .HasForeignKey<TblPayRoll>(d => d.Id)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_PayRoll_Tbl_OrganizationUnit");
+        });
+
         modelBuilder.Entity<TblPermission>(entity =>
         {
             entity.ToTable("Tbl_Permission", "Auth");
@@ -980,6 +1282,20 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Pincode)
                 .HasMaxLength(6)
                 .IsFixedLength();
+        });
+
+        modelBuilder.Entity<TblQuestion>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_Tbl_HouseVisitQuestion");
+
+            entity.ToTable("Tbl_Question", "Loan");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.AnswerType).HasMaxLength(50);
+            entity.Property(e => e.Category).HasMaxLength(30);
+            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<TblRole>(entity =>

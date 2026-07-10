@@ -13,7 +13,7 @@ public partial class TblMember
 
     public int CodeVal { get; set; }
 
-    public string? Abbreviation { get; set; }
+    public string? Salutaion { get; set; }
 
     public string FirstName { get; set; } = null!;
 
@@ -21,7 +21,7 @@ public partial class TblMember
 
     public string? LastName { get; set; }
 
-    public string? FullName { get; set; }
+    public string FullName { get; set; } = null!;
 
     public string? GuardianRelation { get; set; }
 

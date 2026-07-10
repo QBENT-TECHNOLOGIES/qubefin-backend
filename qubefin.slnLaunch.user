@@ -17,6 +17,10 @@
       {
         "Path": "Microservices\\Global\\QubeFin.Global.Api\\QubeFin.Global.Api.csproj",
         "Action": "Start"
+      },
+      {
+        "Path": "Microservices\\Hrms\\QubeFin.Hrms.Api\\QubeFin.Hrms.Api.csproj",
+        "Action": "Start"
       }
     ]
   }

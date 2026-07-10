@@ -14,7 +14,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
 {
 
     #region --- COMMAND ---
-    public record UpdateEmployeeCommand(
+    public record UpdateEmployeeEmploymentCommand(
         Guid Id, string? Salutation, string FirstName, string? MiddleName,
         string LastName, string? Code, string? FatherName, string? MotherName, Guid OrganizationUnitId,
         Guid DepartmentId, string? EmployementType, DateOnly DateOfJoining, DateOnly? DateOfConfirmation,
@@ -30,12 +30,12 @@ namespace QubeFin.Hrms.Application.Employees.Commands
         string? BankHolderName, string? BankBranch, string? BankAccountType, string? OfficialEmail,
         bool? IsActive, bool? IsPayrollActive, Guid? CompanyId, DateOnly? SeparationDate, Guid? ReferedBy,
         string? HowYouKnow, Guid LastModifiedBy
-        ) : IRequest<Result<UpdateEmployeeResponse>>;
+        ) : IRequest<Result<UpdateEmployeeEmploymentResponse>>;
     #endregion
     #region --- VALIDATION ---
-    public class UpdateEmployeeCommandValidator : AbstractValidator<UpdateEmployeeCommand>
+    public class UpdateEmployeeEmploymentCommandValidator : AbstractValidator<UpdateEmployeeEmploymentCommand>
     {
-        public UpdateEmployeeCommandValidator()
+        public UpdateEmployeeEmploymentCommandValidator()
         {
             RuleFor(x => x.FirstName)
                 .Must(value => !string.IsNullOrWhiteSpace(value)
@@ -54,14 +54,14 @@ namespace QubeFin.Hrms.Application.Employees.Commands
     #endregion
 
     #region --- RESPONSE ---
-    public record UpdateEmployeeResponse(bool Created);
+    public record UpdateEmployeeEmploymentResponse(bool Created);
     #endregion
 
     #region --- HANDLER ---
-    internal sealed class UpdateEmployeeCommandHandler(IEmployeeRepository employeeRepository, IUnitOfWork unitOfWork, QubeFinDataContext context)
-        : IRequestHandler<UpdateEmployeeCommand, Result<UpdateEmployeeResponse>>
+    internal sealed class UpdateEmployeeEmploymentCommandHandler(IEmployeeRepository employeeRepository, IUnitOfWork unitOfWork, QubeFinDataContext context)
+        : IRequestHandler<UpdateEmployeeEmploymentCommand, Result<UpdateEmployeeEmploymentResponse>>
     {
-        public async Task<Result<UpdateEmployeeResponse>> Handle(UpdateEmployeeCommand request, CancellationToken cancellationToken)
+        public async Task<Result<UpdateEmployeeEmploymentResponse>> Handle(UpdateEmployeeEmploymentCommand request, CancellationToken cancellationToken)
         {
             var existingEmployee = await employeeRepository.GetById(request.Id);
             if (existingEmployee == null)
@@ -70,18 +70,13 @@ namespace QubeFin.Hrms.Application.Employees.Commands
             }
 
 
-            existingEmployee.UpdateEmployee(
+            existingEmployee.UpdateEmployeePersonalDetails(
                 request.Salutation,
                 request.FirstName,
                 request.MiddleName,
                 request.LastName,
                 request.FatherName,
                 request.MotherName,
-                request.OrganizationUnitId,
-                request.DepartmentId,
-                request.EmployementType,
-                request.DateOfJoining,
-                request.DateOfConfirmation,
                 request.DateOfBirth,
                 request.Gender,
                 request.Religion,
@@ -92,48 +87,12 @@ namespace QubeFin.Hrms.Application.Employees.Commands
                 request.MaritalStatus,
                 request.MobileNo,
                 request.PersonalEmail,
-                request.EmergencyContactRelation1,
-                request.EmergencyContactName1,
-                request.EmergencyContactMobile1,
-                request.EmergencyContactRelation2,
-                request.EmergencyContactName2,
-                request.EmergencyContactMobile2,
-                request.PermanentHouseNo,
-                request.PermanentRoadName,
-                request.PermanentLandMark,
-                request.PermanentAdministrativeUnitId,
-                request.PermanentPoliceStationId,
-                request.PermanentPostOfficeId,
-                request.PermanentPinCode,
-                request.PermanentOwnerShipOfHouse,
-                request.PermanentDurationOfStayInMonths,
-                request.PresentHouseNo,
-                request.PresentRoadName,
-                request.PresentLandMark,
-                request.PresentAdministrativeUnitId,
-                request.PresentPoliceStationId,
-                request.PresentPostOfficeId,
-                request.PresentPinCode,
-                request.PresentOwnerShipOfHouse,
-                request.PresentDurationOfStayInMonths,
-                request.BankId,
-                request.BankAccountNo,
-                request.BankHolderName,
-                request.BankBranch,
-                request.BankAccountType,
-                request.OfficialEmail,
-                request.IsActive,
-                request.IsPayrollActive,
-                request.CompanyId,
-                request.SeparationDate,
-                request.ReferedBy,
-                request.HowYouKnow,
                 request.LastModifiedBy
                 );
             employeeRepository.UpdateEmployee(existingEmployee);
 
-            await unitOfWork.SaveChangesAsync();
-            return Result.Ok(new UpdateEmployeeResponse(true));
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+            return Result.Ok(new UpdateEmployeeEmploymentResponse(true));
 
 
         }

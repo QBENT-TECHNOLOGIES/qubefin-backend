@@ -38,4 +38,6 @@ public partial class TblOrganizationUnit
     public virtual ICollection<TblDesignation> TblDesignations { get; set; } = new List<TblDesignation>();
 
     public virtual ICollection<TblEmployee> TblEmployees { get; set; } = new List<TblEmployee>();
+
+    public virtual TblPayRoll? TblPayRoll { get; set; }
 }

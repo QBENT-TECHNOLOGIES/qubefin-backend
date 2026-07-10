@@ -31,7 +31,7 @@ public class EmployeeEndpoints : IEndpoint
         })
         .WithSummary("Create Employee");
 
-        app.MapPost("employees/update", async (UpdateEmployeeCommand command, ISender sender) =>
+        app.MapPost("employees/update-personal-detail", async (UpdateEmployeePersonalDetailCommand command, ISender sender) =>
         {
             var result = await sender.Send(command);
             if (result.IsFailed)
@@ -48,7 +48,26 @@ public class EmployeeEndpoints : IEndpoint
             
             return Results.Ok();
         })
-        .WithSummary("Update Employee");
+        .WithSummary("Update Employee Personal Details");
+
+        app.MapPost("employees/update-document", async (UpdateEmployeeDocumentCommand command, ISender sender) =>
+        {
+            var result = await sender.Send(command);
+            if (result.IsFailed)
+            {
+                if (result.Errors[0] is RecordNotFoundError)
+                {
+                    return Results.NotFound(result.Errors[0]);
+                }
+                if (result.Errors[0] is ValidationError)
+                {
+                    return Results.BadRequest(result.Errors[0]);
+                }
+            }
+
+            return Results.Ok();
+        })
+        .WithSummary("Update Employee Documents");
 
         app.MapGet("employees/getById/{id:guid}", async (Guid id, ISender sender) =>
         {

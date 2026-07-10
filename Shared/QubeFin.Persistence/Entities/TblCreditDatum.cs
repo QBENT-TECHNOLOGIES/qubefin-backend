@@ -70,4 +70,16 @@ public partial class TblCreditDatum
     public virtual TblCreditOrganization CreditOrganization { get; set; } = null!;
 
     public virtual TblMember? Member { get; set; }
+
+    public virtual ICollection<TblCreditDataAccount> TblCreditDataAccounts { get; set; } = new List<TblCreditDataAccount>();
+
+    public virtual ICollection<TblCreditDataAddress> TblCreditDataAddresses { get; set; } = new List<TblCreditDataAddress>();
+
+    public virtual ICollection<TblCreditDataAlert> TblCreditDataAlerts { get; set; } = new List<TblCreditDataAlert>();
+
+    public virtual ICollection<TblCreditDataDependent> TblCreditDataDependents { get; set; } = new List<TblCreditDataDependent>();
+
+    public virtual ICollection<TblCreditDataIdentity> TblCreditDataIdentities { get; set; } = new List<TblCreditDataIdentity>();
+
+    public virtual ICollection<TblCreditDataIncome> TblCreditDataIncomes { get; set; } = new List<TblCreditDataIncome>();
 }

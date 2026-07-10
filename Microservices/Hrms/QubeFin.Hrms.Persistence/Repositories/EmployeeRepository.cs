@@ -17,6 +17,7 @@ namespace QubeFin.Hrms.Persistence.Repositories
         void UpdateEmployee(Employee employee);
         Task<Employee> GetById(Guid employeeId);
         Task<EmployeeOrganizationTiming?> GetEmployeeOrganization(Guid employeeId);
+        void DeleteDocuments(Guid employeeId, string documentType);
     }
     public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepository
     {
@@ -28,7 +29,11 @@ namespace QubeFin.Hrms.Persistence.Repositories
         {
             context.TblEmployees.Update(employee.ToEntity());
         }
+        public void DeleteDocuments(Guid employeeId,string documentType)
+        {
+            context.TblEmployeeDocuments.Where(m => m.EmployeeId == employeeId && m.DocumentCategory == documentType).ExecuteDelete();
 
+        }
         public async Task<EmployeeOrganizationTiming?> GetEmployeeOrganization(Guid employeeId)
         {
             var employee = await context.TblEmployees.Include(x => x.OrganizationUnit).FirstOrDefaultAsync(x => x.Id == employeeId);
@@ -40,7 +45,7 @@ namespace QubeFin.Hrms.Persistence.Repositories
             {
                 AttendanceInTime = employee.OrganizationUnit?.AttendanceInTime,
                 AttendanceOutTime = employee.OrganizationUnit?.AttendanceOutTime,
-                OrganizationUnitId = employee.OrganizationUnitId
+                OrganizationUnitId = employee.OrganizationUnitId.Value
             };
         }
         public async Task<Employee> GetById(Guid employeeId)
