@@ -21,6 +21,8 @@ public partial class TblApplicationStep
 
     public int Sequence { get; set; }
 
+    public virtual ICollection<TblLoanApplicationWorkflowStep> TblLoanApplicationWorkflowSteps { get; set; } = new List<TblLoanApplicationWorkflowStep>();
+
     public virtual ICollection<TblLoanProductStep> TblLoanProductSteps { get; set; } = new List<TblLoanProductStep>();
 
     public virtual ICollection<TblLoanWorkflowStep> TblLoanWorkflowSteps { get; set; } = new List<TblLoanWorkflowStep>();

@@ -29,7 +29,7 @@ internal sealed class GetAdministrativeUnitByIdQueryHandler(QubeFinDataContext c
                         au.Id,
                         au.Name,
                         aut.Name AS TypeName,
-                        aut.Icon,
+                        aut.Icon AS TypeIcon,
                         au.ParentId,
                         0 AS Level
                     FROM [Global].[Tbl_AdministrativeUnit] au
@@ -52,7 +52,7 @@ internal sealed class GetAdministrativeUnitByIdQueryHandler(QubeFinDataContext c
                     INNER JOIN Hierarchy h
                         ON h.ParentId = p.Id
                 )
-                SELECT Id, Name, TypeName, Icon, Level
+                SELECT Id, Name, TypeName, TypeIcon, Level
                 FROM Hierarchy
                 ORDER BY Level DESC
                 ")

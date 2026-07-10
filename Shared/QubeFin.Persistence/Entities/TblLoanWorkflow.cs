@@ -27,6 +27,8 @@ public partial class TblLoanWorkflow
 
     public virtual TblPost Post { get; set; } = null!;
 
+    public virtual ICollection<TblLoanApplicationWorkflow> TblLoanApplicationWorkflows { get; set; } = new List<TblLoanApplicationWorkflow>();
+
     public virtual ICollection<TblLoanWorkflowDocument> TblLoanWorkflowDocuments { get; set; } = new List<TblLoanWorkflowDocument>();
 
     public virtual ICollection<TblLoanWorkflowStep> TblLoanWorkflowSteps { get; set; } = new List<TblLoanWorkflowStep>();

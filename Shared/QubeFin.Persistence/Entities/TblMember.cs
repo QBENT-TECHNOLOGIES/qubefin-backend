@@ -13,7 +13,7 @@ public partial class TblMember
 
     public int CodeVal { get; set; }
 
-    public string? Abbreviation { get; set; }
+    public string? Salutaion { get; set; }
 
     public string FirstName { get; set; } = null!;
 
@@ -21,7 +21,7 @@ public partial class TblMember
 
     public string? LastName { get; set; }
 
-    public string? FullName { get; set; }
+    public string FullName { get; set; } = null!;
 
     public string? GuardianRelation { get; set; }
 
@@ -78,6 +78,10 @@ public partial class TblMember
     public virtual ICollection<TblCoBorrower> TblCoBorrowers { get; set; } = new List<TblCoBorrower>();
 
     public virtual ICollection<TblCreditDatum> TblCreditData { get; set; } = new List<TblCreditDatum>();
+
+    public virtual ICollection<TblLoanApplication> TblLoanApplications { get; set; } = new List<TblLoanApplication>();
+
+    public virtual ICollection<TblMemberAddress> TblMemberAddresses { get; set; } = new List<TblMemberAddress>();
 
     public virtual ICollection<TblMemberDocument> TblMemberDocuments { get; set; } = new List<TblMemberDocument>();
 }

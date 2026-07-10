@@ -33,9 +33,9 @@ public partial class TblGroup
 
     public string? LandMark { get; set; }
 
-    public string? Lat { get; set; }
+    public string? Latitude { get; set; }
 
-    public string? Lon { get; set; }
+    public string? Longitude { get; set; }
 
     public string? PhotoScan { get; set; }
 
@@ -47,7 +47,7 @@ public partial class TblGroup
 
     public DateTime? VerifiedOn { get; set; }
 
-    public string? VerifiedReason { get; set; }
+    public string? VerifiedRemarks { get; set; }
 
     public Guid? DesignationId { get; set; }
 
@@ -62,6 +62,8 @@ public partial class TblGroup
     public virtual TblAdministrativeUnit AdministrativeUnit { get; set; } = null!;
 
     public virtual TblDesignation? Designation { get; set; }
+
+    public virtual ICollection<TblLoanApplication> TblLoanApplications { get; set; } = new List<TblLoanApplication>();
 
     public virtual ICollection<TblMember> TblMembers { get; set; } = new List<TblMember>();
 }

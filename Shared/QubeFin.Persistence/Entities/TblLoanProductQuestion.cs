@@ -15,5 +15,5 @@ public partial class TblLoanProductQuestion
 
     public virtual TblPost Post { get; set; } = null!;
 
-    public virtual TblHouseVisitQuestion Question { get; set; } = null!;
+    public virtual TblQuestion Question { get; set; } = null!;
 }

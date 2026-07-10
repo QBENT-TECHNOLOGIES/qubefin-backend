@@ -10,7 +10,7 @@ public record GetOrganizationChildUnitsQuery(Guid? ParentId) : IRequest<Result<L
 #endregion
 
 #region --- RESPONSE ---
-public record GetOrganizationChildUnitsResponse(Guid Id, string Name);
+public record GetOrganizationChildUnitsResponse(Guid Id, string Name, string TypeIcon);
 #endregion  
 
 #region --- HANDLER ---
@@ -24,7 +24,7 @@ internal sealed class GetOrganizationChildUnitsQueryHandler(QubeFinDataContext c
             .Include(m => m.OrganizationUnitType)
             .Where(m => m.ParentId == request.ParentId)
             .OrderBy(m => m.Name)
-            .Select(m => new GetOrganizationChildUnitsResponse(m.Id, m.Name))
+            .Select(m => new GetOrganizationChildUnitsResponse(m.Id, m.Name, m.OrganizationUnitType.Icon))
             .ToListAsync(cancellationToken);
 
         return Result.Ok(organizationUnits);
