@@ -12,7 +12,8 @@ public record GetOrganizationUnitByIdQuery(Guid Id) : IRequest<Result<GetOrganiz
 #endregion
 
 #region --- RESPONSE ---
-public record GetOrganizationUnitByIdResponse(Guid Id, string Name, Guid OrganizationUnitTypeId, string OrganizationUnitTypeName, Guid? ParentId, IReadOnlyList<OrganizationUnitHierarchyItem> Hierarchy);
+public record GetOrganizationUnitByIdResponse(Guid Id, string Name, Guid OrganizationUnitTypeId, string OrganizationUnitTypeIcon, string OrganizationUnitTypeName, Guid? ParentId,
+    string CreatedBy, DateTime CreatedOn, string? LastModifiedBy, DateTime? LastModifiedOn, IReadOnlyList<OrganizationUnitHierarchyItem> Hierarchy);
 #endregion
 
 #region --- HANDLER ---
@@ -63,7 +64,8 @@ internal sealed class GetOrganizationUnitByIdQueryHandler(QubeFinDataContext con
             .TblOrganizationUnits
             .Include(m => m.OrganizationUnitType)
             .Where(m => m.Id == request.Id)
-            .Select(m => new GetOrganizationUnitByIdResponse(m.Id, m.Name, m.OrganizationUnitTypeId, m.OrganizationUnitType.Name, m.ParentId, hierarchy))
+            .Select(m => new GetOrganizationUnitByIdResponse(m.Id, m.Name, m.OrganizationUnitTypeId, m.OrganizationUnitType.Icon, m.OrganizationUnitType.Name, m.ParentId,
+                m.CreatedByNavigation.UserName, m.CreatedOn, m.LastModifiedByNavigation.UserName, m.LastModifiedOn, hierarchy))
             .FirstOrDefaultAsync(cancellationToken);
 
         if (organizationUnit is null)

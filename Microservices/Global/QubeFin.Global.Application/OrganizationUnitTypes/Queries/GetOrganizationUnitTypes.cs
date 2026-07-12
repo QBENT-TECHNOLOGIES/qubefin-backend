@@ -10,7 +10,7 @@ public record GetOrganizationUnitTypesQuery : IRequest<Result<List<GetOrganizati
 #endregion
 
 #region --- RESPONSE ---
-public record GetOrganizationUnitTypesResponse(Guid Id, string Name, int LevelNo);
+public record GetOrganizationUnitTypesResponse(Guid Id, string Name, string typeIcon, int LevelNo);
 #endregion
 
 #region --- HANDLER ---
@@ -22,7 +22,7 @@ internal sealed class GetOrganizationUnitTypesQueryHandler(QubeFinDataContext co
         var administrativeUnitTypes = await context
             .TblOrganizationUnitTypes
             .OrderBy(a => a.LevelNo)
-            .Select(a => new GetOrganizationUnitTypesResponse(a.Id, a.Name, a.LevelNo))
+            .Select(a => new GetOrganizationUnitTypesResponse(a.Id, a.Name, a.Icon, a.LevelNo))
             .ToListAsync(cancellationToken);
 
         return Result.Ok(administrativeUnitTypes);

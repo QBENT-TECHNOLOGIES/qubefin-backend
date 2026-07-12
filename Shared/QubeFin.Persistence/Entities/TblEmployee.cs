@@ -15,6 +15,8 @@ public partial class TblEmployee
 
     public string LastName { get; set; } = null!;
 
+    public string FullName { get; set; } = null!;
+
     public string Code { get; set; } = null!;
 
     public string? FatherName { get; set; }
@@ -27,11 +29,13 @@ public partial class TblEmployee
 
     public string? EmployementType { get; set; }
 
-    public DateOnly? DateOfJoining { get; set; }
-
-    public DateOnly? DateOfConfirmation { get; set; }
-
     public DateOnly DateOfBirth { get; set; }
+
+    public DateOnly? JoiningDate { get; set; }
+
+    public DateOnly? ConfirmationDate { get; set; }
+
+    public DateOnly? SeparationDate { get; set; }
 
     public string Gender { get; set; } = null!;
 
@@ -111,17 +115,21 @@ public partial class TblEmployee
 
     public string? OfficialEmail { get; set; }
 
-    public bool? IsActive { get; set; }
+    public bool IsActive { get; set; }
 
-    public bool? IsPayrollActive { get; set; }
+    public bool IsPayrollActive { get; set; }
 
     public Guid? CompanyId { get; set; }
-
-    public DateOnly? SeparationDate { get; set; }
 
     public Guid? ReferedBy { get; set; }
 
     public string? HowYouKnow { get; set; }
+
+    public string? UniversalAccountNo { get; set; }
+
+    public string? Esiipno { get; set; }
+
+    public bool HasEsiEligible { get; set; }
 
     public Guid? CreatedBy { get; set; }
 
@@ -130,12 +138,6 @@ public partial class TblEmployee
     public DateTime? LastModifiedOn { get; set; }
 
     public Guid? LastModifiedBy { get; set; }
-
-    public string? UniversalAccountNo { get; set; }
-
-    public string? Esiipno { get; set; }
-
-    public bool HasEsiEligible { get; set; }
 
     public virtual TblFinancialInstitute? Bank { get; set; }
 
@@ -158,6 +160,8 @@ public partial class TblEmployee
     public virtual ICollection<TblEmployeeQualification> TblEmployeeQualifications { get; set; } = new List<TblEmployeeQualification>();
 
     public virtual ICollection<TblEmployeeReference> TblEmployeeReferences { get; set; } = new List<TblEmployeeReference>();
+
+    public virtual ICollection<TblLeaveTransaction> TblLeaveTransactions { get; set; } = new List<TblLeaveTransaction>();
 
     public virtual ICollection<TblPayRoll> TblPayRolls { get; set; } = new List<TblPayRoll>();
 

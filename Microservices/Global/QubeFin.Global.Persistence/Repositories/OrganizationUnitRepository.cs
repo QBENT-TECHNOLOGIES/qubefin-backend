@@ -28,6 +28,7 @@ internal class OrganizationUnitRepository(QubeFinDataContext context) : IOrganiz
             {
                 Id = m.Id,
                 OrganizationUnitTypeId = m.OrganizationUnitTypeId,
+                OrganizationUnitTypeIcon = m.OrganizationUnitType.Icon,
                 OrganizationUnitTypeName = m.OrganizationUnitType.Name,
                 Name = m.Name,
                 ParentId = m.ParentId

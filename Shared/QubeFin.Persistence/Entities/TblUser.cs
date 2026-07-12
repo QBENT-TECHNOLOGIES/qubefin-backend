@@ -31,11 +31,23 @@ public partial class TblUser
 
     public virtual TblEmployee? Employee { get; set; }
 
+    public virtual ICollection<TblAdministrativeUnit> TblAdministrativeUnitCreatedByNavigations { get; set; } = new List<TblAdministrativeUnit>();
+
+    public virtual ICollection<TblAdministrativeUnit> TblAdministrativeUnitLastModifiedByNavigations { get; set; } = new List<TblAdministrativeUnit>();
+
     public virtual ICollection<TblLoanApplicationWorkflow> TblLoanApplicationWorkflows { get; set; } = new List<TblLoanApplicationWorkflow>();
+
+    public virtual ICollection<TblMenu> TblMenuCreatedByNavigations { get; set; } = new List<TblMenu>();
+
+    public virtual ICollection<TblMenu> TblMenuLastModifiedByNavigations { get; set; } = new List<TblMenu>();
 
     public virtual ICollection<TblOrganizationUnit> TblOrganizationUnitCreatedByNavigations { get; set; } = new List<TblOrganizationUnit>();
 
     public virtual ICollection<TblOrganizationUnit> TblOrganizationUnitLastModifiedByNavigations { get; set; } = new List<TblOrganizationUnit>();
+
+    public virtual ICollection<TblRole> TblRoleCreatedByNavigations { get; set; } = new List<TblRole>();
+
+    public virtual ICollection<TblRole> TblRoleLastModifiedByNavigations { get; set; } = new List<TblRole>();
 
     public virtual ICollection<TblUserMenu> TblUserMenus { get; set; } = new List<TblUserMenu>();
 

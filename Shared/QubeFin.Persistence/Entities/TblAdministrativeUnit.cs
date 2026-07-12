@@ -25,7 +25,11 @@ public partial class TblAdministrativeUnit
 
     public virtual TblAdministrativeUnitType AdministrativeUnitType { get; set; } = null!;
 
+    public virtual TblUser CreatedByNavigation { get; set; } = null!;
+
     public virtual ICollection<TblAdministrativeUnit> InverseParent { get; set; } = new List<TblAdministrativeUnit>();
+
+    public virtual TblUser? LastModifiedByNavigation { get; set; }
 
     public virtual TblAdministrativeUnit? Parent { get; set; }
 

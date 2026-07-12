@@ -13,17 +13,19 @@ namespace QubeFin.Hrms.Persistence.Repositories
 {
     public interface IEmployeeRepository
     {
-        //Task CreateEmployee(Employee employee);
+        Task<Employee?> GetByIdAsync(Guid id);
+        Task CreateEmployeeAsync(Employee employee);
         //void UpdateEmployee(Employee employee);
         //Task<Employee> GetById(Guid employeeId);
         //Task<EmployeeOrganizationTiming?> GetEmployeeOrganization(Guid employeeId);
     }
     public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepository
     {
-        //public async Task CreateEmployee(Employee employee)
-        //{
-        //    await context.TblEmployees.AddAsync(employee.ToEntity());
-        //}
+        public async Task CreateEmployeeAsync(Employee employee)
+        {
+            await context.TblEmployees.AddAsync(employee.ToEntity());
+        }
+
         //public void UpdateEmployee(Employee employee)
         //{
         //    context.TblEmployees.Update(employee.ToEntity());
@@ -54,5 +56,17 @@ namespace QubeFin.Hrms.Persistence.Repositories
         //    return existingEmployee.ToDomain();
 
         //}
+        public async Task<Employee?> GetByIdAsync(Guid id)
+        {
+            var employeeEntity = await context.TblEmployees
+                .Include(x => x.TblEmployeeDesignations)
+                .Include(x => x.TblEmployeeQualifications)
+                .Include(x => x.TblEmployeeEmployments)
+                .Include(x => x.TblEmployeeDocuments)
+                .Include(x => x.TblEmployeeReferences)
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            return employeeEntity is null ? null : employeeEntity.ToDomain();
+        }
     }
 }
