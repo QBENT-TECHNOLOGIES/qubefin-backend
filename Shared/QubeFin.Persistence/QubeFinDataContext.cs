@@ -177,9 +177,15 @@ public partial class QubeFinDataContext : DbContext
     public virtual DbSet<TblUserMenu> TblUserMenus { get; set; }
 
     public virtual DbSet<TblUserSession> TblUserSessions { get; set; }
+ 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<TblAccountGroup>(entity =>
+        {
+            entity.ToTable("Tbl_AccountGroup", "Finance");
+        });
+
         modelBuilder.Entity<TblAccountGroup>(entity =>
         {
             entity.ToTable("Tbl_AccountGroup", "Finance");

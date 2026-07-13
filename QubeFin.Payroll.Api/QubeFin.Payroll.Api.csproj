@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.16.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Host\QubeFin.ServiceDefaults\QubeFin.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\QubeFin.Payroll.Application\QubeFin.Payroll.Application.csproj" />
+    <ProjectReference Include="..\QubeFin.Payroll.Infrastructure\QubeFin.Payroll.Infrastructure.csproj" />
+    <ProjectReference Include="..\QubeFin.Payroll.Persistence\QubeFin.Payroll.Persistence.csproj" />
+  </ItemGroup>
+
+</Project>

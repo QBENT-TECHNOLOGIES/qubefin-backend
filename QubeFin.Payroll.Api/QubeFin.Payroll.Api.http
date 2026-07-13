@@ -1,0 +1,6 @@
+@QubeFin.Payroll.Api_HostAddress = http://localhost:5244
+
+GET {{QubeFin.Payroll.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

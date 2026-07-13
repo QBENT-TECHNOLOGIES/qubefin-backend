@@ -1,19 +1,21 @@
-﻿namespace QubeFin.Hrms.Api.Endpoints;
+﻿using MediatR;
+using QubeFin.Core.Endpoint;
+using QubeFin.Hrms.Application.Attendances.Commands;
 
-//public class AttendanceEndpoints : IEndpoint
-//{
-//    public void MapEndpoint(IEndpointRouteBuilder app)
-//    {
-      
+namespace QubeFin.Hrms.Api.Endpoints;
 
-//        app.MapPost("attendances", async (CreateAttendanceCommand command, ISender sender) =>
-//        {
-//            await sender.Send(command);
+public class AttendanceEndpoints : IEndpoint
+{
+    public void MapEndpoint(IEndpointRouteBuilder app)
+    {
 
-//            return Results.Ok();
-//        })
-//        .WithSummary("Create Attendance");
+        app.MapPost("attendances", async (CreateAttendanceCommand command, ISender sender) =>
 
-      
-//    }
-//}
+        {
+            await sender.Send(command);
+
+            return Results.Ok();
+        })
+        .WithSummary("Create Attendance");
+    }
+}
