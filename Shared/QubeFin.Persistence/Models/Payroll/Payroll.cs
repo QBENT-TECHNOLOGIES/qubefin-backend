@@ -17,6 +17,7 @@ namespace QubeFin.Persistence.Models.Payroll
 
         public Guid OrganizationUnitId { get; private set; }
         public string? OrganizationUnitName { get; private set; }
+        public int? OrganizationCode { get; private set; }
         public Guid DesignationId { get; private set; }
         public string? Designation { get; private set; }
         public Guid CompanyId { get; private set; }
@@ -55,22 +56,38 @@ namespace QubeFin.Persistence.Models.Payroll
             FinYearId = finYearId;
             DayCount = dayCount;
         }
-        public void SetNames(string? organizationUnitName, string employeeName, string finYear, string designation, string company)
+        public void SetNames(string? organizationUnitName, int? organizationCode, string employeeName, string finYear, string designation, string company)
         {
             OrganizationUnitName = organizationUnitName;
+            OrganizationCode = organizationCode;
             EmployeeName = employeeName;
             FinYear = finYear;
             Designation = designation;
             Company = company;
         }
-
         public void SetComponents(IEnumerable<PayrollComponentModel> components)
         {
             _components.Clear();
             _components.AddRange(components);
         }
     }
+    public class PayrollLockingModel
+    {
+        public Guid Id { get; private set; }
+        public bool IsLocked { get; private set; }
 
+        protected PayrollLockingModel() { }
+        public PayrollLockingModel(Guid id, bool isLocked)
+        {
+            Id = id;
+            IsLocked = isLocked;
+        }
+        public void Lock()
+        {
+            if (IsLocked) return;
+            IsLocked = true;
+        }
+    }
     public class PayrollComponentModel
     {
         public Guid Id { get; private set; }
@@ -89,14 +106,12 @@ namespace QubeFin.Persistence.Models.Payroll
             Percentage = percentage;
             Amount = amount;
         }
-
         public void SetNames(string salaryComponentName, string categoryName)
         {
             SalaryComponentName = salaryComponentName;
             CategoryName = categoryName;
         }
     }
-
     public class MonthlyPayroll
     {
         public int PayrollMonth { get; set; }
@@ -108,7 +123,8 @@ namespace QubeFin.Persistence.Models.Payroll
     public class MonthlyPayrollHeader
     {
         public Guid OrganizationUnitId { get; set; }
-        public string OrganizationUnitName { get; set; } = string.Empty;
+        public string? OrganizationUnitName { get; set; }
+        public int? CodeVal { get; set; }
         public decimal TotalEarnings { get; set; }
         public decimal TotalDeductions { get; set; }
         public List<MonthlyPayrollLineItem> Details { get; set; } = new List<MonthlyPayrollLineItem>();
