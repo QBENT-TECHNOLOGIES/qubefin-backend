@@ -33,5 +33,11 @@ public partial class TblDesignation
 
     public virtual ICollection<TblGroup> TblGroups { get; set; } = new List<TblGroup>();
 
+    public virtual ICollection<TblLoanApplicationWorkflow> TblLoanApplicationWorkflows { get; set; } = new List<TblLoanApplicationWorkflow>();
+
+    public virtual ICollection<TblLoanApplication> TblLoanApplications { get; set; } = new List<TblLoanApplication>();
+
     public virtual ICollection<TblMember> TblMembers { get; set; } = new List<TblMember>();
+
+    public virtual ICollection<TblPayRoll> TblPayRolls { get; set; } = new List<TblPayRoll>();
 }

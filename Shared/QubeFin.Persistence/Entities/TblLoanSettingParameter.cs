@@ -9,6 +9,26 @@ public partial class TblLoanSettingParameter
 
     public Guid LoanProductId { get; set; }
 
+    public decimal? MinLoanAmount { get; set; }
+
+    public decimal? MaxLoanAmount { get; set; }
+
+    public decimal? MinInterestRate { get; set; }
+
+    public decimal? MaxInterestRate { get; set; }
+
+    public decimal? MinLoginFees { get; set; }
+
+    public decimal? MaxLoginFees { get; set; }
+
+    public string? InstallmentPeriod { get; set; }
+
+    public string? Factor { get; set; }
+
+    public int? MinAge { get; set; }
+
+    public int? MaxAge { get; set; }
+
     public decimal? ProcessingFeePercent { get; set; }
 
     public decimal? ProcessingFeeCgstpercent { get; set; }

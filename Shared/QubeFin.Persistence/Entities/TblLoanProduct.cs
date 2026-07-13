@@ -15,8 +15,6 @@ public partial class TblLoanProduct
 
     public bool IsActive { get; set; }
 
-    public bool IsMicroLoan { get; set; }
-
     public bool IsPropertyLoan { get; set; }
 
     public bool HavingLegalStep { get; set; }
@@ -27,6 +25,38 @@ public partial class TblLoanProduct
 
     public bool EnachRequired { get; set; }
 
+    public string PaymentSchedule { get; set; } = null!;
+
+    public Guid? AccountGroupId { get; set; }
+
+    public Guid? PrincipalGlaccount { get; set; }
+
+    public Guid? InterestGlaccount { get; set; }
+
+    public Guid? InsuranceGlaccount { get; set; }
+
+    public Guid? Sgstglaccount { get; set; }
+
+    public Guid? Cgstglaccount { get; set; }
+
+    public Guid? Igstglaccount { get; set; }
+
+    public Guid? ProcessingFeesGlaccount { get; set; }
+
+    public Guid? CbinspectionGlaccount { get; set; }
+
+    public Guid? LoanWriteOffGlaccount { get; set; }
+
+    public Guid? LoanRecoveryGlaccount { get; set; }
+
+    public Guid? RoundoffGlaccount { get; set; }
+
+    public Guid? CersaiGlaccount { get; set; }
+
+    public Guid? DocumentGlaccount { get; set; }
+
+    public Guid? BpiGlaccount { get; set; }
+
     public Guid CreatedBy { get; set; }
 
     public DateTime CreatedOn { get; set; }
@@ -35,7 +65,9 @@ public partial class TblLoanProduct
 
     public DateTime? LastModifiedOn { get; set; }
 
-    public virtual ICollection<TblLoanProductParameter> TblLoanProductParameters { get; set; } = new List<TblLoanProductParameter>();
+    public virtual TblAccountGroup? AccountGroup { get; set; }
+
+    public virtual ICollection<TblLoanApplication> TblLoanApplications { get; set; } = new List<TblLoanApplication>();
 
     public virtual ICollection<TblLoanProductQuestion> TblLoanProductQuestions { get; set; } = new List<TblLoanProductQuestion>();
 

@@ -13,7 +13,8 @@ public record GetMenuByIdQuery(Guid Id) : IRequest<Result<GetMenuByIdResponse>>;
 #endregion
 
 #region --- RESPONSE ---
-public record GetMenuByIdResponse(Guid Id, string Name, string Icon, string? Target, Guid? ParentId, int DisplayPosition, bool IsActive, IReadOnlyList<MenuHierarchyItem> Hierarchy);
+public record GetMenuByIdResponse(Guid Id, string Name, string Icon, string? Target, Guid? ParentId, int DisplayPosition, bool IsActive,
+    string CreatedBy, DateTime CreatedOn, string? LastModifiedBy, DateTime? LastModifiedOn, IReadOnlyList<MenuHierarchyItem> Hierarchy);
 #endregion
 
 #region --- HANDLER ---
@@ -59,7 +60,8 @@ internal sealed class GetMenuByIdQueryHandler(QubeFinDataContext context)
             .TblMenus
             .AsNoTracking()
             .Where(m => m.Id == request.Id)
-            .Select(m => new GetMenuByIdResponse(m.Id, m.Name, m.Icon, m.Target, m.ParentId, m.DisplayPosition, m.IsActive, hierarchy))
+            .Select(m => new GetMenuByIdResponse(m.Id, m.Name, m.Icon, m.Target, m.ParentId, m.DisplayPosition, m.IsActive,
+                m.CreatedByNavigation.UserName, m.CreatedOn, m.LastModifiedByNavigation.UserName, m.LastModifiedOn, hierarchy))
             .FirstOrDefaultAsync(cancellationToken);
 
         if (menu is null)

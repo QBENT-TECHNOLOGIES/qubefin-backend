@@ -12,7 +12,8 @@ public record GetAdministrativeUnitByIdQuery(Guid Id) : IRequest<Result<GetAdmin
 #endregion
 
 #region --- RESPONSE ---
-public record GetAdministrativeUnitByIdResponse(Guid Id, string Name, Guid AdministrativeUnitTypeId, string AdministrativeUnitTypeIcon, string AdministrativeUnitTypeName, Guid? ParentId, bool IsActive, IReadOnlyList<AdministrativeHierarchyItem> Hierarchy);
+public record GetAdministrativeUnitByIdResponse(Guid Id, string Name, Guid AdministrativeUnitTypeId, string AdministrativeUnitTypeIcon, string AdministrativeUnitTypeName, Guid? ParentId, bool IsActive, 
+    string CreatedBy, DateTime CreatedOn, string? LastModifiedBy, DateTime? LastModifiedOn, IReadOnlyList<AdministrativeHierarchyItem> Hierarchy);
 #endregion
 
 #region --- HANDLER ---
@@ -29,7 +30,7 @@ internal sealed class GetAdministrativeUnitByIdQueryHandler(QubeFinDataContext c
                         au.Id,
                         au.Name,
                         aut.Name AS TypeName,
-                        aut.Icon,
+                        aut.Icon AS TypeIcon,
                         au.ParentId,
                         0 AS Level
                     FROM [Global].[Tbl_AdministrativeUnit] au
@@ -52,7 +53,7 @@ internal sealed class GetAdministrativeUnitByIdQueryHandler(QubeFinDataContext c
                     INNER JOIN Hierarchy h
                         ON h.ParentId = p.Id
                 )
-                SELECT Id, Name, TypeName, Icon, Level
+                SELECT Id, Name, TypeName, TypeIcon, Level
                 FROM Hierarchy
                 ORDER BY Level DESC
                 ")
@@ -62,8 +63,12 @@ internal sealed class GetAdministrativeUnitByIdQueryHandler(QubeFinDataContext c
         var administrativeUnit = await context
             .TblAdministrativeUnits
             .Include(m => m.AdministrativeUnitType)
+            .Include(m => m.CreatedByNavigation)
+            .Include(m => m.LastModifiedByNavigation)
+            .AsNoTracking()
             .Where(m => m.Id == request.Id)
-            .Select(m => new GetAdministrativeUnitByIdResponse(m.Id, m.Name, m.AdministrativeUnitTypeId, m.AdministrativeUnitType.Icon, m.AdministrativeUnitType.Name, m.ParentId, m.IsActive, hierarchy))
+            .Select(m => new GetAdministrativeUnitByIdResponse(m.Id, m.Name, m.AdministrativeUnitTypeId, m.AdministrativeUnitType.Icon, m.AdministrativeUnitType.Name, 
+                m.ParentId, m.IsActive, m.CreatedByNavigation.UserName, m.CreatedOn, m.LastModifiedByNavigation.UserName, m.LastModifiedOn, hierarchy))
             .FirstOrDefaultAsync(cancellationToken);
 
         if (administrativeUnit is null)
