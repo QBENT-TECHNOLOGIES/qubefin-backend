@@ -37,7 +37,6 @@ namespace QubeFin.Hrms.Application.Attendances.Commands
 
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Ok(new CreateAttendanceResponse(true));
-
         }
     }
     #endregion

@@ -9,7 +9,6 @@ public class AttendanceEndpoints : IEndpoint
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
       
-
         app.MapPost("attendances", async (CreateAttendanceCommand command, ISender sender) =>
         {
             await sender.Send(command);
@@ -17,7 +16,5 @@ public class AttendanceEndpoints : IEndpoint
             return Results.Ok();
         })
         .WithSummary("Create Attendance");
-
-      
     }
 }
