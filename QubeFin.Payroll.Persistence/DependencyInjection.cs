@@ -2,10 +2,13 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using QubeFin.Core.Security;
-using QubeFin.Global.Persistence.Repositories;
+using QubeFin.Payroll.Persistence.Repositories;
 using QubeFin.Persistence;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
-namespace QubeFin.Global.Persistence;
+namespace QubeFin.Payroll.Persistence;
 
 public static class DependencyInjection
 {
@@ -19,9 +22,7 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork>(options => options.GetRequiredService<QubeFinDataContext>());
 
         services.AddScoped<ITokenGenerator, TokenGenerator>();
-        services.AddScoped<IAdministrativeUnitRepository, AdministrativeUnitRepository>();
-        services.AddScoped<IOrganizationUnitTypeRepository, OrganizationUnitTypeRepository>();
-        services.AddScoped<IOrganizationUnitRepository, OrganizationUnitRepository>();
+        services.AddScoped<IPayrollRepository, PayrollRepository>();
         return services;
     }
 }
