@@ -17,7 +17,7 @@ namespace QubeFin.Hrms.Persistence.Repositories
         Task CreateEmployeeAsync(Employee employee);
         //void UpdateEmployee(Employee employee);
         //Task<Employee> GetById(Guid employeeId);
-        //Task<EmployeeOrganizationTiming?> GetEmployeeOrganization(Guid employeeId);
+        Task<Employee?> GetEmloyeeOrganization(Guid id);
     }
     public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepository
     {
@@ -31,20 +31,6 @@ namespace QubeFin.Hrms.Persistence.Repositories
         //    context.TblEmployees.Update(employee.ToEntity());
         //}
 
-        //public async Task<EmployeeOrganizationTiming?> GetEmployeeOrganization(Guid employeeId)
-        //{
-        //    var employee = await context.TblEmployees.Include(x => x.OrganizationUnit).FirstOrDefaultAsync(x => x.Id == employeeId);
-
-        //    if (employee == null)
-        //        return null;
-
-        //    return new EmployeeOrganizationTiming
-        //    {
-        //        AttendanceInTime = employee.OrganizationUnit?.AttendanceInTime,
-        //        AttendanceOutTime = employee.OrganizationUnit?.AttendanceOutTime,
-        //        OrganizationUnitId = employee.OrganizationUnitId
-        //    };
-        //}
         //public async Task<Employee> GetById(Guid employeeId)
         //{
         //    var existingEmployee = await context.TblEmployees.FirstOrDefaultAsync(m => m.Id == employeeId);
@@ -64,7 +50,14 @@ namespace QubeFin.Hrms.Persistence.Repositories
                 .Include(x => x.TblEmployeeEmployments)
                 .Include(x => x.TblEmployeeDocuments)
                 .Include(x => x.TblEmployeeReferences)
+                .Include(x => x.OrganizationUnit)
                 .FirstOrDefaultAsync(x => x.Id == id);
+
+            return employeeEntity is null ? null : employeeEntity.ToDomain();
+        }
+        public async Task<Employee?> GetEmloyeeOrganization(Guid id)
+        {
+            var employeeEntity = await context.TblEmployees.Include(m => m.OrganizationUnit).FirstOrDefaultAsync(x => x.Id == id);
 
             return employeeEntity is null ? null : employeeEntity.ToDomain();
         }

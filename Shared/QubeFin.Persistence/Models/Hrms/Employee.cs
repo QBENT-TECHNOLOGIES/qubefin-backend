@@ -20,8 +20,7 @@
         public AddressInfo PresentAddressInfo { get; private set; } = default!;
         public AddressInfo PermanentAddressInfo { get; private set; } = default!;
         public PayrollInfo PayrollInfo { get; private set; } = default!;
-
-
+        public EmployeeOrganization OrganizationInfo { get; private set; } = default!;  
         public IReadOnlyCollection<EmployeeDesignation> Designations => _designations;
         public IReadOnlyCollection<EmployeeQualification> Qualifications => _qualifications;
         public IReadOnlyCollection<EmployeeEmployment> Employments => _employments;
@@ -33,7 +32,7 @@
         }
 
         public Employee(Guid id, string code, PersonalInfo personalInfo, OfficialInfo officialInfo, ContactInfo contactInfo,
-            AddressInfo presentAddressInfo, AddressInfo permanentAddressInfo, PayrollInfo payrollInfo,
+            AddressInfo presentAddressInfo, AddressInfo permanentAddressInfo, PayrollInfo payrollInfo, EmployeeOrganization organizationInfo,
             Guid? createdBy, DateTime? createdOn, Guid? lastModifiedBy, DateTime? lastModifiedOn)
         {
             Id = id;
@@ -44,6 +43,7 @@
             PresentAddressInfo = presentAddressInfo;
             PermanentAddressInfo = permanentAddressInfo;
             PayrollInfo = payrollInfo;
+            OrganizationInfo = organizationInfo;
             CreatedBy = createdBy;
             CreatedDate = createdOn;
             LastModifiedBy = lastModifiedBy;

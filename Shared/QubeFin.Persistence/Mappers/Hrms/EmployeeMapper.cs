@@ -1,7 +1,6 @@
 ﻿using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Models.Hrms;
 using Entity = QubeFin.Persistence.Entities.TblEmployee;
-
 namespace QubeFin.Persistence.Mappers.Hrms;
 
 public static class EmployeeMapper
@@ -17,6 +16,7 @@ public static class EmployeeMapper
             MapPresentAddressInfo(entity),
             MapPermanentAddressInfo(entity),
             MapPayrollInfo(entity),
+            MapOrganizationInfo(entity),
             entity.CreatedBy,
             entity.CreatedDate,
             entity.LastModifiedBy,
@@ -196,4 +196,15 @@ public static class EmployeeMapper
             entity.IsPayrollActive
         );
     }
+
+    private static EmployeeOrganization MapOrganizationInfo(TblEmployee entity)
+    {
+        return new EmployeeOrganization(
+            entity.OrganizationUnit?.Id,
+            entity.OrganizationUnit?.Name,
+            entity.OrganizationUnit?.AttendanceInTime,
+            entity.OrganizationUnit?.AttendanceOutTime
+        );
+    }
+
 }
