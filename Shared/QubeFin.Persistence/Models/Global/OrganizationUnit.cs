@@ -1,4 +1,4 @@
-﻿namespace QubeFin.Persistence.Models.Global;
+﻿
 
 namespace QubeFin.Persistence.Models.Global
 {
@@ -15,32 +15,12 @@ namespace QubeFin.Persistence.Models.Global
     public Guid? LastModifiedBy { get; set; }
     public TimeOnly? AttendanceInTime { get; set; }
     public TimeOnly? AttendanceOutTime { get; set; }
+    public string? OrganizationUnitType { get; private set;  }
+    public string? CreatedByName { get; private set; }
+    public string? LastModifiedByName { get; private set; }
+    private OrganizationUnit() { }
 
-        public Guid OrganizationUnitTypeId { get; private set; }
-        public string? OrganizationUnitType { get; private set;  }
-
-        public string Name { get; private set; } = null!;
-
-        public int CodeVal { get; private set; }
-
-        public Guid? ParentId { get; private set; }
-
-        public DateTime CreatedOn { get; private set; }
-
-        public Guid CreatedBy { get; private set; }
-        public string? CreatedByName { get; private set; }
-
-        public DateTime? LastModifiedOn { get; private set; }
-
-        public Guid? LastModifiedBy { get; private set; }
-        public string? LastModifiedByName { get; private set; }
-
-        public TimeOnly? AttendanceInTime { get; private set; }
-
-        public TimeOnly? AttendanceOutTime { get; private set; }
-        private OrganizationUnit() { }
-
-    public OrganizationUnit(Guid id, Guid organizationUnitTypeId, string name, int codeVal, Guid? parentId, Guid createdBy, DateTime createdOn, Guid? lastModifiedBy, DateTime? lastModifiedOn,
+    public OrganizationUnit(Guid id, Guid organizationUnitTypeId, string name, int codeVal, Guid? parentId, DateTime createdOn1, Guid createdBy, DateTime createdOn, Guid? lastModifiedBy, DateTime? lastModifiedOn,
         TimeOnly? attendanceInTime, TimeOnly? attendanceOutTime)
         {
             Id = id;

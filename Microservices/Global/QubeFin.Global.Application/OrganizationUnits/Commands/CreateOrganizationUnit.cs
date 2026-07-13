@@ -29,7 +29,7 @@ namespace QubeFin.Global.Application.OrganizationUnis.Commands
                 request.attendanceInTime,
                 request.attendanceOutTime
                 );
-            await organizationUnitRepository.CreateAsync( organizationUnitEntity );
+           // await organizationUnitRepository.CreateAsync( organizationUnitEntity );
             await unitOfWork.SaveChangesAsync( cancellationToken );
             return Result.Ok(new CreateOrganizationUnitResponse(true));
         }

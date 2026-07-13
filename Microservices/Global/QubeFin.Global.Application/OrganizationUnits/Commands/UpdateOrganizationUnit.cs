@@ -22,19 +22,19 @@ namespace QubeFin.Global.Application.OrganizationUnits.Commands
     {
         public async Task<Result<UpdateOrganizationUnitResponse>> Handle(UpdateOrganizationCommand request, CancellationToken cancellationToken)
         {
-            var existingEntity = await organizationUnitRepository.GetByIdAsync(request.id);
-            if (existingEntity is null) return new RecordNotFoundError("Organization unit not found");
-            existingEntity.Update(
-                organizationUnitTypeId: request.organizationUnitTypeId,
-                name: request.name,
-             codeVal: request.codeVal,
-              parentId: request.parentId,
-              lastModifiedBy: request.lastModifiedBy,
-             attendanceInTime: request.attendanceInTime,
-             attendanceOutTime: request.attendanceOutTime
-                );
-            await organizationUnitRepository.UpdateAsync(existingEntity);
-            await unitOfWork.SaveChangesAsync(cancellationToken);
+            //var existingEntity = await organizationUnitRepository.GetByIdAsync(request.id);
+            //if (existingEntity is null) return new RecordNotFoundError("Organization unit not found");
+            //existingEntity.Update(
+            //    organizationUnitTypeId: request.organizationUnitTypeId,
+            //    name: request.name,
+            // codeVal: request.codeVal,
+            //  parentId: request.parentId,
+            //  lastModifiedBy: request.lastModifiedBy,
+            // attendanceInTime: request.attendanceInTime,
+            // attendanceOutTime: request.attendanceOutTime
+            //    );
+            //await organizationUnitRepository.UpdateAsync(existingEntity);
+            //await unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Ok(new UpdateOrganizationUnitResponse(true));
         }
     }
