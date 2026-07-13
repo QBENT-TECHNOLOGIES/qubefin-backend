@@ -4,8 +4,8 @@ public class ContactInfo
 {
     public string MobileNo { get; private set; } = string.Empty;
     public string? PersonalEmail { get; private set; } = string.Empty;
-    public EmergencyContact PrimaryContact { get; private set; } = default!;
-    public EmergencyContact SecondaryContact { get; private set; } = default!;
+    public EmergencyContact PrimaryContact { get; private set; } = new();
+    public EmergencyContact SecondaryContact { get; private set; } = new();
 
     public ContactInfo()
     {
