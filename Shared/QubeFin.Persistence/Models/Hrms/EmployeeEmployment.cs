@@ -1,53 +1,24 @@
-﻿using QubeFin.Persistence.Models.Global;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Persistence.Models.Hrms
 {
-    public class EmployeeEmployment
-    {
-        public Guid Id { get; set; }
-        public string DocumentCategory { get; set; } = null!;
-        public string DocumentName { get; set; } = null!;
-        public string? DocumentNo { get; set; }
-        public DateOnly? ValidFrom { get; set; }
-        public DateOnly? ValidTill { get; set; }
-        public string? FileName { get; set; }
-        public string? FileNo { get; set; }
-        public Guid EmployeeId { get; set; }
-        public DateTime? UploadedOn { get; set; }
-        public Guid? UploadedBy { get; set; }
-
-
-        private EmployeeEmployment() { }
-        public EmployeeEmployment(
-            Guid id,
-            string documentCategory,
-            string documentName,
-            string? documentNo,
-            DateOnly? validFrom,
-            DateOnly? validTill,
-            string? fileName,
-            string? fileNo,
-            Guid employeeId,
-            Guid? uploadedBy,
-            DateTime? uploadedOn
-        )
-        {
-            Id = id;
-            DocumentCategory = documentCategory;
-            DocumentName = documentName;
-            DocumentNo = documentNo;
-            ValidFrom = validFrom;
-            ValidTill = validTill;
-            FileName = fileName;
-            FileNo = fileNo;
-            EmployeeId = employeeId;
-            UploadedOn = uploadedOn;
-            UploadedBy = uploadedBy;
-        }
-    }
-
-
+public class EmployeeEmployment
+{
+    public Guid Id { get; set; }
+    public string EmployerName { get; set; } = null!;
+    public string Designation { get; set; } = null!;
+    public DateOnly FromDate { get; set; }
+    public DateOnly ToDate { get; set; }
+    public decimal LastDrawnSalary { get; set; }
+    public string? JobTitle { get; set; }
+    public string? NocFileName { get; set; }
+    public string? NocFileNo { get; set; }
+    public string? ExpCertFileName { get; set; }
+    public string? ExpCertFileNo { get; set; }
+    public Guid EmployeeId { get; set; }
+    public int Sequence { get; set; }
+    public DateTime? CreatedOn { get; set; }
+    public Guid? CreatedBy { get; set; }
+    public Guid? LastModifiedBy { get; set; }
+    public DateTime? LastModifiedOn { get; set; }
 }

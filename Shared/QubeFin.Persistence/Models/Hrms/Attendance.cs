@@ -48,7 +48,7 @@ public class Attendance
         OutTimeLat = outTimeLat;
         OutTimeLong = outTimeLong;
     }
-    public static Attendance MarkCheckInCheckOut(Guid id, Guid employeeId,  TimeOnly InTime, TimeOnly? OutTime, Guid? organizationUnitId, TimeOnly? expectedInTime, TimeOnly? expectedOutTime, decimal? InTimeLat, decimal? InTimeLong, decimal? OutTimeLat, decimal? OutTimeLong)
+    public static Attendance MarkCheckIn(Guid id, Guid employeeId,  TimeOnly InTime, TimeOnly? OutTime, Guid? organizationUnitId, TimeOnly? expectedInTime, TimeOnly? expectedOutTime, decimal? InTimeLat, decimal? InTimeLong, decimal? OutTimeLat, decimal? OutTimeLong, DateOnly attendanceDate)
     {
         var attendance = new Attendance()
         {
@@ -62,10 +62,16 @@ public class Attendance
             InTimeLat = InTimeLat,
             InTimeLong = InTimeLong,
             OutTimeLat = OutTimeLat,
-            OutTimeLong = OutTimeLong
+            OutTimeLong = OutTimeLong,
+            AttendanceDate = attendanceDate,
         };
 
         return attendance;
     }
-   
+    public void MarchCheckOut(TimeOnly? OutTime, decimal? OutTimeLat, decimal? OutTimeLong)
+    {
+        ActualOutTime = OutTime;
+        OutTimeLat = OutTimeLat;
+        OutTimeLong = OutTimeLong;
+    }
 }

@@ -19,60 +19,10 @@ public class EmployeeDocument
     public Guid EmployeeId { get; set; }
     public DateTime? UploadedOn { get; set; }
     public Guid? UploadedBy { get; set; }
-
-
-    private EmployeeDocument() { }
-    public EmployeeDocument(
-        Guid id,
-        string documentCategory,
-        string documentName,
-        string? documentNo,
-        DateOnly? validFrom,
-        DateOnly? validTill,
-        string? fileName,
-        string? fileNo,
-        Guid employeeId,
-        Guid? uploadedBy,
-        DateTime? uploadedOn
-    )
-    {
-        Id = id;
-        DocumentCategory = documentCategory;
-        DocumentName = documentName;
-        DocumentNo = documentNo;
-        ValidFrom = validFrom;
-        ValidTill = validTill;
-        FileName = fileName;
-        FileNo = fileNo;
-        EmployeeId = employeeId;
-        UploadedBy = uploadedBy;
-        UploadedOn = uploadedOn;
-    }
-    public static EmployeeDocument Create(
-        //Guid employeeId,
-        string documentCategory,
-        string documentName,
-        string? documentNo,
-        DateOnly? validFrom,
-        DateOnly? validTill,
-        string? fileName,
-        string? fileNo,
-        Guid? uploadedBy)
-    {
-        var docs = new EmployeeDocument
-        {
-            Id = Guid.NewGuid(),
-            //EmployeeId = employeeId,
-            DocumentCategory = documentCategory,
-            DocumentName = documentName,
-            DocumentNo = documentNo,
-            ValidFrom = validFrom,
-            ValidTill = validTill,
-            FileName = fileName,
-            FileNo = fileNo,
-            UploadedBy = uploadedBy,
-            UploadedOn = DateTime.Now
-        };
+    public DateTime? CreatedOn { get; set; }
+    public Guid? CreatedBy { get; set; }
+    public Guid? LastModifiedBy { get; set; }
+    public DateTime? LastModifiedOn { get; set; }
 
         return docs;
     }

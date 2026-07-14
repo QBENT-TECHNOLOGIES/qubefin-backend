@@ -179,10 +179,15 @@ public partial class QubeFinDataContext : DbContext
     public virtual DbSet<TblUserMenu> TblUserMenus { get; set; }
 
     public virtual DbSet<TblUserSession> TblUserSessions { get; set; }
+ 
 
-    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<TblAccountGroup>(entity =>
+        {
+            entity.ToTable("Tbl_AccountGroup", "Finance");
+        });
+
         modelBuilder.Entity<TblAccountGroup>(entity =>
         {
             entity.ToTable("Tbl_AccountGroup", "Finance");
@@ -921,11 +926,6 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.RequestDate).HasColumnType("datetime");
             entity.Property(e => e.TotalDays).HasComputedColumnSql("(datediff(day,[FromDate],[ToDate])+(1))", false);
 
-            entity.HasOne(d => d.CalenderYear).WithMany(p => p.TblLeaveRequests)
-                .HasForeignKey(d => d.CalenderYearId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Tbl_LeaveRequest_Tbl_CalenderYear");
-
             entity.HasOne(d => d.StatusNavigation).WithMany(p => p.TblLeaveRequests)
                 .HasForeignKey(d => d.Status)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -966,14 +966,19 @@ public partial class QubeFinDataContext : DbContext
             entity.ToTable("Tbl_LeaveTransaction", "Hrms");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.LeaveCredit).HasColumnType("numeric(5, 3)");
-            entity.Property(e => e.LeaveDebit).HasColumnType("numeric(5, 3)");
+            entity.Property(e => e.LeaveCredit).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.LeaveDebit).HasColumnType("numeric(18, 2)");
             entity.Property(e => e.Remarks).HasMaxLength(200);
 
             entity.HasOne(d => d.Employee).WithMany(p => p.TblLeaveTransactions)
                 .HasForeignKey(d => d.EmployeeId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_LeaveTransaction_Tbl_Employee");
+
+            entity.HasOne(d => d.FinYear).WithMany(p => p.TblLeaveTransactions)
+                .HasForeignKey(d => d.FinYearId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_LeaveTransaction_Tbl_FinYear");
 
             entity.HasOne(d => d.LeaveType).WithMany(p => p.TblLeaveTransactions)
                 .HasForeignKey(d => d.LeaveTypeId)

@@ -10,4 +10,6 @@ builder.AddProject<Projects.QubeFin_Global_Api>("qubefin-global-api");
 
 builder.AddProject<Projects.QubeFin_Hrms_Api>("qubefin-hrms-api");
 
+builder.AddProject<Projects.QubeFin_Payroll_Api>("qubefin-payroll-api");
+
 builder.Build().Run();

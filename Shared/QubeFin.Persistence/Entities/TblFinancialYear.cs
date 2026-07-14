@@ -17,5 +17,7 @@ public partial class TblFinancialYear
 
     public string? AssessmentYear { get; set; }
 
+    public virtual ICollection<TblLeaveTransaction> TblLeaveTransactions { get; set; } = new List<TblLeaveTransaction>();
+
     public virtual ICollection<TblPayRoll> TblPayRolls { get; set; } = new List<TblPayRoll>();
 }

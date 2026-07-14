@@ -4,6 +4,7 @@ using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Hrms;
 
+
 namespace QubeFin.Hrms.Application.Attendances.Commands
 {
 
@@ -25,19 +26,18 @@ namespace QubeFin.Hrms.Application.Attendances.Commands
 
             if (todayAttendance is null)
             {
-               var employeeOrganization = await employeeRepository.GetEmployeeOrganization(request.EmployeeId);
-               var attendance = Attendance.MarkCheckInCheckOut(Guid.NewGuid(), request.EmployeeId, request.time, null, employeeOrganization?.OrganizationUnitId, employeeOrganization?.AttendanceInTime, employeeOrganization?.AttendanceOutTime, request.Lat, request.Long, null, null);
+                var employeeOrganization = await employeeRepository.GetEmloyeeOrganization(request.EmployeeId);
+                var attendance = Attendance.MarkCheckIn(Guid.NewGuid(), request.EmployeeId, request.time, null, employeeOrganization?.OrganizationInfo?.OrganizationUnitId, employeeOrganization?.OrganizationInfo?.AttendanceInTime, employeeOrganization?.OrganizationInfo?.AttendanceOutTime, request.Lat, request.Long, null, null, DateOnly.FromDateTime(DateTime.Now));
                 await attendanceRepository.Create(attendance);
             }
             else
             {
-                var attendance = Attendance.MarkCheckInCheckOut(todayAttendance.Id, request.EmployeeId, todayAttendance.ActualInTime, request.time, todayAttendance.OrganizationUnitId, todayAttendance.ExpectedInTime, todayAttendance.ExpectedOutTime, todayAttendance.InTimeLat, todayAttendance.InTimeLong, todayAttendance.OutTimeLat, todayAttendance.OutTimeLong);
-                await attendanceRepository.Update(attendance);
+                todayAttendance.MarchCheckOut(request.time, request.Lat, request.Long);
+                await attendanceRepository.Update(todayAttendance);
             }
 
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Ok(new CreateAttendanceResponse(true));
-
         }
     }
     #endregion

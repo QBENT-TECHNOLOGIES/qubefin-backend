@@ -15,6 +15,10 @@ public partial class QubeFinDataContext : DbContext, IUnitOfWork
         modelBuilder.Entity<AdministrativeHierarchyItem>()
             .HasNoKey()
             .ToView(null);
+
+        modelBuilder.Entity<OrganizationUnitHierarchyItem>()
+            .HasNoKey()
+            .ToView(null);
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

@@ -23,7 +23,7 @@ namespace QubeFin.Hrms.Persistence.Repositories
         }
         public async Task<Attendance> GetTodayAttendanceData(Guid EmployeeId)
         {
-            var attendanceEntity = await context.TblAttendances.FirstOrDefaultAsync(m => m.EmployeeId == EmployeeId && m.AttendanceDate == DateOnly.FromDateTime(DateTime.Now));
+            var attendanceEntity = await context.TblAttendances.AsNoTracking().FirstOrDefaultAsync(m => m.EmployeeId == EmployeeId && m.AttendanceDate == DateOnly.FromDateTime(DateTime.Now));
             if (attendanceEntity is null)
             {
                 return null;

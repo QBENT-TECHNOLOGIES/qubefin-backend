@@ -11,6 +11,8 @@ public partial class TblLeaveTransaction
 
     public Guid LeaveTypeId { get; set; }
 
+    public Guid FinYearId { get; set; }
+
     public decimal LeaveDebit { get; set; }
 
     public decimal LeaveCredit { get; set; }
@@ -30,6 +32,8 @@ public partial class TblLeaveTransaction
     public Guid CalenderYearId { get; set; }
 
     public virtual TblEmployee Employee { get; set; } = null!;
+
+    public virtual TblFinancialYear FinYear { get; set; } = null!;
 
     public virtual TblLeaveType LeaveType { get; set; } = null!;
 }

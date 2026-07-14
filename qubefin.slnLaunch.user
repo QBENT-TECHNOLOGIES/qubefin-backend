@@ -19,7 +19,7 @@
         "Action": "Start"
       },
       {
-        "Path": "Microservices\\Hrms\\QubeFin.Hrms.Api\\QubeFin.Hrms.Api.csproj",
+        "Path": "Host\\QubeFin.AppHost\\QubeFin.AppHost.csproj",
         "Action": "Start"
       }
     ]
