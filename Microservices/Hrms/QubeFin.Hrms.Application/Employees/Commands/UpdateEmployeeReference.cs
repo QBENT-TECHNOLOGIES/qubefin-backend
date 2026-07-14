@@ -63,7 +63,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
     {
         public async Task<Result<UpdateEmployeeReferenceResponse>> Handle(UpdateEmployeeReferenceCommand request, CancellationToken cancellationToken)
         {
-            var existingEmployee = await employeeRepository.GetById(request.Id);
+            var existingEmployee = await employeeRepository.GetByIdAsync(request.Id);
             if (existingEmployee == null)
             {
                 return new ValidationError("Employee not exist given id.");

@@ -63,33 +63,33 @@ namespace QubeFin.Hrms.Application.Employees.Commands
     {
         public async Task<Result<UpdateEmployeeEmploymentResponse>> Handle(UpdateEmployeeEmploymentCommand request, CancellationToken cancellationToken)
         {
-            var existingEmployee = await employeeRepository.GetById(request.Id);
+            var existingEmployee = await employeeRepository.GetByIdAsync(request.Id);
             if (existingEmployee == null)
             {
                 return new ValidationError("Employee not exist given id.");
             }
 
 
-            existingEmployee.UpdateEmployeePersonalDetails(
-                request.Salutation,
-                request.FirstName,
-                request.MiddleName,
-                request.LastName,
-                request.FatherName,
-                request.MotherName,
-                request.DateOfBirth,
-                request.Gender,
-                request.Religion,
-                request.Caste,
-                request.Nationality,
-                request.BloodGroup,
-                request.DisablityType,
-                request.MaritalStatus,
-                request.MobileNo,
-                request.PersonalEmail,
-                request.LastModifiedBy
-                );
-            employeeRepository.UpdateEmployee(existingEmployee);
+            //existingEmployee.UpdateEmployeePersonalDetails(
+            //    request.Salutation,
+            //    request.FirstName,
+            //    request.MiddleName,
+            //    request.LastName,
+            //    request.FatherName,
+            //    request.MotherName,
+            //    request.DateOfBirth,
+            //    request.Gender,
+            //    request.Religion,
+            //    request.Caste,
+            //    request.Nationality,
+            //    request.BloodGroup,
+            //    request.DisablityType,
+            //    request.MaritalStatus,
+            //    request.MobileNo,
+            //    request.PersonalEmail,
+            //    request.LastModifiedBy
+            //    );
+            //employeeRepository.UpdateEmployee(existingEmployee);
 
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Ok(new UpdateEmployeeEmploymentResponse(true));

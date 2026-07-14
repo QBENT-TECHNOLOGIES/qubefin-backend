@@ -50,7 +50,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
     {
         public async Task<Result<UpdateEmployeeDocumentResponse>> Handle(UpdateEmployeeDocumentCommand request, CancellationToken cancellationToken)
         {
-            var existingEmployee = await employeeRepository.GetById(request.Id);
+            var existingEmployee = await employeeRepository.GetByIdAsync(request.Id);
             if (existingEmployee == null)
             {
                 return new ValidationError("Employee not exist with given id.");
@@ -61,12 +61,12 @@ namespace QubeFin.Hrms.Application.Employees.Commands
                 return new ValidationError("Employee Document not exist.");
             }
 
-            employeeRepository.DeleteDocuments(request.Id, documents.DocumentCategory);
-            existingEmployee.UpdateDocuments(
-                request.Documents,
-                request.LastModifiedBy
-                );
-            employeeRepository.UpdateEmployee(existingEmployee);
+            //employeeRepository.DeleteDocuments(request.Id, documents.DocumentCategory);
+            //existingEmployee.UpdateDocuments(
+            //    request.Documents,
+            //    request.LastModifiedBy
+            //    );
+            //employeeRepository.UpdateEmployee(existingEmployee);
 
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Ok(new UpdateEmployeeDocumentResponse(true));

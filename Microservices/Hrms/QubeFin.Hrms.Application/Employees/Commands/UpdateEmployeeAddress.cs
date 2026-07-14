@@ -56,42 +56,42 @@ namespace QubeFin.Hrms.Application.Employees.Commands
     {
         public async Task<Result<UpdateEmployeeAddressResponse>> Handle(UpdateEmployeeAddressCommand request, CancellationToken cancellationToken)
         {
-            var existingEmployee = await employeeRepository.GetById(request.Id);
+            var existingEmployee = await employeeRepository.GetByIdAsync(request.Id);
             if (existingEmployee == null)
             {
                 return new ValidationError("Employee not exist given id.");
             }
 
 
-            existingEmployee.UpdateEmployeeAddressDetails(
-                request.PermanentHouseNo,
-                request.PermanentRoadName,
-                request.PermanentLandMark,
-                request.PermanentAdministrativeUnitId,
-                request.PermanentPoliceStationId,
-                request.PermanentPostOfficeId,
-                request.PermanentPinCode,
-                request.PermanentOwnerShipOfHouse,
-                request.PermanentDurationOfStayInMonths,
-                request.PresentHouseNo,
-                request.PresentRoadName,
-                request.PresentLandMark,
-                request.PresentAdministrativeUnitId,
-                request.PresentPoliceStationId,
-                request.PresentPostOfficeId,
-                request.PresentPinCode,
-                request.PresentOwnerShipOfHouse,
-                request.PresentDurationOfStayInMonths,
+            //existingEmployee.UpdateEmployeeAddressDetails(
+            //    request.PermanentHouseNo,
+            //    request.PermanentRoadName,
+            //    request.PermanentLandMark,
+            //    request.PermanentAdministrativeUnitId,
+            //    request.PermanentPoliceStationId,
+            //    request.PermanentPostOfficeId,
+            //    request.PermanentPinCode,
+            //    request.PermanentOwnerShipOfHouse,
+            //    request.PermanentDurationOfStayInMonths,
+            //    request.PresentHouseNo,
+            //    request.PresentRoadName,
+            //    request.PresentLandMark,
+            //    request.PresentAdministrativeUnitId,
+            //    request.PresentPoliceStationId,
+            //    request.PresentPostOfficeId,
+            //    request.PresentPinCode,
+            //    request.PresentOwnerShipOfHouse,
+            //    request.PresentDurationOfStayInMonths,
 
-                request.EmergencyContactRelation1,
-                request.EmergencyContactName1,
-                request.EmergencyContactMobile1,
-                request.EmergencyContactRelation2,
-                request.EmergencyContactName2,
-                request.EmergencyContactMobile2,
-                request.LastModifiedBy
-                    );
-                employeeRepository.UpdateEmployee(existingEmployee);
+            //    request.EmergencyContactRelation1,
+            //    request.EmergencyContactName1,
+            //    request.EmergencyContactMobile1,
+            //    request.EmergencyContactRelation2,
+            //    request.EmergencyContactName2,
+            //    request.EmergencyContactMobile2,
+            //    request.LastModifiedBy
+            //        );
+            //    employeeRepository.UpdateEmployee(existingEmployee);
 
                 await unitOfWork.SaveChangesAsync(cancellationToken);
                 return Result.Ok(new UpdateEmployeeAddressResponse(true));

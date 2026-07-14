@@ -1,7 +1,6 @@
 ﻿namespace QubeFin.Persistence.Models.Hrms;
 
-namespace QubeFin.Persistence.Models.Hrms
-{
+
 public class EmployeeEmployment
 {
     public Guid Id { get; set; }

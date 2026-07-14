@@ -62,7 +62,7 @@ internal sealed class UpdateEmployeeOfficialCommandHandler(IEmployeeRepository e
                 request.SeparationDate, request.ReferedBy, request.HowYouKnow, request.OfficialEmail, request.IsActive),
             request.UserId
             );
-            employeeRepository.UpdateEmployee(existingEmployee);
+            //employeeRepository.UpdateEmployee(existingEmployee);
 
         await employeeRepository.UpdateAsync(employee);
         await unitOfWork.SaveChangesAsync(cancellationToken);
