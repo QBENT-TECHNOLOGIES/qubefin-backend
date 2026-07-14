@@ -19,6 +19,10 @@ public partial class TblRole
 
     public Guid? LastModifiedBy { get; set; }
 
+    public virtual TblUser CreatedByNavigation { get; set; } = null!;
+
+    public virtual TblUser? LastModifiedByNavigation { get; set; }
+
     public virtual ICollection<TblDesignationRole> TblDesignationRoles { get; set; } = new List<TblDesignationRole>();
 
     public virtual ICollection<TblRoleMenu> TblRoleMenus { get; set; } = new List<TblRoleMenu>();

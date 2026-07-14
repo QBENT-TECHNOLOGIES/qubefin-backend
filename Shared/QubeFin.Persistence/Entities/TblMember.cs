@@ -79,5 +79,9 @@ public partial class TblMember
 
     public virtual ICollection<TblCreditDatum> TblCreditData { get; set; } = new List<TblCreditDatum>();
 
+    public virtual ICollection<TblLoanApplication> TblLoanApplications { get; set; } = new List<TblLoanApplication>();
+
+    public virtual ICollection<TblMemberAddress> TblMemberAddresses { get; set; } = new List<TblMemberAddress>();
+
     public virtual ICollection<TblMemberDocument> TblMemberDocuments { get; set; } = new List<TblMemberDocument>();
 }

@@ -15,13 +15,13 @@ public partial class TblLoanApplication
 
     public Guid? BorrowerAddressId { get; set; }
 
-    public Guid? BorCreditDataId { get; set; }
+    public Guid? BorrowerCreditDataId { get; set; }
 
     public Guid? CoBorrowerId { get; set; }
 
     public Guid? CoBorrowerAddressId { get; set; }
 
-    public Guid? CoBorCreditDataId { get; set; }
+    public Guid? CoBorrowerCreditDataId { get; set; }
 
     public string? BorCoBorRelation { get; set; }
 
@@ -150,6 +150,28 @@ public partial class TblLoanApplication
     public Guid? LastModifiedBy { get; set; }
 
     public DateTime? LastModifiedOn { get; set; }
+
+    public virtual TblMember Borrower { get; set; } = null!;
+
+    public virtual TblMemberAddress? BorrowerAddress { get; set; }
+
+    public virtual TblCreditDatum? BorrowerCreditData { get; set; }
+
+    public virtual TblCoBorrower? CoBorrower { get; set; }
+
+    public virtual TblMemberAddress? CoBorrowerAddress { get; set; }
+
+    public virtual TblCreditDatum? CoBorrowerCreditData { get; set; }
+
+    public virtual TblCompanyBankAccount? CompanyAccount { get; set; }
+
+    public virtual TblDesignation? Designation { get; set; }
+
+    public virtual TblGroup Group { get; set; } = null!;
+
+    public virtual TblLoanProduct LoanProduct { get; set; } = null!;
+
+    public virtual TblOrganizationUnit OrganizationUnit { get; set; } = null!;
 
     public virtual ICollection<TblLoanApplicationWorkflow> TblLoanApplicationWorkflows { get; set; } = new List<TblLoanApplicationWorkflow>();
 }

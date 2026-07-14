@@ -19,8 +19,8 @@ public class Employee
     public Guid? OrganizationUnitId { get; private set; }
     public Guid? DepartmentId { get; private set; }
     public string? EmployementType { get; private set; }
-    public DateOnly? DateOfJoining { get; private set; }
-    public DateOnly? DateOfConfirmation { get; private set; }
+    public DateOnly? JoiningDate { get; private set; }
+    public DateOnly? ConfirmationDate { get; private set; }
     public DateOnly DateOfBirth { get; private set; }
     public string Gender { get; private set; } = null!;
     public string Religion { get; private set; } = null!;
@@ -61,8 +61,8 @@ public class Employee
     public string? BankBranch { get; private set; }
     public string? BankAccountType { get; private set; }
     public string? OfficialEmail { get; private set; }
-    public bool? IsActive { get; private set; }
-    public bool? IsPayrollActive { get; private set; }
+    public bool IsActive { get; private set; }
+    public bool IsPayrollActive { get; private set; }
     public Guid? CompanyId { get; private set; }
     public DateOnly? SeparationDate { get; private set; }
     public Guid? ReferedBy { get; private set; }
@@ -92,8 +92,8 @@ public class Employee
         Guid? organizationUnitId,
         Guid? departmentId,
         string? employementType,
-        DateOnly? dateOfJoining,
-        DateOnly? dateOfConfirmation,
+        DateOnly? joiningDate,
+        DateOnly? confirmationDate,
         DateOnly dateOfBirth,
         string gender,
         string religion,
@@ -134,8 +134,8 @@ public class Employee
         string? bankBranch,
         string? bankAccountType,
         string? officialEmail,
-        bool? isActive,
-        bool? isPayrollActive,
+        bool isActive,
+        bool isPayrollActive,
         Guid? companyId,
         DateOnly? separationDate,
         Guid? referedBy,
@@ -155,8 +155,8 @@ public class Employee
         OrganizationUnitId = organizationUnitId;
         DepartmentId = departmentId;
         EmployementType = employementType;
-        DateOfJoining = dateOfJoining;
-        DateOfConfirmation = dateOfConfirmation;
+        JoiningDate = joiningDate;
+        ConfirmationDate = confirmationDate;
         DateOfBirth = dateOfBirth;
         Gender = gender;
         Religion = religion;
@@ -371,8 +371,8 @@ public class Employee
         Guid organizationUnitId,
         Guid departmentId,
         string? employementType,
-        DateOnly dateOfJoining,
-        DateOnly? dateOfConfirmation,
+        DateOnly joiningDate,
+        DateOnly? confirmationDate,
         DateOnly? separationDate,
         Guid? referedBy,
         string? howYouKnow,
@@ -389,8 +389,8 @@ public class Employee
         OrganizationUnitId = organizationUnitId;
         DepartmentId = departmentId;
         EmployementType = employementType;
-        DateOfJoining = dateOfJoining;
-        DateOfConfirmation = dateOfConfirmation;
+        JoiningDate = joiningDate;
+        ConfirmationDate = confirmationDate;
         SeparationDate = separationDate;
         ReferedBy = referedBy;
         HowYouKnow = howYouKnow;

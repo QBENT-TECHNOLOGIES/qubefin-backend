@@ -3,13 +3,13 @@ using System.Collections.Generic;
 
 namespace QubeFin.Persistence.Entities;
 
-public partial class TblFinancialInstitute
+public partial class TblAccountHead
 {
     public Guid Id { get; set; }
 
     public string Name { get; set; } = null!;
 
-    public bool IsBank { get; set; }
+    public bool IsSystemDefined { get; set; }
 
     public Guid CreatedBy { get; set; }
 
@@ -19,7 +19,5 @@ public partial class TblFinancialInstitute
 
     public DateTime? LastModifiedOn { get; set; }
 
-    public virtual ICollection<TblCompanyBankAccount> TblCompanyBankAccounts { get; set; } = new List<TblCompanyBankAccount>();
-
-    public virtual ICollection<TblEmployee> TblEmployees { get; set; } = new List<TblEmployee>();
+    public virtual ICollection<TblAccountGroup> TblAccountGroups { get; set; } = new List<TblAccountGroup>();
 }

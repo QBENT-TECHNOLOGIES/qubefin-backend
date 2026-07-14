@@ -63,5 +63,7 @@ public partial class TblGroup
 
     public virtual TblDesignation? Designation { get; set; }
 
+    public virtual ICollection<TblLoanApplication> TblLoanApplications { get; set; } = new List<TblLoanApplication>();
+
     public virtual ICollection<TblMember> TblMembers { get; set; } = new List<TblMember>();
 }

@@ -37,5 +37,7 @@ public partial class TblCoBorrower
 
     public virtual ICollection<TblCreditDatum> TblCreditData { get; set; } = new List<TblCreditDatum>();
 
+    public virtual ICollection<TblLoanApplication> TblLoanApplications { get; set; } = new List<TblLoanApplication>();
+
     public virtual ICollection<TblMemberDocument> TblMemberDocuments { get; set; } = new List<TblMemberDocument>();
 }

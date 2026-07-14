@@ -35,11 +35,15 @@ public partial class TblLoanApplicationWorkflow
 
     public bool IsVerifyOtp { get; set; }
 
+    public virtual TblDesignation Designation { get; set; } = null!;
+
     public virtual TblLoanApplication LoanApplication { get; set; } = null!;
 
     public virtual ICollection<TblLoanApplicationWorkflowDocument> TblLoanApplicationWorkflowDocuments { get; set; } = new List<TblLoanApplicationWorkflowDocument>();
 
     public virtual ICollection<TblLoanApplicationWorkflowStep> TblLoanApplicationWorkflowSteps { get; set; } = new List<TblLoanApplicationWorkflowStep>();
+
+    public virtual TblUser? User { get; set; }
 
     public virtual TblLoanWorkflow Workflow { get; set; } = null!;
 }

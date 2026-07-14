@@ -82,4 +82,8 @@ public partial class TblCreditDatum
     public virtual ICollection<TblCreditDataIdentity> TblCreditDataIdentities { get; set; } = new List<TblCreditDataIdentity>();
 
     public virtual ICollection<TblCreditDataIncome> TblCreditDataIncomes { get; set; } = new List<TblCreditDataIncome>();
+
+    public virtual ICollection<TblLoanApplication> TblLoanApplicationBorrowerCreditData { get; set; } = new List<TblLoanApplication>();
+
+    public virtual ICollection<TblLoanApplication> TblLoanApplicationCoBorrowerCreditData { get; set; } = new List<TblLoanApplication>();
 }

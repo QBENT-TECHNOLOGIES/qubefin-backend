@@ -35,5 +35,7 @@ public partial class TblSalaryComponent
 
     public virtual TblSalaryComponentCategory Category { get; set; } = null!;
 
+    public virtual ICollection<TblPayRollComponent> TblPayRollComponents { get; set; } = new List<TblPayRollComponent>();
+
     public virtual ICollection<TblSalaryStructureComponent> TblSalaryStructureComponents { get; set; } = new List<TblSalaryStructureComponent>();
 }

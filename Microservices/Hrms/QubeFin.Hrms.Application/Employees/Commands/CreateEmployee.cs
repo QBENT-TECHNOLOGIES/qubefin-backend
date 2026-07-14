@@ -16,7 +16,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
     #region --- COMMAND ---
     public record CreateEmployeeCommand(Guid Id, string? Salutation, string FirstName, string? MiddleName,
         string LastName, string Code, string? FatherName, string? MotherName,
-        DateOnly DateOfBirth, string Gender, string Religion, string? Caste, string Nationality, string BloodGroup,
+        DateTime DateOfBirth, string Gender, string Religion, string? Caste, string Nationality, string BloodGroup,
         string? DisablityType, string? MaritalStatus, string MobileNo, string? PersonalEmail, Guid CreatedBy
     ) : IRequest<Result<CreateEmployeeResponse>>;
     #endregion
@@ -74,7 +74,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
                 request.Code,
                 request.FatherName,
                 request.MotherName,
-                request.DateOfBirth,
+                DateOnly.FromDateTime(request.DateOfBirth),
                 request.Gender,
                 request.Religion,
                 request.Caste,

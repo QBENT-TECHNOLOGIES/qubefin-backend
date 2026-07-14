@@ -27,7 +27,11 @@ public partial class TblMenu
 
     public DateTime? LastModifiedOn { get; set; }
 
+    public virtual TblUser CreatedByNavigation { get; set; } = null!;
+
     public virtual ICollection<TblMenu> InverseParent { get; set; } = new List<TblMenu>();
+
+    public virtual TblUser? LastModifiedByNavigation { get; set; }
 
     public virtual TblMenu? Parent { get; set; }
 

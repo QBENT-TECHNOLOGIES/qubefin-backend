@@ -27,7 +27,11 @@ public partial class TblOrganizationUnit
 
     public TimeOnly? AttendanceOutTime { get; set; }
 
+    public virtual TblUser CreatedByNavigation { get; set; } = null!;
+
     public virtual ICollection<TblOrganizationUnit> InverseParent { get; set; } = new List<TblOrganizationUnit>();
+
+    public virtual TblUser? LastModifiedByNavigation { get; set; }
 
     public virtual TblOrganizationUnitType OrganizationUnitType { get; set; } = null!;
 
@@ -39,5 +43,7 @@ public partial class TblOrganizationUnit
 
     public virtual ICollection<TblEmployee> TblEmployees { get; set; } = new List<TblEmployee>();
 
-    public virtual TblPayRoll? TblPayRoll { get; set; }
+    public virtual ICollection<TblLoanApplication> TblLoanApplications { get; set; } = new List<TblLoanApplication>();
+
+    public virtual ICollection<TblPayRoll> TblPayRolls { get; set; } = new List<TblPayRoll>();
 }
