@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace QubeFin.Persistence.Entities;
 
-public partial class TblFinancialYear
+public partial class TblCalenderYear
 {
     public Guid Id { get; set; }
 
@@ -15,7 +15,5 @@ public partial class TblFinancialYear
 
     public bool IsLocked { get; set; }
 
-    public string? AssessmentYear { get; set; }
-
-    public virtual ICollection<TblPayRoll> TblPayRolls { get; set; } = new List<TblPayRoll>();
+    public virtual ICollection<TblLeaveRequest> TblLeaveRequests { get; set; } = new List<TblLeaveRequest>();
 }

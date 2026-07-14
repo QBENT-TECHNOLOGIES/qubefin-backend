@@ -165,5 +165,11 @@ public partial class TblEmployee
 
     public virtual ICollection<TblPayRoll> TblPayRolls { get; set; } = new List<TblPayRoll>();
 
+    public virtual ICollection<TblSurveyAssigned> TblSurveyAssigneds { get; set; } = new List<TblSurveyAssigned>();
+
+    public virtual ICollection<TblSurveyCommitteeEvaluation> TblSurveyCommitteeEvaluations { get; set; } = new List<TblSurveyCommitteeEvaluation>();
+
+    public virtual ICollection<TblSurveyCommittee> TblSurveyCommittees { get; set; } = new List<TblSurveyCommittee>();
+
     public virtual ICollection<TblUser> TblUsers { get; set; } = new List<TblUser>();
 }

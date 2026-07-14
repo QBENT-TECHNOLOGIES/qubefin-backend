@@ -11,8 +11,6 @@ public partial class TblLeaveRequest
 
     public Guid LeaveTypeId { get; set; }
 
-    public Guid? FinYearId { get; set; }
-
     public DateOnly FromDate { get; set; }
 
     public DateOnly ToDate { get; set; }
@@ -26,6 +24,10 @@ public partial class TblLeaveRequest
     public int? TotalDays { get; set; }
 
     public byte Status { get; set; }
+
+    public Guid CalenderYearId { get; set; }
+
+    public virtual TblCalenderYear CalenderYear { get; set; } = null!;
 
     public virtual TblLeaveStatus StatusNavigation { get; set; } = null!;
 }
