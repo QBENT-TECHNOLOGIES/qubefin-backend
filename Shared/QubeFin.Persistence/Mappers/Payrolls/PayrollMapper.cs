@@ -1,4 +1,5 @@
-﻿using QubeFin.Persistence.Models.Payroll;
+﻿using QubeFin.Persistence.Entities;
+using QubeFin.Persistence.Models.Payroll;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,7 +34,7 @@ namespace QubeFin.Persistence.Mappers.Payrolls
                 entity.Employee.LastName
             }.Where(s => !string.IsNullOrWhiteSpace(s)));
 
-            domain.SetNames(entity.OrganizationUnit.Name, fullName, entity.FinYear.Caption, entity.Designation.Name, entity.Company.Name);
+            domain.SetNames(entity.OrganizationUnit.Name, entity.OrganizationUnit.CodeVal, fullName, entity.FinYear.Caption, entity.Designation.Name, entity.Company.Name);
 
             domain.SetComponents(entity.TblPayRollComponents.Select(c =>
             {
@@ -44,7 +45,17 @@ namespace QubeFin.Persistence.Mappers.Payrolls
 
             return domain;
         }
-
+        public static PayrollLockingModel ToLockingDomain(this Entity entity)
+        {
+            return new PayrollLockingModel(
+                entity.Id,
+                entity.IsLocked
+            );
+        }
+        public static void ApplyToEntity(this PayrollLockingModel domain, Entity trackedEntity)
+        {
+            trackedEntity.IsLocked = domain.IsLocked;
+        }
         public static MonthlyPayroll ToMonthlyPayroll(this IEnumerable<PayrollModel> payrolls, int month, int year)
         {
             if (payrolls == null || !payrolls.Any())
@@ -90,6 +101,7 @@ namespace QubeFin.Persistence.Mappers.Payrolls
                         {
                             OrganizationUnitId = group.Key,
                             OrganizationUnitName = group.First().OrganizationUnitName ?? string.Empty,
+                            CodeVal = group.First().OrganizationCode,
                             TotalEarnings = details.Sum(d => d.TotalEarnings),
                             TotalDeductions = details.Sum(d => d.TotalDeductions),
                             Details = details

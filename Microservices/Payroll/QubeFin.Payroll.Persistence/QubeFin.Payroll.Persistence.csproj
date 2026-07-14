@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Shared\QubeFin.Core\QubeFin.Core.csproj" />
-    <ProjectReference Include="..\Shared\QubeFin.Persistence\QubeFin.Persistence.csproj" />
+    <ProjectReference Include="..\..\..\Shared\QubeFin.Core\QubeFin.Core.csproj" />
+    <ProjectReference Include="..\..\..\Shared\QubeFin.Persistence\QubeFin.Persistence.csproj" />
   </ItemGroup>
 
 </Project>

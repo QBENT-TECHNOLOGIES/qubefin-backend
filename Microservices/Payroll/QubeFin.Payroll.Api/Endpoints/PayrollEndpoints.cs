@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using QubeFin.Core.Endpoint;
+using QubeFin.Payroll.Application.Payrolls.Commands;
 using QubeFin.Payroll.Application.Payrolls.Queries;
 using System.Reflection;
 
@@ -37,6 +38,12 @@ namespace QubeFin.Payroll.Api.Endpoints
             }).WithSummary("Get month wise payrolls")
               .WithDescription("Retrieves a list of month wise payrolls in the system.")
               .WithTags("Payrolls");
+            app.MapPut("lock-payrolls/{year:int}/{month:int}", async(int year,int month, ISender sender, CancellationToken cancellationToken) => {
+                var result = await sender.Send(new LockPayrollCommand(month, year), cancellationToken);
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Errors);
+            }).WithSummary("Lock monthly payrolls")
+            .WithDescription("Locks all payroll data for the specified month and year, preventing further modifications.")
+            .WithTags("Payrolls");
         }
     }
 }

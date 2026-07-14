@@ -12,9 +12,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Shared\QubeFin.Core\QubeFin.Core.csproj" />
+    <ProjectReference Include="..\..\..\Shared\QubeFin.Persistence\QubeFin.Persistence.csproj" />
     <ProjectReference Include="..\QubeFin.Payroll.Persistence\QubeFin.Payroll.Persistence.csproj" />
-    <ProjectReference Include="..\Shared\QubeFin.Core\QubeFin.Core.csproj" />
-    <ProjectReference Include="..\Shared\QubeFin.Persistence\QubeFin.Persistence.csproj" />
   </ItemGroup>
 
 </Project>

@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Shared\QubeFin.Core\QubeFin.Core.csproj" />
+    <ProjectReference Include="..\..\..\Shared\QubeFin.Core\QubeFin.Core.csproj" />
   </ItemGroup>
 
 </Project>

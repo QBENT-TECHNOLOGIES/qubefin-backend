@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Mappers.Payrolls;
 using QubeFin.Persistence.Models.Payroll;
 using System;
@@ -13,6 +14,7 @@ namespace QubeFin.Payroll.Persistence.Repositories
         Task<PayrollModel?> GetPayrollById(Guid payrollId);
         Task<IEnumerable<PayrollModel>> GetAllPayrolls();
         Task<MonthlyPayroll> GetMonthlyPayrollAsync(int payrollMonth, int payrollYear);
+        Task<List<TblPayRoll>> GetPayrollsForUpdateAsync(int month, int year, CancellationToken cancellationToken = default);
         Task<IEnumerable<MonthwisePayrollData>> GetMonthwisePayrollSummaryAsync();
     }
     public class PayrollRepository(QubeFinDataContext context) : IPayrollRepository
@@ -47,12 +49,18 @@ namespace QubeFin.Payroll.Persistence.Repositories
         }
         public async Task<IEnumerable<MonthwisePayrollData>> GetMonthwisePayrollSummaryAsync()
         {
-            var sql = "EXEC GetMonthlyPayroll";
+            var sql = "EXEC Payroll.USP_GetMonthlyPayroll";
             var result = await context.Database
                 .SqlQueryRaw<MonthwisePayrollData>(sql)
                 .ToListAsync();
 
             return result;
+        }
+        public async Task<List<TblPayRoll>> GetPayrollsForUpdateAsync(int month, int year, CancellationToken cancellationToken = default)
+        {
+            return await context.TblPayRolls
+                .Where(x => x.PayrollMonth == month && x.PayrollYear == year)
+                .ToListAsync(cancellationToken);
         }
     }
 }
