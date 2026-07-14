@@ -64,14 +64,12 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
 
         return employeeEntity is null ? null : employeeEntity.ToDomain();
     }
-}
-            return employeeEntity is null ? null : employeeEntity.ToDomain();
-        }
-        public async Task<Employee?> GetEmloyeeOrganization(Guid id)
-        {
-            var employeeEntity = await context.TblEmployees.Include(m => m.OrganizationUnit).FirstOrDefaultAsync(x => x.Id == id);
+        
+    public async Task<Employee?> GetEmloyeeOrganization(Guid id)
+    {
+        var employeeEntity = await context.TblEmployees.Include(m => m.OrganizationUnit).FirstOrDefaultAsync(x => x.Id == id);
 
-            return employeeEntity is null ? null : employeeEntity.ToDomain();
-        }
+        return employeeEntity is null ? null : employeeEntity.ToDomain();
     }
 }
+
