@@ -1,5 +1,4 @@
-﻿using Azure.Core;
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
@@ -8,7 +7,6 @@ using QubeFin.Hrms.Api.Requests;
 using QubeFin.Hrms.Application.Employees.Commands;
 using QubeFin.Hrms.Application.Employees.Queries;
 using System.Security.Claims;
-using System.Security.Principal;
 
 namespace QubeFin.Hrms.Api.Endpoints;
 
@@ -114,5 +112,11 @@ public class EmployeeEndpoints : IEndpoint
             return Results.Ok();
         })
         .WithSummary("Update Employee Official data");
+
+        app.MapPost("employees/search-by-text", async (IMediator mediator, SearchTextRequest request) =>
+        {
+            var resp = await mediator.Send(new GetEmployeeBySearchTextQuery(request.SearchText));
+            return TypedResults.Ok(resp);
+        }).WithSummary("Search Employees by Text");
     }
 }
