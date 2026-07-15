@@ -6,6 +6,7 @@ using QubeFin.Core.Identity;
 using QubeFin.Core.Results;
 using QubeFin.Hrms.Api.Requests;
 using QubeFin.Hrms.Application.Employees.Commands;
+using QubeFin.Hrms.Application.Employees.Models;
 using QubeFin.Hrms.Application.Employees.Queries;
 using System.Security.Claims;
 using System.Security.Principal;
@@ -114,5 +115,85 @@ public class EmployeeEndpoints : IEndpoint
             return Results.Ok();
         })
         .WithSummary("Update Employee Official data");
+
+        app.MapPut("employees/update/contact/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] ContactInfoRequest request, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+            var userId = principal.Identity.GetUserId();
+
+            var command = new UpdateEmployeeContactCommand(id, request.MobileNo, request.PersonalEmail, request.PrimaryEmergencyRelation, request.PrimaryEmergencyName, request.PrimaryEmergencyMobile,
+            request.SecondaryEmergencyRelation, request.SecondaryEmergencyName, request.SecondaryEmergencyMobile, userId);
+            var result = await sender.Send(command);
+            if (result.IsFailed)
+            {
+                if (result.Errors[0] is RecordNotFoundError)
+                {
+                    return Results.NotFound(result.Errors[0]);
+                }
+                if (result.Errors[0] is ValidationError)
+                {
+                    return Results.BadRequest(result.Errors[0]);
+                }
+            }
+
+            return Results.Ok();
+        })
+        .WithSummary("Update Employee Contact data");
+
+        app.MapPut("employees/update/address/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] AddressInfoRequest request, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+            var userId = principal.Identity.GetUserId();
+
+            var command = new UpdateEmployeeAddressCommand(id, request?.PresentAddress, request?.PermanentAddress, userId);
+            var result = await sender.Send(command);
+            if (result.IsFailed)
+            {
+                if (result.Errors[0] is RecordNotFoundError)
+                {
+                    return Results.NotFound(result.Errors[0]);
+                }
+                if (result.Errors[0] is ValidationError)
+                {
+                    return Results.BadRequest(result.Errors[0]);
+                }
+            }
+
+            return Results.Ok();
+        })
+        .WithSummary("Update Employee Address data");
+
+        app.MapPut("employees/update/banking-info/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] BankDetail request, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+            var userId = principal.Identity.GetUserId();
+
+            var command = new UpdateEmployeePayrollCommand(id, request.BankId, request.BankAccountNo, request.BankHolderName, request.BankBranch, request.BankAccountType, request.HasEsiEligible,
+                request.EsiIpNumber, request.UniversalAccountNumber, request.IsPayrollActive, userId);
+            var result = await sender.Send(command);
+            if (result.IsFailed)
+            {
+                if (result.Errors[0] is RecordNotFoundError)
+                {
+                    return Results.NotFound(result.Errors[0]);
+                }
+                if (result.Errors[0] is ValidationError)
+                {
+                    return Results.BadRequest(result.Errors[0]);
+                }
+            }
+
+            return Results.Ok();
+        })
+        .WithSummary("Update Banking Info data");
     }
 }
