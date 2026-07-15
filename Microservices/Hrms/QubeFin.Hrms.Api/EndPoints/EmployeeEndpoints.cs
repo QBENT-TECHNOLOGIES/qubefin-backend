@@ -61,7 +61,7 @@ public class EmployeeEndpoints : IEndpoint
         })
         .WithSummary("Create Employee");
 
-        app.MapPut("employees/update/personal/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] PersonalInfoRequest request, ISender sender) =>
+        app.MapPut("employees/update/personal/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id,  PersonalInfoRequest request, ISender sender) =>
         {
             if (principal.Identity is null)
             {
@@ -70,7 +70,7 @@ public class EmployeeEndpoints : IEndpoint
             var userId = principal.Identity.GetUserId();
 
             var command = new UpdateEmployeePersonalCommand(id,request.Code, request.Salutation, request.FirstName, request.MiddleName, request.LastName, request.FatherName, request.MotherName,
-                request.DateOfBirth, request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisablityType, request.MaritalStatus, userId);
+                DateOnly.FromDateTime( request.DateOfBirth), request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisablityType, request.MaritalStatus, userId);
             var result = await sender.Send(command);
             if (result.IsFailed)
             {

@@ -9,7 +9,7 @@ public class PersonalInfoRequest
     public string LastName { get; private set; } = null!;
     public string? FatherName { get; private set; }
     public string? MotherName { get; private set; }
-    public DateOnly DateOfBirth { get; private set; }
+    public DateTime DateOfBirth { get; private set; }
     public string Gender { get; private set; } = null!;
     public string Religion { get; private set; } = null!;
     public string? Caste { get; private set; }
