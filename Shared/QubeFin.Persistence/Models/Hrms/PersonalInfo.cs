@@ -2,6 +2,7 @@
 
 public class PersonalInfo
 {
+    public string Code { get; private set; } = null!;
     public string? Salutation { get; private set; }
     public string FirstName { get; private set; } = null!;
     public string? MiddleName { get; private set; }
@@ -21,9 +22,10 @@ public class PersonalInfo
     {
     }
 
-    public PersonalInfo(string? salutation, string firstName, string? middleName, string lastName, string? fatherName, string? motherName,
+    public PersonalInfo(string code, string? salutation, string firstName, string? middleName, string lastName, string? fatherName, string? motherName,
         DateOnly dateOfBirth, string gender, string religion, string? caste, string nationality, string bloodGroup, string? disablityType, string? maritalStatus)
     {
+        Code = code;
         Salutation = salutation;
         FirstName = firstName;
         MiddleName = middleName;

@@ -16,7 +16,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands;
 
 #region --- COMMAND ---
 public record CreateEmployeeCommand(string Code, string? Salutation, string FirstName, string? MiddleName, string LastName, string? FatherName, string? MotherName, 
-    DateOnly DateOfBirth, string Gender, string Religion, string? Caste, string Nationality, string BloodGroup, string? DisabilityType, string? MaritalStatus,
+    DateTime DateOfBirth, string Gender, string Religion, string? Caste, string Nationality, string BloodGroup, string? DisabilityType, string? MaritalStatus,
     Guid CreatedBy
 ) : IRequest<Result<CreateEmployeeResponse>>;
 #endregion
@@ -64,8 +64,8 @@ internal sealed class CreateEmployeeCommandHandler(IEmployeeRepository employeeR
         var employee = Employee.Create(
             Guid.NewGuid(),
             request.Code,
-            new PersonalInfo(request.Salutation, request.FirstName, request.MiddleName, request.LastName, request.FatherName, request.MotherName,
-                request.DateOfBirth, request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisabilityType, request.MaritalStatus),
+            new PersonalInfo(request.Code, request.Salutation, request.FirstName, request.MiddleName, request.LastName, request.FatherName, request.MotherName,
+                DateOnly.FromDateTime( request.DateOfBirth), request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisabilityType, request.MaritalStatus),
             new OfficialInfo(),
             new ContactInfo(),
             new AddressInfo(),

@@ -33,6 +33,8 @@ public partial class TblAdministrativeUnit
 
     public virtual TblAdministrativeUnit? Parent { get; set; }
 
+    public virtual ICollection<TblBranchSurvey> TblBranchSurveys { get; set; } = new List<TblBranchSurvey>();
+
     public virtual ICollection<TblEmployee> TblEmployeePermanentAdministrativeUnits { get; set; } = new List<TblEmployee>();
 
     public virtual ICollection<TblEmployee> TblEmployeePresentAdministrativeUnits { get; set; } = new List<TblEmployee>();
@@ -42,4 +44,6 @@ public partial class TblAdministrativeUnit
     public virtual ICollection<TblMemberAddress> TblMemberAddresses { get; set; } = new List<TblMemberAddress>();
 
     public virtual ICollection<TblPoliceStation> TblPoliceStations { get; set; } = new List<TblPoliceStation>();
+
+    public virtual ICollection<TblSurvey> TblSurveys { get; set; } = new List<TblSurvey>();
 }

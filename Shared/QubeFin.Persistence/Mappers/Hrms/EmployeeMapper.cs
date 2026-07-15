@@ -50,8 +50,8 @@ public static class EmployeeMapper
             OrganizationUnitId = employee.OfficialInfo.OrganizationUnitId,
             DepartmentId = employee.OfficialInfo.DepartmentId,
             EmployementType = employee.OfficialInfo.EmployementType,
-            JoiningDate = employee.OfficialInfo.DateOfJoining,
-            ConfirmationDate = employee.OfficialInfo.DateOfConfirmation,
+            JoiningDate = employee.OfficialInfo.JoiningDate,
+            ConfirmationDate = employee.OfficialInfo.ConfirmationDate,
             SeparationDate = employee.OfficialInfo.SeparationDate,
             ReferedBy = employee.OfficialInfo.ReferedBy,
             HowYouKnow = employee.OfficialInfo.HowYouKnow,
@@ -104,6 +104,7 @@ public static class EmployeeMapper
     private static PersonalInfo MapPersonalInfo(TblEmployee entity)
     {
         return new PersonalInfo(
+            entity.Code,
             entity.Salutation,
             entity.FirstName,
             entity.MiddleName,
