@@ -61,7 +61,7 @@ public class EmployeeEndpoints : IEndpoint
         })
         .WithSummary("Create Employee");
 
-        app.MapPut("employees/update/personal/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id,  PersonalInfoRequest request, ISender sender) =>
+        app.MapPut("employees/update/personal/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] PersonalInfoRequest request, ISender sender) =>
         {
             if (principal.Identity is null)
             {
@@ -88,7 +88,7 @@ public class EmployeeEndpoints : IEndpoint
         })
         .WithSummary("Update Employee Personal data");
 
-        app.MapPut("employees/update/official/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, OfficialInfoRequest request, ISender sender) =>
+        app.MapPut("employees/update/official/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] OfficialInfoRequest request, ISender sender) =>
         {
             if (principal.Identity is null)
             {
@@ -96,8 +96,8 @@ public class EmployeeEndpoints : IEndpoint
             }
             var userId = principal.Identity.GetUserId();
 
-            var command = new UpdateEmployeeOfficialCommand(id, request.CompanyId, request.OrganizationUnitId, request.DepartmentId, request.EmployementType, request.DateOfJoining, request.DateOfConfirmation,
-                request.SeparationDate, request.ReferedBy, request.HowYouKnow, request.OfficialEmail, request.IsActive, userId);
+            var command = new UpdateEmployeeOfficialCommand(id, request.CompanyId, request.OrganizationUnitId, request.DepartmentId, request.EmployementType, request.DateOfJoining != null ? DateOnly.FromDateTime(request.DateOfJoining.Value) : null, request.DateOfConfirmation != null ? DateOnly.FromDateTime(request.DateOfConfirmation.Value) : null,
+                request.SeparationDate != null ? DateOnly.FromDateTime(request.SeparationDate.Value) : null, request.ReferedBy, request.HowYouKnow, request.OfficialEmail, request.IsActive, userId);
             var result = await sender.Send(command);
             if (result.IsFailed)
             {

@@ -1,4 +1,6 @@
-﻿namespace QubeFin.Persistence.Models.Hrms;
+﻿using Microsoft.IdentityModel.Tokens;
+
+namespace QubeFin.Persistence.Models.Hrms;
 
 public class PersonalInfo
 {
@@ -39,6 +41,6 @@ public class PersonalInfo
         Nationality = nationality;
         BloodGroup = bloodGroup;
         DisablityType = disablityType;
-        MaritalStatus = maritalStatus;
+        MaritalStatus = maritalStatus?.Trim();
     }
 }
