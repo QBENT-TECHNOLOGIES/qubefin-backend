@@ -27,5 +27,7 @@ public partial class TblSalaryStructure
 
     public virtual TblSalaryGrade Grade { get; set; } = null!;
 
+    public virtual ICollection<TblPayRoll> TblPayRolls { get; set; } = new List<TblPayRoll>();
+
     public virtual ICollection<TblSalaryStructureComponent> TblSalaryStructureComponents { get; set; } = new List<TblSalaryStructureComponent>();
 }

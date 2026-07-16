@@ -139,6 +139,8 @@ public partial class TblEmployee
 
     public Guid? LastModifiedBy { get; set; }
 
+    public string? PfaccountNo { get; set; }
+
     public virtual TblFinancialInstitute? Bank { get; set; }
 
     public virtual TblCompany? Company { get; set; }
@@ -164,6 +166,12 @@ public partial class TblEmployee
     public virtual ICollection<TblLeaveTransaction> TblLeaveTransactions { get; set; } = new List<TblLeaveTransaction>();
 
     public virtual ICollection<TblPayRoll> TblPayRolls { get; set; } = new List<TblPayRoll>();
+
+    public virtual ICollection<TblSurveyAssigned> TblSurveyAssigneds { get; set; } = new List<TblSurveyAssigned>();
+
+    public virtual ICollection<TblSurveyCommitteeEvaluation> TblSurveyCommitteeEvaluations { get; set; } = new List<TblSurveyCommitteeEvaluation>();
+
+    public virtual ICollection<TblSurveyCommittee> TblSurveyCommittees { get; set; } = new List<TblSurveyCommittee>();
 
     public virtual ICollection<TblUser> TblUsers { get; set; } = new List<TblUser>();
 }

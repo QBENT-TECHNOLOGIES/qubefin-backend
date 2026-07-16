@@ -1,10 +1,14 @@
 ﻿using FluentResults;
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Mappers.Hrms;
+using QubeFin.Persistence.Models.App;
 using QubeFin.Persistence.Models.Hrms;
+using System.Text.RegularExpressions;
 
 namespace QubeFin.Hrms.Application.Employees.Commands;
 
@@ -21,6 +25,18 @@ public class UpdateEmployeeOfficialCommandValidator : AbstractValidator<UpdateEm
 {
     public UpdateEmployeeOfficialCommandValidator()
     {
+            //RuleFor(x => x.FirstName)
+            //    .Must(value => !string.IsNullOrWhiteSpace(value)
+            //        && Regex.IsMatch(value, @"^[A-Za-z]+$")
+            //        && !value.Equals("Select", StringComparison.OrdinalIgnoreCase))
+            //    .WithMessage("Please enter a valid First Name name.")
+            //    .MinimumLength(3).WithMessage("First Name must be more than 2 characters.")
+            //    .MaximumLength(30).WithMessage("First Name cannot exceed 30 characters.");
+            //RuleFor(x => x.LastName)
+            //    .NotEmpty()
+            //    .Matches("^[A-Za-z]{3,30}$")
+            //    .WithMessage("Last name must contain only letters and be between 3 and 30 characters long.");
+            
     }
 }
 #endregion
@@ -46,10 +62,13 @@ internal sealed class UpdateEmployeeOfficialCommandHandler(IEmployeeRepository e
                 request.SeparationDate, request.ReferedBy, request.HowYouKnow, request.OfficialEmail, request.IsActive),
             request.UserId
             );
+            //employeeRepository.UpdateEmployee(existingEmployee);
 
         await employeeRepository.UpdateAsync(employee);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Ok(new UpdateEmployeeOfficialResponse(true));
+
+
     }
 }
 #endregion

@@ -10,7 +10,7 @@ public record GetEmployeesBySearchQuery(string SearchType, string? SearchText, G
 #endregion
 
 #region --- RESPONSE ---
-public record EmployeesBySearchResult(Guid Id, string? Code, string Name, string Office, string? Email, string? Mobile, DateOnly? JoiningDate, DateOnly? SeperationDate, bool IsActive);
+public record EmployeesBySearchResult(Guid Id, string? Code, string FullName, string Office, string? Email, string? Mobile, DateOnly? JoiningDate, DateOnly? SeperationDate, bool IsActive);
 public record GetEmployeesBySearchResponse(IReadOnlyList<EmployeesBySearchResult> Employees, int TotalRecords);
 #endregion
 
@@ -54,7 +54,7 @@ internal sealed class GetEmployeesBySearchQueryHandler(QubeFinDataContext contex
 
         var totalCount = await filterEntitiesQuery.CountAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
         var employees = await filterEntitiesQuery.Skip(skipRecordCount).Take(request.PageSize)
-            .Select(m => new EmployeesBySearchResult(m.Id, m.Code, string.Empty, string.Empty,
+            .Select(m => new EmployeesBySearchResult(m.Id, m.Code, m.FullName, string.Empty,
                 m.OfficialEmail, m.MobileNo, m.JoiningDate, m.SeparationDate, m.IsActive))
             .ToListAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
 

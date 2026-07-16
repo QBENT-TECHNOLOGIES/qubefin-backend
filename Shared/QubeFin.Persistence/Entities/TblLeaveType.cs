@@ -37,5 +37,9 @@ public partial class TblLeaveType
 
     public DateTime? LastModifiedOn { get; set; }
 
+    public bool ApplicableAfterProbation { get; set; }
+
+    public bool IsMonthlyCredit { get; set; }
+
     public virtual ICollection<TblLeaveTransaction> TblLeaveTransactions { get; set; } = new List<TblLeaveTransaction>();
 }

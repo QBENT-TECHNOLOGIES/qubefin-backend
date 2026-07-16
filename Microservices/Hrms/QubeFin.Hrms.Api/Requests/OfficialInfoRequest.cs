@@ -2,15 +2,15 @@
 
 public class OfficialInfoRequest
 {
-    public Guid? CompanyId { get; private set; }
-    public Guid? OrganizationUnitId { get; private set; }
-    public Guid? DepartmentId { get; private set; }
-    public string? EmployementType { get; private set; }
-    public DateOnly? DateOfJoining { get; private set; }
-    public DateOnly? DateOfConfirmation { get; private set; }
-    public DateOnly? SeparationDate { get; private set; }
-    public Guid? ReferedBy { get; private set; }
-    public string? HowYouKnow { get; private set; }
-    public string? OfficialEmail { get; private set; }
-    public bool IsActive { get; private set; }
+    public Guid? CompanyId { get;  set; }
+    public Guid? OrganizationUnitId { get;  set; }
+    public Guid? DepartmentId { get;  set; }
+    public string? EmployementType { get;  set; }
+    public DateTime? DateOfJoining { get;  set; }
+    public DateTime? DateOfConfirmation { get;  set; }
+    public DateTime? SeparationDate { get;  set; }
+    public Guid? ReferedBy { get;  set; }
+    public string? HowYouKnow { get;  set; }
+    public string? OfficialEmail { get;  set; }
+    public bool IsActive { get;  set; }
 }
