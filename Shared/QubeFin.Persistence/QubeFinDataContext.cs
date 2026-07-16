@@ -34,6 +34,10 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblAttendance> TblAttendances { get; set; }
 
+    public virtual DbSet<TblBranchSurvey> TblBranchSurveys { get; set; }
+
+    public virtual DbSet<TblCalenderYear> TblCalenderYears { get; set; }
+
     public virtual DbSet<TblCoBorrower> TblCoBorrowers { get; set; }
 
     public virtual DbSet<TblCompany> TblCompanies { get; set; }
@@ -168,6 +172,16 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblSalaryStructureComponent> TblSalaryStructureComponents { get; set; }
 
+    public virtual DbSet<TblSurvey> TblSurveys { get; set; }
+
+    public virtual DbSet<TblSurveyAssigned> TblSurveyAssigneds { get; set; }
+
+    public virtual DbSet<TblSurveyCommittee> TblSurveyCommittees { get; set; }
+
+    public virtual DbSet<TblSurveyCommitteeEvaluation> TblSurveyCommitteeEvaluations { get; set; }
+
+    public virtual DbSet<TblSurveyDocument> TblSurveyDocuments { get; set; }
+
     public virtual DbSet<TblSystemValue> TblSystemValues { get; set; }
 
     public virtual DbSet<TblUser> TblUsers { get; set; }
@@ -177,15 +191,11 @@ public partial class QubeFinDataContext : DbContext
     public virtual DbSet<TblUserMenu> TblUserMenus { get; set; }
 
     public virtual DbSet<TblUserSession> TblUserSessions { get; set; }
- 
+
+    public virtual DbSet<WegrowSalJune> WegrowSalJunes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<TblAccountGroup>(entity =>
-        {
-            entity.ToTable("Tbl_AccountGroup", "Finance");
-        });
-
         modelBuilder.Entity<TblAccountGroup>(entity =>
         {
             entity.ToTable("Tbl_AccountGroup", "Finance");
@@ -316,6 +326,110 @@ public partial class QubeFinDataContext : DbContext
             entity.HasOne(d => d.OrganizationUnit).WithMany(p => p.TblAttendances)
                 .HasForeignKey(d => d.OrganizationUnitId)
                 .HasConstraintName("FK_Tbl_Attendance_Tbl_OrganizationUnit");
+        });
+
+        modelBuilder.Entity<TblBranchSurvey>(entity =>
+        {
+            entity.ToTable("Tbl_BranchSurvey", "Global");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.AccessibilityByMotorCycle).HasMaxLength(10);
+            entity.Property(e => e.ActionOn).HasColumnType("datetime");
+            entity.Property(e => e.AdministrativeStatus).HasMaxLength(30);
+            entity.Property(e => e.AgriculturePercent).HasColumnType("decimal(5, 2)");
+            entity.Property(e => e.ApproxPortfolio).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.AreaVisitedPhysically).HasMaxLength(10);
+            entity.Property(e => e.Atms).HasColumnName("ATMs");
+            entity.Property(e => e.AutoTotoAvailability).HasMaxLength(10);
+            entity.Property(e => e.AverageFamilySize).HasColumnType("decimal(5, 2)");
+            entity.Property(e => e.BusConnectivity).HasMaxLength(100);
+            entity.Property(e => e.BusConnectivityAvailable).HasMaxLength(10);
+            entity.Property(e => e.BusinessRisk).HasMaxLength(20);
+            entity.Property(e => e.CollectionRisk).HasMaxLength(20);
+            entity.Property(e => e.CommiteeSubmitOn).HasColumnType("datetime");
+            entity.Property(e => e.CommunalIssuesRisk).HasMaxLength(20);
+            entity.Property(e => e.CompetitionRisk).HasMaxLength(20);
+            entity.Property(e => e.CompetitorVerificationCompleted).HasMaxLength(10);
+            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.CycloneRisk).HasMaxLength(20);
+            entity.Property(e => e.DigitalPaymentAcceptance).HasMaxLength(100);
+            entity.Property(e => e.DistanceFromDistrictHeadquarters).HasColumnType("decimal(8, 2)");
+            entity.Property(e => e.DistanceFromExistingWeGrowBranch).HasColumnType("decimal(8, 2)");
+            entity.Property(e => e.DrinkingWaterAvailability).HasMaxLength(100);
+            entity.Property(e => e.DroughtRisk).HasMaxLength(20);
+            entity.Property(e => e.ElectricitySupply).HasMaxLength(100);
+            entity.Property(e => e.EstimatedCollectionEfficiency).HasColumnType("decimal(5, 2)");
+            entity.Property(e => e.EstimatedLoanPortfolioPotential).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.EstimatedNumberOfJlgsCentres).HasColumnName("EstimatedNumberOfJLGsCentres");
+            entity.Property(e => e.ExistingCustomersContacted).HasMaxLength(10);
+            entity.Property(e => e.ExpectedMonthlyDisbursement).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.FemalePopulationPercent).HasColumnType("decimal(5, 2)");
+            entity.Property(e => e.FloodRisk).HasMaxLength(20);
+            entity.Property(e => e.FraudRisk).HasMaxLength(20);
+            entity.Property(e => e.GeoTag).HasMaxLength(200);
+            entity.Property(e => e.Gpsverified)
+                .HasMaxLength(10)
+                .HasColumnName("GPSVerified");
+            entity.Property(e => e.InternetAvailability).HasMaxLength(100);
+            entity.Property(e => e.Jlgpotential).HasColumnName("JLGPotential");
+            entity.Property(e => e.LandslideRisk).HasMaxLength(20);
+            entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
+            entity.Property(e => e.Latitude).HasColumnType("decimal(10, 8)");
+            entity.Property(e => e.LeanSeason).HasMaxLength(200);
+            entity.Property(e => e.LiteracyRate).HasColumnType("decimal(5, 2)");
+            entity.Property(e => e.LocalReferencesVerified).HasMaxLength(10);
+            entity.Property(e => e.Longitude).HasColumnType("decimal(11, 8)");
+            entity.Property(e => e.MainCrop).HasMaxLength(200);
+            entity.Property(e => e.MigrationRisk).HasMaxLength(20);
+            entity.Property(e => e.MigrationTrend).HasMaxLength(100);
+            entity.Property(e => e.MinorityPopulationPercent).HasColumnType("decimal(5, 2)");
+            entity.Property(e => e.MobileNetworkCoverage).HasMaxLength(100);
+            entity.Property(e => e.MultipleLendingRisk).HasMaxLength(20);
+            entity.Property(e => e.NameOfInstitution).HasMaxLength(200);
+            entity.Property(e => e.NearestLandmark).HasMaxLength(200);
+            entity.Property(e => e.OtherIncomeGeneratingActivities).HasMaxLength(500);
+            entity.Property(e => e.OverallEconomicCondition).HasMaxLength(20);
+            entity.Property(e => e.Parpercent)
+                .HasColumnType("decimal(5, 2)")
+                .HasColumnName("PARPercent");
+            entity.Property(e => e.PeakBusinessSeason).HasMaxLength(200);
+            entity.Property(e => e.PhotographsAttached).HasMaxLength(10);
+            entity.Property(e => e.PinCode)
+                .HasMaxLength(6)
+                .IsUnicode(false);
+            entity.Property(e => e.PoliticalDisturbanceRisk).HasMaxLength(20);
+            entity.Property(e => e.PortfolioYear1).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.PortfolioYear2).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.PortfolioYear3).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.ProposedOperationalArea).HasMaxLength(200);
+            entity.Property(e => e.PublicTransportAvailability).HasMaxLength(100);
+            entity.Property(e => e.RailConnectivity).HasMaxLength(10);
+            entity.Property(e => e.RailwayConnectivity).HasMaxLength(100);
+            entity.Property(e => e.Recommendation).HasMaxLength(30);
+            entity.Property(e => e.RoadAccessibility).HasMaxLength(10);
+            entity.Property(e => e.RoadCondition).HasMaxLength(20);
+            entity.Property(e => e.SafetyOfArea).HasMaxLength(100);
+            entity.Property(e => e.ScheduledCastePercent).HasColumnType("decimal(5, 2)");
+            entity.Property(e => e.ScheduledTribePercent).HasColumnType("decimal(5, 2)");
+            entity.Property(e => e.SurveyorSubmitOn).HasColumnType("datetime");
+
+            entity.HasOne(d => d.AdministrativeUnit).WithMany(p => p.TblBranchSurveys)
+                .HasForeignKey(d => d.AdministrativeUnitId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_BranchSurvey_Tbl_AdministrativeUnit");
+
+            entity.HasOne(d => d.Survey).WithMany(p => p.TblBranchSurveys)
+                .HasForeignKey(d => d.SurveyId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_BranchSurvey_Tbl_Survey");
+        });
+
+        modelBuilder.Entity<TblCalenderYear>(entity =>
+        {
+            entity.ToTable("Tbl_CalenderYear", "Global");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Caption).HasMaxLength(20);
         });
 
         modelBuilder.Entity<TblCoBorrower>(entity =>
@@ -559,9 +673,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
-            entity.Property(e => e.Name)
-                .HasMaxLength(10)
-                .IsFixedLength();
+            entity.Property(e => e.Name).HasMaxLength(20);
             entity.Property(e => e.RowVersion)
                 .IsRowVersion()
                 .IsConcurrencyToken();
@@ -668,6 +780,9 @@ public partial class QubeFinDataContext : DbContext
                 .IsFixedLength();
             entity.Property(e => e.PermanentRoadName).HasMaxLength(50);
             entity.Property(e => e.PersonalEmail).HasMaxLength(100);
+            entity.Property(e => e.PfaccountNo)
+                .HasMaxLength(50)
+                .HasColumnName("PFAccountNo");
             entity.Property(e => e.PresentHouseNo).HasMaxLength(20);
             entity.Property(e => e.PresentLandMark).HasMaxLength(100);
             entity.Property(e => e.PresentOwnerShipOfHouse).HasMaxLength(10);
@@ -916,6 +1031,11 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.RequestDate).HasColumnType("datetime");
             entity.Property(e => e.TotalDays).HasComputedColumnSql("(datediff(day,[FromDate],[ToDate])+(1))", false);
 
+            entity.HasOne(d => d.CalenderYear).WithMany(p => p.TblLeaveRequests)
+                .HasForeignKey(d => d.CalenderYearId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_LeaveRequest_Tbl_CalenderYear");
+
             entity.HasOne(d => d.StatusNavigation).WithMany(p => p.TblLeaveRequests)
                 .HasForeignKey(d => d.Status)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -956,19 +1076,14 @@ public partial class QubeFinDataContext : DbContext
             entity.ToTable("Tbl_LeaveTransaction", "Hrms");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.LeaveCredit).HasColumnType("numeric(18, 2)");
-            entity.Property(e => e.LeaveDebit).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.LeaveCredit).HasColumnType("numeric(5, 3)");
+            entity.Property(e => e.LeaveDebit).HasColumnType("numeric(5, 3)");
             entity.Property(e => e.Remarks).HasMaxLength(200);
 
             entity.HasOne(d => d.Employee).WithMany(p => p.TblLeaveTransactions)
                 .HasForeignKey(d => d.EmployeeId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_LeaveTransaction_Tbl_Employee");
-
-            entity.HasOne(d => d.FinYear).WithMany(p => p.TblLeaveTransactions)
-                .HasForeignKey(d => d.FinYearId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Tbl_LeaveTransaction_Tbl_FinYear");
 
             entity.HasOne(d => d.LeaveType).WithMany(p => p.TblLeaveTransactions)
                 .HasForeignKey(d => d.LeaveTypeId)
@@ -1502,10 +1617,14 @@ public partial class QubeFinDataContext : DbContext
         {
             entity.ToTable("Tbl_OrganizationUnit", "Global");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).HasDefaultValueSql("(newid())", "DF_Tbl_OrganizationUnit_Id");
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
             entity.Property(e => e.Name).HasMaxLength(50);
+
+            entity.HasOne(d => d.Company).WithMany(p => p.TblOrganizationUnits)
+                .HasForeignKey(d => d.CompanyId)
+                .HasConstraintName("FK_Tbl_OrganizationUnit_Tbl_Company");
 
             entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.TblOrganizationUnitCreatedByNavigations)
                 .HasForeignKey(d => d.CreatedBy)
@@ -1566,6 +1685,14 @@ public partial class QubeFinDataContext : DbContext
                 .HasForeignKey(d => d.OrganizationUnitId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_PayRoll_Tbl_OrganizationUnit");
+
+            entity.HasOne(d => d.SalaryGrade).WithMany(p => p.TblPayRolls)
+                .HasForeignKey(d => d.SalaryGradeId)
+                .HasConstraintName("Fk_Tbl_SalaryGrade_Tbl_Payroll");
+
+            entity.HasOne(d => d.SalaryStructure).WithMany(p => p.TblPayRolls)
+                .HasForeignKey(d => d.SalaryStructureId)
+                .HasConstraintName("FK_Tbl_PayRoll_Tbl_SalaryStructure");
         });
 
         modelBuilder.Entity<TblPayRollComponent>(entity =>
@@ -1627,7 +1754,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
-            entity.Property(e => e.Name).HasMaxLength(30);
+            entity.Property(e => e.Name).HasMaxLength(50);
             entity.Property(e => e.RowVersion)
                 .IsRowVersion()
                 .IsConcurrencyToken();
@@ -1786,6 +1913,93 @@ public partial class QubeFinDataContext : DbContext
                 .HasConstraintName("FK_Tbl_SalaryStructureComponent_Tbl_SalaryStructure");
         });
 
+        modelBuilder.Entity<TblSurvey>(entity =>
+        {
+            entity.ToTable("Tbl_Survey", "Global");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.AssignmentNo).HasMaxLength(50);
+            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
+            entity.Property(e => e.ProposedArea).HasMaxLength(200);
+            entity.Property(e => e.Sequence).ValueGeneratedOnAdd();
+            entity.Property(e => e.SurveyType).HasMaxLength(50);
+
+            entity.HasOne(d => d.AdministrativeUnit).WithMany(p => p.TblSurveys)
+                .HasForeignKey(d => d.AdministrativeUnitId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_Survey_Tbl_AdministrativeUnit");
+        });
+
+        modelBuilder.Entity<TblSurveyAssigned>(entity =>
+        {
+            entity.ToTable("Tbl_SurveyAssigned", "Global");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.AssignedDate).HasColumnType("datetime");
+
+            entity.HasOne(d => d.Employee).WithMany(p => p.TblSurveyAssigneds)
+                .HasForeignKey(d => d.EmployeeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_SurveyAssigned_Tbl_Employee");
+
+            entity.HasOne(d => d.Survey).WithMany(p => p.TblSurveyAssigneds)
+                .HasForeignKey(d => d.SurveyId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_SurveyAssigned_Tbl_Survey");
+        });
+
+        modelBuilder.Entity<TblSurveyCommittee>(entity =>
+        {
+            entity.ToTable("Tbl_SurveyCommittee", "Global");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
+
+            entity.HasOne(d => d.Employee).WithMany(p => p.TblSurveyCommittees)
+                .HasForeignKey(d => d.EmployeeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_SurveyCommittee_Tbl_Employee");
+        });
+
+        modelBuilder.Entity<TblSurveyCommitteeEvaluation>(entity =>
+        {
+            entity.ToTable("Tbl_SurveyCommitteeEvaluation", "Global");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Comments).HasMaxLength(500);
+            entity.Property(e => e.EvaluationDate).HasColumnType("datetime");
+            entity.Property(e => e.Status)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+
+            entity.HasOne(d => d.Employee).WithMany(p => p.TblSurveyCommitteeEvaluations)
+                .HasForeignKey(d => d.EmployeeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_SurveyCommitteeEvaluation_Tbl_Employee");
+
+            entity.HasOne(d => d.Survey).WithMany(p => p.TblSurveyCommitteeEvaluations)
+                .HasForeignKey(d => d.SurveyId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_SurveyCommitteeEvaluation_Tbl_Survey");
+        });
+
+        modelBuilder.Entity<TblSurveyDocument>(entity =>
+        {
+            entity.ToTable("Tbl_SurveyDocument", "Global");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.FileName).HasMaxLength(300);
+            entity.Property(e => e.FileSequence).HasMaxLength(300);
+            entity.Property(e => e.Sequence).ValueGeneratedOnAdd();
+
+            entity.HasOne(d => d.Survey).WithMany(p => p.TblSurveyDocuments)
+                .HasForeignKey(d => d.SurveyId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_SurveyDocument_Tbl_Survey");
+        });
+
         modelBuilder.Entity<TblSystemValue>(entity =>
         {
             entity.HasKey(e => new { e.SysKey, e.SysVal });
@@ -1851,6 +2065,325 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.UserAgent).HasMaxLength(500);
 
             entity.HasOne(d => d.User).WithMany(p => p.TblUserSessions).HasForeignKey(d => d.UserId);
+        });
+
+        modelBuilder.Entity<WegrowSalJune>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToTable("Wegrow_Sal_June");
+
+            entity.Property(e => e.AC2PfAdminCharges).HasColumnName("A_C_2_PF_ADMIN_CHARGES");
+            entity.Property(e => e.AadharNo)
+                .HasMaxLength(50)
+                .HasColumnName("Aadhar_No");
+            entity.Property(e => e.AbryBenefits).HasColumnName("ABRY_BENEFITS");
+            entity.Property(e => e.AdhocRemark)
+                .HasMaxLength(1)
+                .HasColumnName("Adhoc_Remark");
+            entity.Property(e => e.Area).HasMaxLength(50);
+            entity.Property(e => e.ArrearDays).HasColumnName("Arrear_Days");
+            entity.Property(e => e.ArrearEarlyGoingLop).HasColumnName("ARREAR_EARLY_GOING_LOP");
+            entity.Property(e => e.ArrearLateComingLop).HasColumnName("ARREAR_LATE_COMING_LOP");
+            entity.Property(e => e.ArrearOther).HasColumnName("ARREAR_OTHER");
+            entity.Property(e => e.ArrearOvertime).HasColumnName("ARREAR_OVERTIME");
+            entity.Property(e => e.ArrearOvertimeHours).HasColumnName("Arrear_Overtime_Hours");
+            entity.Property(e => e.ArrearPaidHolidays).HasColumnName("ARREAR_PAID_HOLIDAYS");
+            entity.Property(e => e.BankAccountNo).HasColumnName("Bank_Account_No");
+            entity.Property(e => e.BankBranchCode)
+                .HasMaxLength(50)
+                .HasColumnName("Bank_Branch_Code");
+            entity.Property(e => e.BankName)
+                .HasMaxLength(50)
+                .HasColumnName("Bank_Name");
+            entity.Property(e => e.BasicSalary).HasColumnName("BASIC_SALARY");
+            entity.Property(e => e.BasicSalary2).HasColumnName("BASIC_SALARY2");
+            entity.Property(e => e.BasicSalaryArrears).HasColumnName("BASIC_SALARY_ARREARS");
+            entity.Property(e => e.Bonus)
+                .HasMaxLength(1)
+                .HasColumnName("BONUS");
+            entity.Property(e => e.Bonus2).HasColumnName("BONUS2");
+            entity.Property(e => e.BonusArrears).HasColumnName("BONUS_ARREARS");
+            entity.Property(e => e.BonusCtc).HasColumnName("BONUS_CTC");
+            entity.Property(e => e.BonusCurrentFy).HasColumnName("BONUS_CURRENT_FY");
+            entity.Property(e => e.BonusPreviousFy).HasColumnName("BONUS_PREVIOUS_FY");
+            entity.Property(e => e.BonusProvision)
+                .HasMaxLength(1)
+                .HasColumnName("BONUS_PROVISION");
+            entity.Property(e => e.BonusProvision2).HasColumnName("BONUS_PROVISION2");
+            entity.Property(e => e.CanteenDeduction)
+                .HasMaxLength(1)
+                .HasColumnName("CANTEEN_DEDUCTION");
+            entity.Property(e => e.CanteenDeduction2).HasColumnName("CANTEEN_DEDUCTION2");
+            entity.Property(e => e.CessForThePeriod).HasColumnName("CESS_FOR_THE_PERIOD");
+            entity.Property(e => e.City).HasMaxLength(50);
+            entity.Property(e => e.ClaimExpensePayment)
+                .HasMaxLength(1)
+                .HasColumnName("CLAIM_EXPENSE_PAYMENT");
+            entity.Property(e => e.ClaimExpensePayment2).HasColumnName("CLAIM_EXPENSE_PAYMENT2");
+            entity.Property(e => e.ClaimExpensePaymentArrears).HasColumnName("CLAIM_EXPENSE_PAYMENT_ARREARS");
+            entity.Property(e => e.Company).HasMaxLength(50);
+            entity.Property(e => e.CompanyProvidentFund).HasColumnName("COMPANY_PROVIDENT_FUND");
+            entity.Property(e => e.CompanyProvidentFundArrear).HasColumnName("COMPANY_PROVIDENT_FUND_ARREAR");
+            entity.Property(e => e.ConfirmationDate).HasColumnName("Confirmation_Date");
+            entity.Property(e => e.ConveyanceAllowance).HasColumnName("CONVEYANCE_ALLOWANCE");
+            entity.Property(e => e.ConveyanceAllowance2).HasColumnName("CONVEYANCE_ALLOWANCE2");
+            entity.Property(e => e.ConveyanceAllowanceArrears).HasColumnName("CONVEYANCE_ALLOWANCE_ARREARS");
+            entity.Property(e => e.CtcTotal).HasColumnName("CTC_TOTAL");
+            entity.Property(e => e.Currency).HasMaxLength(50);
+            entity.Property(e => e.Da)
+                .HasMaxLength(1)
+                .HasColumnName("DA");
+            entity.Property(e => e.Da2).HasColumnName("DA2");
+            entity.Property(e => e.DaArrears).HasColumnName("DA_ARREARS");
+            entity.Property(e => e.DateOfBirth).HasColumnName("Date_of_Birth");
+            entity.Property(e => e.DateOfJoining).HasColumnName("Date_of_Joining");
+            entity.Property(e => e.DateOfLeaving).HasColumnName("Date_of_Leaving");
+            entity.Property(e => e.DaysInMonth).HasColumnName("Days_In_Month");
+            entity.Property(e => e.DaysWorked).HasColumnName("Days_Worked");
+            entity.Property(e => e.Department).HasMaxLength(50);
+            entity.Property(e => e.Designation).HasMaxLength(50);
+            entity.Property(e => e.DriverReimbursement)
+                .HasMaxLength(1)
+                .HasColumnName("DRIVER_REIMBURSEMENT");
+            entity.Property(e => e.DriverReimbursement2).HasColumnName("DRIVER_REIMBURSEMENT2");
+            entity.Property(e => e.DriverReimbursementArrears).HasColumnName("DRIVER_REIMBURSEMENT_ARREARS");
+            entity.Property(e => e.EarlyGoingDeduction)
+                .HasMaxLength(1)
+                .HasColumnName("EARLY_GOING_DEDUCTION");
+            entity.Property(e => e.EarlyGoingDeduction2).HasColumnName("EARLY_GOING_DEDUCTION2");
+            entity.Property(e => e.EarlyGoingDeductionArrears).HasColumnName("EARLY_GOING_DEDUCTION_ARREARS");
+            entity.Property(e => e.EdliAdminCharges).HasColumnName("EDLI_ADMIN_CHARGES");
+            entity.Property(e => e.EdliContribution).HasColumnName("EDLI_CONTRIBUTION");
+            entity.Property(e => e.EducationAllowance)
+                .HasMaxLength(1)
+                .HasColumnName("EDUCATION_ALLOWANCE");
+            entity.Property(e => e.EducationAllowance2).HasColumnName("EDUCATION_ALLOWANCE2");
+            entity.Property(e => e.EducationAllowanceArrears).HasColumnName("EDUCATION_ALLOWANCE_ARREARS");
+            entity.Property(e => e.EmailId)
+                .HasMaxLength(50)
+                .HasColumnName("Email_Id");
+            entity.Property(e => e.EmpCode)
+                .HasMaxLength(50)
+                .HasColumnName("Emp_Code");
+            entity.Property(e => e.EmployeeEsiCtc).HasColumnName("EMPLOYEE_ESI_CTC");
+            entity.Property(e => e.EmployeePensionScheme).HasColumnName("EMPLOYEE_PENSION_SCHEME");
+            entity.Property(e => e.EmployeePfCtc).HasColumnName("EMPLOYEE_PF_CTC");
+            entity.Property(e => e.EmployeeStateInsurance).HasColumnName("EMPLOYEE_STATE_INSURANCE");
+            entity.Property(e => e.EmployerContributionEsi).HasColumnName("EMPLOYER_CONTRIBUTION_ESI");
+            entity.Property(e => e.EmployerContributionEsiArrears).HasColumnName("EMPLOYER_CONTRIBUTION_ESI_ARREARS");
+            entity.Property(e => e.EmployerEdliCtc)
+                .HasMaxLength(1)
+                .HasColumnName("EMPLOYER_EDLI_CTC");
+            entity.Property(e => e.EmployerEsiCtc).HasColumnName("EMPLOYER_ESI_CTC");
+            entity.Property(e => e.EmployerPfAdminChargesCtc)
+                .HasMaxLength(1)
+                .HasColumnName("EMPLOYER_PF_ADMIN_CHARGES_CTC");
+            entity.Property(e => e.EmployerPfCtc).HasColumnName("EMPLOYER_PF_CTC");
+            entity.Property(e => e.EpsArrear).HasColumnName("EPS_ARREAR");
+            entity.Property(e => e.EpsContributionArrearsManual)
+                .HasMaxLength(1)
+                .HasColumnName("EPS_CONTRIBUTION_ARREARS_MANUAL");
+            entity.Property(e => e.EpsContributionManual)
+                .HasMaxLength(1)
+                .HasColumnName("EPS_CONTRIBUTION_MANUAL");
+            entity.Property(e => e.EsiArrears).HasColumnName("ESI_ARREARS");
+            entity.Property(e => e.EsicEmployeeContributionArrearsManual)
+                .HasMaxLength(1)
+                .HasColumnName("ESIC_EMPLOYEE_CONTRIBUTION_ARREARS_MANUAL");
+            entity.Property(e => e.EsicEmployeeContributionManual)
+                .HasMaxLength(1)
+                .HasColumnName("ESIC_EMPLOYEE_CONTRIBUTION_MANUAL");
+            entity.Property(e => e.EsicNo).HasColumnName("ESIC_No");
+            entity.Property(e => e.ExGratia)
+                .HasMaxLength(1)
+                .HasColumnName("EX_GRATIA");
+            entity.Property(e => e.ExGratia2).HasColumnName("EX_GRATIA2");
+            entity.Property(e => e.ExGratiaArrears).HasColumnName("EX_GRATIA_ARREARS");
+            entity.Property(e => e.ExgratiaCurrentFy).HasColumnName("EXGRATIA_CURRENT_FY");
+            entity.Property(e => e.ExgratiaPreviousFy).HasColumnName("EXGRATIA_PREVIOUS_FY");
+            entity.Property(e => e.ExgratiaProvision)
+                .HasMaxLength(1)
+                .HasColumnName("EXGRATIA_PROVISION");
+            entity.Property(e => e.FatherName)
+                .HasMaxLength(50)
+                .HasColumnName("Father_Name");
+            entity.Property(e => e.FuelReimbursement)
+                .HasMaxLength(1)
+                .HasColumnName("FUEL_REIMBURSEMENT");
+            entity.Property(e => e.FuelReimbursement2).HasColumnName("FUEL_REIMBURSEMENT2");
+            entity.Property(e => e.FuelReimbursementArrears).HasColumnName("FUEL_REIMBURSEMENT_ARREARS");
+            entity.Property(e => e.FullDays)
+                .HasMaxLength(1)
+                .HasColumnName("Full_Days");
+            entity.Property(e => e.Gender).HasMaxLength(50);
+            entity.Property(e => e.Grade).HasMaxLength(50);
+            entity.Property(e => e.Gratuity).HasColumnName("GRATUITY");
+            entity.Property(e => e.GratuityAmountManual)
+                .HasMaxLength(1)
+                .HasColumnName("GRATUITY_AMOUNT_MANUAL");
+            entity.Property(e => e.GratuityContributionCtc).HasColumnName("GRATUITY_CONTRIBUTION_CTC");
+            entity.Property(e => e.GratuityProvision)
+                .HasMaxLength(1)
+                .HasColumnName("GRATUITY_PROVISION");
+            entity.Property(e => e.GrossSalary).HasColumnName("Gross_Salary");
+            entity.Property(e => e.HalfDays)
+                .HasMaxLength(1)
+                .HasColumnName("Half_Days");
+            entity.Property(e => e.HolidaysArrears).HasColumnName("Holidays_Arrears");
+            entity.Property(e => e.HouseRentAllowance).HasColumnName("HOUSE_RENT_ALLOWANCE");
+            entity.Property(e => e.HouseRentAllowance2).HasColumnName("HOUSE_RENT_ALLOWANCE2");
+            entity.Property(e => e.HouseRentAllowanceArrears).HasColumnName("HOUSE_RENT_ALLOWANCE_ARREARS");
+            entity.Property(e => e.HraPercentage)
+                .HasMaxLength(1)
+                .HasColumnName("HRA_PERCENTAGE");
+            entity.Property(e => e.IfscCode)
+                .HasMaxLength(50)
+                .HasColumnName("IFSC_Code");
+            entity.Property(e => e.IncomeTax).HasColumnName("INCOME_TAX");
+            entity.Property(e => e.LastWorkingDate).HasColumnName("Last_Working_Date");
+            entity.Property(e => e.LateComingDeduction)
+                .HasMaxLength(1)
+                .HasColumnName("LATE_COMING_DEDUCTION");
+            entity.Property(e => e.LateComingDeduction2).HasColumnName("LATE_COMING_DEDUCTION2");
+            entity.Property(e => e.LateComingDeductionArrears).HasColumnName("LATE_COMING_DEDUCTION_ARREARS");
+            entity.Property(e => e.LateLop).HasColumnName("Late_LOP");
+            entity.Property(e => e.LeaveEncashment)
+                .HasMaxLength(1)
+                .HasColumnName("LEAVE_ENCASHMENT");
+            entity.Property(e => e.LeaveEncashment2).HasColumnName("LEAVE_ENCASHMENT2");
+            entity.Property(e => e.LeaveEncashmentArrears).HasColumnName("LEAVE_ENCASHMENT_ARREARS");
+            entity.Property(e => e.LeaveTravelAllowance)
+                .HasMaxLength(1)
+                .HasColumnName("LEAVE_TRAVEL_ALLOWANCE");
+            entity.Property(e => e.LeaveTravelAllowance2).HasColumnName("LEAVE_TRAVEL_ALLOWANCE2");
+            entity.Property(e => e.LeaveTravelAllowanceArrears).HasColumnName("LEAVE_TRAVEL_ALLOWANCE_ARREARS");
+            entity.Property(e => e.Location).HasMaxLength(50);
+            entity.Property(e => e.Lop).HasColumnName("LOP");
+            entity.Property(e => e.LtaReimbursement)
+                .HasMaxLength(1)
+                .HasColumnName("LTA_REIMBURSEMENT");
+            entity.Property(e => e.LtaReimbursement2).HasColumnName("LTA_REIMBURSEMENT2");
+            entity.Property(e => e.LtaReimbursementArrears).HasColumnName("LTA_REIMBURSEMENT_ARREARS");
+            entity.Property(e => e.LwfManual)
+                .HasMaxLength(1)
+                .HasColumnName("LWF_MANUAL");
+            entity.Property(e => e.MaritalStatus)
+                .HasMaxLength(50)
+                .HasColumnName("Marital_Status");
+            entity.Property(e => e.MedicalAllowance).HasColumnName("MEDICAL_ALLOWANCE");
+            entity.Property(e => e.MedicalAllowance2).HasColumnName("MEDICAL_ALLOWANCE2");
+            entity.Property(e => e.MedicalAllowanceArrears).HasColumnName("MEDICAL_ALLOWANCE_ARREARS");
+            entity.Property(e => e.MedicalReimbursement)
+                .HasMaxLength(1)
+                .HasColumnName("MEDICAL_REIMBURSEMENT");
+            entity.Property(e => e.MedicalReimbursement2).HasColumnName("MEDICAL_REIMBURSEMENT2");
+            entity.Property(e => e.MedicalReimbursementArrears).HasColumnName("MEDICAL_REIMBURSEMENT_ARREARS");
+            entity.Property(e => e.MinimumWage)
+                .HasMaxLength(1)
+                .HasColumnName("MINIMUM_WAGE");
+            entity.Property(e => e.MobileNo).HasColumnName("Mobile_No");
+            entity.Property(e => e.ModeOfPayment)
+                .HasMaxLength(50)
+                .HasColumnName("Mode_of_Payment");
+            entity.Property(e => e.MonthlyGross).HasColumnName("MONTHLY_GROSS");
+            entity.Property(e => e.MpfContributionArrearsManual)
+                .HasMaxLength(1)
+                .HasColumnName("MPF_CONTRIBUTION_ARREARS_MANUAL");
+            entity.Property(e => e.MpfContributionManual)
+                .HasMaxLength(1)
+                .HasColumnName("MPF_CONTRIBUTION_MANUAL");
+            entity.Property(e => e.Name).HasMaxLength(50);
+            entity.Property(e => e.NetPay).HasColumnName("Net_Pay");
+            entity.Property(e => e.NetPayCtc).HasColumnName("NET_PAY_CTC");
+            entity.Property(e => e.OtherAllowance)
+                .HasMaxLength(1)
+                .HasColumnName("OTHER_ALLOWANCE");
+            entity.Property(e => e.OtherAllowance2).HasColumnName("OTHER_ALLOWANCE2");
+            entity.Property(e => e.OtherAllowanceArrears).HasColumnName("OTHER_ALLOWANCE_ARREARS");
+            entity.Property(e => e.OtherDeduction)
+                .HasMaxLength(1)
+                .HasColumnName("OTHER_DEDUCTION");
+            entity.Property(e => e.OtherDeduction2).HasColumnName("OTHER_DEDUCTION2");
+            entity.Property(e => e.OtherIncome)
+                .HasMaxLength(1)
+                .HasColumnName("OTHER_INCOME");
+            entity.Property(e => e.OtherIncome2).HasColumnName("OTHER_INCOME2");
+            entity.Property(e => e.OtherIncomeArrears).HasColumnName("OTHER_INCOME_ARREARS");
+            entity.Property(e => e.OvertimeHours).HasColumnName("Overtime_Hours");
+            entity.Property(e => e.Pan)
+                .HasMaxLength(50)
+                .HasColumnName("PAN");
+            entity.Property(e => e.PfNo)
+                .HasMaxLength(50)
+                .HasColumnName("PF_No");
+            entity.Property(e => e.Pran)
+                .HasMaxLength(1)
+                .HasColumnName("PRAN");
+            entity.Property(e => e.PresentDays).HasColumnName("Present_Days");
+            entity.Property(e => e.PrevMonthRoundOffRecovery)
+                .HasMaxLength(1)
+                .HasColumnName("PREV_MONTH_ROUND_OFF_RECOVERY");
+            entity.Property(e => e.PrevMonthRoundOffRecovery2).HasColumnName("PREV_MONTH_ROUND_OFF_RECOVERY2");
+            entity.Property(e => e.ProfTax).HasColumnName("PROF_TAX");
+            entity.Property(e => e.ProfTaxCtc).HasColumnName("PROF_TAX_CTC");
+            entity.Property(e => e.ProfTaxManual)
+                .HasMaxLength(1)
+                .HasColumnName("PROF_TAX_MANUAL");
+            entity.Property(e => e.ProvidentFund).HasColumnName("PROVIDENT_FUND");
+            entity.Property(e => e.ProvidentFundArrear).HasColumnName("PROVIDENT_FUND_ARREAR");
+            entity.Property(e => e.RawtaxForThePeriod).HasColumnName("RAWTAX_FOR_THE_PERIOD");
+            entity.Property(e => e.RetirementDate)
+                .HasMaxLength(1)
+                .HasColumnName("Retirement_Date");
+            entity.Property(e => e.RoundingOff).HasColumnName("Rounding_Off");
+            entity.Property(e => e.SalaryAdvance)
+                .HasMaxLength(1)
+                .HasColumnName("SALARY_ADVANCE");
+            entity.Property(e => e.SalaryAdvance2).HasColumnName("SALARY_ADVANCE2");
+            entity.Property(e => e.SpecialAllowance)
+                .HasMaxLength(1)
+                .HasColumnName("SPECIAL_ALLOWANCE");
+            entity.Property(e => e.SpecialAllowance2).HasColumnName("SPECIAL_ALLOWANCE2");
+            entity.Property(e => e.SpecialAllowanceArrears).HasColumnName("SPECIAL_ALLOWANCE_ARREARS");
+            entity.Property(e => e.Status).HasMaxLength(50);
+            entity.Property(e => e.StopPaymentFromDate)
+                .HasMaxLength(1)
+                .HasColumnName("Stop_Payment_FromDate");
+            entity.Property(e => e.StopPaymentTillDate)
+                .HasMaxLength(1)
+                .HasColumnName("Stop_Payment_TillDate");
+            entity.Property(e => e.SuperannuationId)
+                .HasMaxLength(1)
+                .HasColumnName("Superannuation_ID");
+            entity.Property(e => e.TdsManual)
+                .HasMaxLength(1)
+                .HasColumnName("TDS_MANUAL");
+            entity.Property(e => e.Title).HasMaxLength(50);
+            entity.Property(e => e.TotalArrear).HasColumnName("Total_Arrear");
+            entity.Property(e => e.TotalDeduction).HasColumnName("Total_Deduction");
+            entity.Property(e => e.TotalEarning).HasColumnName("Total_Earning");
+            entity.Property(e => e.TransferDate)
+                .HasMaxLength(1)
+                .HasColumnName("Transfer_Date");
+            entity.Property(e => e.TravelExpensePayment)
+                .HasMaxLength(1)
+                .HasColumnName("TRAVEL_EXPENSE_PAYMENT");
+            entity.Property(e => e.TravelExpensePayment2).HasColumnName("TRAVEL_EXPENSE_PAYMENT2");
+            entity.Property(e => e.TravelExpensePaymentArrears).HasColumnName("TRAVEL_EXPENSE_PAYMENT_ARREARS");
+            entity.Property(e => e.UanNo).HasColumnName("UAN_No");
+            entity.Property(e => e.VoluntaryProvidentFund).HasColumnName("VOLUNTARY_PROVIDENT_FUND");
+            entity.Property(e => e.VoluntaryProvidentFundArrear).HasColumnName("VOLUNTARY_PROVIDENT_FUND_ARREAR");
+            entity.Property(e => e.VpfContribution)
+                .HasMaxLength(1)
+                .HasColumnName("VPF_CONTRIBUTION");
+            entity.Property(e => e.VpfContributionAmount)
+                .HasMaxLength(1)
+                .HasColumnName("VPF_CONTRIBUTION_AMOUNT");
+            entity.Property(e => e.VpfContributionArrearsAmount)
+                .HasMaxLength(1)
+                .HasColumnName("VPF_CONTRIBUTION_ARREARS_AMOUNT");
+            entity.Property(e => e.WorkableDays).HasColumnName("Workable_Days");
         });
 
         OnModelCreatingPartial(modelBuilder);
