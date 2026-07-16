@@ -1,8 +1,11 @@
 ﻿using MediatR;
-using QubeFin.Core.Results;
 using QubeFin.Core.Endpoint;
-using QubeFin.Global.Application.SurveyCommittees.Queries;
+using QubeFin.Core.Identity;
+using QubeFin.Core.Results;
 using QubeFin.Global.Application.SurveyCommittees.Commands;
+using QubeFin.Global.Application.SurveyCommittees.Models;
+using QubeFin.Global.Application.SurveyCommittees.Queries;
+using System.Security.Claims;
 
 namespace QubeFin.Global.Api.Endpoints
 {
@@ -33,9 +36,9 @@ namespace QubeFin.Global.Api.Endpoints
                 return Results.Ok(result.Value);
             }).WithSummary("Get Committee Member By Id");
 
-            app.MapPost("survey-committees", async (AddMemberCommand command, ISender sender) =>
+            app.MapPost("survey-committees", async (MemberAddRequest request, IMediator mediator, ClaimsPrincipal principal) =>
             {
-                var result = await sender.Send(command);
+                var result = await mediator.Send(new AddMemberCommand(request, principal.Identity.GetUserId()));
                 if (result.IsFailed)
                 {
                     if (result.Errors[0] is RecordNotFoundError)
@@ -50,9 +53,9 @@ namespace QubeFin.Global.Api.Endpoints
                 return Results.Ok();
             }).WithSummary("Add Member To Survey Committee");
 
-            app.MapPut("survey-committees", async (UpdateMemberCommand command, ISender sender) =>
+            app.MapPut("survey-committees", async (MemberUpdateRequest request, IMediator mediator, ClaimsPrincipal principal) =>
             {
-                var result = await sender.Send(command);
+                var result = await mediator.Send(new UpdateMemberCommand(request, principal.Identity.GetUserId()));
                 if (result.IsFailed)
                 {
                     if (result.Errors[0] is RecordNotFoundError)

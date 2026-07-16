@@ -1,13 +1,26 @@
-﻿using MediatR;
-using FluentResults;
-using QubeFin.Persistence;
+﻿using FluentResults;
+using FluentValidation;
+using MediatR;
 using QubeFin.Core.Results;
+using QubeFin.Global.Application.SurveyCommittees.Models;
 using QubeFin.Global.Persistence.Repositories;
+using QubeFin.Persistence;
 
 namespace QubeFin.Global.Application.SurveyCommittees.Commands;
 
 #region --- COMMAND ---
-public record UpdateMemberCommand(Guid Id, Guid EmployeId, bool IsActive, bool IsLead, DateOnly AssignTo, Guid UserId) : IRequest<Result<UpdateMemberResponse>>;
+public record UpdateMemberCommand(MemberUpdateRequest member, Guid UserId) : IRequest<Result<UpdateMemberResponse>>;
+#endregion
+
+#region --- VALIDATOR ---
+public class UpdateMemberCommandValidator : AbstractValidator<UpdateMemberCommand>
+{
+    public UpdateMemberCommandValidator()
+    {
+        RuleFor(v => v.member.Id).NotEmpty().WithMessage("Committee Id is required.");
+        RuleFor(v => v.member.AssignedTo).NotEmpty().WithMessage("Separation Date is required.").When( w => w.member.IsActive == false);
+    }
+}
 #endregion
 
 #region --- RESPONSE ---
@@ -19,10 +32,10 @@ internal sealed class UpdateMemberCommandHandler(ISurveyCommitteeRepository surv
 {
     public async Task<Result<UpdateMemberResponse>> Handle(UpdateMemberCommand request, CancellationToken cancellationToken)
     {
-        var existingSurveyCommitteeMember = await surveyCommitteeRepository.GetByIdAsync(request.Id);
+        var existingSurveyCommitteeMember = await surveyCommitteeRepository.GetByIdAsync(request.member.Id);
         if (existingSurveyCommitteeMember is null) return new RecordNotFoundError("Member not found");
 
-        existingSurveyCommitteeMember.Update(isActive: request.IsActive, isLead: request.IsLead, assignedTo: request.AssignTo, lastModifiedBy: request.UserId);
+        existingSurveyCommitteeMember.Update(isActive: request.member.IsActive, isLead: request.member.IsLead, assignedTo: request.member.AssignedTo, lastModifiedBy: request.UserId);
         await surveyCommitteeRepository.UpdateMember(existingSurveyCommitteeMember);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Ok(new UpdateMemberResponse(true));

@@ -193,5 +193,11 @@ public class EmployeeEndpoints : IEndpoint
             return Results.Ok();
         })
         .WithSummary("Update Banking Info data");
+
+        app.MapPost("employees/search-by-text", async (IMediator mediator, SearchTextRequest request) =>
+        {
+            var resp = await mediator.Send(new GetEmployeeBySearchTextQuery(request.SearchText));
+            return TypedResults.Ok(resp);
+        }).WithSummary("Search Employees by Text");
     }
 }

@@ -1,7 +1,8 @@
-﻿using QubeFin.Persistence;
-using Microsoft.EntityFrameworkCore;
-using QubeFin.Persistence.Models.Global;
+﻿using Microsoft.EntityFrameworkCore;
+using QubeFin.Persistence;
 using QubeFin.Persistence.Mappers.Global;
+using QubeFin.Persistence.Models.Global;
+using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Global.Persistence.Repositories
 {
@@ -18,14 +19,13 @@ namespace QubeFin.Global.Persistence.Repositories
         {
             await context.TblSurveyCommittees.AddAsync(surveyCommittee.ToEntity());
         }
-        public Task UpdateMember(SurveyCommittee surveyCommittee)
+        public async Task UpdateMember(SurveyCommittee surveyCommittee)
         {
             context.TblSurveyCommittees.Update(surveyCommittee.ToEntity());
-            return Task.CompletedTask;
         }
         public async Task<SurveyCommittee?> GetByIdAsync(Guid id)
         {
-            var entity = await context.TblSurveyCommittees.FirstOrDefaultAsync(m => m.Id == id);
+            var entity = await context.TblSurveyCommittees.AsNoTracking().FirstOrDefaultAsync(m => m.Id == id);
             return entity?.ToDomain();
         }
         public async Task<bool> ExistsByEmployeeIdAsync(Guid employeeId)

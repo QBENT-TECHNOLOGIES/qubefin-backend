@@ -32,8 +32,11 @@ internal sealed class FilterCommitteeMemberQueryHandler(QubeFinDataContext conte
         {
             filterEntitiesQuery = request.SortOn switch
             {
-                "employee" => request.SortDirection.Equals("DESC", StringComparison.CurrentCultureIgnoreCase) ? filterEntitiesQuery.OrderByDescending(m => m.Employee.FullName) : filterEntitiesQuery.OrderBy(m => m.Employee.FullName),
+                "employeeName" => request.SortDirection.Equals("DESC", StringComparison.CurrentCultureIgnoreCase) ? filterEntitiesQuery.OrderByDescending(m => m.Employee.FullName) : filterEntitiesQuery.OrderBy(m => m.Employee.FullName),
+                "isLead" => request.SortDirection.Equals("DESC", StringComparison.CurrentCultureIgnoreCase) ? filterEntitiesQuery.OrderByDescending(m => m.IsLead) : filterEntitiesQuery.OrderBy(m => m.IsLead),
+                "isActive" => request.SortDirection.Equals("DESC", StringComparison.CurrentCultureIgnoreCase) ? filterEntitiesQuery.OrderByDescending(m => m.IsActive) : filterEntitiesQuery.OrderBy(m => m.IsActive),
                 "assignedFrom" => request.SortDirection.Equals("DESC", StringComparison.CurrentCultureIgnoreCase) ? filterEntitiesQuery.OrderByDescending(m => m.AssignedFrom) : filterEntitiesQuery.OrderBy(m => m.AssignedFrom),
+                "assignedTo" => request.SortDirection.Equals("DESC", StringComparison.CurrentCultureIgnoreCase) ? filterEntitiesQuery.OrderByDescending(m => m.AssignedTo) : filterEntitiesQuery.OrderBy(m => m.AssignedTo),
                 _ => request.SortDirection == "DESC" ? filterEntitiesQuery.OrderByDescending(m => m.Employee.FullName) : filterEntitiesQuery.OrderBy(m => m.Employee.FullName),
             };
         }

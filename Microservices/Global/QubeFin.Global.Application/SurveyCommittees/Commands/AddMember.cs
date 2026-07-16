@@ -1,16 +1,27 @@
-﻿using MediatR;
-using FluentResults;
-using QubeFin.Persistence;
+﻿using FluentResults;
+using FluentValidation;
+using MediatR;
 using QubeFin.Core.Results;
-using QubeFin.Persistence.Models.Global;
+using QubeFin.Global.Application.SurveyCommittees.Models;
 using QubeFin.Global.Persistence.Repositories;
+using QubeFin.Persistence;
+using QubeFin.Persistence.Models.Global;
 
 namespace QubeFin.Global.Application.SurveyCommittees.Commands;
 
 #region --- COMMAND ---
-public record AddMemberCommand(Guid EmployeeId, bool IsLead, Guid UserId) : IRequest<Result<AddMemberResponse>>;
+public record AddMemberCommand(MemberAddRequest member, Guid UserId) : IRequest<Result<AddMemberResponse>>;
 #endregion
 
+#region --- VALIDATOR ---
+public class AddMemberCommandValidator : AbstractValidator<AddMemberCommand>
+{
+    public AddMemberCommandValidator()
+    {
+        RuleFor(v => v.member.EmployeeId).NotEmpty().WithMessage("Employee Id is required.");
+    }
+}
+#endregion
 #region --- RESPONSE ---
 public record AddMemberResponse(bool Created);
 #endregion
@@ -22,10 +33,10 @@ internal sealed class AddMemberCommandHandler(ISurveyCommitteeRepository surveyC
     {
         DateOnly toDay = DateOnly.FromDateTime(DateTime.UtcNow);
 
-        var duplicateMember = await surveyCommitteeRepository.ExistsByEmployeeIdAsync(request.EmployeeId);
+        var duplicateMember = await surveyCommitteeRepository.ExistsByEmployeeIdAsync(request.member.EmployeeId);
         if (duplicateMember) return new ValidationError("This member is already in survey committee.");
 
-        var surveyCommitte = SurveyCommittee.Create(Guid.NewGuid(), request.EmployeeId, request.IsLead, toDay, request.UserId);
+        var surveyCommitte = SurveyCommittee.Create(Guid.NewGuid(), request.member.EmployeeId, request.member.IsLead, toDay, request.UserId);
 
         await surveyCommitteeRepository.AddMember(surveyCommitte);
         await unitOfWork.SaveChangesAsync(cancellationToken);

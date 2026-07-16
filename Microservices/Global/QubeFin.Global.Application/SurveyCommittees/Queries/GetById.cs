@@ -1,9 +1,11 @@
-﻿using MediatR;
-using FluentResults;
-using QubeFin.Persistence;
-using QubeFin.Core.Results;
+﻿using FluentResults;
+using FluentValidation;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
+using QubeFin.Core.Results;
+using QubeFin.Global.Application.SurveyCommittees.Commands;
 using QubeFin.Global.Application.SurveyCommittees.Models;
+using QubeFin.Persistence;
 
 namespace QubeFin.Global.Application.SurveyCommittees.Queries;
 
@@ -11,6 +13,15 @@ namespace QubeFin.Global.Application.SurveyCommittees.Queries;
 public record GetByIdQuery(Guid Id) : IRequest<Result<GetByIdResponse>>;
 #endregion
 
+#region --- VALIDATOR ---
+public class GetByIdQueryValidator : AbstractValidator<GetByIdQuery>
+{
+    public GetByIdQueryValidator()
+    {
+        RuleFor(v => v.Id).NotEmpty().WithMessage("Committee Id is required.");
+    }
+}
+#endregion
 #region --- RESPONSE ---
 public record GetByIdResponse(SurveyCommitteeMemberResponse SurveyCommitteeMember);
 #endregion
@@ -30,7 +41,7 @@ internal sealed class GetByIdQueryHandler(QubeFinDataContext context) : IRequest
         {
             Id = SurveyCommitteeMember.Id,
             EmployeeId = SurveyCommitteeMember.EmployeeId,
-            EmployeeName = SurveyCommitteeMember.Employee.FullName,
+            EmployeeName = SurveyCommitteeMember.Employee.FullName + "(" + SurveyCommitteeMember.Employee.Code + ")",
             IsLead = SurveyCommitteeMember.IsLead,
             IsActive = SurveyCommitteeMember.IsActive,
             AssignedFrom = SurveyCommitteeMember.AssignedFrom,
