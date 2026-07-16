@@ -191,6 +191,24 @@ public partial class TblBranchSurvey
 
     public string? Recommendation { get; set; }
 
+    public bool IsSurveyorSubmit { get; set; }
+
+    public DateTime? SurveyorSubmitOn { get; set; }
+
+    public bool IsCommiteeSubmit { get; set; }
+
+    public DateTime? CommiteeSubmitOn { get; set; }
+
+    public bool IsApproved { get; set; }
+
+    public bool IsRejected { get; set; }
+
+    public Guid? ActionBy { get; set; }
+
+    public DateTime? ActionOn { get; set; }
+
+    public bool IsBranchCreate { get; set; }
+
     public Guid CreatedBy { get; set; }
 
     public DateTime CreatedOn { get; set; }

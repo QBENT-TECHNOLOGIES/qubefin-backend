@@ -27,6 +27,10 @@ public partial class TblOrganizationUnit
 
     public TimeOnly? AttendanceOutTime { get; set; }
 
+    public Guid? CompanyId { get; set; }
+
+    public virtual TblCompany? Company { get; set; }
+
     public virtual TblUser CreatedByNavigation { get; set; } = null!;
 
     public virtual ICollection<TblOrganizationUnit> InverseParent { get; set; } = new List<TblOrganizationUnit>();
