@@ -192,6 +192,7 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblUserSession> TblUserSessions { get; set; }
 
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<TblAccountGroup>(entity =>

@@ -33,7 +33,7 @@
 
         public Employee(Guid id, string code, PersonalInfo personalInfo, OfficialInfo officialInfo, ContactInfo contactInfo,
             AddressInfo presentAddressInfo, AddressInfo permanentAddressInfo, PayrollInfo payrollInfo, EmployeeOrganization organizationInfo,
-            Guid? createdBy, DateTime? createdOn, Guid? lastModifiedBy, DateTime? lastModifiedOn)
+            List<EmployeeQualification> qualifications, List<EmployeeReference> references, List<EmployeeDocument> documents, List<EmployeeEmployment> employments, Guid? createdBy, DateTime? createdOn, Guid? lastModifiedBy, DateTime? lastModifiedOn)
         {
             Id = id;
             Code = code;
@@ -48,6 +48,22 @@
             CreatedDate = createdOn;
             LastModifiedBy = lastModifiedBy;
             LastModifiedOn = lastModifiedOn;
+            if (qualifications != null)
+            {
+                _qualifications.AddRange(qualifications);
+            }
+            if (references != null)
+            {
+                _references.AddRange(references);
+            }
+            if (documents != null)
+            {
+                _documents.AddRange(documents);
+            }
+            if (employments != null)
+            {
+                _employments.AddRange(employments);
+            }
         }
 
         public static Employee Create(
@@ -128,6 +144,47 @@
                 _qualifications.Remove(qualification);
             }
         }
+        public void ReplaceQualifications(IEnumerable<EmployeeQualification> qualifications)
+        {
+            _qualifications.Clear();
+            _qualifications.AddRange(qualifications);
+        }
+
+        public void RemoveReference(Guid referenceId)
+        {
+            var reference = _references
+                .FirstOrDefault(x => x.Id == referenceId);
+
+            if (reference != null)
+            {
+                _references.Remove(reference);
+            }
+        }
+        public void ReplaceReferences(IEnumerable<EmployeeReference> references)
+        {
+            _references.Clear();
+            _references.AddRange(references);
+        }
+        public void RemoveDocument(Guid documentId)
+        {
+            var document = _documents
+                .FirstOrDefault(x => x.Id == documentId);
+
+            if (document != null)
+            {
+                _documents.Remove(document);
+            }
+        }
+        public void ReplaceDocuments(IEnumerable<EmployeeDocument> documents, string documentCategory)
+        {
+            _documents.Where(m => m.DocumentCategory == documentCategory).ToList().Clear();
+            _documents.AddRange(documents);
+        }
+        public void ReplaceEmployments(IEnumerable<EmployeeEmployment> emplouments)
+        {
+            _employments.Clear();
+            _employments.AddRange(emplouments);
+        }
 
         public void AddDesignation(EmployeeDesignation designation)
         {
@@ -168,4 +225,5 @@
             LastModifiedOn = DateTime.UtcNow;
         }
     }
+
 }

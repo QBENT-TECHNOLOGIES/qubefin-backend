@@ -17,6 +17,10 @@ public static class EmployeeMapper
             MapPermanentAddressInfo(entity),
             MapPayrollInfo(entity),
             MapOrganizationInfo(entity),
+            MapQualificationInfo(entity),
+            MapReferenceInfo(entity),
+            MapDocumntInfo(entity),
+            MapEmploymentInfo(entity),
             entity.CreatedBy,
             entity.CreatedDate,
             entity.LastModifiedBy,
@@ -50,8 +54,8 @@ public static class EmployeeMapper
             OrganizationUnitId = employee.OfficialInfo.OrganizationUnitId,
             DepartmentId = employee.OfficialInfo.DepartmentId,
             EmployementType = employee.OfficialInfo.EmployementType,
-            JoiningDate = employee.OfficialInfo.DateOfJoining,
-            ConfirmationDate = employee.OfficialInfo.DateOfConfirmation,
+            JoiningDate = employee.OfficialInfo.JoiningDate,
+            ConfirmationDate = employee.OfficialInfo.ConfirmationDate,
             SeparationDate = employee.OfficialInfo.SeparationDate,
             ReferedBy = employee.OfficialInfo.ReferedBy,
             HowYouKnow = employee.OfficialInfo.HowYouKnow,
@@ -104,6 +108,7 @@ public static class EmployeeMapper
     private static PersonalInfo MapPersonalInfo(TblEmployee entity)
     {
         return new PersonalInfo(
+            entity.Code,
             entity.Salutation,
             entity.FirstName,
             entity.MiddleName,
@@ -205,6 +210,74 @@ public static class EmployeeMapper
             entity.OrganizationUnit?.AttendanceInTime,
             entity.OrganizationUnit?.AttendanceOutTime
         );
+    }
+    private static List<EmployeeQualification> MapQualificationInfo(TblEmployee entity)
+    {
+        return [.. entity.TblEmployeeQualifications
+        .Select(q => new EmployeeQualification(
+            q.Id,
+            q.AcademicStream,
+            q.Specialization,
+            q.YearOfPassing,
+            q.UniversityOrBoard,
+            q.SchoolOrCollege,
+            q.GradeOrMarks,
+            q.DocFileName,
+            q.DocFileNo,
+            q.EmployeeId,
+            q.Sequence
+        ))
+        .OrderBy(q => q.Sequence)];
+    }
+    private static List<EmployeeReference> MapReferenceInfo(TblEmployee entity)
+    {
+        return [.. entity.TblEmployeeReferences
+        .Select(q => new EmployeeReference(
+            q.Id,
+            q.EmployeeId,
+            q.PersonName,
+            q.Mobile,
+            q.Email,
+            q.Address,
+            q.Occupation,
+            q.HowDoYouKnow
+        ))];
+    }
+    private static List<EmployeeDocument> MapDocumntInfo(TblEmployee entity)
+    {
+        return [.. entity.TblEmployeeDocuments.Where(m => m.DocumentCategory == "KYC")
+        .Select(q => new EmployeeDocument(
+            q.Id,
+            q.DocumentCategory,
+            q.DocumentName,
+            q.DocumentNo,
+            q.ValidFrom,
+            q.ValidTill,
+            q.FileName,
+            q.FileNo,
+            q.EmployeeId,
+            q.UploadedBy
+        ))];
+    }
+    private static List<EmployeeEmployment> MapEmploymentInfo(TblEmployee entity)
+    {
+        return [.. entity.TblEmployeeEmployments
+        .Select(q => new EmployeeEmployment(
+            q.Id,
+            q.EmployerName,
+            q.Designation,
+            q.FromDate,
+            q.ToDate,
+            q.LastDrawnSalary,
+            q.JobTitle,
+            q.NocFileName,
+            q.NocFileNo,
+            q.ExpCertFileName,
+            q.ExpCertFileNo,
+            q.EmployeeId,
+            q.Sequence,
+            q.CreatedBy
+        ))];
     }
 
 }
