@@ -3,6 +3,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
+using QubeFin.Hrms.Application.Employees.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Mappers.Hrms;
@@ -15,21 +16,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
 
     #region --- COMMAND ---
     public record UpdateEmployeeReferenceCommand(
-        Guid Id, string? Salutation, string FirstName, string? MiddleName,
-        string LastName, string? Code, string? FatherName, string? MotherName, Guid OrganizationUnitId,
-        Guid DepartmentId, string? EmployementType, DateOnly DateOfJoining, DateOnly? DateOfConfirmation,
-        DateOnly DateOfBirth, string Gender, string Religion, string? Caste, string Nationality, string BloodGroup,
-        string? DisablityType, string? MaritalStatus, string MobileNo, string? PersonalEmail, string? EmergencyContactRelation1,
-        string? EmergencyContactName1, string? EmergencyContactMobile1, string? EmergencyContactRelation2,
-        string? EmergencyContactName2, string? EmergencyContactMobile2, string? PermanentHouseNo, string? PermanentRoadName,
-        string? PermanentLandMark, Guid? PermanentAdministrativeUnitId, Guid? PermanentPoliceStationId, Guid? PermanentPostOfficeId,
-        string? PermanentPinCode, string? PermanentOwnerShipOfHouse, int? PermanentDurationOfStayInMonths,
-        string PresentHouseNo, string? PresentRoadName, string? PresentLandMark, Guid? PresentAdministrativeUnitId,
-        Guid? PresentPoliceStationId, Guid? PresentPostOfficeId, string? PresentPinCode,
-        string? PresentOwnerShipOfHouse, int? PresentDurationOfStayInMonths, Guid? BankId, long? BankAccountNo,
-        string? BankHolderName, string? BankBranch, string? BankAccountType, string? OfficialEmail,
-        bool? IsActive, bool? IsPayrollActive, Guid? CompanyId, DateOnly? SeparationDate, Guid? ReferedBy,
-        string? HowYouKnow, Guid LastModifiedBy
+        Guid Id, IReadOnlyList<ReferenceDetailRequest> ReferenceDetail, Guid LastModifiedBy
         ) : IRequest<Result<UpdateEmployeeReferenceResponse>>;
     #endregion
     #region --- VALIDATION ---
@@ -68,30 +55,32 @@ namespace QubeFin.Hrms.Application.Employees.Commands
             {
                 return new ValidationError("Employee not exist given id.");
             }
+            // 2. Project incoming requests directly into domain entity shapes
+            var updatedReferenceList = new List<EmployeeReference>();
 
+            for (int i = 0; i < request.ReferenceDetail.Count; i++)
+            {
+                var req = request.ReferenceDetail[i];
+                //int sequenceValue = i + 1;
 
-            //existingEmployee.UpdateEmployeeReferences(
-            //    request.Salutation,
-            //    request.FirstName,
-            //    request.MiddleName,
-            //    request.LastName,
-            //    request.FatherName,
-            //    request.MotherName,
-            //    request.DateOfBirth,
-            //    request.Gender,
-            //    request.Religion,
-            //    request.Caste,
-            //    request.Nationality,
-            //    request.BloodGroup,
-            //    request.DisablityType,
-            //    request.MaritalStatus,
-            //    request.MobileNo,
-            //    request.PersonalEmail,
-            //    request.LastModifiedBy
-            //    );
-            //employeeRepository.UpdateEmployee(existingEmployee);
+                var referenceEntity = new EmployeeReference(
+                    Guid.NewGuid(),
+                    request.Id,
+                    req.PersonName,
+                    req.Mobile,
+                    req.Email,
+                    req.Address,
+                    req.Occupation,
+                    req.HowDoYouKnow
+                );
+                updatedReferenceList.Add(referenceEntity);
+            }
 
-            //await unitOfWork.SaveChangesAsync();
+            // 3. Atomically overwrite old items and explicitly log modifications
+            existingEmployee.ReplaceReferences(updatedReferenceList);
+
+            await employeeRepository.UpdateAsync(existingEmployee);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Ok(new UpdateEmployeeReferenceResponse(true));
 
 

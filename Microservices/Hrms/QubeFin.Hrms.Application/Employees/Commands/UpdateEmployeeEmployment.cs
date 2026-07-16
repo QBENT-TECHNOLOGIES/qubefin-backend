@@ -3,6 +3,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
+using QubeFin.Hrms.Application.Employees.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Mappers.Hrms;
@@ -15,21 +16,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
 
     #region --- COMMAND ---
     public record UpdateEmployeeEmploymentCommand(
-        Guid Id, string? Salutation, string FirstName, string? MiddleName,
-        string LastName, string? Code, string? FatherName, string? MotherName, Guid OrganizationUnitId,
-        Guid DepartmentId, string? EmployementType, DateOnly DateOfJoining, DateOnly? DateOfConfirmation,
-        DateOnly DateOfBirth, string Gender, string Religion, string? Caste, string Nationality, string BloodGroup,
-        string? DisablityType, string? MaritalStatus, string MobileNo, string? PersonalEmail, string? EmergencyContactRelation1,
-        string? EmergencyContactName1, string? EmergencyContactMobile1, string? EmergencyContactRelation2,
-        string? EmergencyContactName2, string? EmergencyContactMobile2, string? PermanentHouseNo, string? PermanentRoadName,
-        string? PermanentLandMark, Guid? PermanentAdministrativeUnitId, Guid? PermanentPoliceStationId, Guid? PermanentPostOfficeId,
-        string? PermanentPinCode, string? PermanentOwnerShipOfHouse, int? PermanentDurationOfStayInMonths,
-        string PresentHouseNo, string? PresentRoadName, string? PresentLandMark, Guid? PresentAdministrativeUnitId,
-        Guid? PresentPoliceStationId, Guid? PresentPostOfficeId, string? PresentPinCode,
-        string? PresentOwnerShipOfHouse, int? PresentDurationOfStayInMonths, Guid? BankId, long? BankAccountNo,
-        string? BankHolderName, string? BankBranch, string? BankAccountType, string? OfficialEmail,
-        bool? IsActive, bool? IsPayrollActive, Guid? CompanyId, DateOnly? SeparationDate, Guid? ReferedBy,
-        string? HowYouKnow, Guid LastModifiedBy
+        Guid Id, List<EmploymentDetailRequest> Employments, Guid LastModifiedBy
         ) : IRequest<Result<UpdateEmployeeEmploymentResponse>>;
     #endregion
     #region --- VALIDATION ---
@@ -37,17 +24,17 @@ namespace QubeFin.Hrms.Application.Employees.Commands
     {
         public UpdateEmployeeEmploymentCommandValidator()
         {
-            RuleFor(x => x.FirstName)
-                .Must(value => !string.IsNullOrWhiteSpace(value)
-                    && Regex.IsMatch(value, @"^[A-Za-z]+$")
-                    && !value.Equals("Select", StringComparison.OrdinalIgnoreCase))
-                .WithMessage("Please enter a valid First Name name.")
-                .MinimumLength(3).WithMessage("First Name must be more than 2 characters.")
-                .MaximumLength(30).WithMessage("First Name cannot exceed 30 characters.");
-            RuleFor(x => x.LastName)
-                .NotEmpty()
-                .Matches("^[A-Za-z]{3,30}$")
-                .WithMessage("Last name must contain only letters and be between 3 and 30 characters long.");
+            //RuleFor(x => x.FirstName)
+            //    .Must(value => !string.IsNullOrWhiteSpace(value)
+            //        && Regex.IsMatch(value, @"^[A-Za-z]+$")
+            //        && !value.Equals("Select", StringComparison.OrdinalIgnoreCase))
+            //    .WithMessage("Please enter a valid First Name name.")
+            //    .MinimumLength(3).WithMessage("First Name must be more than 2 characters.")
+            //    .MaximumLength(30).WithMessage("First Name cannot exceed 30 characters.");
+            //RuleFor(x => x.LastName)
+            //    .NotEmpty()
+            //    .Matches("^[A-Za-z]{3,30}$")
+            //    .WithMessage("Last name must contain only letters and be between 3 and 30 characters long.");
             
         }
     }
@@ -68,32 +55,42 @@ namespace QubeFin.Hrms.Application.Employees.Commands
             {
                 return new ValidationError("Employee not exist given id.");
             }
+            // 2. Project incoming requests directly into domain entity shapes
+            var updatedEmploymentEntityList = new List<EmployeeEmployment>();
 
+            var orderByQualifications = request.Employments.OrderBy(m => m.Sequence).ToList();
+            for (int i = 0; i < orderByQualifications.Count; i++)
+            {
+                var req = orderByQualifications[i];
+                int sequenceValue = i + 1;
+                //int sequenceValue = i + 1;
 
-            //existingEmployee.UpdateEmployeePersonalDetails(
-            //    request.Salutation,
-            //    request.FirstName,
-            //    request.MiddleName,
-            //    request.LastName,
-            //    request.FatherName,
-            //    request.MotherName,
-            //    request.DateOfBirth,
-            //    request.Gender,
-            //    request.Religion,
-            //    request.Caste,
-            //    request.Nationality,
-            //    request.BloodGroup,
-            //    request.DisablityType,
-            //    request.MaritalStatus,
-            //    request.MobileNo,
-            //    request.PersonalEmail,
-            //    request.LastModifiedBy
-            //    );
-            //employeeRepository.UpdateEmployee(existingEmployee);
+                var employmentEntity = new EmployeeEmployment(
+                    id: Guid.NewGuid(),
+                    employerName: req.EmployerName,
+                    designation: req.Designation,
+                    fromDate: req.FromDate,
+                    toDate: req.ToDate,
+                    lastDrawnSalary: req.LastDrawnSalary,
+                    jobTitle: req.JobTitle,
+                    nocFileName: req.NocFileName,
+                    nocFileNo: req.NocFileNo,
+                    expCertFileName: req.ExpCertFileName,
+                    expCertFileNo: req.ExpCertFileNo,
+                    employeeId: request.Id,
+                    sequence: sequenceValue, // Integer index from your loop (e.g., i + 1)
+                    createdBy: request.LastModifiedBy
+                );
 
+                updatedEmploymentEntityList.Add(employmentEntity);
+            }
+
+            // 3. Atomically overwrite old items and explicitly log modifications
+            existingEmployee.ReplaceEmployments(updatedEmploymentEntityList);
+
+            await employeeRepository.UpdateAsync(existingEmployee);
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Ok(new UpdateEmployeeEmploymentResponse(true));
-
 
         }
     }

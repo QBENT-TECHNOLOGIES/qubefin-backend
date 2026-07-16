@@ -2,19 +2,37 @@
 
 public class EmployeeReference
 {
-    public Guid Id { get; set; }
-    public string DocumentCategory { get; set; } = null!;
-    public string DocumentName { get; set; } = null!;
-    public string? DocumentNo { get; set; }
-    public DateOnly? ValidFrom { get; set; }
-    public DateOnly? ValidTill { get; set; }
-    public string? FileName { get; set; }
-    public string? FileNo { get; set; }
-    public Guid EmployeeId { get; set; }
-    public string PersonName { get; set; } = null!;
-    public string Mobile { get; set; } = null!;
-    public string Email { get; set; } = null!;
-    public string Address { get; set; } = null!;
-    public string? Occupation { get; set; }
-    public string? HowDoYouKnow { get; set; }
+    public Guid Id { get; private set; }
+    public Guid EmployeeId { get; private set; }
+    public string PersonName { get; private set; } = null!;
+    public string Mobile { get; private set; } = null!;
+    public string Email { get; private set; } = null!;
+    public string Address { get; private set; } = null!;
+    public string? Occupation { get; private set; }
+    public string? HowDoYouKnow { get; private set; }
+
+    // Required for ORM/EF Core hydration
+    private EmployeeReference()
+    {
+    }
+
+    public EmployeeReference(
+        Guid id,
+        Guid employeeId,
+        string personName,
+        string mobile,
+        string email,
+        string address,
+        string? occupation,
+        string? howDoYouKnow)
+    {
+        Id = id == Guid.Empty ? Guid.NewGuid() : id;
+        EmployeeId = employeeId;
+        PersonName = personName.Trim();
+        Mobile = mobile.Trim();
+        Email = email.Trim();
+        Address = address.Trim();
+        Occupation = occupation?.Trim();
+        HowDoYouKnow = howDoYouKnow?.Trim();
+    }
 }

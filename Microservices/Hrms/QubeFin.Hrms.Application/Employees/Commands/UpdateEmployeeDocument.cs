@@ -55,19 +55,33 @@ namespace QubeFin.Hrms.Application.Employees.Commands
             {
                 return new ValidationError("Employee not exist with given id.");
             }
-            var documents = request.Documents.FirstOrDefault();
-            if (documents == null)
+            // 2. Project incoming requests directly into domain entity shapes
+            var updatedDocumentEntityList = new List<EmployeeDocument>();
+
+            for (int i = 0; i < request.Documents.Count; i++)
             {
-                return new ValidationError("Employee Document not exist.");
+                var req = request.Documents[i];
+                //int sequenceValue = i + 1;
+
+                var documentEntity = new EmployeeDocument(
+                    Guid.NewGuid(),
+                    "KYC",
+                    req.DocumentName,
+                    req.DocumentNo,
+                    req.ValidFrom,
+                    req.ValidTill,
+                    req.FileName,
+                    req.FileNo,
+                    request.Id,
+                    req.LastModifiedBy
+                );
+                updatedDocumentEntityList.Add(documentEntity);
             }
 
-            //employeeRepository.DeleteDocuments(request.Id, documents.DocumentCategory);
-            //existingEmployee.UpdateDocuments(
-            //    request.Documents,
-            //    request.LastModifiedBy
-            //    );
-            //employeeRepository.UpdateEmployee(existingEmployee);
+            // 3. Atomically overwrite old items and explicitly log modifications
+            existingEmployee.ReplaceDocuments(updatedDocumentEntityList, "KYC");
 
+            await employeeRepository.UpdateAsync(existingEmployee);
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Ok(new UpdateEmployeeDocumentResponse(true));
 

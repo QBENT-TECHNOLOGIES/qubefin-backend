@@ -3,6 +3,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
+using QubeFin.Hrms.Application.Employees.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Mappers.Hrms;
@@ -15,16 +16,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
 
     #region --- COMMAND ---
     public record UpdateEmployeeQualificationCommand(
-            string AcademicStream,
-            string? Specialization,
-            int YearOfPassing,
-            string? UniversityOrBoard,
-            string? SchoolOrCollege,
-            string? GradeOrMarks,
-            string? DocFileName,
-            string? DocFileNo,
-            Guid EmployeeId,
-            int Sequence, Guid LastModifiedBy
+            Guid Id, IReadOnlyList<QualificationRequest> Qualifications, Guid LastModifiedBy
         ) : IRequest<Result<UpdateEmployeeQualificationResponse>>;
     #endregion
     #region --- VALIDATION ---
@@ -32,20 +24,49 @@ namespace QubeFin.Hrms.Application.Employees.Commands
     {
         public UpdateEmployeeQualificationCommandValidator()
         {
-            //RuleFor(x => x.FirstName)
-            //    .Must(value => !string.IsNullOrWhiteSpace(value)
-            //        && Regex.IsMatch(value, @"^[A-Za-z]+$")
-            //        && !value.Equals("Select", StringComparison.OrdinalIgnoreCase))
-            //    .WithMessage("Please enter a valid First Name name.")
-            //    .MinimumLength(3).WithMessage("First Name must be more than 2 characters.")
-            //    .MaximumLength(30).WithMessage("First Name cannot exceed 30 characters.");
-            //RuleFor(x => x.LastName)
-            //    .NotEmpty()
-            //    .Matches("^[A-Za-z]{3,30}$")
-            //    .WithMessage("Last name must contain only letters and be between 3 and 30 characters long.");
-            
+            RuleFor(x => x.Id)
+            .NotEmpty().WithMessage("Employee ID is required.");
+
+            RuleFor(x => x.LastModifiedBy)
+                .NotEmpty().WithMessage("Modifier User ID is required.");
+
+            // Validates that the list itself is not completely empty
+            RuleFor(x => x.Qualifications)
+                .NotEmpty().WithMessage("At least one qualification entry must be provided.");
+
+            // Loops through the array and validates each record automatically
+            RuleForEach(x => x.Qualifications)
+                .SetValidator(new QualificationRequestValidator());
+
         }
     }
+    public class QualificationRequestValidator : AbstractValidator<QualificationRequest>
+    {
+        public QualificationRequestValidator()
+        {
+            RuleFor(x => x.AcademicStream)
+                .NotEmpty().WithMessage("Academic stream is required.")
+                .MaximumLength(100).WithMessage("Academic stream cannot exceed 100 characters.");
+
+            RuleFor(x => x.UniversityOrBoard)
+                .NotEmpty().WithMessage("University or Board name is required.")
+                .MaximumLength(150).WithMessage("University or Board name cannot exceed 150 characters.");
+
+            RuleFor(x => x.SchoolOrCollege)
+                .NotEmpty().WithMessage("School or College name is required.")
+                .MaximumLength(150).WithMessage("School or College name cannot exceed 150 characters.");
+
+            RuleFor(x => x.YearOfPassing)
+                .NotEmpty().WithMessage("Year of passing is required.")
+                .InclusiveBetween(1950, DateTime.UtcNow.Year)
+                .WithMessage($"Year of passing must be a valid year between 1950 and {DateTime.UtcNow.Year}.");
+
+            RuleFor(x => x.GradeOrMarks)
+                .NotEmpty().WithMessage("Grade or Marks summary is required.")
+                .MaximumLength(20).WithMessage("Grade or Marks entry cannot exceed 20 characters.");
+        }
+    }
+
     #endregion
 
     #region --- RESPONSE ---
@@ -58,35 +79,41 @@ namespace QubeFin.Hrms.Application.Employees.Commands
     {
         public async Task<Result<UpdateEmployeeQualificationResponse>> Handle(UpdateEmployeeQualificationCommand request, CancellationToken cancellationToken)
         {
-            var existingEmployee = await employeeRepository.GetByIdAsync(request.EmployeeId);
+            var existingEmployee = await employeeRepository.GetByIdAsync(request.Id);
             if (existingEmployee == null)
             {
                 return new ValidationError("Employee not exist given id.");
             }
+            // 2. Project incoming requests directly into domain entity shapes
+            var updatedQualificationsList = new List<EmployeeQualification>();
 
+            var orderByQualifications = request.Qualifications.OrderBy(m => m.Sequence).ToList();
+            for (int i = 0; i < orderByQualifications.Count; i++)
+            {
+                var req = orderByQualifications[i];
+                int sequenceValue = i + 1;
 
-            //existingEmployee.UpdateEmployeeQualifications(
-            //    Guid.NewGuid(),
-            //    request.AcademicStream,
-            //    request.MiddleName,
-            //    request.LastName,
-            //    request.FatherName,
-            //    request.MotherName,
-            //    request.DateOfBirth,
-            //    request.Gender,
-            //    request.Religion,
-            //    request.Caste,
-            //    request.Nationality,
-            //    request.BloodGroup,
-            //    request.DisablityType,
-            //    request.MaritalStatus,
-            //    request.MobileNo,
-            //    request.PersonalEmail,
-            //    request.LastModifiedBy
-            //    );
-            //employeeRepository.UpdateEmployee(existingEmployee);
+                var qualificationEntity = new EmployeeQualification(
+                    Guid.NewGuid(),
+                    req.AcademicStream,
+                    req.Specialization,
+                    req.YearOfPassing,
+                    req.UniversityOrBoard,
+                    req.SchoolOrCollege,
+                    req.GradeOrMarks,
+                    req.DocFileName,
+                    req.DocFileNo,
+                    request.Id,
+                    sequenceValue
+                );
+                updatedQualificationsList.Add(qualificationEntity);
+            }
 
-            //await unitOfWork.SaveChangesAsync();
+            // 3. Atomically overwrite old items and explicitly log modifications
+            existingEmployee.ReplaceQualifications(updatedQualificationsList);
+
+            await employeeRepository.UpdateAsync(existingEmployee);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Ok(new UpdateEmployeeQualificationResponse(true));
 
 
