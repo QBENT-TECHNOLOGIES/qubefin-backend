@@ -62,6 +62,63 @@ public class EmployeeEndpoints : IEndpoint
         })
         .WithSummary("Create Employee");
 
+        // ---------- START  GET BY ID -----------//
+        app.MapGet("employees/personal-details/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new GetEmployeePersonalByIdQuery(id));
+            if (result.IsFailed)
+            {
+                if (result.Errors[0] is RecordNotFoundError)
+                {
+                    return Results.NotFound(result.Errors[0]);
+                }
+                if (result.Errors[0] is ValidationError)
+                {
+                    return Results.BadRequest(result.Errors[0]);
+                }
+            }
+            return Results.Ok(result.Value);
+        })
+        .WithSummary("Get Employee Personal By Id");
+
+        app.MapGet("employees/address-details/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new GetEmployeeAddressByIdQuery(id));
+            if (result.IsFailed)
+            {
+                if (result.Errors[0] is RecordNotFoundError)
+                {
+                    return Results.NotFound(result.Errors[0]);
+                }
+                if (result.Errors[0] is ValidationError)
+                {
+                    return Results.BadRequest(result.Errors[0]);
+                }
+            }
+            return Results.Ok(result.Value);
+        })
+        .WithSummary("Get Employee Address By Id");
+
+        app.MapGet("employees/official-details/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new GetEmployeeOfficialByIdQuery(id));
+            if (result.IsFailed)
+            {
+                if (result.Errors[0] is RecordNotFoundError)
+                {
+                    return Results.NotFound(result.Errors[0]);
+                }
+                if (result.Errors[0] is ValidationError)
+                {
+                    return Results.BadRequest(result.Errors[0]);
+                }
+            }
+            return Results.Ok(result.Value);
+        })
+        .WithSummary("Get Employee Official By Id");
+
+        // ---------- END  GET BY ID -----------//
+
         app.MapPut("employees/update/personal/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] PersonalInfoRequest request, ISender sender) =>
         {
             if (principal.Identity is null)
