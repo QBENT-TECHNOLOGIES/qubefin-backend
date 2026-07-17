@@ -22,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<IAdministrativeUnitRepository, AdministrativeUnitRepository>();
         services.AddScoped<IOrganizationUnitTypeRepository, OrganizationUnitTypeRepository>();
         services.AddScoped<IOrganizationUnitRepository, OrganizationUnitRepository>();
+        services.AddScoped<ISurveyCommitteeRepository, SurveyCommitteeRepository>();
         return services;
     }
 }

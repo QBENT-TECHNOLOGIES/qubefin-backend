@@ -13,17 +13,17 @@ using System.Text.RegularExpressions;
 namespace QubeFin.Hrms.Application.Employees.Commands;
 
 #region --- COMMAND ---
-public record UpdateEmployeeOfficialCommand(
-        Guid Id, Guid? CompanyId, Guid? OrganizationUnitId, Guid? DepartmentId, string? EmployementType, DateOnly? DateOfJoining, DateOnly? DateOfConfirmation,
-        DateOnly? SeparationDate, Guid? ReferedBy, string? HowYouKnow, string? OfficialEmail, bool IsActive,
+public record UpdateEmployeePayrollCommand(
+        Guid Id, Guid BankId, long BankAccountNo, string BankHolderName, string BankBranch, string BankAccountType,
+        bool HasEsiEligible, string? EsiIpNumber, string? UniversalAccountNumber, bool IsPayrollActive,
         Guid UserId
-    ) : IRequest<Result<UpdateEmployeeOfficialResponse>>;
+    ) : IRequest<Result<UpdateEmployeePayrollResponse>>;
 #endregion
 
 #region --- VALIDATION ---
-public class UpdateEmployeeOfficialCommandValidator : AbstractValidator<UpdateEmployeeOfficialCommand>
+public class UpdateEmployeePayrollCommandValidator : AbstractValidator<UpdateEmployeePayrollCommand>
 {
-    public UpdateEmployeeOfficialCommandValidator()
+    public UpdateEmployeePayrollCommandValidator()
     {
             //RuleFor(x => x.FirstName)
             //    .Must(value => !string.IsNullOrWhiteSpace(value)
@@ -42,14 +42,14 @@ public class UpdateEmployeeOfficialCommandValidator : AbstractValidator<UpdateEm
 #endregion
 
 #region --- RESPONSE ---
-public record UpdateEmployeeOfficialResponse(bool Created);
+public record UpdateEmployeePayrollResponse(bool Created);
 #endregion
 
 #region --- HANDLER ---
-internal sealed class UpdateEmployeeOfficialCommandHandler(IEmployeeRepository employeeRepository, IUnitOfWork unitOfWork)
-    : IRequestHandler<UpdateEmployeeOfficialCommand, Result<UpdateEmployeeOfficialResponse>>
+internal sealed class UpdateEmployeePayrollCommandHandler(IEmployeeRepository employeeRepository, IUnitOfWork unitOfWork)
+    : IRequestHandler<UpdateEmployeePayrollCommand, Result<UpdateEmployeePayrollResponse>>
 {
-    public async Task<Result<UpdateEmployeeOfficialResponse>> Handle(UpdateEmployeeOfficialCommand request, CancellationToken cancellationToken)
+    public async Task<Result<UpdateEmployeePayrollResponse>> Handle(UpdateEmployeePayrollCommand request, CancellationToken cancellationToken)
     {
         var employee = await employeeRepository.GetByIdAsync(request.Id);
         if (employee == null)
@@ -57,16 +57,16 @@ internal sealed class UpdateEmployeeOfficialCommandHandler(IEmployeeRepository e
             return new ValidationError("Employee does not exist with the given id.");
         }
 
-        employee.UpdateOfficialInfo(
-            new OfficialInfo(request.CompanyId, request.OrganizationUnitId, request.DepartmentId, request.EmployementType, request.DateOfJoining, request.DateOfConfirmation,
-                request.SeparationDate, request.ReferedBy, request.HowYouKnow, request.OfficialEmail, request.IsActive),
+        employee.UpdatePayrollInfo(
+            new PayrollInfo(request.BankId, request.BankAccountNo, request.BankHolderName, request.BankBranch, request.BankAccountType, request.HasEsiEligible,
+                request.EsiIpNumber, request.UniversalAccountNumber, request.IsPayrollActive),
             request.UserId
             );
             //employeeRepository.UpdateEmployee(existingEmployee);
 
         await employeeRepository.UpdateAsync(employee);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result.Ok(new UpdateEmployeeOfficialResponse(true));
+        return Result.Ok(new UpdateEmployeePayrollResponse(true));
 
 
     }
