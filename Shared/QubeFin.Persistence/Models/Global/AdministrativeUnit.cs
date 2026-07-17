@@ -1,6 +1,4 @@
-﻿using QubeFin.Persistence.Models.App;
-
-namespace QubeFin.Persistence.Models.Global;
+﻿namespace QubeFin.Persistence.Models.Global;
 
 public class AdministrativeUnit
 {
@@ -40,5 +38,14 @@ public class AdministrativeUnit
         };
 
         return administrativeUnit;
+    }
+
+    public void Update(Guid administrativrUnitTypeId, string name, Guid? parentId, Guid userId)
+    {
+        AdministrativeUnitTypeId = administrativrUnitTypeId;
+        Name = name;
+        ParentId = parentId;
+        LastModifiedBy = userId;
+        LastModifiedOn = DateTime.UtcNow;
     }
 }

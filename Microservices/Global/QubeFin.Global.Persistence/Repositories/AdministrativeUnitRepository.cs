@@ -7,15 +7,17 @@ namespace QubeFin.Global.Persistence.Repositories;
 
 public interface IAdministrativeUnitRepository
 {
-    void Add(AdministrativeUnit administrativeUnit);
     Task<IEnumerable<AdministrativeUnitTree>> GetAllAsync(CancellationToken cancellationToken);
+    Task<AdministrativeUnit?> GetByIdAsync(Guid id);
+    Task AddAsync(AdministrativeUnit administrativeUnit);
+    void Update(AdministrativeUnit administrativeUnit);
 }
 
 public class AdministrativeUnitRepository(QubeFinDataContext context) : IAdministrativeUnitRepository
 {
-    public void Add(AdministrativeUnit administrativeUnit)
+    public async Task AddAsync(AdministrativeUnit administrativeUnit)
     {
-        context.TblAdministrativeUnits.Add(administrativeUnit.ToEntity());
+        await context.TblAdministrativeUnits.AddAsync(administrativeUnit.ToEntity());
     }
 
     public async Task<IEnumerable<AdministrativeUnitTree>> GetAllAsync(CancellationToken cancellationToken)
@@ -37,5 +39,16 @@ public class AdministrativeUnitRepository(QubeFinDataContext context) : IAdminis
             .ToListAsync(cancellationToken);
 
         return administrativeUnitEntities;
+    }
+
+    public async Task<AdministrativeUnit?> GetByIdAsync(Guid id)
+    {
+        var administrativeUnitEntity = await context.TblAdministrativeUnits.AsNoTracking().FirstOrDefaultAsync(m => m.Id == id);
+        return administrativeUnitEntity?.ToDomain();
+    }
+
+    public void Update(AdministrativeUnit administrativeUnit)
+    {
+        context.TblAdministrativeUnits.Update(administrativeUnit.ToEntity());
     }
 }

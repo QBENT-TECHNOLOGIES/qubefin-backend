@@ -1,8 +1,4 @@
 ﻿using QubeFin.Persistence.Models.Global;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Entity = QubeFin.Persistence.Entities.TblOrganizationUnit;
 
 namespace QubeFin.Persistence.Mappers.Global;
@@ -11,24 +7,19 @@ public static class OrganizationUnitMapper
 {
     public static OrganizationUnit ToDomain(this Entity entity)
     {
-        // Use the domain factory method that exists instead of a non-existent 12-arg ctor
-        var domain = OrganizationUnit.Create(
+        return new OrganizationUnit(
             entity.Id,
             entity.OrganizationUnitTypeId,
             entity.Name,
             entity.CodeVal,
+            entity.AttendanceInTime,
+            entity.AttendanceOutTime,
             entity.ParentId,
             entity.CreatedBy,
-            entity.AttendanceInTime,
-            entity.AttendanceOutTime
+            entity.CreatedOn,
+            entity.LastModifiedBy,
+            entity.LastModifiedOn
         );
-
-        // Preserve audit timestamps/ids if domain exposes setters
-        domain.CreatedOn = entity.CreatedOn;
-        domain.LastModifiedOn = entity.LastModifiedOn;
-        domain.LastModifiedBy = entity.LastModifiedBy;
-
-        return domain;
     }
 
     public static Entity ToEntity(this OrganizationUnit domain)

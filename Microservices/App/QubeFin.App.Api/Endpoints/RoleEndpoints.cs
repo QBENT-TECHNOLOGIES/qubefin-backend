@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using QubeFin.App.Application.Roles.Queries;
 using QubeFin.Core.Endpoint;
+using QubeFin.Core.Results;
 
 namespace QubeFin.App.Api.Endpoints;
 
@@ -10,8 +11,8 @@ public class RoleEndpoints : IEndpoint
     {
         app.MapGet("roles", async (ISender sender) =>
         {
-            var roles = await sender.Send(new GetRolesQuery());
-            return Results.Ok(roles.Value);
+            var result = await sender.Send(new GetRolesQuery());
+            return result.ToHttpResult();
         })
         //.RequireAuthorization("Permission:Users.View")
         .WithSummary("Get All Roles");
