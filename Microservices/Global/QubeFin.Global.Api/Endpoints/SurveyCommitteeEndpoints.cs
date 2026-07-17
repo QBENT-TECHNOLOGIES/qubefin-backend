@@ -13,9 +13,9 @@ namespace QubeFin.Global.Api.Endpoints
     {
         public void MapEndpoint(IEndpointRouteBuilder app)
         {
-            app.MapGet("survey-committees/filter", async (IMediator mediator, string? searchText, string? sortOn, string? sortDirection, int pageIndex, int pageSize) =>
+            app.MapGet("survey-committees/filter", async (ISender sender, string? searchText, string? sortOn, string? sortDirection, int pageIndex, int pageSize) =>
             {
-                var resp = await mediator.Send(new FilterCommitteeMemberQuery(searchText, sortOn, sortDirection, pageIndex, pageSize));
+                var resp = await sender.Send(new FilterCommitteeMemberQuery(searchText, sortOn, sortDirection, pageIndex, pageSize));
                 return TypedResults.Ok(resp);
             }).WithSummary("Filter Committee Members");
 
@@ -36,9 +36,9 @@ namespace QubeFin.Global.Api.Endpoints
                 return Results.Ok(result.Value);
             }).WithSummary("Get Committee Member By Id");
 
-            app.MapPost("survey-committees", async (MemberAddRequest request, IMediator mediator, ClaimsPrincipal principal) =>
+            app.MapPost("survey-committees", async (MemberAddRequest request, ISender sender, ClaimsPrincipal principal) =>
             {
-                var result = await mediator.Send(new AddMemberCommand(request, principal.Identity.GetUserId()));
+                var result = await sender.Send(new AddMemberCommand(request, principal.Identity.GetUserId()));
                 if (result.IsFailed)
                 {
                     if (result.Errors[0] is RecordNotFoundError)
@@ -53,9 +53,9 @@ namespace QubeFin.Global.Api.Endpoints
                 return Results.Ok();
             }).WithSummary("Add Member To Survey Committee");
 
-            app.MapPut("survey-committees", async (MemberUpdateRequest request, IMediator mediator, ClaimsPrincipal principal) =>
+            app.MapPut("survey-committees", async (MemberUpdateRequest request, ISender sender, ClaimsPrincipal principal) =>
             {
-                var result = await mediator.Send(new UpdateMemberCommand(request, principal.Identity.GetUserId()));
+                var result = await sender.Send(new UpdateMemberCommand(request, principal.Identity.GetUserId()));
                 if (result.IsFailed)
                 {
                     if (result.Errors[0] is RecordNotFoundError)

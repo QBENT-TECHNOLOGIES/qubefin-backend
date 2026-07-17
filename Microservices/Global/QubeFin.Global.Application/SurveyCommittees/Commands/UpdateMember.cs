@@ -35,7 +35,12 @@ internal sealed class UpdateMemberCommandHandler(ISurveyCommitteeRepository surv
         var existingSurveyCommitteeMember = await surveyCommitteeRepository.GetByIdAsync(request.member.Id);
         if (existingSurveyCommitteeMember is null) return new RecordNotFoundError("Member not found");
 
-        existingSurveyCommitteeMember.Update(isActive: request.member.IsActive, isLead: request.member.IsLead, assignedTo: request.member.AssignedTo, lastModifiedBy: request.UserId);
+        existingSurveyCommitteeMember.Update(
+            isActive: request.member.IsActive, 
+            isLead: request.member.IsActive ? request.member.IsLead : false, 
+            assignedTo: !request.member.IsActive ? request.member.AssignedTo : null, 
+            lastModifiedBy: request.UserId);
+
         await surveyCommitteeRepository.UpdateMember(existingSurveyCommitteeMember);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Ok(new UpdateMemberResponse(true));

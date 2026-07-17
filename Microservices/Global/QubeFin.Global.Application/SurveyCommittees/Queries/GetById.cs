@@ -6,6 +6,7 @@ using QubeFin.Core.Results;
 using QubeFin.Global.Application.SurveyCommittees.Commands;
 using QubeFin.Global.Application.SurveyCommittees.Models;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Models.Global;
 
 namespace QubeFin.Global.Application.SurveyCommittees.Queries;
 
@@ -45,7 +46,14 @@ internal sealed class GetByIdQueryHandler(QubeFinDataContext context) : IRequest
             IsLead = SurveyCommitteeMember.IsLead,
             IsActive = SurveyCommitteeMember.IsActive,
             AssignedFrom = SurveyCommitteeMember.AssignedFrom,
-            AssignedTo = SurveyCommitteeMember.AssignedTo
+            AssignedTo = SurveyCommitteeMember.AssignedTo,
+            AuditInfo = new AuditInfo
+            {
+                CreatedBy = SurveyCommitteeMember.CreatedBy.ToString(),
+                CreatedOn = SurveyCommitteeMember.CreatedOn,
+                LastModifiedBy = SurveyCommitteeMember.LastModifiedBy != null ? SurveyCommitteeMember.LastModifiedBy.ToString() : null,
+                LastModifiedOn = SurveyCommitteeMember.LastModifiedOn
+            }
         });
     }
 }
