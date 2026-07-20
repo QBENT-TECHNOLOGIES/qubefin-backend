@@ -22,7 +22,8 @@ namespace QubeFin.Persistence.Mappers.Global
                 entity.CreatedBy,
                 entity.CreatedOn,
                 entity.LastModifiedBy,
-                entity.LastModifiedOn
+                entity.LastModifiedOn,
+                entity.TblSurveyAssigneds.Select(x => x.ToDomain()).ToList()
             );
         }
         public static TblSurvey ToEntity(this Survey domain)
@@ -40,7 +41,8 @@ namespace QubeFin.Persistence.Mappers.Global
                 CreatedBy = domain.CreatedBy,
                 CreatedOn = domain.CreatedOn,
                 LastModifiedBy = domain.LastModifiedBy,
-                LastModifiedOn = domain.LastModifiedOn
+                LastModifiedOn = domain.LastModifiedOn,
+                TblSurveyAssigneds = domain.SurveyAssigneds.Select(x => x.ToEntity()).ToList()
             };
         }
     }

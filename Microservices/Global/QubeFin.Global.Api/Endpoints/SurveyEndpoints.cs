@@ -43,10 +43,8 @@ namespace QubeFin.Global.Api.Endpoints
                     return Results.Forbid();
                 }
                 var userId = principal.Identity.GetUserId();
-                request.CreatedBy = userId;
-                request.LastModifiedBy = userId;
 
-                var command = new CreateSurveyCommand(request);
+                var command = new CreateSurveyCommand(request, userId);
                 var result = await sender.Send(command);
                 if (result.IsFailed)
                 {
@@ -70,10 +68,8 @@ namespace QubeFin.Global.Api.Endpoints
                     return Results.Forbid();
                 }
                 var userId = principal.Identity.GetUserId();
-                request.CreatedBy = userId;
-                request.LastModifiedBy = userId;
 
-                var command = new UpdateSurveyCommand(request);
+                var command = new UpdateSurveyCommand(request, userId);
                 var result = await sender.Send(command);
                 if (result.IsFailed)
                 {

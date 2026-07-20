@@ -10,7 +10,7 @@ namespace QubeFin.Global.Application.SurveyUnit.Commands;
 
 
 #region --- COMMAND ---
-public record CreateSurveyCommand(SurveyRequest SurveyRequest) : IRequest<Result<CreateSurveyResponse>>;
+public record CreateSurveyCommand(SurveyRequest SurveyRequest, Guid userId) : IRequest<Result<CreateSurveyResponse>>;
 #endregion
 
 #region --- VALIDATION ---
@@ -20,7 +20,6 @@ public class CreateSurveyCommandValidator : AbstractValidator<CreateSurveyComman
     {
         RuleFor(v => v.SurveyRequest).NotNull().WithMessage("Survey request is required.");
         RuleFor(v => v.SurveyRequest.SurveyType).NotEmpty().WithMessage("Survey type is required.");
-        RuleFor(v => v.SurveyRequest.AssignmentNo).NotEmpty().WithMessage("Assignment number is required.");
         RuleFor(v => v.SurveyRequest.AssignmentDate).NotEmpty().WithMessage("Assignment date is required.");
         RuleFor(v => v.SurveyRequest.ProposedArea).NotEmpty().WithMessage("Proposed area is required.");
         RuleFor(v => v.SurveyRequest.AdministrativeUnitId).NotEmpty().WithMessage("Administrative unit ID is required.");
@@ -38,15 +37,24 @@ internal sealed class CreateSurveyCommandHandler(ISurveyRepository surveyReposit
 {
     public async Task<Result<CreateSurveyResponse>> Handle(CreateSurveyCommand request, CancellationToken cancellationToken)
     {
+        var surveyAssigneds = request.SurveyRequest.SurveyAssigneds
+            .Select(x => SurveyAssigned.Create(
+                Guid.Empty,
+                x.EmployeeId,
+                x.IsLead,
+                request.userId))
+            .ToList();
+
+
         var survey = Survey.Create(
             Guid.NewGuid(),
             request.SurveyRequest.SurveyType,
-            request.SurveyRequest.AssignmentNo,
             request.SurveyRequest.AssignmentDate,
             request.SurveyRequest.ProposedArea,
             request.SurveyRequest.AdministrativeUnitId,
             request.SurveyRequest.TentativeSubmissionDate,
-            request.SurveyRequest.CreatedBy
+            surveyAssigneds,
+            request.userId
         );
         await surveyRepository.AddSurvey(survey);
         await unitOfWork.SaveChangesAsync(cancellationToken);

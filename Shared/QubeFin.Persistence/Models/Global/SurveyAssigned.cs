@@ -22,6 +22,10 @@ namespace QubeFin.Persistence.Models.Global
             AssignedDate = DateTime.Now;
             AssignedBy = assignedBy;
         }
+        public static SurveyAssigned Create(Guid surveyId, Guid employeeId, bool isLead, Guid assignedBy)
+        {
+            return new SurveyAssigned(Guid.Empty, surveyId, employeeId, isLead, assignedBy);
+        }
         public void Update(bool isLead)
         {
             IsLead = isLead;

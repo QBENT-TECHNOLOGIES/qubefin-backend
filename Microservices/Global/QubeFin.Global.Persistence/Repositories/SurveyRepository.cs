@@ -2,9 +2,6 @@
 using QubeFin.Persistence;
 using QubeFin.Persistence.Mappers.Global;
 using QubeFin.Persistence.Models.Global;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace QubeFin.Global.Persistence.Repositories
 {

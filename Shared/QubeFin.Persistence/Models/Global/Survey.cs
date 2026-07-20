@@ -28,7 +28,8 @@
                 Guid createdBy,
                 DateTime createdOn,
                 Guid? lastModifiedBy,
-                DateTime? lastModifiedOn
+                DateTime? lastModifiedOn,
+                List<SurveyAssigned> surveyAssigneds
             )
         {
             Id = id;
@@ -42,24 +43,29 @@
             CreatedOn = createdOn;
             LastModifiedBy = lastModifiedBy;
             LastModifiedOn = lastModifiedOn;
+            if (surveyAssigneds != null && surveyAssigneds.Any())
+            {
+                _surveyAssigneds.AddRange(surveyAssigneds);
+            }
         }
-        public static Survey Create(Guid id, string surveyType, string assignmentNo, DateOnly assignmentDate, string proposedArea, Guid administrativeUnitId, DateOnly tentativeSubmissionDate, Guid createdBy)
+        public static Survey Create(Guid id, string surveyType, DateOnly assignmentDate, string proposedArea, Guid administrativeUnitId, DateOnly tentativeSubmissionDate, IEnumerable<SurveyAssigned> surveyAssigneds, Guid createdBy)
         {
             var survey = new Survey
             {
                 Id = id,
                 SurveyType = surveyType,
-                AssignmentNo = assignmentNo,
+                AssignmentNo = new Random().Next(100000, 999999).ToString(),
                 AssignmentDate = assignmentDate,
                 ProposedArea = proposedArea,
                 AdministrativeUnitId = administrativeUnitId,
                 TentativeSubmissionDate = tentativeSubmissionDate,
                 CreatedBy = createdBy,
-                CreatedOn = DateTime.Now,
+                CreatedOn = DateTime.Now
             };
+            survey.ReplaceSurveyAssigneds(surveyAssigneds);
             return survey;
         }
-        public void Update(string surveyType, DateOnly assignmentDate, string proposedArea, Guid administrativeUnitId, DateOnly tentativeSubmissionDate, Guid? lastModifiedBy)
+        public void Update(string surveyType, DateOnly assignmentDate, string proposedArea, Guid administrativeUnitId, DateOnly tentativeSubmissionDate, IEnumerable<SurveyAssigned> surveyAssigneds, Guid? lastModifiedBy)
         {
             SurveyType = surveyType;
             AssignmentDate = assignmentDate;
@@ -68,34 +74,8 @@
             TentativeSubmissionDate = tentativeSubmissionDate;
             LastModifiedBy = lastModifiedBy;
             LastModifiedOn = DateTime.Now;
-        }
 
-        public void AddSurveyAssigneds(SurveyAssigned surveyAssigned)
-        {
-            ArgumentNullException.ThrowIfNull(surveyAssigned);
-            _surveyAssigneds.Add(surveyAssigned);
-        }
-        public void UpdateSurveyAssigneds(Guid surveyAssignedId, bool IsLead)
-        {
-            var surveyAssigned = _surveyAssigneds
-                .FirstOrDefault(x => x.Id == surveyAssignedId);
-
-            if (surveyAssigned is null)
-            {
-                throw new InvalidOperationException("Survey assigned not found.");
-            }
-
-            surveyAssigned.Update(IsLead);
-        }
-        public void RemoveSurveyAssigneds(Guid surveyAssignedId)
-        {
-            var surveyAssigned = _surveyAssigneds
-                .FirstOrDefault(x => x.Id == surveyAssignedId);
-
-            if (surveyAssigned != null)
-            {
-                _surveyAssigneds.Remove(surveyAssigned);
-            }
+            ReplaceSurveyAssigneds(surveyAssigneds);
         }
         public void ReplaceSurveyAssigneds(IEnumerable<SurveyAssigned> surveyAssigneds)
         {

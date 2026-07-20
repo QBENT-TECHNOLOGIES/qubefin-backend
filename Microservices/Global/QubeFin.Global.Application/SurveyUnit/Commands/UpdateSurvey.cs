@@ -6,12 +6,13 @@ using QubeFin.Global.Application.SurveyCommittees.Commands;
 using QubeFin.Global.Application.SurveyUnit.Models;
 using QubeFin.Global.Persistence.Repositories;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Models.Global;
 
 namespace QubeFin.Global.Application.SurveyUnit.Commands;
 
 
 #region --- COMMAND ---
-public record UpdateSurveyCommand(SurveyRequest SurveyRequest) : IRequest<Result<UpdateSurveyResponse>>;
+public record UpdateSurveyCommand(SurveyRequest SurveyRequest, Guid userId) : IRequest<Result<UpdateSurveyResponse>>;
 #endregion
 
 #region --- VALIDATION ---
@@ -41,13 +42,22 @@ internal sealed class UpdateSurveyCommandHandler(ISurveyRepository surveyReposit
         var surveyEntity = await surveyRepository.GetByIdAsync(request.SurveyRequest.Id);
         if (surveyEntity is null) return new RecordNotFoundError("Member not found");
 
+        var surveyAssigneds = request.SurveyRequest.SurveyAssigneds
+            .Select(x => SurveyAssigned.Create(
+                Guid.Empty,
+                x.EmployeeId,
+                x.IsLead,
+                request.userId))
+            .ToList();
+
         surveyEntity.Update(
             surveyType: request.SurveyRequest.SurveyType,
             assignmentDate: request.SurveyRequest.AssignmentDate,
             proposedArea: request.SurveyRequest.ProposedArea,
             administrativeUnitId: request.SurveyRequest.AdministrativeUnitId,
             tentativeSubmissionDate: request.SurveyRequest.TentativeSubmissionDate,
-            lastModifiedBy: request.SurveyRequest.LastModifiedBy
+            surveyAssigneds,
+            lastModifiedBy: request.userId
         );
 
         await surveyRepository.UpdateSurvey(surveyEntity);
