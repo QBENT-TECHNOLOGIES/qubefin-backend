@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace QubeFin.Global.Application.Survey.Models
+namespace QubeFin.Global.Application.SurveyUnit.Models
 {
     public class SurveySearchParam : SearchParam
     {

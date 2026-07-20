@@ -2,14 +2,14 @@
 using MediatR;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using QubeFin.Global.Application.Survey.Models;
+using QubeFin.Global.Application.SurveyUnit.Models;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Global;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace QubeFin.Global.Application.Survey.Queries;
+namespace QubeFin.Global.Application.SurveyUnit.Queries;
 
 #region --- QUERY ---
 public record GetSurveyBySearchQuery(SurveySearchParam searchParam) : IRequest<GetSurveyBySearchResponse>;
