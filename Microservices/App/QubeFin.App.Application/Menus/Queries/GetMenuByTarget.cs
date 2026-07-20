@@ -8,20 +8,30 @@ using QubeFin.Persistence.Models.App;
 namespace QubeFin.App.Application.Menus.Queries;
 
 #region --- QUERY ---
-public record GetMenuByIdQuery(Guid Id) : IRequest<Result<GetMenuByIdResponse>>;
+public record GetMenuByTargetQuery(string TargetPath) : IRequest<Result<GetMenuByTargetResponse>>;
 #endregion
 
 #region --- RESPONSE ---
-public record GetMenuByIdResponse(Guid Id, string Name, string Icon, string? Target, Guid? ParentId, int DisplayPosition, bool IsActive,
-    string CreatedBy, DateTime CreatedOn, string? LastModifiedBy, DateTime? LastModifiedOn, IReadOnlyList<MenuHierarchyItem> Hierarchy);
+public record GetMenuByTargetResponse(Guid Id, string Name, string Icon, string? Target, IReadOnlyList<MenuHierarchyItem> Hierarchy);
 #endregion
 
 #region --- HANDLER ---
-internal sealed class GetMenuByIdQueryHandler(QubeFinDataContext context)
-    : IRequestHandler<GetMenuByIdQuery, Result<GetMenuByIdResponse>>
+internal sealed class GetMenuByTargetQueryHandler(QubeFinDataContext context)
+    : IRequestHandler<GetMenuByTargetQuery, Result<GetMenuByTargetResponse>>
 {
-    public async Task<Result<GetMenuByIdResponse>> Handle(GetMenuByIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<GetMenuByTargetResponse>> Handle(GetMenuByTargetQuery request, CancellationToken cancellationToken)
     {
+        var menuEntity = await context
+            .TblMenus
+            .AsNoTracking()
+            .Where(m => m.Target == request.TargetPath)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (menuEntity is null)
+        {
+            return new RecordNotFoundError($"Menu not found for the given TargetPath");
+        }
+
         var hierarchy = await context.Set<MenuHierarchyItem>()
             .FromSqlInterpolated($@"
                 ;WITH Hierarchy AS
@@ -34,7 +44,7 @@ internal sealed class GetMenuByIdQueryHandler(QubeFinDataContext context)
                         m.ParentId,
                         0 AS Level
                     FROM [Auth].[Tbl_Menu] m
-                    WHERE M.Id = {request.Id}
+                    WHERE M.Id = {menuEntity.Id}
                     UNION ALL
 
                     SELECT
@@ -55,19 +65,7 @@ internal sealed class GetMenuByIdQueryHandler(QubeFinDataContext context)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
-        var menu = await context
-            .TblMenus
-            .AsNoTracking()
-            .Where(m => m.Id == request.Id)
-            .Select(m => new GetMenuByIdResponse(m.Id, m.Name, m.Icon, m.Target, m.ParentId, m.DisplayPosition, m.IsActive,
-                m.CreatedByNavigation.UserName, m.CreatedOn, m.LastModifiedByNavigation.UserName, m.LastModifiedOn, hierarchy))
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (menu is null)
-        {
-            return new RecordNotFoundError($"Menu not found for the given Id");
-        }
-        return Result.Ok(menu);
+        return Result.Ok(new GetMenuByTargetResponse(menuEntity.Id, menuEntity.Name, menuEntity.Icon, menuEntity.Target, hierarchy));
     }
 }
 #endregion
