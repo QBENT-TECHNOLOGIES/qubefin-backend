@@ -99,6 +99,24 @@ public class EmployeeEndpoints : IEndpoint
         })
         .WithSummary("Get Employee Address By Id");
 
+        app.MapGet("employees/contact-details/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new GetEmployeeContactByIdQuery(id));
+            if (result.IsFailed)
+            {
+                if (result.Errors[0] is RecordNotFoundError)
+                {
+                    return Results.NotFound(result.Errors[0]);
+                }
+                if (result.Errors[0] is ValidationError)
+                {
+                    return Results.BadRequest(result.Errors[0]);
+                }
+            }
+            return Results.Ok(result.Value);
+        })
+        .WithSummary("Get Employee Contact Details By Id");
+
         app.MapGet("employees/official-details/{id:guid}", async (Guid id, ISender sender) =>
         {
             var result = await sender.Send(new GetEmployeeOfficialByIdQuery(id));
