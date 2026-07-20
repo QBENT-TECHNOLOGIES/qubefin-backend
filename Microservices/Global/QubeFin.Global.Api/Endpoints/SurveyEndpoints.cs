@@ -63,7 +63,7 @@ namespace QubeFin.Global.Api.Endpoints
             }).WithSummary("Create Survey");
 
 
-            app.MapPut("employees", async (ClaimsPrincipal principal, SurveyRequest request, ISender sender) =>
+            app.MapPut("surveys", async (ClaimsPrincipal principal, SurveyRequest request, ISender sender) =>
             {
                 if (principal.Identity is null)
                 {
