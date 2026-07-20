@@ -5,6 +5,7 @@ using QubeFin.App.Application.Menus.Commands;
 using QubeFin.App.Application.Menus.Queries;
 using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
+using QubeFin.Core.Results;
 using System.Security.Claims;
 
 namespace QubeFin.App.Api.Endpoints;
@@ -41,6 +42,17 @@ public class MenuEndpoints : IEndpoint
         .WithName("GetMenuById")
         .WithSummary("Get menu by ID")
         .WithDescription("Retrieves a single menu using its unique identifier.")
+        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status404NotFound);
+
+        app.MapGet("menus/{target}", async (ISender sender, [FromRoute] string target) =>
+        {
+            var result = await sender.Send(new GetMenuByTargetQuery(Uri.UnescapeDataString(target)));
+            return result.ToHttpResult();
+        })
+        .WithName("GetMenuByTarget")
+        .WithSummary("Get menu by Target Path")
+        .WithDescription("Retrieves a single menu using its target path.")
         .Produces(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
