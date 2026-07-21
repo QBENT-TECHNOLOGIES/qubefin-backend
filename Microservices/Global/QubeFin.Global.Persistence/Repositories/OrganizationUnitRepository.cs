@@ -7,16 +7,17 @@ namespace QubeFin.Global.Persistence.Repositories;
 
 public interface IOrganizationUnitRepository
 {
-    void Add(OrganizationUnit organizationUnit);
     Task<IEnumerable<OrganizationUnitTree>> GetAllAsync(CancellationToken cancellationToken);
     Task<OrganizationUnit?> GetByIdAsync(Guid id);
+    Task AddAsync(OrganizationUnit organizationUnit);
+    void Update(OrganizationUnit organizationUnit);
 }
 
 internal class OrganizationUnitRepository(QubeFinDataContext context) : IOrganizationUnitRepository
 {
-    public void Add(OrganizationUnit organizationUnit)
+    public async Task AddAsync(OrganizationUnit organizationUnit)
     {
-        context.TblOrganizationUnits.Add(organizationUnit.ToEntity());
+        await context.TblOrganizationUnits.AddAsync(organizationUnit.ToEntity());
     }
 
     public async Task<IEnumerable<OrganizationUnitTree>> GetAllAsync(CancellationToken cancellationToken)
@@ -40,8 +41,12 @@ internal class OrganizationUnitRepository(QubeFinDataContext context) : IOrganiz
     }
     public async Task<OrganizationUnit?> GetByIdAsync(Guid id)
     {
-        var organizationUnitEntity = await context.TblOrganizationUnits.FirstOrDefaultAsync(m => m.Id == id);
-
+        var organizationUnitEntity = await context.TblOrganizationUnits.AsNoTracking().FirstOrDefaultAsync(m => m.Id == id);
         return organizationUnitEntity?.ToDomain();
+    }
+
+    public void Update(OrganizationUnit organizationUnit)
+    {
+        context.TblOrganizationUnits.Update(organizationUnit.ToEntity());
     }
 }

@@ -14,7 +14,7 @@ namespace QubeFin.Persistence.Models.Payroll
 
         public Guid EmployeeId { get; private set; }
         public string? EmployeeName { get; private set; }
-
+        public string? EmployeeCode { get; private set; }
         public Guid OrganizationUnitId { get; private set; }
         public string? OrganizationUnitName { get; private set; }
         public int? OrganizationCode { get; private set; }
@@ -28,6 +28,13 @@ namespace QubeFin.Persistence.Models.Payroll
         public string? FinYear { get; private set; }
 
         public int? DayCount { get; private set; }
+        public Guid? SalaryGradeId { get; private set; }
+        public string? SalaryGradeName { get; private set; }
+        public DateTime? CreatedOn { get; private set; }
+
+        public Guid? CreatedBy { get; private set; }
+
+        public Guid? SalaryStructureId { get; private set; }
 
         private readonly List<PayrollComponentModel> _components = new();
         public IReadOnlyCollection<PayrollComponentModel> Components => _components.AsReadOnly();
@@ -43,7 +50,11 @@ namespace QubeFin.Persistence.Models.Payroll
             Guid companyId,
             bool isLocked,
             Guid finYearId,
-            int? dayCount)
+            int? dayCount,
+            Guid? salaryGradeId,
+            DateTime? createdOn,
+            Guid? createdBy,
+            Guid? salaryStructureId)
         {
             Id = id;
             PayrollMonth = payrollMonth;
@@ -55,15 +66,21 @@ namespace QubeFin.Persistence.Models.Payroll
             IsLocked = isLocked;
             FinYearId = finYearId;
             DayCount = dayCount;
+            SalaryGradeId = salaryGradeId;
+            CreatedOn = createdOn;
+            CreatedBy = createdBy;
+            SalaryStructureId = salaryStructureId;
         }
-        public void SetNames(string? organizationUnitName, int? organizationCode, string employeeName, string finYear, string designation, string company)
+        public void SetNames(string? organizationUnitName, int? organizationCode, string employeeName, string employeeCode, string finYear, string designation, string company, string salaryGradeName)
         {
             OrganizationUnitName = organizationUnitName;
             OrganizationCode = organizationCode;
             EmployeeName = employeeName;
+            EmployeeCode = employeeCode;
             FinYear = finYear;
             Designation = designation;
             Company = company;
+            SalaryGradeName = salaryGradeName;
         }
         public void SetComponents(IEnumerable<PayrollComponentModel> components)
         {
@@ -91,25 +108,33 @@ namespace QubeFin.Persistence.Models.Payroll
     public class PayrollComponentModel
     {
         public Guid Id { get; private set; }
+        public Guid PayRollId { get; private set; }
         public Guid SalaryComponentId { get; private set; }
         public string? SalaryComponentName { get; private set; }
         public string? CategoryName { get; private set; }
+        public int DisplayOrder { get; private set; }
         public decimal Percentage { get; private set; }
         public decimal Amount { get; private set; }
 
         private PayrollComponentModel() { }
 
-        public PayrollComponentModel(Guid id, Guid salaryComponentId, decimal percentage, decimal amount)
+        public PayrollComponentModel(Guid id, Guid payrollId, Guid salaryComponentId, decimal percentage, decimal amount)
         {
             Id = id;
+            PayRollId = payrollId;
             SalaryComponentId = salaryComponentId;
             Percentage = percentage;
             Amount = amount;
         }
-        public void SetNames(string salaryComponentName, string categoryName)
+        public void SetNames(string salaryComponentName, string categoryName, int displayOrder)
         {
             SalaryComponentName = salaryComponentName;
             CategoryName = categoryName;
+            DisplayOrder = displayOrder;
+        }
+        public void UpdateAmount(decimal amount)
+        {
+            Amount = amount;
         }
     }
     public class MonthlyPayroll

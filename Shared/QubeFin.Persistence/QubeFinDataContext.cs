@@ -1618,10 +1618,14 @@ public partial class QubeFinDataContext : DbContext
         {
             entity.ToTable("Tbl_OrganizationUnit", "Global");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).HasDefaultValueSql("(newid())", "DF_Tbl_OrganizationUnit_Id");
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
             entity.Property(e => e.Name).HasMaxLength(50);
+
+            entity.HasOne(d => d.Company).WithMany(p => p.TblOrganizationUnits)
+                .HasForeignKey(d => d.CompanyId)
+                .HasConstraintName("FK_Tbl_OrganizationUnit_Tbl_Company");
 
             entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.TblOrganizationUnitCreatedByNavigations)
                 .HasForeignKey(d => d.CreatedBy)
@@ -1682,6 +1686,14 @@ public partial class QubeFinDataContext : DbContext
                 .HasForeignKey(d => d.OrganizationUnitId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_PayRoll_Tbl_OrganizationUnit");
+
+            entity.HasOne(d => d.SalaryGrade).WithMany(p => p.TblPayRolls)
+                .HasForeignKey(d => d.SalaryGradeId)
+                .HasConstraintName("Fk_Tbl_SalaryGrade_Tbl_Payroll");
+
+            entity.HasOne(d => d.SalaryStructure).WithMany(p => p.TblPayRolls)
+                .HasForeignKey(d => d.SalaryStructureId)
+                .HasConstraintName("FK_Tbl_PayRoll_Tbl_SalaryStructure");
         });
 
         modelBuilder.Entity<TblPayRollComponent>(entity =>
@@ -1743,7 +1755,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
-            entity.Property(e => e.Name).HasMaxLength(30);
+            entity.Property(e => e.Name).HasMaxLength(50);
             entity.Property(e => e.RowVersion)
                 .IsRowVersion()
                 .IsConcurrencyToken();

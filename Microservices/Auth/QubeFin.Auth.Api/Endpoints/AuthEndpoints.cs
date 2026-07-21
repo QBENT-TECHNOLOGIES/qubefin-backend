@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using QubeFin.Auh.Application.Accounts.Commands;
 using QubeFin.Auth.Application.Accounts.Commands;
+using QubeFin.Auth.Application.Accounts.Queries;
 using QubeFin.Core.Endpoint;
 using QubeFin.Core.Results;
 
@@ -11,7 +11,7 @@ public class AuthEndpoints : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("validate-login", async (HttpContext httpContext, ValidtateLoginCommand request, [FromHeader(Name = "Device-Id")] string? deviceId, ISender sender, IPublisher publisher) =>
+        app.MapPost("validate-login", async (HttpContext httpContext, ValidateLoginCommand request, [FromHeader(Name = "X-Device-Id")] string? deviceId, ISender sender) =>
         {
             var userAgent = httpContext.Request.Headers.UserAgent.ToString();
             request = request with
@@ -21,37 +21,19 @@ public class AuthEndpoints : IEndpoint
             };
 
             var result = await sender.Send(request);
-            if (result.IsFailed)
-            {
-                if (result.Errors[0] is RecordNotFoundError)
-                {
-                    return Results.NotFound(result.Errors[0]);
-                }
-                if (result.Errors[0] is ValidationError)
-                {
-                    return Results.BadRequest(result.Errors[0]);
-                }
-            }
-
-            return Results.Ok(result.Value);
+            return result.ToHttpResult();
         });
 
-        app.MapPost("verify-mfa", async (VerifyMfaCommand request, ISender sender, IPublisher publisher) =>
+        app.MapPost("verify-mfa", async (VerifyMfaCommand request, ISender sender) =>
         {
             var result = await sender.Send(request);
-            if (result.IsFailed)
-            {
-                if (result.Errors[0] is RecordNotFoundError)
-                {
-                    return Results.NotFound(result.Errors[0]);
-                }
-                if (result.Errors[0] is ValidationError)
-                {
-                    return Results.BadRequest(result.Errors[0]);
-                }
-            }
+            return result.ToHttpResult();
+        });
 
-            return Results.Ok(result.Value);
+        app.MapPost("refresh-token", async ([FromHeader(Name = "Refresh-Token")] string refreshToken, ISender sender) =>
+        {
+            var result = await sender.Send(new ValidateRefreshTokenQuery(refreshToken));
+            return result.ToHttpResult();
         });
     }
 }

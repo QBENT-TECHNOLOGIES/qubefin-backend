@@ -4,6 +4,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
+using QubeFin.Hrms.Application.Employees.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Mappers.Hrms;
@@ -16,7 +17,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
 
     #region --- COMMAND ---
     public record UpdateEmployeeDocumentCommand(
-        Guid Id, List<EmployeeDocument> Documents, Guid LastModifiedBy
+        Guid Id, List<DocumentDetailRequest> Documents, Guid LastModifiedBy
         ) : IRequest<Result<UpdateEmployeeDocumentResponse>>;
     #endregion
     #region --- VALIDATION ---
@@ -73,7 +74,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
                     req.FileName,
                     req.FileNo,
                     request.Id,
-                    req.LastModifiedBy
+                    request.LastModifiedBy
                 );
                 updatedDocumentEntityList.Add(documentEntity);
             }

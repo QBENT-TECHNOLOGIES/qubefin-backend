@@ -3,7 +3,7 @@
 public class DocumentDetailRequest
 {
     public Guid Id { get;  set; }
-    public string DocumentCategory { get;  set; } = null!;
+    public string? DocumentCategory { get;  set; }
     public string DocumentName { get;  set; } = null!;
     public string? DocumentNo { get;  set; }
     public DateOnly? ValidFrom { get;  set; }

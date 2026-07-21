@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.App;
-using QubeFin.Persistence.Models.Global;
 
 namespace QubeFin.App.Application.Menus.Queries;
 

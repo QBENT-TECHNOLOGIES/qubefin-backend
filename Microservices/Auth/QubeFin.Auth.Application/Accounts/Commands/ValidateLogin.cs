@@ -6,10 +6,10 @@ using QubeFin.Core.Security;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.App;
 
-namespace QubeFin.Auh.Application.Accounts.Commands;
+namespace QubeFin.Auth.Application.Accounts.Commands;
 
 #region --- COMMAND ---
-public record ValidtateLoginCommand(string UserName, string Password, string? DeviceId, string? UserAgent) : IRequest<Result<ValidtateLoginResponse>>;
+public record ValidateLoginCommand(string UserName, string Password, string? DeviceId, string? UserAgent) : IRequest<Result<ValidtateLoginResponse>>;
 #endregion
 
 #region --- RESPONSE ---
@@ -18,9 +18,9 @@ public record ValidtateLoginResponse(string SessionToken);
 
 #region --- HANDLER ---
 internal class ValidtateLoginCommandHandler(IAuthRepository authRepository, IUnitOfWork unitOfWork)
-    : IRequestHandler<ValidtateLoginCommand, Result<ValidtateLoginResponse>>
+    : IRequestHandler<ValidateLoginCommand, Result<ValidtateLoginResponse>>
 {
-    public async Task<Result<ValidtateLoginResponse>> Handle(ValidtateLoginCommand request, CancellationToken cancellationToken)
+    public async Task<Result<ValidtateLoginResponse>> Handle(ValidateLoginCommand request, CancellationToken cancellationToken)
     {
         var user = await authRepository.ValidateLoginAsync(request.UserName, request.Password);
         if (user is null)
