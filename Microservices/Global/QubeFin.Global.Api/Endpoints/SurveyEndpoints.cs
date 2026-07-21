@@ -83,7 +83,7 @@ namespace QubeFin.Global.Api.Endpoints
                     }
                 }
 
-                return Results.Ok();
+                return Results.Ok(result);
             }).WithSummary("Update Survey");
         }
     }

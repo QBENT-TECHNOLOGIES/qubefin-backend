@@ -29,7 +29,7 @@ public class UpdateSurveyCommandValidator : AbstractValidator<UpdateSurveyComman
 #endregion
 
 #region --- RESPONSE ---
-public record UpdateSurveyResponse(bool Created);
+public record UpdateSurveyResponse(bool Created, string message);
 #endregion
 
 #region --- HANDLER ---
@@ -52,7 +52,7 @@ internal sealed class UpdateSurveyCommandHandler(ISurveyRepository surveyReposit
         await surveyRepository.UpdateSurvey(survey);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Ok(new UpdateSurveyResponse(true));
+        return Result.Ok(new UpdateSurveyResponse(true, $"Survey updated successfully."));
     }
 }
 #endregion
