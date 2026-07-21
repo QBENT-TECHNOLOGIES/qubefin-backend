@@ -15,7 +15,7 @@ namespace QubeFin.Persistence.Models.Global
         private SurveyAssigned() { }
         public SurveyAssigned(Guid id, Guid surveyId, Guid employeeId, bool isLead, Guid assignedBy)
         {
-            Id = id == Guid.Empty ? Guid.NewGuid() : id;
+            Id = id;
             SurveyId = surveyId;
             EmployeeId = employeeId;
             IsLead = isLead;

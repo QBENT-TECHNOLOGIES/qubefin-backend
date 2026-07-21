@@ -1,8 +1,6 @@
 ﻿using FluentResults;
 using FluentValidation;
 using MediatR;
-using QubeFin.Core.Results;
-using QubeFin.Global.Application.SurveyCommittees.Commands;
 using QubeFin.Global.Application.SurveyUnit.Models;
 using QubeFin.Global.Persistence.Repositories;
 using QubeFin.Persistence;
@@ -39,28 +37,19 @@ internal sealed class UpdateSurveyCommandHandler(ISurveyRepository surveyReposit
 {
     public async Task<Result<UpdateSurveyResponse>> Handle(UpdateSurveyCommand request, CancellationToken cancellationToken)
     {
-        var surveyEntity = await surveyRepository.GetByIdAsync(request.SurveyRequest.Id);
-        if (surveyEntity is null) return new RecordNotFoundError("Member not found");
-
         var surveyAssigneds = request.SurveyRequest.SurveyAssigneds
-            .Select(x => SurveyAssigned.Create(
-                surveyEntity.Id,
+            .Select(x => new SurveyAssigned(
+                x.Id,
+                request.SurveyRequest.Id,
                 x.EmployeeId,
                 x.IsLead,
                 request.userId))
             .ToList();
 
-        surveyEntity.Update(
-            surveyType: request.SurveyRequest.SurveyType,
-            assignmentDate: request.SurveyRequest.AssignmentDate,
-            proposedArea: request.SurveyRequest.ProposedArea,
-            administrativeUnitId: request.SurveyRequest.AdministrativeUnitId,
-            tentativeSubmissionDate: request.SurveyRequest.TentativeSubmissionDate,
-            surveyAssigneds,
-            lastModifiedBy: request.userId
-        );
+        var survey = new Survey(request.SurveyRequest.Id, request.SurveyRequest.SurveyType, request.SurveyRequest.AssignmentDate, request.SurveyRequest.ProposedArea, request.SurveyRequest.AdministrativeUnitId, 
+            request.SurveyRequest.TentativeSubmissionDate, request.userId, surveyAssigneds);
 
-        await surveyRepository.UpdateSurvey(surveyEntity);
+        await surveyRepository.UpdateSurvey(survey);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Ok(new UpdateSurveyResponse(true));

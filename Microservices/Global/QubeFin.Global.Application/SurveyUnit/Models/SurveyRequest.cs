@@ -16,6 +16,7 @@ namespace QubeFin.Global.Application.SurveyUnit.Models
     }
     public class SurveyAssignedRequest
     {
+        public Guid Id { get; set; }
         public Guid EmployeeId { get; set; }
         public bool IsLead { get; set; }
     }
