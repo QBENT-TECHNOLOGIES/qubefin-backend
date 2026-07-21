@@ -31,5 +31,13 @@ public class UtilityEndpoints : IEndpoint
         })
         //.RequireAuthorization("Permission:Users.View")
         .WithSummary("Get Post Office");
+
+        app.MapGet("kyc-documents", async (ISender sender) =>
+        {
+            var user = await sender.Send(new GetKycDocumentsQuery());
+            return Results.Ok(user.Value);
+        })
+        //.RequireAuthorization("Permission:Users.View")
+        .WithSummary("Get KYC Documents");
     }
 }
