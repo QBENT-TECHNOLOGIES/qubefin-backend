@@ -13,15 +13,18 @@ namespace QubeFin.Global.Api.Endpoints
     {
         public void MapEndpoint(IEndpointRouteBuilder app)
         {
-            app.MapPost("surveys/search", async (SurveySearchParam searchParam, ISender sender) =>
+            app.MapPost("surveys/search", async (SurveySearchParam searchParam, ClaimsPrincipal principal, ISender sender) =>
             {
+                searchParam.EmployeeId = principal.Identity.GetEmployeeId();
+                searchParam.UserId = principal.Identity.GetUserId();
                 var searchResults = await sender.Send(new GetSurveyBySearchQuery(searchParam));
                 return Results.Ok(searchResults);
             }).WithSummary("Search All Surveys");
 
-            app.MapGet("surveys/{id:guid}", async (Guid id, ISender sender) =>
+            app.MapGet("surveys/{id:guid}", async (Guid id, ClaimsPrincipal principal, ISender sender) =>
             {
-                var result = await sender.Send(new GetSurveyByIdQuery(id));
+                var employeeId = principal.Identity.GetEmployeeId();
+                var result = await sender.Send(new GetSurveyByIdQuery(id, employeeId));
                 if (result.IsFailed)
                 {
                     if (result.Errors[0] is RecordNotFoundError)
