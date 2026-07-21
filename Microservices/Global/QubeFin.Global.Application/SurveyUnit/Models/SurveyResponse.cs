@@ -14,6 +14,7 @@ namespace QubeFin.Global.Application.SurveyUnit.Models
         public string ProposedArea { get; set; } = string.Empty;
         public Guid AdministrativeUnitId { get; set; }
         public DateOnly TentativeSubmissionDate { get; set; }
+        public bool IsSurveyAccessed { get; set; }
         public AuditInfo? AuditInfo { get; set; } = new AuditInfo();
         public List<SurveyAssignedResponse> SurveyAssigneds { get; set; } = new List<SurveyAssignedResponse>();
     }

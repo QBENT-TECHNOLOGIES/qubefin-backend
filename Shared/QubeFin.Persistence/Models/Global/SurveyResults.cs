@@ -10,6 +10,7 @@ namespace QubeFin.Persistence.Models.Global
         public string AssignmentNo { get; set; } = string.Empty;
         public DateOnly AssignmentDate { get; set; }
         public string SurveyType { get; set; } = string.Empty;
+        public DateOnly TentativeSubmissionDate { get; set; }
         public string Status { get; set; } = string.Empty;
         public int TotalCount { get; set; }
     }

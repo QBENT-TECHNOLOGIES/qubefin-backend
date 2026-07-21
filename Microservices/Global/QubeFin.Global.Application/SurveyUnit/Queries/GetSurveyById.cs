@@ -10,7 +10,7 @@ using QubeFin.Persistence.Models.Global;
 namespace QubeFin.Global.Application.SurveyUnit.Queries;
 
 #region --- QUERY ---
-public record GetSurveyByIdQuery(Guid Id) : IRequest<Result<GetByIdResponse>>;
+public record GetSurveyByIdQuery(Guid Id, Guid EmployeeId) : IRequest<Result<GetByIdResponse>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -36,7 +36,7 @@ internal sealed class GetSurveyByIdQueryHandler(QubeFinDataContext context) : IR
         {
             return new RecordNotFoundError($"Survey not found for the given Id");
         }
-        var users = await context.TblUsers.Where(u=>u.Id == surveyEntity.CreatedBy || u.Id == surveyEntity.LastModifiedBy).AsNoTracking().ToListAsync(cancellationToken);
+        var users = await context.TblUsers.Where(u => u.Id == surveyEntity.CreatedBy || u.Id == surveyEntity.LastModifiedBy).AsNoTracking().ToListAsync(cancellationToken);
         return new GetByIdResponse(new SurveyResponse
         {
             Id = surveyEntity.Id,
@@ -46,6 +46,7 @@ internal sealed class GetSurveyByIdQueryHandler(QubeFinDataContext context) : IR
             ProposedArea = surveyEntity.ProposedArea,
             AdministrativeUnitId = surveyEntity.AdministrativeUnitId,
             TentativeSubmissionDate = surveyEntity.TentativeSubmissionDate,
+            IsSurveyAccessed = surveyEntity.TblSurveyAssigneds.Any(s => s.EmployeeId == request.EmployeeId),
             AuditInfo = new AuditInfo
             {
                 CreatedBy = users.FirstOrDefault(u => u.Id == surveyEntity.CreatedBy)?.UserName ?? string.Empty,
