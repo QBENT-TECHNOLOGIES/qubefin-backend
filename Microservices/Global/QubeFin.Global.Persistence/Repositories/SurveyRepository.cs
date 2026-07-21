@@ -20,10 +20,11 @@ namespace QubeFin.Global.Persistence.Repositories
         public async Task UpdateSurvey(Survey survey)
         {
             context.TblSurveys.Update(survey.ToEntity());
+            //context.Entry(survey.ToEntity()).Property(x => x.Sequence).IsModified = false;
         }
         public async Task<Survey?> GetByIdAsync(Guid id)
         {
-            var entity = await context.TblSurveys.AsNoTracking().FirstOrDefaultAsync(m => m.Id == id);
+            var entity = await context.TblSurveys.Include(m=>m.TblSurveyAssigneds).AsNoTracking().FirstOrDefaultAsync(m => m.Id == id);
             return entity?.ToDomain();
         }
     }

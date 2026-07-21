@@ -1911,7 +1911,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
             entity.Property(e => e.ProposedArea).HasMaxLength(200);
-            entity.Property(e => e.Sequence).ValueGeneratedOnAdd();
+            entity.Property(e => e.Sequence).ValueGeneratedOnAdd().Metadata.SetAfterSaveBehavior(Microsoft.EntityFrameworkCore.Metadata.PropertySaveBehavior.Ignore);
             entity.Property(e => e.SurveyType).HasMaxLength(50);
 
             entity.HasOne(d => d.AdministrativeUnit).WithMany(p => p.TblSurveys)

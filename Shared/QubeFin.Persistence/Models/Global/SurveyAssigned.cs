@@ -24,7 +24,7 @@ namespace QubeFin.Persistence.Models.Global
         }
         public static SurveyAssigned Create(Guid surveyId, Guid employeeId, bool isLead, Guid assignedBy)
         {
-            return new SurveyAssigned(Guid.Empty, surveyId, employeeId, isLead, assignedBy);
+            return new SurveyAssigned(Guid.NewGuid(), surveyId, employeeId, isLead, assignedBy);
         }
         public void Update(bool isLead)
         {

@@ -44,7 +44,7 @@ internal sealed class UpdateSurveyCommandHandler(ISurveyRepository surveyReposit
 
         var surveyAssigneds = request.SurveyRequest.SurveyAssigneds
             .Select(x => SurveyAssigned.Create(
-                Guid.Empty,
+                surveyEntity.Id,
                 x.EmployeeId,
                 x.IsLead,
                 request.userId))
