@@ -24,7 +24,11 @@ namespace QubeFin.Persistence.Mappers.Payrolls
                 entity.CompanyId,
                 entity.IsLocked,
                 entity.FinYearId,
-                entity.DayCount
+                entity.DayCount,
+                entity.SalaryGradeId,
+                entity.CreatedOn,
+                entity.CreatedBy,
+                entity.SalaryStructureId
             );
 
             string fullName = string.Join(" ", new[]
@@ -34,12 +38,12 @@ namespace QubeFin.Persistence.Mappers.Payrolls
                 entity.Employee.LastName
             }.Where(s => !string.IsNullOrWhiteSpace(s)));
 
-            domain.SetNames(entity.OrganizationUnit.Name, entity.OrganizationUnit.CodeVal, fullName, entity.FinYear.Caption, entity.Designation.Name, entity.Company.Name);
+            domain.SetNames(entity.OrganizationUnit.Name, entity.OrganizationUnit.CodeVal, fullName, entity.Employee.Code, entity.FinYear.Caption, entity.Designation.Name, entity.Company.Name, entity.SalaryGrade?.Name ?? string.Empty);
 
             domain.SetComponents(entity.TblPayRollComponents.Select(c =>
             {
-                var componentModel = new PayrollComponentModel(c.Id, c.SalaryComponentId, c.Percentage, c.Amount);
-                componentModel.SetNames(c.SalaryComponent.Name, c.SalaryComponent.Category.Name);
+                var componentModel = new PayrollComponentModel(c.Id, c.PayRollId, c.SalaryComponentId, c.Percentage, c.Amount);
+                componentModel.SetNames(c.SalaryComponent.Name, c.SalaryComponent.Category.Name, c.SalaryComponent.DisplayOrder);
                 return componentModel;
             }));
 
@@ -110,6 +114,17 @@ namespace QubeFin.Persistence.Mappers.Payrolls
             };
 
             return result;
+        }
+        public static TblPayRollComponent ToEntity(this PayrollComponentModel domain)
+        {
+            return new TblPayRollComponent
+            {
+                Id = domain.Id,
+                PayRollId = domain.PayRollId,
+                SalaryComponentId = domain.SalaryComponentId,
+                Percentage = domain.Percentage,
+                Amount = domain.Amount
+            };
         }
     }
 }

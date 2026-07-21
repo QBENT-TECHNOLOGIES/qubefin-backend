@@ -21,5 +21,7 @@ public partial class TblSalaryGrade
 
     public Guid? LastModifiedBy { get; set; }
 
+    public virtual ICollection<TblPayRoll> TblPayRolls { get; set; } = new List<TblPayRoll>();
+
     public virtual ICollection<TblSalaryStructure> TblSalaryStructures { get; set; } = new List<TblSalaryStructure>();
 }

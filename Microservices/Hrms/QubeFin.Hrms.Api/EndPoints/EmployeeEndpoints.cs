@@ -7,6 +7,7 @@ using QubeFin.Hrms.Api.Requests;
 using QubeFin.Hrms.Application.Employees.Commands;
 using QubeFin.Hrms.Application.Employees.Models;
 using QubeFin.Hrms.Application.Employees.Queries;
+using QubeFin.Persistence.Models.Hrms;
 using System.Security.Claims;
 
 namespace QubeFin.Hrms.Api.Endpoints;
@@ -59,6 +60,100 @@ public class EmployeeEndpoints : IEndpoint
             return Results.Ok();
         })
         .WithSummary("Create Employee");
+
+        // ---------- START  GET BY ID -----------//
+        app.MapGet("employees/personal-details/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new GetEmployeePersonalByIdQuery(id));
+            if (result.IsFailed)
+            {
+                if (result.Errors[0] is RecordNotFoundError)
+                {
+                    return Results.NotFound(result.Errors[0]);
+                }
+                if (result.Errors[0] is ValidationError)
+                {
+                    return Results.BadRequest(result.Errors[0]);
+                }
+            }
+            return Results.Ok(result.Value);
+        })
+        .WithSummary("Get Employee Personal By Id");
+
+        app.MapGet("employees/address-details/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new GetEmployeeAddressByIdQuery(id));
+            if (result.IsFailed)
+            {
+                if (result.Errors[0] is RecordNotFoundError)
+                {
+                    return Results.NotFound(result.Errors[0]);
+                }
+                if (result.Errors[0] is ValidationError)
+                {
+                    return Results.BadRequest(result.Errors[0]);
+                }
+            }
+            return Results.Ok(result.Value);
+        })
+        .WithSummary("Get Employee Address By Id");
+
+        app.MapGet("employees/contact-details/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new GetEmployeeContactByIdQuery(id));
+            if (result.IsFailed)
+            {
+                if (result.Errors[0] is RecordNotFoundError)
+                {
+                    return Results.NotFound(result.Errors[0]);
+                }
+                if (result.Errors[0] is ValidationError)
+                {
+                    return Results.BadRequest(result.Errors[0]);
+                }
+            }
+            return Results.Ok(result.Value);
+        })
+        .WithSummary("Get Employee Contact Details By Id");
+
+        app.MapGet("employees/official-details/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new GetEmployeeOfficialByIdQuery(id));
+            if (result.IsFailed)
+            {
+                if (result.Errors[0] is RecordNotFoundError)
+                {
+                    return Results.NotFound(result.Errors[0]);
+                }
+                if (result.Errors[0] is ValidationError)
+                {
+                    return Results.BadRequest(result.Errors[0]);
+                }
+            }
+            return Results.Ok(result.Value);
+        })
+        .WithSummary("Get Employee Official By Id");
+
+        app.MapGet("employees/kyc-details/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new GetEmployeeKycDetailQuery(id));
+            if (result.IsFailed)
+            {
+                if (result.Errors[0] is RecordNotFoundError)
+                {
+                    return Results.NotFound(result.Errors[0]);
+                }
+                if (result.Errors[0] is ValidationError)
+                {
+                    return Results.BadRequest(result.Errors[0]);
+                }
+            }
+            return Results.Ok(result.Value);
+        })
+        .WithSummary("Get Employee KYC By Id");
+        
+
+        // ---------- END  GET BY ID -----------//
 
         app.MapPut("employees/update/personal/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] PersonalInfoRequest request, ISender sender) =>
         {
@@ -150,6 +245,32 @@ public class EmployeeEndpoints : IEndpoint
             var userId = principal.Identity.GetUserId();
 
             var command = new UpdateEmployeeAddressCommand(id, request?.PresentAddress, request?.PermanentAddress, userId);
+            var result = await sender.Send(command);
+            if (result.IsFailed)
+            {
+                if (result.Errors[0] is RecordNotFoundError)
+                {
+                    return Results.NotFound(result.Errors[0]);
+                }
+                if (result.Errors[0] is ValidationError)
+                {
+                    return Results.BadRequest(result.Errors[0]);
+                }
+            }
+
+            return Results.Ok();
+        })
+        .WithSummary("Update Employee Address data");
+
+        app.MapPut("employees/update/kyc-document/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] List<DocumentDetailRequest> Documents, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+            var userId = principal.Identity.GetUserId();
+
+            var command = new UpdateEmployeeDocumentCommand(id, Documents, userId);
             var result = await sender.Send(command);
             if (result.IsFailed)
             {

@@ -7,7 +7,7 @@ using QubeFin.Persistence.Models.Global;
 namespace QubeFin.Global.Application.AdministrativeUnits.Commands;
 
 #region --- COMMAND ---
-public record CreateAdministrativeUnitCommand(Guid AdministrativeUnitTypeId, string Name, Guid? ParentId) : IRequest<Result<CreateAdministrativeUnitResponse>>;
+public record CreateAdministrativeUnitCommand(Guid AdministrativeUnitTypeId, string Name, Guid? ParentId, Guid UserId) : IRequest<Result<CreateAdministrativeUnitResponse>>;
 #endregion
 
 #region --- RESPONSE ---
@@ -20,8 +20,8 @@ internal sealed class CreateAdministrativeUnitCommandHandler(IAdministrativeUnit
 {
     public async Task<Result<CreateAdministrativeUnitResponse>> Handle(CreateAdministrativeUnitCommand request, CancellationToken cancellationToken)
     {
-        var administrativeUnit = AdministrativeUnit.Create(Guid.NewGuid(), request.AdministrativeUnitTypeId, request.Name, request.ParentId, Guid.Parse("04360E23-A310-46BA-87D8-89C0EF355E45"));
-        administrativeUnitRepository.Add(administrativeUnit);
+        var administrativeUnit = AdministrativeUnit.Create(Guid.NewGuid(), request.AdministrativeUnitTypeId, request.Name, request.ParentId, request.UserId);
+        await administrativeUnitRepository.AddAsync(administrativeUnit);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Ok(new CreateAdministrativeUnitResponse(true));
     }

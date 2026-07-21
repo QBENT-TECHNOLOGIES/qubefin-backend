@@ -139,6 +139,8 @@ public partial class TblEmployee
 
     public Guid? LastModifiedBy { get; set; }
 
+    public string? PfaccountNo { get; set; }
+
     public virtual TblFinancialInstitute? Bank { get; set; }
 
     public virtual TblCompany? Company { get; set; }
