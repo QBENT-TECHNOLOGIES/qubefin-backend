@@ -1,4 +1,5 @@
-﻿using System;
+﻿using QubeFin.Persistence.Models.Global;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -13,10 +14,7 @@ namespace QubeFin.Global.Application.SurveyUnit.Models
         public string ProposedArea { get; set; } = string.Empty;
         public Guid AdministrativeUnitId { get; set; }
         public DateOnly TentativeSubmissionDate { get; set; }
-        public Guid CreatedBy { get; set; }
-        public DateTime CreatedOn { get; set; }
-        public Guid? LastModifiedBy { get; set; }
-        public DateTime? LastModifiedOn { get; set; }
+        public AuditInfo? AuditInfo { get; set; } = new AuditInfo();
         public List<SurveyAssignedResponse> SurveyAssigneds { get; set; } = new List<SurveyAssignedResponse>();
     }
     public class SurveyAssignedResponse
