@@ -14,7 +14,7 @@ public record GetRolesBySearchQuery(string? SearchText, string? SortOn, string? 
 
 #region --- RESPONSE ---
 public record RolesBySearchResult(Guid Id, string Name, bool IsActive);
-public record GetRolesBySearchResponse(IReadOnlyList<RolesBySearchResult> Roles, int TotalRecords);
+public record GetRolesBySearchResponse(IReadOnlyList<RolesBySearchResult> Roles, int TotalCount);
 #endregion
 
 #region --- HANDLER ---
