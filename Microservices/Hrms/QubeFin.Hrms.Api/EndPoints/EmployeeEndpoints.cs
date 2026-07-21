@@ -1,5 +1,4 @@
-﻿using Azure.Core;
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
@@ -10,7 +9,6 @@ using QubeFin.Hrms.Application.Employees.Models;
 using QubeFin.Hrms.Application.Employees.Queries;
 using QubeFin.Persistence.Models.Hrms;
 using System.Security.Claims;
-using System.Security.Principal;
 
 namespace QubeFin.Hrms.Api.Endpoints;
 
@@ -316,5 +314,11 @@ public class EmployeeEndpoints : IEndpoint
             return Results.Ok();
         })
         .WithSummary("Update Banking Info data");
+
+        app.MapPost("employees/search-by-text", async (IMediator mediator, SearchTextRequest request) =>
+        {
+            var resp = await mediator.Send(new GetEmployeeBySearchTextQuery(request.SearchText));
+            return TypedResults.Ok(resp);
+        }).WithSummary("Search Employees by Text");
     }
 }

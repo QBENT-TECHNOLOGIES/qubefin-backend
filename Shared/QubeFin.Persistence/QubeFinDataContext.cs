@@ -192,7 +192,9 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblUserSession> TblUserSessions { get; set; }
 
-    
+    public virtual DbSet<WegrowSalJune> WegrowSalJunes { get; set; }
+
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<TblAccountGroup>(entity =>
@@ -333,6 +335,7 @@ public partial class QubeFinDataContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.AccessibilityByMotorCycle).HasMaxLength(10);
+            entity.Property(e => e.ActionOn).HasColumnType("datetime");
             entity.Property(e => e.AdministrativeStatus).HasMaxLength(30);
             entity.Property(e => e.AgriculturePercent).HasColumnType("decimal(5, 2)");
             entity.Property(e => e.ApproxPortfolio).HasColumnType("decimal(18, 2)");
@@ -344,6 +347,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.BusConnectivityAvailable).HasMaxLength(10);
             entity.Property(e => e.BusinessRisk).HasMaxLength(20);
             entity.Property(e => e.CollectionRisk).HasMaxLength(20);
+            entity.Property(e => e.CommiteeSubmitOn).HasColumnType("datetime");
             entity.Property(e => e.CommunalIssuesRisk).HasMaxLength(20);
             entity.Property(e => e.CompetitionRisk).HasMaxLength(20);
             entity.Property(e => e.CompetitorVerificationCompleted).HasMaxLength(10);
@@ -408,6 +412,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.SafetyOfArea).HasMaxLength(100);
             entity.Property(e => e.ScheduledCastePercent).HasColumnType("decimal(5, 2)");
             entity.Property(e => e.ScheduledTribePercent).HasColumnType("decimal(5, 2)");
+            entity.Property(e => e.SurveyorSubmitOn).HasColumnType("datetime");
 
             entity.HasOne(d => d.AdministrativeUnit).WithMany(p => p.TblBranchSurveys)
                 .HasForeignKey(d => d.AdministrativeUnitId)
@@ -1918,7 +1923,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
             entity.Property(e => e.ProposedArea).HasMaxLength(200);
-            entity.Property(e => e.Sequence).ValueGeneratedOnAdd();
+            entity.Property(e => e.Sequence).ValueGeneratedOnAdd().Metadata.SetAfterSaveBehavior(Microsoft.EntityFrameworkCore.Metadata.PropertySaveBehavior.Ignore);
             entity.Property(e => e.SurveyType).HasMaxLength(50);
 
             entity.HasOne(d => d.AdministrativeUnit).WithMany(p => p.TblSurveys)
