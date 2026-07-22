@@ -5,9 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using QubeFin.Global.Application.SurveyUnit.Models;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Global;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace QubeFin.Global.Application.SurveyUnit.Queries;
 
@@ -36,12 +33,14 @@ internal sealed class GetSurveyBySearchQueryHandler(QubeFinDataContext context) 
     public async Task<GetSurveyBySearchResponse> Handle(GetSurveyBySearchQuery request, CancellationToken cancellationToken)
     {
         var surveySearchResults = await context.Set<SurveyResults>()
-          .FromSqlRaw("EXEC [Global].[USP_FilteredSurvey] @SearchText, @SortOn, @SortDirection, @PageIndex, @PageSize",
+          .FromSqlRaw("EXEC [Global].[USP_FilteredSurvey] @SearchText, @SortOn, @SortDirection, @PageIndex, @PageSize, @UserId, @EmployeeId",
             new SqlParameter("@SearchText", request.searchParam.SearchText ?? ""),
             new SqlParameter("@SortOn", request.searchParam.SortOn ?? ""),
             new SqlParameter("@SortDirection", request.searchParam.SortDirection ?? ""),
             new SqlParameter("@PageIndex", request.searchParam.PageIndex),
-            new SqlParameter("@PageSize", request.searchParam.PageSize)
+            new SqlParameter("@PageSize", request.searchParam.PageSize),
+            new SqlParameter("@UserId", request.searchParam.UserId),
+            new SqlParameter("@EmployeeId", request.searchParam.EmployeeId)
             )
           .AsNoTracking()
           .ToListAsync(cancellationToken);

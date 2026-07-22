@@ -5,11 +5,12 @@ using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
 using QubeFin.Global.Application.SurveyUnit.Models;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Models.Global;
 
 namespace QubeFin.Global.Application.SurveyUnit.Queries;
 
 #region --- QUERY ---
-public record GetSurveyByIdQuery(Guid Id) : IRequest<Result<GetByIdResponse>>;
+public record GetSurveyByIdQuery(Guid Id, Guid EmployeeId) : IRequest<Result<GetByIdResponse>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -31,11 +32,11 @@ internal sealed class GetSurveyByIdQueryHandler(QubeFinDataContext context) : IR
     public async Task<Result<GetByIdResponse>> Handle(GetSurveyByIdQuery request, CancellationToken cancellationToken)
     {
         var surveyEntity = await context.TblSurveys.Include(m => m.TblSurveyAssigneds).ThenInclude(m => m.Employee).AsNoTracking().FirstOrDefaultAsync(m => m.Id == request.Id, cancellationToken: cancellationToken);
-
         if (surveyEntity is null)
         {
             return new RecordNotFoundError($"Survey not found for the given Id");
         }
+        var users = await context.TblUsers.Where(u => u.Id == surveyEntity.CreatedBy || u.Id == surveyEntity.LastModifiedBy).AsNoTracking().ToListAsync(cancellationToken);
         return new GetByIdResponse(new SurveyResponse
         {
             Id = surveyEntity.Id,
@@ -45,11 +46,15 @@ internal sealed class GetSurveyByIdQueryHandler(QubeFinDataContext context) : IR
             ProposedArea = surveyEntity.ProposedArea,
             AdministrativeUnitId = surveyEntity.AdministrativeUnitId,
             TentativeSubmissionDate = surveyEntity.TentativeSubmissionDate,
-            CreatedBy = surveyEntity.CreatedBy,
-            CreatedOn = surveyEntity.CreatedOn,
-            LastModifiedBy = surveyEntity.LastModifiedBy,
-            LastModifiedOn = surveyEntity.LastModifiedOn,
-            SurveyAssigneds = surveyEntity.TblSurveyAssigneds.OrderBy(s => s.AssignedDate).Select(s => new SurveyAssignedResponse
+            IsSurveyAccessed = surveyEntity.TblSurveyAssigneds.Any(s => s.EmployeeId == request.EmployeeId),
+            AuditInfo = new AuditInfo
+            {
+                CreatedBy = users.FirstOrDefault(u => u.Id == surveyEntity.CreatedBy)?.UserName ?? string.Empty,
+                CreatedOn = surveyEntity.CreatedOn,
+                LastModifiedBy = users.FirstOrDefault(u => u.Id == surveyEntity.LastModifiedBy)?.UserName ?? string.Empty,
+                LastModifiedOn = surveyEntity.LastModifiedOn
+            },
+            SurveyAssigneds = surveyEntity.TblSurveyAssigneds.OrderBy(s => !s.IsLead).ThenBy(s => s.Employee.FullName).Select(s => new SurveyAssignedResponse
             {
                 Id = s.Id,
                 SurveyId = s.SurveyId,
