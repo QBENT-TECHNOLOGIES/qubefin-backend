@@ -264,7 +264,7 @@ public class EmployeeEndpoints : IEndpoint
         })
         .WithSummary("Update Employee Address data");
 
-        app.MapPut("employees/update/kyc-document/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] List<DocumentDetailRequest> Documents, ISender sender) =>
+        app.MapPut("employees/update/kyc/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] List<DocumentDetailRequest> Documents, ISender sender) =>
         {
             if (principal.Identity is null)
             {

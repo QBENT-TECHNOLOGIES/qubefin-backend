@@ -37,8 +37,8 @@ internal sealed class GetEmployeeKycDetailQueryHandler(QubeFinDataContext contex
             DocumentCategory = d.DocumentCategory,
             DocumentName = d.DocumentName,
             DocumentNo = d.DocumentNo,
-            ValidFrom = d.ValidFrom,
-            ValidTill = d.ValidTill,
+            ValidFrom = d.ValidFrom == null ? null :d.ValidFrom?.ToDateTime(TimeOnly.MinValue),
+            ValidTill = d.ValidTill == null ? null :d.ValidTill?.ToDateTime(TimeOnly.MinValue),
             FileName = d.FileName,
             FileNo = d.FileNo,
             EmployeeId = d.EmployeeId

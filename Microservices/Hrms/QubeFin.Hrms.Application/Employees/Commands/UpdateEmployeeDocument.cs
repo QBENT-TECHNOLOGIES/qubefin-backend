@@ -7,6 +7,7 @@ using QubeFin.Core.Results;
 using QubeFin.Hrms.Application.Employees.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Mappers.Hrms;
 using QubeFin.Persistence.Models.App;
 using QubeFin.Persistence.Models.Hrms;
@@ -57,32 +58,40 @@ namespace QubeFin.Hrms.Application.Employees.Commands
                 return new ValidationError("Employee not exist with given id.");
             }
             // 2. Project incoming requests directly into domain entity shapes
-            var updatedDocumentEntityList = new List<EmployeeDocument>();
+            var updatedDocumentEntityList = new List<TblEmployeeDocument>();
 
             for (int i = 0; i < request.Documents.Count; i++)
             {
                 var req = request.Documents[i];
                 //int sequenceValue = i + 1;
 
-                var documentEntity = new EmployeeDocument(
-                    Guid.NewGuid(),
-                    "KYC",
-                    req.DocumentName,
-                    req.DocumentNo,
-                    req.ValidFrom,
-                    req.ValidTill,
-                    req.FileName,
-                    req.FileNo,
-                    request.Id,
-                    request.LastModifiedBy
-                );
+                var documentEntity = new TblEmployeeDocument()
+                {
+                    Id = Guid.NewGuid(),
+                    DocumentCategory = "KYC",
+                    DocumentName = req.DocumentName,
+                    DocumentNo = req.DocumentNo,
+                    ValidFrom = req.ValidFrom != null ? DateOnly.FromDateTime(req.ValidFrom.Value) : null,
+                    ValidTill = req.ValidTill != null ? DateOnly.FromDateTime(req.ValidTill.Value) : null,
+                    FileName = req.FileName,
+                    FileNo = req.FileNo,
+                    EmployeeId = request.Id,
+                    UploadedBy = request.LastModifiedBy,
+                    UploadedOn = DateTime.Now
+                };
+                    
+                
                 updatedDocumentEntityList.Add(documentEntity);
             }
 
             // 3. Atomically overwrite old items and explicitly log modifications
-            existingEmployee.ReplaceDocuments(updatedDocumentEntityList, "KYC");
-
-            await employeeRepository.UpdateAsync(existingEmployee);
+            var docs = await context.TblEmployeeDocuments.Where(m => m.EmployeeId == request.Id && m.DocumentCategory == "KYC").ToListAsync(cancellationToken: cancellationToken);
+            if (docs != null && docs.Count() > 0)
+            {
+                 context.TblEmployeeDocuments.RemoveRange(docs);
+            }
+            context.TblEmployeeDocuments.AddRange(updatedDocumentEntityList);
+            existingEmployee.SetModified(request.LastModifiedBy);
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Ok(new UpdateEmployeeDocumentResponse(true));
 

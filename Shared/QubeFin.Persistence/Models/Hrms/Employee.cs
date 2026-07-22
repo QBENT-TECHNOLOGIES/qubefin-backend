@@ -219,7 +219,7 @@
             _designations.AddRange(designations);
         }
 
-        private void SetModified(Guid userId)
+        public void SetModified(Guid userId)
         {
             LastModifiedBy = userId;
             LastModifiedOn = DateTime.UtcNow;
