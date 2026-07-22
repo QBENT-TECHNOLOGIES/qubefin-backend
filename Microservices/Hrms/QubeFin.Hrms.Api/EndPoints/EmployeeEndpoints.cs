@@ -151,6 +151,24 @@ public class EmployeeEndpoints : IEndpoint
             return Results.Ok(result.Value);
         })
         .WithSummary("Get Employee KYC By Id");
+
+        app.MapGet("employees/references/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new GetEmployeeReferenceQuery(id));
+            if (result.IsFailed)
+            {
+                if (result.Errors[0] is RecordNotFoundError)
+                {
+                    return Results.NotFound(result.Errors[0]);
+                }
+                if (result.Errors[0] is ValidationError)
+                {
+                    return Results.BadRequest(result.Errors[0]);
+                }
+            }
+            return Results.Ok(result.Value);
+        })
+        .WithSummary("Get Employee References By Id");
         
 
         // ---------- END  GET BY ID -----------//
@@ -271,6 +289,32 @@ public class EmployeeEndpoints : IEndpoint
             var userId = principal.Identity.GetUserId();
 
             var command = new UpdateEmployeeDocumentCommand(id, Documents, userId);
+            var result = await sender.Send(command);
+            if (result.IsFailed)
+            {
+                if (result.Errors[0] is RecordNotFoundError)
+                {
+                    return Results.NotFound(result.Errors[0]);
+                }
+                if (result.Errors[0] is ValidationError)
+                {
+                    return Results.BadRequest(result.Errors[0]);
+                }
+            }
+
+            return Results.Ok();
+        })
+        .WithSummary("Update Employee Address data");
+
+        app.MapPut("employees/update/references/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] List<ReferenceDetailRequest> referenceDetail, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+            var userId = principal.Identity.GetUserId();
+
+            var command = new UpdateEmployeeReferenceCommand(id, referenceDetail, userId);
             var result = await sender.Send(command);
             if (result.IsFailed)
             {

@@ -84,7 +84,6 @@ namespace QubeFin.Hrms.Application.Employees.Commands
                 updatedDocumentEntityList.Add(documentEntity);
             }
 
-            // 3. Atomically overwrite old items and explicitly log modifications
             var docs = await context.TblEmployeeDocuments.Where(m => m.EmployeeId == request.Id && m.DocumentCategory == "KYC").ToListAsync(cancellationToken: cancellationToken);
             if (docs != null && docs.Count() > 0)
             {

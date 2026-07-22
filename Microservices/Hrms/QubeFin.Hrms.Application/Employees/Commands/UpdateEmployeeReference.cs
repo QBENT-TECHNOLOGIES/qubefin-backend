@@ -6,6 +6,7 @@ using QubeFin.Core.Results;
 using QubeFin.Hrms.Application.Employees.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Mappers.Hrms;
 using QubeFin.Persistence.Models.App;
 using QubeFin.Persistence.Models.Hrms;
@@ -56,33 +57,38 @@ namespace QubeFin.Hrms.Application.Employees.Commands
                 return new ValidationError("Employee not exist given id.");
             }
             // 2. Project incoming requests directly into domain entity shapes
-            var updatedReferenceList = new List<EmployeeReference>();
+            var referenceEntityList = new List<TblEmployeeReference>();
 
             for (int i = 0; i < request.ReferenceDetail.Count; i++)
             {
                 var req = request.ReferenceDetail[i];
                 //int sequenceValue = i + 1;
 
-                var referenceEntity = new EmployeeReference(
-                    Guid.NewGuid(),
-                    request.Id,
-                    req.PersonName,
-                    req.Mobile,
-                    req.Email,
-                    req.Address,
-                    req.Occupation,
-                    req.HowDoYouKnow
-                );
-                updatedReferenceList.Add(referenceEntity);
+                var referenceEntity = new TblEmployeeReference()
+                {
+                    Id = Guid.NewGuid(),
+                    EmployeeId = request.Id,
+                    PersonName = req.PersonName,
+                    Mobile = req.Mobile,
+                    Email = req.Email,
+                    Address = req.Address,
+                    Occupation = req.Occupation,
+                    HowDoYouKnow = req.HowDoYouKnow,
+                };
+
+
+                referenceEntityList.Add(referenceEntity);
             }
 
-            // 3. Atomically overwrite old items and explicitly log modifications
-            existingEmployee.ReplaceReferences(updatedReferenceList);
-
-            await employeeRepository.UpdateAsync(existingEmployee);
+            var referers = await context.TblEmployeeReferences.Where(m => m.EmployeeId == request.Id).ToListAsync(cancellationToken: cancellationToken);
+            if (referers != null && referers.Count() > 0)
+            {
+                context.TblEmployeeReferences.RemoveRange(referers);
+            }
+            context.TblEmployeeReferences.AddRange(referenceEntityList);
+            existingEmployee.SetModified(request.LastModifiedBy);
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Ok(new UpdateEmployeeReferenceResponse(true));
-
 
         }
     }
