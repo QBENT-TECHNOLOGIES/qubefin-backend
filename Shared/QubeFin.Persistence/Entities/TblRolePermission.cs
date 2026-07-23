@@ -5,15 +5,17 @@ namespace QubeFin.Persistence.Entities;
 
 public partial class TblRolePermission
 {
-    public Guid RoleId { get; set; }
+    public Guid RoleMenuId { get; set; }
 
-    public Guid PermissionId { get; set; }
+    public string PermissionToken { get; set; } = null!;
+
+    public string AccessClaimToken { get; set; } = null!;
 
     public DateTime CreatedOn { get; set; }
 
     public Guid CreatedBy { get; set; }
 
-    public virtual TblPermission Permission { get; set; } = null!;
+    public virtual TblPermission PermissionTokenNavigation { get; set; } = null!;
 
-    public virtual TblRole Role { get; set; } = null!;
+    public virtual TblRoleMenu RoleMenu { get; set; } = null!;
 }

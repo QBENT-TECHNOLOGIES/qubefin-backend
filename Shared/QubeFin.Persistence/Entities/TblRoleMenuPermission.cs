@@ -3,21 +3,19 @@ using System.Collections.Generic;
 
 namespace QubeFin.Persistence.Entities;
 
-public partial class TblRoleMenu
+public partial class TblRoleMenuPermission
 {
-    public Guid Id { get; set; }
-
     public Guid RoleId { get; set; }
 
-    public Guid MenuId { get; set; }
+    public Guid MenuPermissionId { get; set; }
+
+    public string AccessClaimToken { get; set; } = null!;
 
     public DateTime CreatedOn { get; set; }
 
     public Guid CreatedBy { get; set; }
 
-    public virtual TblMenu Menu { get; set; } = null!;
+    public virtual TblMenuPermission MenuPermission { get; set; } = null!;
 
     public virtual TblRole Role { get; set; } = null!;
-
-    public virtual ICollection<TblRolePermission> TblRolePermissions { get; set; } = new List<TblRolePermission>();
 }

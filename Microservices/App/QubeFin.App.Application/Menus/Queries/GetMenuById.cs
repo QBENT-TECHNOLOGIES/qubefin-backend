@@ -12,8 +12,30 @@ public record GetMenuByIdQuery(Guid Id) : IRequest<Result<GetMenuByIdResponse>>;
 #endregion
 
 #region --- RESPONSE ---
-public record GetMenuByIdResponse(Guid Id, string Name, string Icon, string? Target, Guid? ParentId, int DisplayPosition, bool IsActive,
-    string CreatedBy, DateTime CreatedOn, string? LastModifiedBy, DateTime? LastModifiedOn, IReadOnlyList<MenuHierarchyItem> Hierarchy);
+//public sealed record GetMenuByIdResponse(Guid Id, string Name, string Icon, string? Target, Guid? ParentId, int DisplayPosition, bool IsActive,
+//    string CreatedBy, DateTime CreatedOn, string? LastModifiedBy, DateTime? LastModifiedOn, IReadOnlyList<MenuHierarchyItem> Hierarchy, IReadOnlyList<Permission> Permissions);
+public sealed record GetMenuByIdResponse
+{
+    public Guid Id { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public string Icon { get; init; } = string.Empty;
+    public string Target { get; init; } = string.Empty;
+    public Guid? ParentId { get; init; }
+    public int DisplayPosition { get; init; }
+    public bool IsActive { get; set; }
+    public string CreatedBy { get; init; } = string.Empty;
+    public DateTime CreatedOn { get; init; }
+    public string? LastModifiedBy { get; init; }
+    public DateTime? LastModifiedOn { get; init; }
+    public IReadOnlyList<MenuHierarchyItem> Hierarchy { get; init; } = [];
+    public IReadOnlyList<PermissionResponse> Permissions { get; init; } = [];
+}
+public sealed record PermissionResponse
+{
+    public string PermissionToken { get; init; } = string.Empty;
+    public int DisplayPosition { get; init; }
+    public bool Checked { get; init; }
+}
 #endregion
 
 #region --- HANDLER ---
@@ -59,8 +81,30 @@ internal sealed class GetMenuByIdQueryHandler(QubeFinDataContext context)
             .TblMenus
             .AsNoTracking()
             .Where(m => m.Id == request.Id)
-            .Select(m => new GetMenuByIdResponse(m.Id, m.Name, m.Icon, m.Target, m.ParentId, m.DisplayPosition, m.IsActive,
-                m.CreatedByNavigation.UserName, m.CreatedOn, m.LastModifiedByNavigation.UserName, m.LastModifiedOn, hierarchy))
+            .Select(m => new GetMenuByIdResponse
+            {
+                Id = m.Id,
+                Name = m.Name,
+                Icon = m.Icon,
+                Target = m.Target,
+                ParentId = m.ParentId,
+                DisplayPosition = m.DisplayPosition,
+                IsActive = m.IsActive,
+                CreatedBy = m.CreatedByNavigation.UserName,
+                CreatedOn = m.CreatedOn,
+                LastModifiedBy = m.LastModifiedByNavigation != null ? m.LastModifiedByNavigation.UserName : string.Empty,
+                LastModifiedOn = m.LastModifiedOn,
+                Hierarchy = hierarchy,
+
+                Permissions = m.TblMenuPermissions
+                    .OrderBy(x  => x.PermissionTokenNavigation.DisplayPosition)
+                    .Select(p => new PermissionResponse
+                    {
+                        PermissionToken = p.PermissionTokenNavigation.PermissionToken,
+                        DisplayPosition = p.PermissionTokenNavigation.DisplayPosition
+                    })
+                    .ToList()
+            })
             .FirstOrDefaultAsync(cancellationToken);
 
         if (menu is null)

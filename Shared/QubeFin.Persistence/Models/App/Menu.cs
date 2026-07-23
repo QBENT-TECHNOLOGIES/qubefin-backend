@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace QubeFin.Persistence.Models.App;
+﻿namespace QubeFin.Persistence.Models.App;
 
 public class Menu
 {
+    private readonly List<Permission> _permissions = [];
+
     public Guid Id { get; private set; }
     public string Name { get; private set; } = null!;
     public string Icon { get; private set; } = null!;
@@ -17,6 +15,8 @@ public class Menu
     public DateTime CreatedOn { get; private set; }
     public Guid? LastModifiedBy { get; private set; }
     public DateTime? LastModifiedOn { get; private set; }
+
+    public IReadOnlyCollection<Permission> Permissions =>   _permissions.AsReadOnly();
 
     public Menu() { }
     public Menu(Guid id, string name, string icon, string? target, Guid? parentId, int position, bool isActive, 
