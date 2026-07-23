@@ -6,6 +6,7 @@ using QubeFin.Core.Results;
 using QubeFin.Hrms.Application.Employees.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Mappers.Hrms;
 using QubeFin.Persistence.Models.App;
 using QubeFin.Persistence.Models.Hrms;
@@ -85,34 +86,39 @@ namespace QubeFin.Hrms.Application.Employees.Commands
                 return new ValidationError("Employee not exist given id.");
             }
             // 2. Project incoming requests directly into domain entity shapes
-            var updatedQualificationsList = new List<EmployeeQualification>();
+            var updatedQualificationList = new List<TblEmployeeQualification>();
 
             var orderByQualifications = request.Qualifications.OrderBy(m => m.Sequence).ToList();
             for (int i = 0; i < orderByQualifications.Count; i++)
             {
                 var req = orderByQualifications[i];
                 int sequenceValue = i + 1;
+                //int sequenceValue = i + 1;
 
-                var qualificationEntity = new EmployeeQualification(
-                    Guid.NewGuid(),
-                    req.AcademicStream,
-                    req.Specialization,
-                    req.YearOfPassing,
-                    req.UniversityOrBoard,
-                    req.SchoolOrCollege,
-                    req.GradeOrMarks,
-                    req.DocFileName,
-                    req.DocFileNo,
-                    request.Id,
-                    sequenceValue
-                );
-                updatedQualificationsList.Add(qualificationEntity);
+                var employmentEntity = new TblEmployeeQualification()
+                {
+                    Id = req.Id,
+                    EmployeeId = request.Id,
+                    AcademicStream = req.AcademicStream,
+                    Specialization = req.Specialization,
+                    YearOfPassing = req.YearOfPassing,
+                    UniversityOrBoard = req.UniversityOrBoard,
+                    SchoolOrCollege = req.SchoolOrCollege,
+                    GradeOrMarks = req.GradeOrMarks,
+                    DocFileName = req.DocFileName,
+                    DocFileNo = req.DocFileNo,
+                    Sequence = sequenceValue
+                };
+
+                updatedQualificationList.Add(employmentEntity);
             }
-
-            // 3. Atomically overwrite old items and explicitly log modifications
-            existingEmployee.ReplaceQualifications(updatedQualificationsList);
-
-            await employeeRepository.UpdateAsync(existingEmployee);
+            var emp = await context.TblEmployeeQualifications.Where(m => m.EmployeeId == request.Id).ToListAsync(cancellationToken: cancellationToken);
+            if (emp != null && emp.Count() > 0)
+            {
+                context.TblEmployeeQualifications.RemoveRange(emp);
+            }
+            context.TblEmployeeQualifications.AddRange(updatedQualificationList);
+            existingEmployee.SetModified(request.LastModifiedBy);
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Ok(new UpdateEmployeeQualificationResponse(true));
 

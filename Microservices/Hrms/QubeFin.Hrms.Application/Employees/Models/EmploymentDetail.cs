@@ -5,8 +5,8 @@ public class EmploymentDetailRequest
     public Guid Id { get; set; }
     public string EmployerName { get; set; } = null!;
     public string Designation { get; set; } = null!;
-    public DateOnly FromDate { get; set; }
-    public DateOnly ToDate { get; set; }
+    public DateTime FromDate { get; set; }
+    public DateTime ToDate { get; set; }
     public decimal LastDrawnSalary { get; set; }
     public string? JobTitle { get; set; }
     public string? NocFileName { get; set; }
