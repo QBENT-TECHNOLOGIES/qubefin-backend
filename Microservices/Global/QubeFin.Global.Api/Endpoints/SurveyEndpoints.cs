@@ -120,8 +120,24 @@ namespace QubeFin.Global.Api.Endpoints
                     }
                 }
                 return Results.Ok();
-            })
-            .WithSummary("Create Branch Survey");
+            }).WithSummary("Create Branch Survey");
+
+            app.MapPut("surveys/branch", async (CreateBranchSurveyCommand command, ISender sender) =>
+            {
+                var result = await sender.Send(command);
+                if (result.IsFailed)
+                {
+                    if (result.Errors[0] is RecordNotFoundError)
+                    {
+                        return Results.NotFound(result.Errors[0]);
+                    }
+                    if (result.Errors[0] is ValidationError)
+                    {
+                        return Results.BadRequest(result.Errors[0]);
+                    }
+                }
+                return Results.Ok();
+            }).WithSummary("Update Branch Survey");
         }
     }
 }

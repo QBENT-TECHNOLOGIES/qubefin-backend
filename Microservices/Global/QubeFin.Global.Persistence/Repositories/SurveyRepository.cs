@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using QubeFin.Persistence;
-using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Mappers.Global;
 using QubeFin.Persistence.Models.Global;
+using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Global.Persistence.Repositories
 {
@@ -12,6 +12,8 @@ namespace QubeFin.Global.Persistence.Repositories
         Task UpdateSurvey(Survey survey);
         Task<Survey?> GetByIdAsync(Guid id);
         Task<Guid> AddBranchSurvey(BranchSurvey branchSurvey);
+        Task UpdateBranchSurvey(BranchSurvey branchSurvey);
+        Task<BranchSurvey?> GetBranchSurveyByIdAsync(Guid id);
     }
     public class SurveyRepository(QubeFinDataContext context) : ISurveyRepository
     {
@@ -77,6 +79,15 @@ namespace QubeFin.Global.Persistence.Repositories
             var entity = branchSurvey.ToEntity();
             await context.TblBranchSurveys.AddAsync(entity);
             return entity.Id;
+        }
+        public async Task<BranchSurvey?> GetBranchSurveyByIdAsync(Guid id)
+        {
+            var entity = await context.TblBranchSurveys.AsNoTracking().FirstOrDefaultAsync(m => m.Id == id);
+            return entity?.ToDomain();
+        }
+        public async Task UpdateBranchSurvey(BranchSurvey branchSurvey)
+        {
+            context.TblBranchSurveys.Update(branchSurvey.ToEntity());
         }
     }
 }

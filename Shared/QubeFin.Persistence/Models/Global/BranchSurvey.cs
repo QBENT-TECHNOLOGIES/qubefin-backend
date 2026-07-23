@@ -4,7 +4,6 @@
     {
         public Guid Id { get; set; }
         public Guid SurveyId { get; set; }
-        public DateOnly SurveyDate { get; set; }
         public BranchSurveyGeographicInformation BranchSurveyGeographicInformation { get; private set; } = default!;
         public BranchSurveyAccessibilityAssessment BranchSurveyAccessibilityAssessment { get; private set; } = default!;
         public BranchSurveyDemographicProfile BranchSurveyDemographicProfile { get; private set; } = default!;
@@ -32,7 +31,6 @@
         {
             Id = id;
             SurveyId = surveyId;
-            SurveyDate = surveyDate;
             BranchSurveyGeographicInformation = geographicInformation;
             BranchSurveyAccessibilityAssessment = accessibilityAssessment;
             BranchSurveyDemographicProfile = demographicProfile;
@@ -53,7 +51,6 @@
         public static BranchSurvey Create(
                 Guid id,
                 Guid surveyId,
-                DateOnly surveyDate,
                 BranchSurveyGeographicInformation geographicInformation,
                 BranchSurveyAccessibilityAssessment accessibilityAssessment,
                 BranchSurveyDemographicProfile demographicProfile,
@@ -72,7 +69,6 @@
             {
                 Id = id,
                 SurveyId = surveyId,
-                SurveyDate = surveyDate,
                 BranchSurveyGeographicInformation = geographicInformation,
                 BranchSurveyAccessibilityAssessment = accessibilityAssessment,
                 BranchSurveyDemographicProfile = demographicProfile,
@@ -182,6 +178,7 @@
     }
     public class BranchSurveyGeographicInformation
     {
+        public DateOnly SurveyDate { get; set; }
         public string? ProposedOperationalArea { get; set; }
         public Guid AdministrativeUnitId { get; set; }
         public string? PinCode { get; set; }
@@ -193,8 +190,9 @@
         public decimal? DistanceFromExistingWeGrowBranch { get; set; }
         public decimal? DistanceFromDistrictHeadquarters { get; set; }
         public BranchSurveyGeographicInformation() { }
-        public BranchSurveyGeographicInformation(string? proposedOperationalArea, Guid administrativeUnitId, string? pinCode, decimal? latitude, decimal? longitude, string? geoTag, string? nearestLandmark, string? administrativeStatus, decimal? distanceFromExistingWeGrowBranch, decimal? distanceFromDistrictHeadquarters)
+        public BranchSurveyGeographicInformation(DateOnly surveyDate, string? proposedOperationalArea, Guid administrativeUnitId, string? pinCode, decimal? latitude, decimal? longitude, string? geoTag, string? nearestLandmark, string? administrativeStatus, decimal? distanceFromExistingWeGrowBranch, decimal? distanceFromDistrictHeadquarters)
         {
+            SurveyDate = surveyDate;
             ProposedOperationalArea = proposedOperationalArea;
             AdministrativeUnitId = administrativeUnitId;
             PinCode = pinCode;

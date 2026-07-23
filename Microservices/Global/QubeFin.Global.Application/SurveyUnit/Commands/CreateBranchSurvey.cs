@@ -36,8 +36,8 @@ internal sealed class CreateBranchSurveyCommandHandler(ISurveyRepository surveyR
         var branchSurvey = BranchSurvey.Create(
             Guid.NewGuid(),
             request.SurveyRequest.SurveyId,
-            request.SurveyRequest.SurveyDate,
             new BranchSurveyGeographicInformation(
+                    request.SurveyRequest.GeographicInformation.SurveyDate,
                     request.SurveyRequest.GeographicInformation.ProposedOperationalArea,
                     request.SurveyRequest.GeographicInformation.AdministrativeUnitId,
                     request.SurveyRequest.GeographicInformation.PinCode,

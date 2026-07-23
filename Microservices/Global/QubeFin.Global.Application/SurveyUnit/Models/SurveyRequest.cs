@@ -24,7 +24,6 @@ namespace QubeFin.Global.Application.SurveyUnit.Models
     {
         public Guid Id { get; set; }
         public Guid SurveyId { get; set; }
-        public DateOnly SurveyDate { get; set; }
         public BranchSurveyGeographicInformationRequest? GeographicInformation { get; set; }
         public BranchSurveyAccessibilityAssessmentRequest? AccessibilityAssessment { get; set; }
         public BranchSurveyDemographicProfileRequest? DemographicProfile { get; set; }
@@ -40,6 +39,7 @@ namespace QubeFin.Global.Application.SurveyUnit.Models
     }
     public class BranchSurveyGeographicInformationRequest
     {
+        public DateOnly SurveyDate { get; set; }
         public string? ProposedOperationalArea { get; set; }
         public Guid AdministrativeUnitId { get; set; }
         public string? PinCode { get; set; }

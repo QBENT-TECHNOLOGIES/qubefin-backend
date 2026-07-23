@@ -6,12 +6,11 @@ namespace QubeFin.Persistence.Mappers.Global;
 
 public static class BranchSurveyMapper
 {
-    public static BranchSurvey ToDomain(TblBranchSurvey entity)
+    public static BranchSurvey ToDomain(this TblBranchSurvey entity)
     {
         return BranchSurvey.Create(
             entity.Id,
             entity.SurveyId,
-            entity.SurveyDate,
             MapGeographicInformation(entity),
             MapAccessibilityAssessment(entity),
             MapDemographicProfile(entity),
@@ -31,6 +30,7 @@ public static class BranchSurveyMapper
     private static BranchSurveyGeographicInformation MapGeographicInformation(TblBranchSurvey entity)
     {
         return new BranchSurveyGeographicInformation(
+            entity.SurveyDate,
             entity.ProposedOperationalArea,
             entity.AdministrativeUnitId,
             entity.PinCode,
@@ -194,8 +194,8 @@ public static class BranchSurveyMapper
         {
             Id = branch.Id,
             SurveyId = branch.SurveyId,
-            SurveyDate = branch.SurveyDate,
 
+            SurveyDate = branch.BranchSurveyGeographicInformation.SurveyDate,
             ProposedOperationalArea = branch.BranchSurveyGeographicInformation?.ProposedOperationalArea,
             AdministrativeUnitId = branch.BranchSurveyGeographicInformation?.AdministrativeUnitId ?? default,
             PinCode = branch.BranchSurveyGeographicInformation?.PinCode,

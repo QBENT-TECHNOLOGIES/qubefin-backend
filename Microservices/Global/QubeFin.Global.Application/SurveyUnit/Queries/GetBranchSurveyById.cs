@@ -2,7 +2,6 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using QubeFin.Core.Results;
 using QubeFin.Global.Application.SurveyUnit.Models;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Global;
@@ -31,10 +30,15 @@ internal sealed class GetBranchSurveyByIdHandler(QubeFinDataContext context) : I
 {
     public async Task<Result<GetBranchSurveyByIdResponse>> Handle(GetBranchSurveyById request, CancellationToken cancellationToken)
     {
-        var branchSurveyEntity = await context.TblBranchSurveys.Include(m => m.Survey).ThenInclude(m => m.TblSurveyAssigneds).AsNoTracking().FirstOrDefaultAsync(m => m.SurveyId == request.SurveyId, cancellationToken: cancellationToken);
+        var surveyEntity = await context.TblSurveys.Include(m => m.TblSurveyAssigneds).Include(m => m.TblBranchSurveys).AsNoTracking().FirstOrDefaultAsync(m => m.Id == request.SurveyId, cancellationToken: cancellationToken);
+        if (surveyEntity is null)
+        {
+            return Result.Fail(new Error($"Survey with Id {request.SurveyId} not found."));
+        }
+        var branchSurveyEntity = surveyEntity?.TblBranchSurveys.FirstOrDefault();
         if (branchSurveyEntity is null)
         {
-            return new GetBranchSurveyByIdResponse(null);
+            return new GetBranchSurveyByIdResponse(new BranchSurveyResponse { IsSubmitButtonVisible = surveyEntity.TblSurveyAssigneds.Any(sa => sa.EmployeeId == request.EmployeeId && sa.IsLead) });
         }
         var users = await context.TblUsers.Where(u => u.Id == branchSurveyEntity.CreatedBy || u.Id == branchSurveyEntity.LastModifiedBy).AsNoTracking().ToListAsync(cancellationToken);
         return new GetBranchSurveyByIdResponse(new BranchSurveyResponse
