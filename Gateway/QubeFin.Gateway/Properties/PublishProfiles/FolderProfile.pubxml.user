@@ -3,7 +3,7 @@
 <Project>
   <PropertyGroup>
     <_PublishTargetUrl>D:\Products\Microfinance\QubeFin\qubefin-backend\Gateway\QubeFin.Gateway\bin\Release\net10.0\publish\</_PublishTargetUrl>
-    <History>True|2026-07-08T13:24:35.1407698Z||;True|2026-07-08T18:45:58.6122400+05:30||;True|2026-07-08T18:40:36.4611950+05:30||;True|2026-07-08T18:11:01.1826064+05:30||;True|2026-07-08T18:09:05.7756633+05:30||;True|2026-07-08T16:28:15.9902448+05:30||;</History>
+    <History>True|2026-07-22T09:27:50.6539304Z||;True|2026-07-08T18:54:35.1407698+05:30||;True|2026-07-08T18:45:58.6122400+05:30||;True|2026-07-08T18:40:36.4611950+05:30||;True|2026-07-08T18:11:01.1826064+05:30||;True|2026-07-08T18:09:05.7756633+05:30||;True|2026-07-08T16:28:15.9902448+05:30||;</History>
     <LastFailureDetails />
   </PropertyGroup>
 </Project>
