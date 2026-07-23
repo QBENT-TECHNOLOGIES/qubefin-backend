@@ -11,6 +11,7 @@ namespace QubeFin.Global.Persistence.Repositories
         Task AddSurvey(Survey survey);
         Task UpdateSurvey(Survey survey);
         Task<Survey?> GetByIdAsync(Guid id);
+        Task<Guid> AddBranchSurvey(BranchSurvey branchSurvey);
     }
     public class SurveyRepository(QubeFinDataContext context) : ISurveyRepository
     {
@@ -70,6 +71,12 @@ namespace QubeFin.Global.Persistence.Repositories
         {
             var entity = await context.TblSurveys.Include(m => m.TblSurveyAssigneds).AsNoTracking().FirstOrDefaultAsync(m => m.Id == id);
             return entity?.ToDomain();
+        }
+        public async Task<Guid> AddBranchSurvey(BranchSurvey branchSurvey)
+        {
+            var entity = branchSurvey.ToEntity();
+            await context.TblBranchSurveys.AddAsync(entity);
+            return entity.Id;
         }
     }
 }
