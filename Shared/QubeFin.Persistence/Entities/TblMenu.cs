@@ -35,7 +35,5 @@ public partial class TblMenu
 
     public virtual TblMenu? Parent { get; set; }
 
-    public virtual ICollection<TblRoleMenu> TblRoleMenus { get; set; } = new List<TblRoleMenu>();
-
-    public virtual ICollection<TblUserMenu> TblUserMenus { get; set; } = new List<TblUserMenu>();
+    public virtual ICollection<TblMenuPermission> TblMenuPermissions { get; set; } = new List<TblMenuPermission>();
 }

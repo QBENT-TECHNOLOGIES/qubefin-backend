@@ -5,13 +5,9 @@ namespace QubeFin.Persistence.Entities;
 
 public partial class TblPermission
 {
-    public Guid Id { get; set; }
+    public string PermissionToken { get; set; } = null!;
 
-    public string AccessFunction { get; set; } = null!;
+    public int DisplayPosition { get; set; }
 
-    public string AccessToken { get; set; } = null!;
-
-    public string Name { get; set; } = null!;
-
-    public virtual ICollection<TblRolePermission> TblRolePermissions { get; set; } = new List<TblRolePermission>();
+    public virtual ICollection<TblMenuPermission> TblMenuPermissions { get; set; } = new List<TblMenuPermission>();
 }

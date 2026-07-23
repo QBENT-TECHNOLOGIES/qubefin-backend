@@ -16,6 +16,8 @@ public partial class QubeFinDataContext : DbContext
     {
     }
 
+    public virtual DbSet<DboTempEmpBranch> DboTempEmpBranches { get; set; }
+
     public virtual DbSet<TblAccountGroup> TblAccountGroups { get; set; }
 
     public virtual DbSet<TblAccountHead> TblAccountHeads { get; set; }
@@ -138,6 +140,8 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblMenu> TblMenus { get; set; }
 
+    public virtual DbSet<TblMenuPermission> TblMenuPermissions { get; set; }
+
     public virtual DbSet<TblOrganizationUnit> TblOrganizationUnits { get; set; }
 
     public virtual DbSet<TblOrganizationUnitType> TblOrganizationUnitTypes { get; set; }
@@ -158,9 +162,7 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblRole> TblRoles { get; set; }
 
-    public virtual DbSet<TblRoleMenu> TblRoleMenus { get; set; }
-
-    public virtual DbSet<TblRolePermission> TblRolePermissions { get; set; }
+    public virtual DbSet<TblRoleMenuPermission> TblRoleMenuPermissions { get; set; }
 
     public virtual DbSet<TblSalaryComponent> TblSalaryComponents { get; set; }
 
@@ -188,15 +190,31 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblUserDevice> TblUserDevices { get; set; }
 
-    public virtual DbSet<TblUserMenu> TblUserMenus { get; set; }
+    public virtual DbSet<TblUserMenuPermission> TblUserMenuPermissions { get; set; }
 
     public virtual DbSet<TblUserSession> TblUserSessions { get; set; }
 
-    public virtual DbSet<WegrowSalJune> WegrowSalJunes { get; set; }
-
+    public virtual DbSet<WegrowConsolidateEmployee> WegrowConsolidateEmployees { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<DboTempEmpBranch>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToTable("dbo.Temp_Emp_Branch");
+
+            entity.Property(e => e.Code)
+                .HasMaxLength(50)
+                .HasColumnName("code");
+            entity.Property(e => e.Designation)
+                .HasMaxLength(100)
+                .HasColumnName("designation");
+            entity.Property(e => e.Location)
+                .HasMaxLength(50)
+                .HasColumnName("location");
+        });
+
         modelBuilder.Entity<TblAccountGroup>(entity =>
         {
             entity.ToTable("Tbl_AccountGroup", "Finance");
@@ -684,7 +702,7 @@ public partial class QubeFinDataContext : DbContext
         {
             entity.ToTable("Tbl_Designation", "Hrms");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).HasDefaultValueSql("(newid())", "DF_Tbl_Designation_Id");
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
             entity.Property(e => e.Name).HasMaxLength(50);
@@ -704,7 +722,7 @@ public partial class QubeFinDataContext : DbContext
         {
             entity.ToTable("Tbl_DesignationGradeMapping", "Hrms");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).HasDefaultValueSql("(newid())", "DF_Tbl_DesignationGradeMapping_Id");
         });
 
         modelBuilder.Entity<TblDesignationRole>(entity =>
@@ -1614,6 +1632,26 @@ public partial class QubeFinDataContext : DbContext
                 .HasConstraintName("FK_Tbl_Menu_Tbl_Menu");
         });
 
+        modelBuilder.Entity<TblMenuPermission>(entity =>
+        {
+            entity.ToTable("Tbl_MenuPermission", "Auth");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
+            entity.Property(e => e.PermissionToken).HasMaxLength(20);
+
+            entity.HasOne(d => d.Menu).WithMany(p => p.TblMenuPermissions)
+                .HasForeignKey(d => d.MenuId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_MenuPermission_Tbl_Menu");
+
+            entity.HasOne(d => d.PermissionTokenNavigation).WithMany(p => p.TblMenuPermissions)
+                .HasForeignKey(d => d.PermissionToken)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_MenuPermission_Tbl_Permission");
+        });
+
         modelBuilder.Entity<TblOrganizationUnit>(entity =>
         {
             entity.ToTable("Tbl_OrganizationUnit", "Global");
@@ -1719,18 +1757,13 @@ public partial class QubeFinDataContext : DbContext
 
         modelBuilder.Entity<TblPermission>(entity =>
         {
+            entity.HasKey(e => e.PermissionToken).HasName("PK_Tbl_Permission_1");
+
             entity.ToTable("Tbl_Permission", "Auth");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.AccessFunction)
-                .HasMaxLength(30)
-                .HasDefaultValue("");
-            entity.Property(e => e.AccessToken)
-                .HasMaxLength(10)
-                .HasDefaultValue("");
-            entity.Property(e => e.Name)
-                .HasMaxLength(41)
-                .HasComputedColumnSql("(([AccessFunction]+'.')+[AccessToken])", false);
+            entity.Property(e => e.PermissionToken)
+                .HasMaxLength(20)
+                .HasDefaultValue("", "DF__Tbl_Permi__Acces__1EA48E88");
         });
 
         modelBuilder.Entity<TblPoliceStation>(entity =>
@@ -1807,36 +1840,24 @@ public partial class QubeFinDataContext : DbContext
                 .HasConstraintName("FK_Tbl_Role_Tbl_User1");
         });
 
-        modelBuilder.Entity<TblRoleMenu>(entity =>
+        modelBuilder.Entity<TblRoleMenuPermission>(entity =>
         {
-            entity.HasKey(e => new { e.RoleId, e.MenuId });
+            entity.HasKey(e => new { e.RoleId, e.MenuPermissionId }).HasName("PK_Tbl_RolePermission");
 
-            entity.ToTable("Tbl_RoleMenu", "Auth");
+            entity.ToTable("Tbl_RoleMenuPermission", "Auth");
 
+            entity.Property(e => e.AccessClaimToken).HasMaxLength(50);
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
 
-            entity.HasOne(d => d.Menu).WithMany(p => p.TblRoleMenus)
-                .HasForeignKey(d => d.MenuId)
+            entity.HasOne(d => d.MenuPermission).WithMany(p => p.TblRoleMenuPermissions)
+                .HasForeignKey(d => d.MenuPermissionId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Tbl_RoleMenu_Tbl_Menu");
+                .HasConstraintName("FK_Tbl_RoleMenuPermission_Tbl_MenuPermission");
 
-            entity.HasOne(d => d.Role).WithMany(p => p.TblRoleMenus)
+            entity.HasOne(d => d.Role).WithMany(p => p.TblRoleMenuPermissions)
                 .HasForeignKey(d => d.RoleId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Tbl_RoleMenu_Tbl_Role");
-        });
-
-        modelBuilder.Entity<TblRolePermission>(entity =>
-        {
-            entity.HasKey(e => new { e.RoleId, e.PermissionId }).HasName("PK_Tbl_RolePermission_1");
-
-            entity.ToTable("Tbl_RolePermission", "Auth");
-
-            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
-
-            entity.HasOne(d => d.Permission).WithMany(p => p.TblRolePermissions).HasForeignKey(d => d.PermissionId);
-
-            entity.HasOne(d => d.Role).WithMany(p => p.TblRolePermissions).HasForeignKey(d => d.RoleId);
+                .HasConstraintName("FK_Tbl_RoleMenuPermission_Tbl_Role");
         });
 
         modelBuilder.Entity<TblSalaryComponent>(entity =>
@@ -1881,7 +1902,7 @@ public partial class QubeFinDataContext : DbContext
         {
             entity.ToTable("Tbl_SalaryStructure", "Payroll");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).HasDefaultValueSql("(newid())", "DF_Tbl_SalaryStructure_Id");
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.GrossAmount).HasColumnType("numeric(18, 2)");
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
@@ -1923,7 +1944,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
             entity.Property(e => e.ProposedArea).HasMaxLength(200);
-            entity.Property(e => e.Sequence).ValueGeneratedOnAdd().Metadata.SetAfterSaveBehavior(Microsoft.EntityFrameworkCore.Metadata.PropertySaveBehavior.Ignore);
+            entity.Property(e => e.Sequence).ValueGeneratedOnAdd();
             entity.Property(e => e.SurveyType).HasMaxLength(50);
 
             entity.HasOne(d => d.AdministrativeUnit).WithMany(p => p.TblSurveys)
@@ -2035,23 +2056,24 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.ReleaseDate).HasColumnType("datetime");
         });
 
-        modelBuilder.Entity<TblUserMenu>(entity =>
+        modelBuilder.Entity<TblUserMenuPermission>(entity =>
         {
-            entity.HasKey(e => new { e.UserId, e.MenuId });
+            entity.HasKey(e => new { e.UserId, e.MenuPermissionId }).HasName("PK_Tbl_UserPermission");
 
-            entity.ToTable("Tbl_UserMenu", "Auth");
+            entity.ToTable("Tbl_UserMenuPermission", "Auth");
 
+            entity.Property(e => e.AccessClaimToken).HasMaxLength(50);
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
 
-            entity.HasOne(d => d.Menu).WithMany(p => p.TblUserMenus)
-                .HasForeignKey(d => d.MenuId)
+            entity.HasOne(d => d.MenuPermission).WithMany(p => p.TblUserMenuPermissions)
+                .HasForeignKey(d => d.MenuPermissionId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Tbl_UserMenu_Tbl_Menu");
+                .HasConstraintName("FK_Tbl_UserMenuPermission_Tbl_MenuPermission");
 
-            entity.HasOne(d => d.User).WithMany(p => p.TblUserMenus)
+            entity.HasOne(d => d.User).WithMany(p => p.TblUserMenuPermissions)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Tbl_UserMenu_Tbl_User");
+                .HasConstraintName("FK_Tbl_UserMenuPermission_Tbl_User");
         });
 
         modelBuilder.Entity<TblUserSession>(entity =>
@@ -2068,11 +2090,11 @@ public partial class QubeFinDataContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.TblUserSessions).HasForeignKey(d => d.UserId);
         });
 
-        modelBuilder.Entity<WegrowSalJune>(entity =>
+        modelBuilder.Entity<WegrowConsolidateEmployee>(entity =>
         {
             entity
                 .HasNoKey()
-                .ToTable("Wegrow_Sal_June");
+                .ToTable("Wegrow_Consolidate_Employees");
 
             entity.Property(e => e.AC2PfAdminCharges).HasColumnName("A_C_2_PF_ADMIN_CHARGES");
             entity.Property(e => e.AadharNo)
@@ -2124,6 +2146,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.ClaimExpensePayment2).HasColumnName("CLAIM_EXPENSE_PAYMENT2");
             entity.Property(e => e.ClaimExpensePaymentArrears).HasColumnName("CLAIM_EXPENSE_PAYMENT_ARREARS");
             entity.Property(e => e.Company).HasMaxLength(50);
+            entity.Property(e => e.Company2).HasMaxLength(50);
             entity.Property(e => e.CompanyProvidentFund).HasColumnName("COMPANY_PROVIDENT_FUND");
             entity.Property(e => e.CompanyProvidentFundArrear).HasColumnName("COMPANY_PROVIDENT_FUND_ARREAR");
             entity.Property(e => e.ConfirmationDate).HasColumnName("Confirmation_Date");
@@ -2173,18 +2196,12 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.EmployeeStateInsurance).HasColumnName("EMPLOYEE_STATE_INSURANCE");
             entity.Property(e => e.EmployerContributionEsi).HasColumnName("EMPLOYER_CONTRIBUTION_ESI");
             entity.Property(e => e.EmployerContributionEsiArrears).HasColumnName("EMPLOYER_CONTRIBUTION_ESI_ARREARS");
-            entity.Property(e => e.EmployerEdliCtc)
-                .HasMaxLength(1)
-                .HasColumnName("EMPLOYER_EDLI_CTC");
+            entity.Property(e => e.EmployerEdliCtc).HasColumnName("EMPLOYER_EDLI_CTC");
             entity.Property(e => e.EmployerEsiCtc).HasColumnName("EMPLOYER_ESI_CTC");
-            entity.Property(e => e.EmployerPfAdminChargesCtc)
-                .HasMaxLength(1)
-                .HasColumnName("EMPLOYER_PF_ADMIN_CHARGES_CTC");
+            entity.Property(e => e.EmployerPfAdminChargesCtc).HasColumnName("EMPLOYER_PF_ADMIN_CHARGES_CTC");
             entity.Property(e => e.EmployerPfCtc).HasColumnName("EMPLOYER_PF_CTC");
             entity.Property(e => e.EpsArrear).HasColumnName("EPS_ARREAR");
-            entity.Property(e => e.EpsContributionArrearsManual)
-                .HasMaxLength(1)
-                .HasColumnName("EPS_CONTRIBUTION_ARREARS_MANUAL");
+            entity.Property(e => e.EpsContributionArrearsManual).HasColumnName("EPS_CONTRIBUTION_ARREARS_MANUAL");
             entity.Property(e => e.EpsContributionManual)
                 .HasMaxLength(1)
                 .HasColumnName("EPS_CONTRIBUTION_MANUAL");
@@ -2260,6 +2277,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.LeaveTravelAllowance2).HasColumnName("LEAVE_TRAVEL_ALLOWANCE2");
             entity.Property(e => e.LeaveTravelAllowanceArrears).HasColumnName("LEAVE_TRAVEL_ALLOWANCE_ARREARS");
             entity.Property(e => e.Location).HasMaxLength(50);
+            entity.Property(e => e.Location2).HasMaxLength(50);
             entity.Property(e => e.Lop).HasColumnName("LOP");
             entity.Property(e => e.LtaReimbursement)
                 .HasMaxLength(1)
@@ -2297,9 +2315,10 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Name).HasMaxLength(50);
             entity.Property(e => e.NetPay).HasColumnName("Net_Pay");
             entity.Property(e => e.NetPayCtc).HasColumnName("NET_PAY_CTC");
-            entity.Property(e => e.OtherAllowance)
+            entity.Property(e => e.OldCode)
                 .HasMaxLength(1)
-                .HasColumnName("OTHER_ALLOWANCE");
+                .HasColumnName("Old_Code");
+            entity.Property(e => e.OtherAllowance).HasColumnName("OTHER_ALLOWANCE");
             entity.Property(e => e.OtherAllowance2).HasColumnName("OTHER_ALLOWANCE2");
             entity.Property(e => e.OtherAllowanceArrears).HasColumnName("OTHER_ALLOWANCE_ARREARS");
             entity.Property(e => e.OtherDeduction)
@@ -2334,9 +2353,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.ProvidentFund).HasColumnName("PROVIDENT_FUND");
             entity.Property(e => e.ProvidentFundArrear).HasColumnName("PROVIDENT_FUND_ARREAR");
             entity.Property(e => e.RawtaxForThePeriod).HasColumnName("RAWTAX_FOR_THE_PERIOD");
-            entity.Property(e => e.RetirementDate)
-                .HasMaxLength(1)
-                .HasColumnName("Retirement_Date");
+            entity.Property(e => e.RetirementDate).HasColumnName("Retirement_Date");
             entity.Property(e => e.RoundingOff).HasColumnName("Rounding_Off");
             entity.Property(e => e.SalaryAdvance)
                 .HasMaxLength(1)
