@@ -38,9 +38,9 @@ public class AuthRepository(QubeFinDataContext context) : IAuthRepository
         }
         if (userEntity.IsSuperAdmin)
         {
-            return await context.TblRolePermissions
+            return await context.TblRoleMenuPermissions
                 .AsNoTracking()
-                .Select(m => m.Permission.Name)
+                .Select(m => m.AccessClaimToken)
                 .Distinct()
                 .ToListAsync();
         }
@@ -64,10 +64,10 @@ public class AuthRepository(QubeFinDataContext context) : IAuthRepository
             return [];
         }
 
-        return await context.TblRolePermissions
+        return await context.TblRoleMenuPermissions
             .AsNoTracking()
-            .Where(m => m.RoleId == roleEntity.Id)
-            .Select(m => m.Permission.Name)
+            //.Where(m => m.RoleId == roleEntity.Id)
+            .Select(m => m.AccessClaimToken)
             .Distinct()
             .ToListAsync();
     }

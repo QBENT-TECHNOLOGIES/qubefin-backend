@@ -29,6 +29,17 @@ public class MenuEndpoints : IEndpoint
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
 
+        app.MapGet("menus/parent-only", async (ISender sender, CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(new GetParentMenusQuery(), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithName("GetParentMenus")
+        .WithSummary("Get parent menus")
+        .WithDescription("Returns the parent menus only.")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
+
         app.MapGet("menus/{id:guid}", async (Guid id, ISender sender) =>
         {
             var result = await sender.Send(new GetMenuByIdQuery(id));
