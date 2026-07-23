@@ -169,7 +169,61 @@ public class EmployeeEndpoints : IEndpoint
             return Results.Ok(result.Value);
         })
         .WithSummary("Get Employee References By Id");
-        
+
+        app.MapGet("employees/employments/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new GetEmployeeEmploymentQuery(id));
+            if (result.IsFailed)
+            {
+                if (result.Errors[0] is RecordNotFoundError)
+                {
+                    return Results.NotFound(result.Errors[0]);
+                }
+                if (result.Errors[0] is ValidationError)
+                {
+                    return Results.BadRequest(result.Errors[0]);
+                }
+            }
+            return Results.Ok(result.Value);
+        })
+        .WithSummary("Get Employee Employments By Id");
+
+        app.MapGet("employees/qualifications/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new GetEmployeeQualificationQuery(id));
+            if (result.IsFailed)
+            {
+                if (result.Errors[0] is RecordNotFoundError)
+                {
+                    return Results.NotFound(result.Errors[0]);
+                }
+                if (result.Errors[0] is ValidationError)
+                {
+                    return Results.BadRequest(result.Errors[0]);
+                }
+            }
+            return Results.Ok(result.Value);
+        })
+        .WithSummary("Get Employee Employments By Id");
+
+        app.MapGet("employees/banking/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new GetEmployeePayrollByIdQuery(id));
+            if (result.IsFailed)
+            {
+                if (result.Errors[0] is RecordNotFoundError)
+                {
+                    return Results.NotFound(result.Errors[0]);
+                }
+                if (result.Errors[0] is ValidationError)
+                {
+                    return Results.BadRequest(result.Errors[0]);
+                }
+            }
+            return Results.Ok(result.Value);
+        })
+        .WithSummary("Get Employee Banking Info By Id");
+
 
         // ---------- END  GET BY ID -----------//
 
@@ -304,7 +358,7 @@ public class EmployeeEndpoints : IEndpoint
 
             return Results.Ok();
         })
-        .WithSummary("Update Employee Address data");
+        .WithSummary("Update Employee Kyc data");
 
         app.MapPut("employees/update/references/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] List<ReferenceDetailRequest> referenceDetail, ISender sender) =>
         {
@@ -330,7 +384,59 @@ public class EmployeeEndpoints : IEndpoint
 
             return Results.Ok();
         })
-        .WithSummary("Update Employee Address data");
+        .WithSummary("Update Employee Reference data");
+
+        app.MapPut("employees/update/employments/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] List<EmploymentDetailRequest> employments, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+            var userId = principal.Identity.GetUserId();
+
+            var command = new UpdateEmployeeEmploymentCommand(id, employments, userId);
+            var result = await sender.Send(command);
+            if (result.IsFailed)
+            {
+                if (result.Errors[0] is RecordNotFoundError)
+                {
+                    return Results.NotFound(result.Errors[0]);
+                }
+                if (result.Errors[0] is ValidationError)
+                {
+                    return Results.BadRequest(result.Errors[0]);
+                }
+            }
+
+            return Results.Ok();
+        })
+        .WithSummary("Update Employee Employment data");
+
+        app.MapPut("employees/update/qualifications/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] List<QualificationRequest> employments, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+            var userId = principal.Identity.GetUserId();
+
+            var command = new UpdateEmployeeQualificationCommand(id, employments, userId);
+            var result = await sender.Send(command);
+            if (result.IsFailed)
+            {
+                if (result.Errors[0] is RecordNotFoundError)
+                {
+                    return Results.NotFound(result.Errors[0]);
+                }
+                if (result.Errors[0] is ValidationError)
+                {
+                    return Results.BadRequest(result.Errors[0]);
+                }
+            }
+
+            return Results.Ok();
+        })
+        .WithSummary("Update Employee Qualification data");
 
         app.MapPut("employees/update/banking-info/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] BankDetail request, ISender sender) =>
         {

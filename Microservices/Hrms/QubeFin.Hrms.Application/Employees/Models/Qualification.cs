@@ -3,7 +3,7 @@
 public class QualificationRequest
 {
     public Guid Id { get;  set; }
-    public string? AcademicStream { get;  set; }
+    public string AcademicStream { get;  set; }
     public string? Specialization { get;  set; }
     public int YearOfPassing { get;  set; }
     public string? UniversityOrBoard { get;  set; }
