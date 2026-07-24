@@ -24,7 +24,7 @@ public class CreateBranchSurveyCommandValidator : AbstractValidator<CreateBranch
 #endregion
 
 #region --- RESPONSE ---
-public record CreateBranchSurveyResponse(bool Created, Guid Id);
+public record CreateBranchSurveyResponse(bool Created, Guid Id, string message);
 #endregion
 
 #region --- HANDLER ---
@@ -64,7 +64,7 @@ internal sealed class CreateBranchSurveyCommandHandler(ISurveyRepository surveyR
         var saveResposne = await surveyRepository.AddBranchSurvey(branchSurvey);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Ok(new CreateBranchSurveyResponse(true, saveResposne));
+        return Result.Ok(new CreateBranchSurveyResponse(true, saveResposne, "Branch survey created successfully."));
     }
 }
 #endregion
