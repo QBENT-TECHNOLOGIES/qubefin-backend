@@ -37,7 +37,7 @@ namespace QubeFin.Global.Api.Endpoints
                         return Results.BadRequest(result.Errors[0]);
                     }
                 }
-                return Results.Ok(result.Value);
+                return Results.Ok(result);
             }).WithSummary("Get Survey By Id");
 
             app.MapPost("surveys", async (ClaimsPrincipal principal, SurveyRequest request, ISender sender) =>
@@ -61,7 +61,7 @@ namespace QubeFin.Global.Api.Endpoints
                         return Results.BadRequest(result.Errors[0]);
                     }
                 }
-                return Results.Ok();
+                return Results.Ok(result);
             }).WithSummary("Create Survey");
 
             app.MapPut("surveys", async (ClaimsPrincipal principal, SurveyRequest request, ISender sender) =>
@@ -85,7 +85,7 @@ namespace QubeFin.Global.Api.Endpoints
                         return Results.BadRequest(result.Errors[0]);
                     }
                 }
-                return Results.Ok();
+                return Results.Ok(result);
             }).WithSummary("Update Survey");
 
             app.MapGet("surveys/branch/{surveyId:guid}", async (Guid surveyId, ClaimsPrincipal principal, ISender sender) =>
@@ -103,7 +103,7 @@ namespace QubeFin.Global.Api.Endpoints
                         return Results.BadRequest(result.Errors[0]);
                     }
                 }
-                return Results.Ok(result.Value);
+                return Results.Ok(result);
             }).WithSummary("Get Branch Survey By Id");
 
             app.MapPost("surveys/branch", async (ClaimsPrincipal principal, BranchSurveyRequest request, ISender sender) =>
@@ -122,7 +122,7 @@ namespace QubeFin.Global.Api.Endpoints
                         return Results.BadRequest(result.Errors[0]);
                     }
                 }
-                return Results.Ok();
+                return Results.Ok(result);
             }).WithSummary("Create Branch Survey");
 
             app.MapPut("surveys/branch", async (ClaimsPrincipal principal, BranchSurveyRequest request, ISender sender) =>
@@ -141,7 +141,7 @@ namespace QubeFin.Global.Api.Endpoints
                         return Results.BadRequest(result.Errors[0]);
                     }
                 }
-                return Results.Ok();
+                return Results.Ok(result);
             }).WithSummary("Update Branch Survey");
 
             app.MapPost("surveys/branch/submit", async (SubmitBranchSurveyRequest request, ClaimsPrincipal principal, ISender sender) =>
@@ -160,7 +160,7 @@ namespace QubeFin.Global.Api.Endpoints
                         return Results.BadRequest(result.Errors[0]);
                     }
                 }
-                return Results.Ok();
+                return Results.Ok(result);
             }).WithSummary("Submit Branch Survey");
         }
     }
