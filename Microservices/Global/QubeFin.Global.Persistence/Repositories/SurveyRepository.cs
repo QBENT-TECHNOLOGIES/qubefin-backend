@@ -2,7 +2,6 @@
 using QubeFin.Persistence;
 using QubeFin.Persistence.Mappers.Global;
 using QubeFin.Persistence.Models.Global;
-using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Global.Persistence.Repositories
 {
@@ -14,6 +13,7 @@ namespace QubeFin.Global.Persistence.Repositories
         Task<Guid> AddBranchSurvey(BranchSurvey branchSurvey);
         Task UpdateBranchSurvey(BranchSurvey branchSurvey);
         Task<BranchSurvey?> GetBranchSurveyByIdAsync(Guid id);
+        Task SubmitBranchSurvey(Guid branchSurveyId, bool isApproved, Guid submittedBy);
     }
     public class SurveyRepository(QubeFinDataContext context) : ISurveyRepository
     {
@@ -88,6 +88,34 @@ namespace QubeFin.Global.Persistence.Repositories
         public async Task UpdateBranchSurvey(BranchSurvey branchSurvey)
         {
             context.TblBranchSurveys.Update(branchSurvey.ToEntity());
+        }
+        public async Task SubmitBranchSurvey(Guid branchSurveyId, bool isApproved, Guid submittedBy)
+        {
+            var entity = await context.TblBranchSurveys.FirstOrDefaultAsync(m => m.Id == branchSurveyId);
+            if (entity == null)
+                throw new Exception("Branch survey not found.");
+            if (!entity.IsSurveyorSubmit)
+            {
+                entity.IsSurveyorSubmit = true;
+                entity.SurveyorSubmitOn = DateTime.UtcNow;
+                entity.LastModifiedBy = submittedBy;
+                entity.LastModifiedOn = DateTime.UtcNow;
+            }
+            if (!entity.IsCommiteeSubmit)
+            {
+                entity.IsCommiteeSubmit = true;
+                entity.CommiteeSubmitOn = DateTime.UtcNow;
+                entity.LastModifiedBy = submittedBy;
+                entity.LastModifiedOn = DateTime.UtcNow;
+            }
+            if (!entity.IsApproved && !entity.IsRejected)
+            {
+                entity.IsApproved = isApproved;
+                entity.IsRejected = !isApproved;
+                entity.ActionBy = submittedBy; 
+                entity.ActionOn = DateTime.UtcNow;
+            }
+            context.TblBranchSurveys.Update(entity);
         }
     }
 }

@@ -164,4 +164,10 @@ namespace QubeFin.Global.Application.SurveyUnit.Models
     {
         public string? Recommendation { get; set; }
     }
+    public class SubmitBranchSurveyRequest
+    {
+        public Guid Id { get; set; }
+        public Guid SurveyId { get; set; }
+        public bool IsApproved { get; set; } = false;
+    }
 }

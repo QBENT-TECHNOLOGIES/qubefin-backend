@@ -6,7 +6,6 @@ using QubeFin.Core.Results;
 using QubeFin.Global.Application.SurveyUnit.Commands;
 using QubeFin.Global.Application.SurveyUnit.Models;
 using QubeFin.Global.Application.SurveyUnit.Queries;
-using QubeFin.Persistence.Models.App;
 using System.Security.Claims;
 
 namespace QubeFin.Global.Api.Endpoints
@@ -144,6 +143,25 @@ namespace QubeFin.Global.Api.Endpoints
                 }
                 return Results.Ok();
             }).WithSummary("Update Branch Survey");
+
+            app.MapPost("surveys/branch/submit", async (SubmitBranchSurveyRequest request, ClaimsPrincipal principal, ISender sender) =>
+            {
+                var userId = principal.Identity.GetUserId();
+                var command = new SubmitBranchSurveyCommand(request, userId);
+                var result = await sender.Send(command);
+                if (result.IsFailed)
+                {
+                    if (result.Errors[0] is RecordNotFoundError)
+                    {
+                        return Results.NotFound(result.Errors[0]);
+                    }
+                    if (result.Errors[0] is ValidationError)
+                    {
+                        return Results.BadRequest(result.Errors[0]);
+                    }
+                }
+                return Results.Ok();
+            }).WithSummary("Submit Branch Survey");
         }
     }
 }

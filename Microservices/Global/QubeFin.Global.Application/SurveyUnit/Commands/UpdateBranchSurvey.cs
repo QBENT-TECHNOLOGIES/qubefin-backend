@@ -5,7 +5,6 @@ using QubeFin.Global.Application.SurveyUnit.Models;
 using QubeFin.Global.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Global;
-using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Global.Application.SurveyUnit.Commands;
 
@@ -29,7 +28,7 @@ public record UpdateBranchSurveyResponse(bool Created, string Message);
 #endregion
 
 #region --- HANDLER ---
-internal sealed class UpdateBranchSurveyCommandHandler(ISurveyRepository surveyRepository, IUnitOfWork unitOfWork, ISender sender) : IRequestHandler<UpdateBranchSurveyCommand, Result<UpdateBranchSurveyResponse>>
+internal sealed class UpdateBranchSurveyCommandHandler(ISurveyRepository surveyRepository, IUnitOfWork unitOfWork) : IRequestHandler<UpdateBranchSurveyCommand, Result<UpdateBranchSurveyResponse>>
 {
     public async Task<Result<UpdateBranchSurveyResponse>> Handle(UpdateBranchSurveyCommand request, CancellationToken cancellationToken)
     {

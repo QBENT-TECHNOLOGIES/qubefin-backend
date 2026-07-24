@@ -41,6 +41,7 @@ internal sealed class GetBranchSurveyByIdHandler(QubeFinDataContext context) : I
             return new GetBranchSurveyByIdResponse(new BranchSurveyResponse { IsSubmitButtonVisible = surveyEntity.TblSurveyAssigneds.Any(sa => sa.EmployeeId == request.EmployeeId && sa.IsLead) });
         }
         var users = await context.TblUsers.Where(u => u.Id == branchSurveyEntity.CreatedBy || u.Id == branchSurveyEntity.LastModifiedBy).AsNoTracking().ToListAsync(cancellationToken);
+        var surveyCommitees = await context.TblSurveyCommittees.AsNoTracking().ToListAsync(cancellationToken);
         return new GetBranchSurveyByIdResponse(new BranchSurveyResponse
         {
             Id = branchSurveyEntity.Id,
@@ -142,7 +143,10 @@ internal sealed class GetBranchSurveyByIdHandler(QubeFinDataContext context) : I
             CommiteeSubmitOn = branchSurveyEntity.CommiteeSubmitOn,
             IsApproved = branchSurveyEntity.IsApproved,
             IsRejected = branchSurveyEntity.IsRejected,
-            IsSubmitButtonVisible = (!branchSurveyEntity.IsSurveyorSubmit && branchSurveyEntity.Survey.TblSurveyAssigneds.Any(sa => sa.EmployeeId == request.EmployeeId && sa.IsLead)),
+            IsSubmitButtonVisible = branchSurveyEntity == null ? false :
+            (!branchSurveyEntity.IsSurveyorSubmit && branchSurveyEntity.Survey.TblSurveyAssigneds.Any(sa => sa.EmployeeId == request.EmployeeId && sa.IsLead)) ||
+            (!branchSurveyEntity.IsCommiteeSubmit && surveyCommitees.Any(c => c.EmployeeId == request.EmployeeId && c.IsActive && c.IsLead)) ||
+            (!branchSurveyEntity.IsApproved && !branchSurveyEntity.IsRejected) ? true : false,
 
             AuditInfo = new AuditInfo
             {
