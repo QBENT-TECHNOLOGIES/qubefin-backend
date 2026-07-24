@@ -143,11 +143,10 @@ internal sealed class GetBranchSurveyByIdHandler(QubeFinDataContext context) : I
             CommiteeSubmitOn = branchSurveyEntity.CommiteeSubmitOn,
             IsApproved = branchSurveyEntity.IsApproved,
             IsRejected = branchSurveyEntity.IsRejected,
-            IsSubmitButtonVisible = branchSurveyEntity == null ? false :
-            (!branchSurveyEntity.IsSurveyorSubmit && branchSurveyEntity.Survey.TblSurveyAssigneds.Any(sa => sa.EmployeeId == request.EmployeeId && sa.IsLead)) ||
-            (!branchSurveyEntity.IsCommiteeSubmit && surveyCommitees.Any(c => c.EmployeeId == request.EmployeeId && c.IsActive && c.IsLead)) ||
-            (!branchSurveyEntity.IsApproved && !branchSurveyEntity.IsRejected) ? true : false,
-
+            IsSubmitButtonVisible = branchSurveyEntity != null &&
+            ((!branchSurveyEntity.IsSurveyorSubmit && branchSurveyEntity.Survey.TblSurveyAssigneds.Any(sa => sa.EmployeeId == request.EmployeeId && sa.IsLead)) ||
+            (branchSurveyEntity.IsSurveyorSubmit && !branchSurveyEntity.IsCommiteeSubmit && surveyCommitees.Any(c => c.EmployeeId == request.EmployeeId && c.IsActive && c.IsLead)) ||
+            (branchSurveyEntity.IsSurveyorSubmit && branchSurveyEntity.IsCommiteeSubmit && !branchSurveyEntity.IsApproved && !branchSurveyEntity.IsRejected)),
             AuditInfo = new AuditInfo
             {
                 CreatedBy = users.FirstOrDefault(u => u.Id == branchSurveyEntity.CreatedBy)?.UserName ?? string.Empty,
