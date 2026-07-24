@@ -19,7 +19,6 @@ public class CreateBranchSurveyCommandValidator : AbstractValidator<CreateBranch
     {
         RuleFor(v => v.SurveyRequest).NotNull().WithMessage("Survey request is required.");
         RuleFor(v => v.SurveyRequest.SurveyId).NotEmpty().WithMessage("Survey ID is required.");
-        RuleFor(v => v.SurveyRequest.SurveyDate).NotNull().WithMessage("Survey date is required.");
     }
 }
 #endregion

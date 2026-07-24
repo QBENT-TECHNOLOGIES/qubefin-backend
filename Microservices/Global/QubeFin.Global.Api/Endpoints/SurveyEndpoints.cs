@@ -1,10 +1,12 @@
-﻿using MediatR;
+﻿using Azure.Core;
+using MediatR;
 using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
 using QubeFin.Core.Results;
 using QubeFin.Global.Application.SurveyUnit.Commands;
 using QubeFin.Global.Application.SurveyUnit.Models;
 using QubeFin.Global.Application.SurveyUnit.Queries;
+using QubeFin.Persistence.Models.App;
 using System.Security.Claims;
 
 namespace QubeFin.Global.Api.Endpoints
@@ -105,8 +107,10 @@ namespace QubeFin.Global.Api.Endpoints
                 return Results.Ok(result.Value);
             }).WithSummary("Get Branch Survey By Id");
 
-            app.MapPost("surveys/branch", async (CreateBranchSurveyCommand command, ISender sender) =>
+            app.MapPost("surveys/branch", async (ClaimsPrincipal principal, BranchSurveyRequest request, ISender sender) =>
             {
+                var userId = principal.Identity.GetUserId();
+                var command = new CreateBranchSurveyCommand(request, userId);
                 var result = await sender.Send(command);
                 if (result.IsFailed)
                 {
@@ -122,8 +126,10 @@ namespace QubeFin.Global.Api.Endpoints
                 return Results.Ok();
             }).WithSummary("Create Branch Survey");
 
-            app.MapPut("surveys/branch", async (CreateBranchSurveyCommand command, ISender sender) =>
+            app.MapPut("surveys/branch", async (ClaimsPrincipal principal, BranchSurveyRequest request, ISender sender) =>
             {
+                var userId = principal.Identity.GetUserId();
+                var command = new UpdateBranchSurveyCommand(request, userId);
                 var result = await sender.Send(command);
                 if (result.IsFailed)
                 {
