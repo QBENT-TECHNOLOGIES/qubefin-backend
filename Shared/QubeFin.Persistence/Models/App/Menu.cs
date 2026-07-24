@@ -1,4 +1,6 @@
-﻿namespace QubeFin.Persistence.Models.App;
+﻿using QubeFin.Persistence.Models.Global;
+
+namespace QubeFin.Persistence.Models.App;
 
 public class Menu
 {
@@ -33,6 +35,18 @@ public class Menu
         CreatedOn = createdOn;
         LastModifiedBy = lastModifiedBy;
         LastModifiedOn = lastModifiedOn;
+    }
+    public Menu(Guid id, string name, string icon, string? target, Guid? parentId, Guid userId, List<Permission> permissions)
+    {
+        Id = id;
+        Name = name;
+        Icon = icon;
+        Target = target;
+        ParentId = parentId;
+        if (permissions != null && permissions.Any())
+        {
+            _permissions.AddRange(permissions);
+        }
     }
 
     public static Menu Create(Guid id, string name, string icon, string? target, Guid? parentId, int position, Guid createdBy)

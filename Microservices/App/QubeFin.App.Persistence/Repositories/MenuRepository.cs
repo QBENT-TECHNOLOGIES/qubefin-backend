@@ -12,7 +12,7 @@ public interface IMenuRepository
     Task<int> GetMaxMenuPositionAsync();
     Task<IEnumerable<MenuTree>> GetTreeAsync();
     Task AddAsync(Menu menu);
-    void Update(Menu menu);
+    Task UpdateAsync(Menu menu, Guid userId);
     void Remove(Menu menu);
 }
 
@@ -67,8 +67,50 @@ public class MenuRepository(QubeFinDataContext context) : IMenuRepository
         throw new NotImplementedException();
     }
 
-    public void Update(Menu menu)
+    public async Task UpdateAsync(Menu menu, Guid userId)
     {
-        context.TblMenus.Update(menu.ToEntity());
+        var entity = await context.TblMenus
+                .Include(x => x.TblMenuPermissions)
+                .FirstOrDefaultAsync(x => x.Id == menu.Id);
+
+        if (entity == null)
+            throw new Exception("Menu not found.");
+
+        // Update parent
+        entity.Name = menu.Name;
+        entity.Icon = menu.Icon;
+        entity.Target = menu.Target;
+        entity.ParentId = menu.ParentId;
+        //entity.DisplayPosition = menu.DisplayPosition;
+        entity.LastModifiedBy = userId;
+        entity.LastModifiedOn = DateTime.Now;
+
+        // Remove deleted assignments
+        foreach (var existing in entity.TblMenuPermissions.ToList())
+        {
+            if (!menu.Permissions.Any(x => x.PermissionToken == existing.PermissionToken))
+            {
+                context.TblMenuPermissions.Remove(existing);
+            }
+        }
+
+        foreach (var permission in menu.Permissions)
+        {
+            var existing = entity.TblMenuPermissions.FirstOrDefault(x => x.PermissionToken == permission.PermissionToken);
+
+            if (existing == null)
+            {
+                // New assignment
+                var newMenuPermission = MenuPermission.Create(entity.Id, permission.PermissionToken, userId);
+                entity.TblMenuPermissions.Add(newMenuPermission.ToEntity());
+            }
+            else
+            {
+                // Existing assignment
+                existing.PermissionToken = permission.PermissionToken;
+                existing.LastModifiedBy = menu.LastModifiedBy;
+                existing.LastModifiedOn = DateTime.Now;
+            }
+        }
     }
 }

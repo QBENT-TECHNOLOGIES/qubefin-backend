@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using Azure.Core;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using QubeFin.App.Api.Requests;
 using QubeFin.App.Application.Menus.Commands;
@@ -6,6 +7,7 @@ using QubeFin.App.Application.Menus.Queries;
 using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
 using QubeFin.Core.Results;
+using QubeFin.Persistence.Models.App;
 using System.Security.Claims;
 
 namespace QubeFin.App.Api.Endpoints;
@@ -88,7 +90,14 @@ public class MenuEndpoints : IEndpoint
             }
             var userId = principal.Identity.GetUserId();
 
-            await sender.Send(new UpdateMenuCommand(id, menu.Name, menu.Icon, menu.Target, menu.ParentId, userId));
+            var permissions = menu.Permissions
+                .Select(x => new Permission(
+                x.PermissionToken,
+                x.DisplayPosition))
+            .ToList();
+
+
+            await sender.Send(new UpdateMenuCommand(id, menu.Name, menu.Icon, menu.Target, menu.ParentId, userId, permissions));
             return Results.Ok();
         })
         .WithSummary("Update Menu");
