@@ -11,6 +11,6 @@ public record MenuRequest
 
 public record PermissionRequest
 {
-    public string PermissionToken { get; set; } = string.Empty;
+    public Guid Id { get; set; }
     public int DisplayPosition { get; set; }
 }

@@ -1034,10 +1034,28 @@ public partial class QubeFinDataContext : DbContext
             entity.ToTable("Tbl_LeaveEvent", "Hrms");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.ApplicantStatusText).HasMaxLength(50);
             entity.Property(e => e.EventButtonText).HasMaxLength(50);
-            entity.Property(e => e.EventStatusText).HasMaxLength(50);
-            entity.Property(e => e.StatusColor).HasMaxLength(10);
+            entity.Property(e => e.EventStatus).HasMaxLength(50);
+
+            entity.HasOne(d => d.LeaveType).WithMany(p => p.TblLeaveEvents)
+                .HasForeignKey(d => d.LeaveTypeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_LeaveEvent_Tbl_LeaveType");
+
+            entity.HasOne(d => d.OrganizationUnitType).WithMany(p => p.TblLeaveEvents)
+                .HasForeignKey(d => d.OrganizationUnitTypeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_LeaveEvent_Tbl_OrganizationUnitType");
+
+            entity.HasOne(d => d.ReceiverPost).WithMany(p => p.TblLeaveEvents)
+                .HasForeignKey(d => d.ReceiverPostId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_LeaveEvent_Tbl_Post");
+
+            entity.HasOne(d => d.SalaryGrade).WithMany(p => p.TblLeaveEvents)
+                .HasForeignKey(d => d.SalaryGradeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_LeaveEvent_Tbl_SalaryGrade");
         });
 
         modelBuilder.Entity<TblLeaveRequest>(entity =>
@@ -1049,16 +1067,6 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Reason).HasMaxLength(500);
             entity.Property(e => e.RequestDate).HasColumnType("datetime");
             entity.Property(e => e.TotalDays).HasComputedColumnSql("(datediff(day,[FromDate],[ToDate])+(1))", false);
-
-            entity.HasOne(d => d.CalenderYear).WithMany(p => p.TblLeaveRequests)
-                .HasForeignKey(d => d.CalenderYearId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Tbl_LeaveRequest_Tbl_CalenderYear");
-
-            entity.HasOne(d => d.StatusNavigation).WithMany(p => p.TblLeaveRequests)
-                .HasForeignKey(d => d.Status)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_LeaveRequest_Status");
         });
 
         modelBuilder.Entity<TblLeaveRequestDocument>(entity =>
@@ -1079,14 +1087,37 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.EventDate).HasPrecision(0);
             entity.Property(e => e.Remarks).HasMaxLength(500);
+
+            entity.HasOne(d => d.LeaveEvent).WithMany(p => p.TblLeaveRequestEventLeaveEvents)
+                .HasForeignKey(d => d.LeaveEventId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_LeaveRequestEvent_Tbl_LeaveEvent");
+
+            entity.HasOne(d => d.LeaveRequest).WithMany(p => p.TblLeaveRequestEvents)
+                .HasForeignKey(d => d.LeaveRequestId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_LeaveRequestEvent_Tbl_LeaveRequest");
+
+            entity.HasOne(d => d.NextLeaveEvent).WithMany(p => p.TblLeaveRequestEventNextLeaveEvents)
+                .HasForeignKey(d => d.NextLeaveEventId)
+                .HasConstraintName("FK_Tbl_LeaveRequestEvent_Tbl_LeaveEvent1");
+
+            entity.HasOne(d => d.ReceiverDesignation).WithMany(p => p.TblLeaveRequestEventReceiverDesignations)
+                .HasForeignKey(d => d.ReceiverDesignationId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_LeaveRequestEvent_Tbl_Designation1");
+
+            entity.HasOne(d => d.SenderDesignation).WithMany(p => p.TblLeaveRequestEventSenderDesignations)
+                .HasForeignKey(d => d.SenderDesignationId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_LeaveRequestEvent_Tbl_Designation");
         });
 
         modelBuilder.Entity<TblLeaveStatus>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Tbl_Leav__3214EC0775329299");
-
             entity.ToTable("Tbl_LeaveStatus", "Hrms");
 
+            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Title).HasMaxLength(50);
         });
 
@@ -1639,15 +1670,14 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
-            entity.Property(e => e.PermissionToken).HasMaxLength(20);
 
             entity.HasOne(d => d.Menu).WithMany(p => p.TblMenuPermissions)
                 .HasForeignKey(d => d.MenuId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_MenuPermission_Tbl_Menu");
 
-            entity.HasOne(d => d.PermissionTokenNavigation).WithMany(p => p.TblMenuPermissions)
-                .HasForeignKey(d => d.PermissionToken)
+            entity.HasOne(d => d.Permission).WithMany(p => p.TblMenuPermissions)
+                .HasForeignKey(d => d.PermissionId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_MenuPermission_Tbl_Permission");
         });
@@ -1757,10 +1787,15 @@ public partial class QubeFinDataContext : DbContext
 
         modelBuilder.Entity<TblPermission>(entity =>
         {
-            entity.HasKey(e => e.PermissionToken).HasName("PK_Tbl_Permission_1");
+            entity.HasKey(e => e.Id).HasName("PK_Tbl_Permission_1");
 
             entity.ToTable("Tbl_Permission", "Auth");
 
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.BackgroundClass).HasMaxLength(200);
+            entity.Property(e => e.Description).HasMaxLength(50);
+            entity.Property(e => e.Icon).HasMaxLength(30);
+            entity.Property(e => e.IconClass).HasMaxLength(200);
             entity.Property(e => e.PermissionToken)
                 .HasMaxLength(20)
                 .HasDefaultValue("", "DF__Tbl_Permi__Acces__1EA48E88");

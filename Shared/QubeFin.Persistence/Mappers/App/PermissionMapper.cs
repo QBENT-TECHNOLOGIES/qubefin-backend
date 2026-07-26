@@ -12,7 +12,12 @@ public static class PermissionMapper
     public static Permission ToDomain(this Entity entity)
     {
         return new Permission(
+            entity.Id,
             entity.PermissionToken,
+            entity.Description,
+            entity.Icon,
+            entity.BackgroundClass,
+            entity.IconClass,
             entity.DisplayPosition
             );
     }
@@ -21,7 +26,12 @@ public static class PermissionMapper
     {
         return new Entity
         {
+            Id = domain.Id,
             PermissionToken = domain.PermissionToken,
+            Description = domain.Description,
+            Icon = domain.Icon,
+            BackgroundClass = domain.BackgroundClass,
+            IconClass = domain.IconClass,
             DisplayPosition = domain.DisplayPosition
         };
     }

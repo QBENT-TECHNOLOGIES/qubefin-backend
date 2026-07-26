@@ -13,5 +13,7 @@ public partial class TblOrganizationUnitType
 
     public int LevelNo { get; set; }
 
+    public virtual ICollection<TblLeaveEvent> TblLeaveEvents { get; set; } = new List<TblLeaveEvent>();
+
     public virtual ICollection<TblOrganizationUnit> TblOrganizationUnits { get; set; } = new List<TblOrganizationUnit>();
 }

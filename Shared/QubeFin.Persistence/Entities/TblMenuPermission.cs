@@ -9,7 +9,7 @@ public partial class TblMenuPermission
 
     public Guid MenuId { get; set; }
 
-    public string PermissionToken { get; set; } = null!;
+    public Guid PermissionId { get; set; }
 
     public Guid CreatedBy { get; set; }
 
@@ -21,7 +21,7 @@ public partial class TblMenuPermission
 
     public virtual TblMenu Menu { get; set; } = null!;
 
-    public virtual TblPermission PermissionTokenNavigation { get; set; } = null!;
+    public virtual TblPermission Permission { get; set; } = null!;
 
     public virtual ICollection<TblRoleMenuPermission> TblRoleMenuPermissions { get; set; } = new List<TblRoleMenuPermission>();
 

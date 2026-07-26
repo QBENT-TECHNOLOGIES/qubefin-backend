@@ -14,6 +14,4 @@ public partial class TblCalenderYear
     public DateOnly EndDate { get; set; }
 
     public bool IsLocked { get; set; }
-
-    public virtual ICollection<TblLeaveRequest> TblLeaveRequests { get; set; } = new List<TblLeaveRequest>();
 }

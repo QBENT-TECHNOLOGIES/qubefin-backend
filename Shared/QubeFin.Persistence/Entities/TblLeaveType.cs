@@ -41,5 +41,7 @@ public partial class TblLeaveType
 
     public bool IsMonthlyCredit { get; set; }
 
+    public virtual ICollection<TblLeaveEvent> TblLeaveEvents { get; set; } = new List<TblLeaveEvent>();
+
     public virtual ICollection<TblLeaveTransaction> TblLeaveTransactions { get; set; } = new List<TblLeaveTransaction>();
 }

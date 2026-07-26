@@ -4,7 +4,7 @@ namespace QubeFin.Persistence.Models.App;
 
 public class Menu
 {
-    private readonly List<Permission> _permissions = [];
+    private readonly List<PermissionAssigned> _permissions = [];
 
     public Guid Id { get; private set; }
     public string Name { get; private set; } = null!;
@@ -18,7 +18,7 @@ public class Menu
     public Guid? LastModifiedBy { get; private set; }
     public DateTime? LastModifiedOn { get; private set; }
 
-    public IReadOnlyCollection<Permission> Permissions =>   _permissions.AsReadOnly();
+    public IReadOnlyCollection<PermissionAssigned> Permissions =>   _permissions.AsReadOnly();
 
     public Menu() { }
     public Menu(Guid id, string name, string icon, string? target, Guid? parentId, int position, bool isActive, 
@@ -36,7 +36,7 @@ public class Menu
         LastModifiedBy = lastModifiedBy;
         LastModifiedOn = lastModifiedOn;
     }
-    public Menu(Guid id, string name, string icon, string? target, Guid? parentId, Guid userId, List<Permission> permissions)
+    public Menu(Guid id, string name, string icon, string? target, Guid? parentId, Guid userId, List<PermissionAssigned> permissions)
     {
         Id = id;
         Name = name;
@@ -49,7 +49,7 @@ public class Menu
         }
     }
 
-    public static Menu Create(Guid id, string name, string icon, string? target, Guid? parentId, int position, Guid createdBy)
+    public static Menu Create(Guid id, string name, string icon, string? target, Guid? parentId, int position, Guid userId, List<PermissionAssigned> permissions)
     {
         var menu = new Menu
         {
@@ -60,9 +60,14 @@ public class Menu
             ParentId = parentId,
             DisplayPosition = position,
             IsActive = true,
-            CreatedBy = createdBy,
-            CreatedOn = DateTime.UtcNow
+            CreatedBy = userId,
+            CreatedOn = DateTime.Now,
         };
+
+        if (permissions?.Any() == true)
+        {
+            menu._permissions.AddRange(permissions);
+        }
 
         return menu;
     }

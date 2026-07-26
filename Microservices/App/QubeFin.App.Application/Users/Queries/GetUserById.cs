@@ -11,7 +11,7 @@ public record GetUserByIdQuery(Guid Id) : IRequest<Result<GetUserByIdResponse>>;
 #endregion
 
 #region --- RESPONSE ---
-public record GetUserByIdResponse(Guid Id, string UserName, Guid? EmployeeId, bool IsActive, bool IsSuperAdmin);
+public record GetUserByIdResponse(Guid Id, string UserName, Guid? EmployeeId, string Employee, string MfaSecret, bool HasMfaEnabled, bool IsActive, bool IsSuperAdmin);
 #endregion
 
 #region --- HANDLER ---
@@ -22,8 +22,9 @@ internal sealed class GetUserByIdQueryHandler(QubeFinDataContext context)
     {
         var user = await context
             .TblUsers
+            .Include(m => m.Employee)
             .Where(m => m.Id == request.Id)
-            .Select(m => new GetUserByIdResponse(m.Id, m.UserName, m.EmployeeId, m.IsActive, m.IsSuperAdmin))
+            .Select(m => new GetUserByIdResponse(m.Id, m.UserName, m.EmployeeId, m.Employee == null ? string.Empty : m.Employee.FullName, m.MfaSecret, m.HasMfaEnabled, m.IsActive, m.IsSuperAdmin))
             .FirstOrDefaultAsync(cancellationToken);
 
         if (user is null)

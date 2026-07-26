@@ -8,7 +8,7 @@ using QubeFin.Persistence.Models.Global;
 namespace QubeFin.App.Application.Menus.Commands;
 
 #region --- COMMAND ---
-public record UpdateMenuCommand(Guid Id, string Name, string Icon, string? Target, Guid ParentId, Guid UserId, List<Permission> Permissions) : IRequest<Result<UpdateMenuResponse>>;
+public record UpdateMenuCommand(Guid Id, string Name, string Icon, string? Target, Guid ParentId, Guid UserId, List<PermissionAssigned> Permissions) : IRequest<Result<UpdateMenuResponse>>;
 #endregion
 
 #region --- RESPONSE ---

@@ -37,9 +37,10 @@ public class MenuRepository(QubeFinDataContext context) : IMenuRepository
         return menu;
     }
 
-    public Task<int> GetMaxMenuPositionAsync()
+    public async Task<int> GetMaxMenuPositionAsync()
     {
-        throw new NotImplementedException();
+        var lastPosition = await context.TblMenus.MaxAsync(m => m.DisplayPosition);
+        return lastPosition == 0 ? 0 : lastPosition;
     }
 
     public async Task<IEnumerable<MenuTree>> GetTreeAsync()
@@ -88,7 +89,7 @@ public class MenuRepository(QubeFinDataContext context) : IMenuRepository
         // Remove deleted assignments
         foreach (var existing in entity.TblMenuPermissions.ToList())
         {
-            if (!menu.Permissions.Any(x => x.PermissionToken == existing.PermissionToken))
+            if (!menu.Permissions.Any(x => x.Id == existing.PermissionId))
             {
                 context.TblMenuPermissions.Remove(existing);
             }
@@ -96,18 +97,18 @@ public class MenuRepository(QubeFinDataContext context) : IMenuRepository
 
         foreach (var permission in menu.Permissions)
         {
-            var existing = entity.TblMenuPermissions.FirstOrDefault(x => x.PermissionToken == permission.PermissionToken);
+            var existing = entity.TblMenuPermissions.FirstOrDefault(x => x.Id == permission.Id);
 
             if (existing == null)
             {
                 // New assignment
-                var newMenuPermission = MenuPermission.Create(entity.Id, permission.PermissionToken, userId);
+                var newMenuPermission = MenuPermission.Create(entity.Id, permission.Id, userId);
                 entity.TblMenuPermissions.Add(newMenuPermission.ToEntity());
             }
             else
             {
                 // Existing assignment
-                existing.PermissionToken = permission.PermissionToken;
+                existing.PermissionId = permission.Id;
                 existing.LastModifiedBy = menu.LastModifiedBy;
                 existing.LastModifiedOn = DateTime.Now;
             }

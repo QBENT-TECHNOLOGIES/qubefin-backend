@@ -12,14 +12,12 @@ public record GetMenuByIdQuery(Guid Id) : IRequest<Result<GetMenuByIdResponse>>;
 #endregion
 
 #region --- RESPONSE ---
-//public sealed record GetMenuByIdResponse(Guid Id, string Name, string Icon, string? Target, Guid? ParentId, int DisplayPosition, bool IsActive,
-//    string CreatedBy, DateTime CreatedOn, string? LastModifiedBy, DateTime? LastModifiedOn, IReadOnlyList<MenuHierarchyItem> Hierarchy, IReadOnlyList<Permission> Permissions);
 public sealed record GetMenuByIdResponse
 {
     public Guid Id { get; init; }
     public string Name { get; init; } = string.Empty;
     public string Icon { get; init; } = string.Empty;
-    public string Target { get; init; } = string.Empty;
+    public string? Target { get; init; }
     public Guid? ParentId { get; init; }
     public int DisplayPosition { get; init; }
     public bool IsActive { get; set; }
@@ -32,7 +30,12 @@ public sealed record GetMenuByIdResponse
 }
 public sealed record PermissionResponse
 {
+    public Guid Id { get; init; }
     public string PermissionToken { get; init; } = string.Empty;
+    public string Description { get; init; } = string.Empty;
+    public string Icon { get; init; } = string.Empty;
+    public string BackgroundClass { get; init; } = string.Empty;
+    public string IconClass { get; init; } = string.Empty;
     public int DisplayPosition { get; init; }
     public bool Checked { get; init; }
 }
@@ -97,11 +100,16 @@ internal sealed class GetMenuByIdQueryHandler(QubeFinDataContext context)
                 Hierarchy = hierarchy,
 
                 Permissions = m.TblMenuPermissions
-                    .OrderBy(x  => x.PermissionTokenNavigation.DisplayPosition)
+                    .OrderBy(x  => x.Permission.DisplayPosition)
                     .Select(p => new PermissionResponse
                     {
-                        PermissionToken = p.PermissionTokenNavigation.PermissionToken,
-                        DisplayPosition = p.PermissionTokenNavigation.DisplayPosition
+                        Id = p.Permission.Id,
+                        PermissionToken = p.Permission.PermissionToken,
+                        Description = p.Permission.Description,
+                        Icon = p.Permission.Icon,
+                        BackgroundClass = p.Permission.BackgroundClass,
+                        IconClass = p.Permission.IconClass,
+                        DisplayPosition = p.Permission.DisplayPosition
                     })
                     .ToList()
             })

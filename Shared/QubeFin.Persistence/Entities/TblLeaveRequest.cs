@@ -25,9 +25,5 @@ public partial class TblLeaveRequest
 
     public byte Status { get; set; }
 
-    public Guid CalenderYearId { get; set; }
-
-    public virtual TblCalenderYear CalenderYear { get; set; } = null!;
-
-    public virtual TblLeaveStatus StatusNavigation { get; set; } = null!;
+    public virtual ICollection<TblLeaveRequestEvent> TblLeaveRequestEvents { get; set; } = new List<TblLeaveRequestEvent>();
 }

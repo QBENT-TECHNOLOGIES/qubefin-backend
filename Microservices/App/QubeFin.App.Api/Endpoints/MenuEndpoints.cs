@@ -77,7 +77,11 @@ public class MenuEndpoints : IEndpoint
             }
             var userId = principal.Identity.GetUserId();
 
-            await sender.Send(new CreateMenuCommand(menu.Name, menu.Icon, menu.Target, menu.ParentId, userId));
+            var permissions = menu.Permissions
+                .Select(x => new PermissionAssigned { Id = x.Id })
+            .ToList();
+
+            await sender.Send(new CreateMenuCommand(menu.Name, menu.Icon, menu.Target, menu.ParentId, userId, permissions));
             return Results.Ok();
         })
        .WithSummary("Create Menu");
@@ -91,9 +95,7 @@ public class MenuEndpoints : IEndpoint
             var userId = principal.Identity.GetUserId();
 
             var permissions = menu.Permissions
-                .Select(x => new Permission(
-                x.PermissionToken,
-                x.DisplayPosition))
+                .Select(x => new PermissionAssigned { Id = x.Id })
             .ToList();
 
 

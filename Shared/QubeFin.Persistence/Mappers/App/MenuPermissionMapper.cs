@@ -10,7 +10,7 @@ public static class MenuPermissionMapper
         return new MenuPermission(
             entity.Id,
             entity.MenuId,
-            entity.PermissionToken,
+            entity.PermissionId,
             entity.CreatedBy,
             entity.CreatedOn,
             entity.LastModifiedBy,
@@ -23,7 +23,7 @@ public static class MenuPermissionMapper
         {
             Id = domain.Id,
             MenuId = domain.MenuId,
-            PermissionToken = domain.PermissionToken,
+            PermissionId = domain.PermissionId,
             CreatedBy = domain.CreatedBy,
             CreatedOn = domain.CreatedOn,
             LastModifiedBy = domain.LastModifiedBy,
