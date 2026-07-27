@@ -68,10 +68,10 @@ public class Attendance
 
         return attendance;
     }
-    public void MarchCheckOut(TimeOnly? OutTime, decimal? OutTimeLat, decimal? OutTimeLong)
+    public void MarchCheckOut(TimeOnly? outTime, decimal? outTimeLat, decimal? outTimeLong)
     {
-        ActualOutTime = OutTime;
-        OutTimeLat = OutTimeLat;
-        OutTimeLong = OutTimeLong;
+        ActualOutTime = outTime;
+        OutTimeLat = outTimeLat;
+        OutTimeLong = outTimeLong;
     }
 }

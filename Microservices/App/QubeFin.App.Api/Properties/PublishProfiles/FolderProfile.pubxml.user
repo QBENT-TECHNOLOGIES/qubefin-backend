@@ -3,7 +3,7 @@
 <Project>
   <PropertyGroup>
     <_PublishTargetUrl>D:\Products\Microfinance\QubeFin\qubefin-backend\Microservices\App\QubeFin.App.Api\bin\Release\net10.0\publish\</_PublishTargetUrl>
-    <History>True|2026-07-08T11:02:21.4312488Z||;</History>
+    <History>True|2026-07-22T09:14:05.2381607Z||;True|2026-07-08T16:32:21.4312488+05:30||;</History>
     <LastFailureDetails />
   </PropertyGroup>
 </Project>

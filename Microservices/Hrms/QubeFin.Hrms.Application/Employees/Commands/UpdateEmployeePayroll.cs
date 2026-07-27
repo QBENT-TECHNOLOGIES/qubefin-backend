@@ -14,7 +14,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands;
 
 #region --- COMMAND ---
 public record UpdateEmployeePayrollCommand(
-        Guid Id, Guid BankId, long BankAccountNo, string BankHolderName, string BankBranch, string BankAccountType,
+        Guid Id, Guid? BankId, long BankAccountNo, string BankHolderName, string BankBranch, string BankAccountType,
         bool HasEsiEligible, string? EsiIpNumber, string? UniversalAccountNumber, bool IsPayrollActive,
         Guid UserId
     ) : IRequest<Result<UpdateEmployeePayrollResponse>>;

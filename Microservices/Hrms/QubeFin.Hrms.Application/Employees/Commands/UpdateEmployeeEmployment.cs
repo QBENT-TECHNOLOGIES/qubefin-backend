@@ -6,6 +6,7 @@ using QubeFin.Core.Results;
 using QubeFin.Hrms.Application.Employees.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Mappers.Hrms;
 using QubeFin.Persistence.Models.App;
 using QubeFin.Persistence.Models.Hrms;
@@ -56,7 +57,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
                 return new ValidationError("Employee not exist given id.");
             }
             // 2. Project incoming requests directly into domain entity shapes
-            var updatedEmploymentEntityList = new List<EmployeeEmployment>();
+            var updatedEmploymentEntityList = new List<TblEmployeeEmployment>();
 
             var orderByQualifications = request.Employments.OrderBy(m => m.Sequence).ToList();
             for (int i = 0; i < orderByQualifications.Count; i++)
@@ -65,30 +66,33 @@ namespace QubeFin.Hrms.Application.Employees.Commands
                 int sequenceValue = i + 1;
                 //int sequenceValue = i + 1;
 
-                var employmentEntity = new EmployeeEmployment(
-                    id: Guid.NewGuid(),
-                    employerName: req.EmployerName,
-                    designation: req.Designation,
-                    fromDate: req.FromDate,
-                    toDate: req.ToDate,
-                    lastDrawnSalary: req.LastDrawnSalary,
-                    jobTitle: req.JobTitle,
-                    nocFileName: req.NocFileName,
-                    nocFileNo: req.NocFileNo,
-                    expCertFileName: req.ExpCertFileName,
-                    expCertFileNo: req.ExpCertFileNo,
-                    employeeId: request.Id,
-                    sequence: sequenceValue, // Integer index from your loop (e.g., i + 1)
-                    createdBy: request.LastModifiedBy
-                );
+                var employmentEntity = new TblEmployeeEmployment(){
+                    Id = req.Id,
+                    EmployeeId = request.Id,
+                    EmployerName = req.EmployerName,
+                    Designation = req.Designation,
+                    FromDate = DateOnly.FromDateTime(req.FromDate),
+                    ToDate = DateOnly.FromDateTime(req.ToDate),
+                    LastDrawnSalary = req.LastDrawnSalary,
+                    JobTitle = req.JobTitle,
+                    NocFileName = req.NocFileName,
+                    NocFileNo = req.NocFileNo,
+                    ExpCertFileName = req.ExpCertFileName,
+                    ExpCertFileNo = req.ExpCertFileNo,
+                    Sequence = sequenceValue,
+                    CreatedBy = request.LastModifiedBy,
+                    CreatedOn = DateTime.Now
+                };
 
                 updatedEmploymentEntityList.Add(employmentEntity);
             }
-
-            // 3. Atomically overwrite old items and explicitly log modifications
-            existingEmployee.ReplaceEmployments(updatedEmploymentEntityList);
-
-            await employeeRepository.UpdateAsync(existingEmployee);
+            var emp = await context.TblEmployeeEmployments.Where(m => m.EmployeeId == request.Id).ToListAsync(cancellationToken: cancellationToken);
+            if (emp != null && emp.Count() > 0)
+            {
+                context.TblEmployeeEmployments.RemoveRange(emp);
+            }
+            context.TblEmployeeEmployments.AddRange(updatedEmploymentEntityList);
+            existingEmployee.SetModified(request.LastModifiedBy);
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Ok(new UpdateEmployeeEmploymentResponse(true));
 

@@ -1,13 +1,14 @@
 ﻿using FluentResults;
 using MediatR;
 using QubeFin.App.Persistence.Repositories;
-using QubeFin.Core.Results;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Models.App;
+using QubeFin.Persistence.Models.Global;
 
 namespace QubeFin.App.Application.Menus.Commands;
 
 #region --- COMMAND ---
-public record UpdateMenuCommand(Guid Id, string Name, string Icon, string? Target, Guid ParentId, Guid UserId) : IRequest<Result<UpdateMenuResponse>>;
+public record UpdateMenuCommand(Guid Id, string Name, string Icon, string? Target, Guid ParentId, Guid UserId, List<PermissionAssigned> Permissions) : IRequest<Result<UpdateMenuResponse>>;
 #endregion
 
 #region --- RESPONSE ---
@@ -20,14 +21,9 @@ internal sealed class UpdateMenuCommandHandler(IMenuRepository menuRepository, I
 {
     public async Task<Result<UpdateMenuResponse>> Handle(UpdateMenuCommand request, CancellationToken cancellationToken)
     {
-        var menu = await menuRepository.GetByIdAsync(request.Id);
-        if (menu is null)
-        {
-            return new RecordNotFoundError($"Menu not found for the given Id");
-        }
+        var menu = new Menu(request.Id, request.Name, request.Icon, request.Target, request.ParentId, request.UserId, request.Permissions);
 
-        menu.Update(request.Name, request.Icon, request.Target, request.ParentId, 0, request.UserId);
-        menuRepository.Update(menu);
+        await menuRepository.UpdateAsync(menu, request.UserId);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Ok(new UpdateMenuResponse(true));

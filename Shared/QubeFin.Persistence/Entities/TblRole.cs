@@ -25,7 +25,5 @@ public partial class TblRole
 
     public virtual ICollection<TblDesignationRole> TblDesignationRoles { get; set; } = new List<TblDesignationRole>();
 
-    public virtual ICollection<TblRoleMenu> TblRoleMenus { get; set; } = new List<TblRoleMenu>();
-
-    public virtual ICollection<TblRolePermission> TblRolePermissions { get; set; } = new List<TblRolePermission>();
+    public virtual ICollection<TblRoleMenuPermission> TblRoleMenuPermissions { get; set; } = new List<TblRoleMenuPermission>();
 }

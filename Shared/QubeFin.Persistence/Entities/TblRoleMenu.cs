@@ -5,6 +5,8 @@ namespace QubeFin.Persistence.Entities;
 
 public partial class TblRoleMenu
 {
+    public Guid Id { get; set; }
+
     public Guid RoleId { get; set; }
 
     public Guid MenuId { get; set; }
@@ -16,4 +18,6 @@ public partial class TblRoleMenu
     public virtual TblMenu Menu { get; set; } = null!;
 
     public virtual TblRole Role { get; set; } = null!;
+
+    public virtual ICollection<TblRolePermission> TblRolePermissions { get; set; } = new List<TblRolePermission>();
 }

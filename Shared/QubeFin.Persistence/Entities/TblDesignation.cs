@@ -33,6 +33,10 @@ public partial class TblDesignation
 
     public virtual ICollection<TblGroup> TblGroups { get; set; } = new List<TblGroup>();
 
+    public virtual ICollection<TblLeaveRequestEvent> TblLeaveRequestEventReceiverDesignations { get; set; } = new List<TblLeaveRequestEvent>();
+
+    public virtual ICollection<TblLeaveRequestEvent> TblLeaveRequestEventSenderDesignations { get; set; } = new List<TblLeaveRequestEvent>();
+
     public virtual ICollection<TblLoanApplicationWorkflow> TblLoanApplicationWorkflows { get; set; } = new List<TblLoanApplicationWorkflow>();
 
     public virtual ICollection<TblLoanApplication> TblLoanApplications { get; set; } = new List<TblLoanApplication>();

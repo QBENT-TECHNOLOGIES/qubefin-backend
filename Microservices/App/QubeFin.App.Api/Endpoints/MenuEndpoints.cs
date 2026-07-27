@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using Azure.Core;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using QubeFin.App.Api.Requests;
 using QubeFin.App.Application.Menus.Commands;
@@ -6,6 +7,7 @@ using QubeFin.App.Application.Menus.Queries;
 using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
 using QubeFin.Core.Results;
+using QubeFin.Persistence.Models.App;
 using System.Security.Claims;
 
 namespace QubeFin.App.Api.Endpoints;
@@ -26,6 +28,17 @@ public class MenuEndpoints : IEndpoint
         .WithName("GetMenuTree")
         .WithSummary("Get menu hierarchy")
         .WithDescription("Returns the complete hierarchical tree of all application menus.")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
+
+        app.MapGet("menus/parent-only", async (ISender sender, CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(new GetParentMenusQuery(), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithName("GetParentMenus")
+        .WithSummary("Get parent menus")
+        .WithDescription("Returns the parent menus only.")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
 
@@ -64,7 +77,11 @@ public class MenuEndpoints : IEndpoint
             }
             var userId = principal.Identity.GetUserId();
 
-            await sender.Send(new CreateMenuCommand(menu.Name, menu.Icon, menu.Target, menu.ParentId, userId));
+            var permissions = menu.Permissions
+                .Select(x => new PermissionAssigned { Id = x.Id })
+            .ToList();
+
+            await sender.Send(new CreateMenuCommand(menu.Name, menu.Icon, menu.Target, menu.ParentId, userId, permissions));
             return Results.Ok();
         })
        .WithSummary("Create Menu");
@@ -77,7 +94,12 @@ public class MenuEndpoints : IEndpoint
             }
             var userId = principal.Identity.GetUserId();
 
-            await sender.Send(new UpdateMenuCommand(id, menu.Name, menu.Icon, menu.Target, menu.ParentId, userId));
+            var permissions = menu.Permissions
+                .Select(x => new PermissionAssigned { Id = x.Id })
+            .ToList();
+
+
+            await sender.Send(new UpdateMenuCommand(id, menu.Name, menu.Icon, menu.Target, menu.ParentId, userId, permissions));
             return Results.Ok();
         })
         .WithSummary("Update Menu");
