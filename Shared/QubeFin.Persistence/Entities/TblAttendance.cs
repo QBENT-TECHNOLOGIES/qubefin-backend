@@ -25,13 +25,15 @@ public partial class TblAttendance
 
     public bool IsLateEntry { get; set; }
 
-    public decimal? InTimeLat { get; set; }
+    public decimal? InTimeLatitude { get; set; }
 
-    public decimal? InTimeLong { get; set; }
+    public decimal? InTimeLongitude { get; set; }
 
-    public decimal? OutTimeLat { get; set; }
+    public decimal? OutTimeLatitude { get; set; }
 
-    public decimal? OutTimeLong { get; set; }
+    public decimal? OutTimeLongitude { get; set; }
+
+    public virtual TblEmployee Employee { get; set; } = null!;
 
     public virtual TblOrganizationUnit? OrganizationUnit { get; set; }
 }
