@@ -37,7 +37,7 @@ namespace QubeFin.Global.Api.Endpoints
                         return Results.BadRequest(result.Errors[0]);
                     }
                 }
-                return Results.Ok(result);
+                return Results.Ok(result.Value);
             }).WithSummary("Get Survey By Id");
 
             app.MapPost("surveys", async (ClaimsPrincipal principal, SurveyRequest request, ISender sender) =>
@@ -103,7 +103,7 @@ namespace QubeFin.Global.Api.Endpoints
                         return Results.BadRequest(result.Errors[0]);
                     }
                 }
-                return Results.Ok(result);
+                return Results.Ok(result.Value);
             }).WithSummary("Get Branch Survey By Id");
 
             app.MapPost("surveys/branch", async (ClaimsPrincipal principal, BranchSurveyRequest request, ISender sender) =>
