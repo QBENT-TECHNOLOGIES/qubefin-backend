@@ -13,7 +13,7 @@ namespace QubeFin.Hrms.Application.Attendances.Commands
     #endregion
 
     #region --- RESPONSE ---
-    public record CreateAttendanceResponse(bool Created);
+    public record CreateAttendanceResponse(bool success, string message);
     #endregion
 
     #region --- HANDLER ---
@@ -37,7 +37,7 @@ namespace QubeFin.Hrms.Application.Attendances.Commands
             }
 
             await unitOfWork.SaveChangesAsync(cancellationToken);
-            return Result.Ok(new CreateAttendanceResponse(true));
+            return Result.Ok(new CreateAttendanceResponse(true, $"{(todayAttendance is null ? "Checked In Success" : "Checked Out Success")}"));
         }
     }
     #endregion

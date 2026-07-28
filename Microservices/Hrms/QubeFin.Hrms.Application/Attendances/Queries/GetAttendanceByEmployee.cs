@@ -20,7 +20,7 @@ public class GetAttendanceByEmployeeQueryValidator : AbstractValidator<GetAttend
 }
 #endregion
 #region --- RESPONSE ---
-public record GetByIdResponse(Attendance? attendance);
+public record GetByIdResponse(Attendance? response);
 #endregion
 
 #region --- HANDLER ---

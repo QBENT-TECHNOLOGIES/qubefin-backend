@@ -21,7 +21,7 @@ public class GetAttendanceRegularizationsByIdQueryValidator : AbstractValidator<
 #endregion
 
 #region --- RESPONSE ---
-public record GetAttendanceRegularizationsByIdResponse(AttendanceRegularization? regularization);
+public record GetAttendanceRegularizationsByIdResponse(AttendanceRegularization? response);
 #endregion
 
 #region --- HANDLER ---

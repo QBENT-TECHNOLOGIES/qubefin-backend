@@ -5,7 +5,6 @@ using QubeFin.Core.Identity;
 using QubeFin.Hrms.Application.Attendances.Commands;
 using QubeFin.Hrms.Application.Attendances.Models;
 using QubeFin.Hrms.Application.Attendances.Queries;
-using QubeFin.Persistence.Models.App;
 using System.Security.Claims;
 
 namespace QubeFin.Hrms.Api.Endpoints;
@@ -21,8 +20,19 @@ public class AttendanceEndpoints : IEndpoint
                 return Results.Forbid();
             }
             var empId = principal.Identity.GetEmployeeId();
-            var savedResult = await sender.Send(new CreateAttendanceCommand(empId, command.time, command.Lat, command.Long));
-            return Results.Ok(savedResult);
+            var result = await sender.Send(new CreateAttendanceCommand(empId, command.time, command.Lat, command.Long));
+            if (result.IsFailed)
+            {
+                if (result.Errors[0] is QubeFin.Core.Results.RecordNotFoundError)
+                {
+                    return Results.NotFound(result.Errors[0]);
+                }
+                if (result.Errors[0] is QubeFin.Core.Results.ValidationError)
+                {
+                    return Results.BadRequest(result.Errors[0]);
+                }
+            }
+            return Results.Ok(result.Value);
         }).WithSummary("Attendance Check in and Check out Saved");
 
         app.MapGet("attendances", async (ClaimsPrincipal principal, ISender sender) =>
@@ -33,7 +43,7 @@ public class AttendanceEndpoints : IEndpoint
             }
             var empId = principal.Identity.GetEmployeeId();
             var response = await sender.Send(new GetAttendanceByEmployeeQuery(empId));
-            return Results.Ok(response);
+            return Results.Ok(response.Value);
         }).WithSummary("Today's Attendance");
 
         app.MapPost("attendance/regularizations", async (ClaimsPrincipal principal, [FromForm] RegularizationRequest request, ISender sender) =>
@@ -44,9 +54,20 @@ public class AttendanceEndpoints : IEndpoint
             }
             var empId = principal.Identity.GetEmployeeId();
             var command = new CreateAttendanceRegularizationCommand(request, empId);
-            var savedResult = await sender.Send(command);
-            return Results.Ok(savedResult);
-        }).WithSummary("Create Attendance Regularization");
+            var result = await sender.Send(command);
+            if (result.IsFailed)
+            {
+                if (result.Errors[0] is QubeFin.Core.Results.RecordNotFoundError)
+                {
+                    return Results.NotFound(result.Errors[0]);
+                }
+                if (result.Errors[0] is QubeFin.Core.Results.ValidationError)
+                {
+                    return Results.BadRequest(result.Errors[0]);
+                }
+            }
+            return Results.Ok(result.Value);
+        }).DisableAntiforgery().WithSummary("Create Attendance Regularization");
 
         app.MapGet("attendance/regularizations/{id:guid}", async (Guid id, ClaimsPrincipal principal, ISender sender) =>
         {
@@ -55,7 +76,7 @@ public class AttendanceEndpoints : IEndpoint
                 return Results.Forbid();
             }
             var response = await sender.Send(new GetAttendanceRegularizationsByIdQuery(id));
-            return Results.Ok(response);
+            return Results.Ok(response.Value);
         }).WithSummary("Get Attendance Regularizations by Id");
 
         app.MapGet("attendance/regularizations/submit/{id:guid}", async (Guid id, ClaimsPrincipal principal, ISender sender) =>

@@ -27,7 +27,7 @@ public class CreateAttendanceRegularizationCommandValidator : AbstractValidator<
 #endregion
 
 #region --- RESPONSE ---
-public record CreateAttendanceRegularizationResponse(bool Created);
+public record CreateAttendanceRegularizationResponse(bool success, string message);
 #endregion
 
 #region --- HANDLER ---
@@ -44,7 +44,7 @@ internal sealed class CreateAttendanceRegularizationCommandHandler(IAttendanceRe
         var regularization = AttendanceRegularization.CreateNew(Guid.NewGuid(), request.EmployeeId, request.regularization.RegularizationDate, request.regularization.Reason, attachment);
         await attendanceRepository.CreateRegularization(regularization);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result.Ok(new CreateAttendanceRegularizationResponse(true));
+        return Result.Ok(new CreateAttendanceRegularizationResponse(true, $"Regularization applied successfully for : {request.regularization.RegularizationDate}"));
     }
 }
 #endregion
