@@ -13,7 +13,7 @@ public class AttendanceEndpoints : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("attendances", async (ClaimsPrincipal principal, CreateAttendanceCommand command, ISender sender) =>
+        app.MapPost("attendances/punch", async (ClaimsPrincipal principal, CreateAttendanceCommand command, ISender sender) =>
         {
             if (principal.Identity is null)
             {
@@ -80,6 +80,18 @@ public class AttendanceEndpoints : IEndpoint
             }
             return Results.Ok(result.Value);
         }).DisableAntiforgery().WithSummary("Create Attendance Regularization");
+
+        app.MapPost("attendances/regularizations/search", async (ClaimsPrincipal principal, ISender sender, AttendanceSearchRequest request) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+
+            var empId = principal.Identity.GetEmployeeId();
+            var response = await sender.Send(new GetAttendanceRegularizationBySearch(empId, request));
+            return Results.Ok(response);
+        }).WithSummary("Search attendance regularization for logged-in employee with optional filters");
 
         app.MapGet("attendances/regularizations/{id:guid}", async (Guid id, ClaimsPrincipal principal, ISender sender) =>
         {
