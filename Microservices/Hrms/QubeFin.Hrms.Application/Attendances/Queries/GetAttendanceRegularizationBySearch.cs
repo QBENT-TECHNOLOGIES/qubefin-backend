@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Hrms.Application.Attendances.Models;
@@ -7,6 +8,16 @@ namespace QubeFin.Hrms.Application.Attendances.Queries;
 
 #region --- QUERY ---
 public record GetAttendanceRegularizationBySearch(Guid EmployeeId, AttendanceSearchRequest searchParam) : IRequest<GetAttendanceRegularizationBySearchResponse>;
+#endregion
+
+#region --- VALIDATOR ---
+public class GetAttendanceRegularizationBySearchValidator : AbstractValidator<GetAttendanceRegularizationBySearch>
+{
+    public GetAttendanceRegularizationBySearchValidator()
+    {
+        RuleFor(v => v.EmployeeId).NotNull().WithMessage("Employee Id is required.");
+    }
+}
 #endregion
 
 #region --- RESPONSE ---

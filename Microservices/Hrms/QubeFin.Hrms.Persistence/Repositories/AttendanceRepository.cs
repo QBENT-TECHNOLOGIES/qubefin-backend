@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Mappers.App;
 using QubeFin.Persistence.Models.Hrms;
@@ -12,6 +13,7 @@ namespace QubeFin.Hrms.Persistence.Repositories
         Task Update(Attendance attendance);
         Task CreateRegularization(AttendanceRegularization regularization);
         Task<AttendanceRegularization?> GetRegularization(Guid Id);
+        Task UpdateRegularization(Guid Id, DateOnly RegularizationDate, string Reason, IFormFile? Attachment, string? AttachmentName);
         Task SubmitAttendanceRegularization(Guid Id, Guid EmployeeId);
         Task ApproveRejectAttendanceRegularization(Guid Id, bool IsApproved, Guid ActionBy);
     }
@@ -32,7 +34,6 @@ namespace QubeFin.Hrms.Persistence.Repositories
 
             return attendanceEntity.ToDomain();
         }
-
         public Task Update(Attendance attendance)
         {
             context.TblAttendances.Update(attendance.ToEntity());
@@ -42,6 +43,20 @@ namespace QubeFin.Hrms.Persistence.Repositories
         {
             context.TblAttendanceRegularizations.Add(regularization.ToEntity());
             return Task.CompletedTask;
+        }
+        public async Task UpdateRegularization(Guid Id, DateOnly RegularizationDate, string Reason, IFormFile? Attachment, string? AttachmentName)
+        {
+            var regularizationEntity = await context.TblAttendanceRegularizations.AsNoTracking().FirstOrDefaultAsync(m => m.Id == Id);
+            if (regularizationEntity is null)
+            {
+                throw new Exception("Regularization not found");
+            }
+            regularizationEntity.RegularizationDate = RegularizationDate;
+            regularizationEntity.Reason = Reason;
+            if (Attachment != null && Attachment.Length > 0)
+            {
+                regularizationEntity.Attachment = AttachmentName;
+            }
         }
         public async Task<AttendanceRegularization?> GetRegularization(Guid Id)
         {

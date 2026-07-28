@@ -45,23 +45,21 @@ public class Attendance
         {
             Id = id,
             EmployeeId = employeeId,
-            ActualInTime = InTime,
-            ActualOutTime = OutTime,
             OrganizationUnitId = organizationUnitId,
+            AttendanceDate = attendanceDate,
             ExpectedInTime = expectedInTime,
             ExpectedOutTime = expectedOutTime,
+            ActualInTime = InTime,
+            IsLateEntry = expectedInTime.HasValue && InTime > expectedInTime.Value,
             InTimeLatitude = InTimeLat,
-            InTimeLongitude = InTimeLong,
-            OutTimeLatitude = OutTimeLat,
-            OutTimeLongitude = OutTimeLong,
-            AttendanceDate = attendanceDate,
+            InTimeLongitude = InTimeLong
         };
-
         return attendance;
     }
-    public void MarchCheckOut(TimeOnly? outTime, decimal? outTimeLat, decimal? outTimeLong)
+    public void MarchCheckOut(TimeOnly? outTime, TimeOnly? expectedOutTime, decimal? outTimeLat, decimal? outTimeLong)
     {
         ActualOutTime = outTime;
+        IsEarlyLeave = expectedOutTime.HasValue && outTime.HasValue && outTime.Value < expectedOutTime.Value;
         OutTimeLatitude = outTimeLat;
         OutTimeLongitude = outTimeLong;
     }

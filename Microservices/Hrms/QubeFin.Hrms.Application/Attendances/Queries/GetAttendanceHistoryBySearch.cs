@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Hrms.Application.Attendances.Models;
@@ -7,6 +8,16 @@ namespace QubeFin.Hrms.Application.Attendances.Queries;
 
 #region --- QUERY ---
 public record GetAttendanceHistoryByQuery(Guid EmployeeId, AttendanceSearchRequest searchParam) : IRequest<GetAttendanceHistoryResponse>;
+#endregion
+
+#region --- VALIDATOR ---
+public class GetAttendanceHistoryByQueryValidator : AbstractValidator<GetAttendanceHistoryByQuery>
+{
+    public GetAttendanceHistoryByQueryValidator()
+    {
+        RuleFor(v => v.EmployeeId).NotNull().WithMessage("Employee Id is required.");
+    }
+}
 #endregion
 
 #region --- RESPONSE ---
@@ -34,8 +45,10 @@ internal sealed class GetAttendanceHistoryByEmployeeQueryHandler(QubeFinDataCont
             var status = request.searchParam.Status.Trim().ToLowerInvariant();
             query = status switch
             {
-                "late" => query.Where(m => m.IsLateEntry),
-                "early" => query.Where(m => m.IsEarlyLeave),
+                "on time" => query.Where(m => !m.IsLateEntry && !m.IsEarlyLeave),
+                "late entry" => query.Where(m => m.IsLateEntry && !m.IsEarlyLeave),
+                "early exit" => query.Where(m => !m.IsLateEntry && m.IsEarlyLeave),
+                "late entry & early exit" => query.Where(m => m.IsLateEntry && m.IsEarlyLeave),
                 _ => query
             };
         }
