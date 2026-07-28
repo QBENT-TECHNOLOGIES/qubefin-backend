@@ -69,7 +69,7 @@ internal sealed class GetAttendanceHistoryByEmployeeQueryHandler(QubeFinDataCont
         return new GetAttendanceHistoryResponse(attendances, total);
     }
 
-    public static string GetWorkingHours(TimeOnly? inTime, TimeOnly? outTime)
+    private static string GetWorkingHours(TimeOnly? inTime, TimeOnly? outTime)
     {
         if (!inTime.HasValue || !outTime.HasValue)
             return "-";
@@ -81,7 +81,7 @@ internal sealed class GetAttendanceHistoryByEmployeeQueryHandler(QubeFinDataCont
 
         return $"{duration.Hours} hours {duration.Minutes} minutes";
     }
-    public static string GetAttendanceStatus(bool IsLateEntry, bool IsEarlyLeave)
+    private static string GetAttendanceStatus(bool IsLateEntry, bool IsEarlyLeave)
     {
         return (IsLateEntry, IsEarlyLeave) switch
         {
