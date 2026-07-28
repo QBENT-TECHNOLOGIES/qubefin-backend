@@ -46,7 +46,19 @@ public class AttendanceEndpoints : IEndpoint
             return Results.Ok(response.Value);
         }).WithSummary("Today's Attendance");
 
-        app.MapPost("attendance/regularizations", async (ClaimsPrincipal principal, [FromForm] RegularizationRequest request, ISender sender) =>
+        app.MapGet("attendances/history", async (ClaimsPrincipal principal, ISender sender, AttendanceSearchRequest request) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+
+            var empId = principal.Identity.GetEmployeeId();
+            var response = await sender.Send(new GetAttendanceHistoryByQuery(empId, request));
+            return Results.Ok(response);
+        }).WithSummary("Get attendance history for logged-in employee with optional filters");
+
+        app.MapPost("attendances/regularizations", async (ClaimsPrincipal principal, [FromForm] RegularizationRequest request, ISender sender) =>
         {
             if (principal.Identity is null)
             {
@@ -69,7 +81,7 @@ public class AttendanceEndpoints : IEndpoint
             return Results.Ok(result.Value);
         }).DisableAntiforgery().WithSummary("Create Attendance Regularization");
 
-        app.MapGet("attendance/regularizations/{id:guid}", async (Guid id, ClaimsPrincipal principal, ISender sender) =>
+        app.MapGet("attendances/regularizations/{id:guid}", async (Guid id, ClaimsPrincipal principal, ISender sender) =>
         {
             if (principal.Identity is null)
             {
@@ -79,7 +91,7 @@ public class AttendanceEndpoints : IEndpoint
             return Results.Ok(response.Value);
         }).WithSummary("Get Attendance Regularizations by Id");
 
-        app.MapGet("attendance/regularizations/submit/{id:guid}", async (Guid id, ClaimsPrincipal principal, ISender sender) =>
+        app.MapGet("attendances/regularizations/submit/{id:guid}", async (Guid id, ClaimsPrincipal principal, ISender sender) =>
         {
             if (principal.Identity is null)
             {
@@ -101,7 +113,7 @@ public class AttendanceEndpoints : IEndpoint
             return Results.Ok(result.Value);
         }).WithSummary("Submit Attendance Regularization");
 
-        app.MapGet("attendance/regularizations/decision/{id:guid}/{isApproved}", async (Guid id, bool isApproved, ClaimsPrincipal principal, ISender sender) =>
+        app.MapGet("attendances/regularizations/decision/{id:guid}/{isApproved}", async (Guid id, bool isApproved, ClaimsPrincipal principal, ISender sender) =>
         {
             if (principal.Identity is null)
             {
