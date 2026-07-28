@@ -98,7 +98,6 @@ public class MenuEndpoints : IEndpoint
                 .Select(x => new PermissionAssigned { Id = x.Id })
             .ToList();
 
-
             await sender.Send(new UpdateMenuCommand(id, menu.Name, menu.Icon, menu.Target, menu.ParentId, userId, permissions));
             return Results.Ok();
         })
