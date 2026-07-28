@@ -46,7 +46,7 @@ public class AttendanceEndpoints : IEndpoint
             return Results.Ok(response.Value);
         }).WithSummary("Today's Attendance");
 
-        app.MapGet("attendances/history", async (ClaimsPrincipal principal, ISender sender, AttendanceSearchRequest request) =>
+        app.MapPost("attendances/history", async (ClaimsPrincipal principal, ISender sender, AttendanceSearchRequest request) =>
         {
             if (principal.Identity is null)
             {
