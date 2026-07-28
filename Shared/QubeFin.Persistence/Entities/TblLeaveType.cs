@@ -13,7 +13,7 @@ public partial class TblLeaveType
 
     public bool IsPrayerable { get; set; }
 
-    public bool IsConversionLeave { get; set; }
+    public bool IsConvertible { get; set; }
 
     public bool IsEncashable { get; set; }
 
@@ -23,23 +23,23 @@ public partial class TblLeaveType
 
     public int MaxContinuousDays { get; set; }
 
-    public bool NegativeBalanceAllowed { get; set; }
+    public bool ApplicableAfterProbation { get; set; }
 
-    public byte[] ConcurrencyStamp { get; set; } = null!;
+    public bool IsMonthlyCredit { get; set; }
 
-    public int? SeqNo { get; set; }
+    public int SeqNo { get; set; }
 
-    public Guid? CreatedBy { get; set; }
+    public Guid CreatedBy { get; set; }
 
-    public DateTime? CreatedOn { get; set; }
+    public DateTime CreatedOn { get; set; }
 
     public Guid? LastModifiedBy { get; set; }
 
     public DateTime? LastModifiedOn { get; set; }
 
-    public bool ApplicableAfterProbation { get; set; }
+    public virtual TblUser CreatedByNavigation { get; set; } = null!;
 
-    public bool IsMonthlyCredit { get; set; }
+    public virtual TblUser? LastModifiedByNavigation { get; set; }
 
     public virtual ICollection<TblLeaveEvent> TblLeaveEvents { get; set; } = new List<TblLeaveEvent>();
 

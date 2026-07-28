@@ -4,7 +4,9 @@ using QubeFin.App.Application.Roles.Queries;
 using QubeFin.App.Application.Users.Commands;
 using QubeFin.App.Application.Users.Queries;
 using QubeFin.Core.Endpoint;
+using QubeFin.Core.Identity;
 using QubeFin.Core.Results;
+using System.Security.Claims;
 
 namespace QubeFin.App.Api.Endpoints;
 
@@ -34,6 +36,20 @@ public class UserEndpoints : IEndpoint
         })
         //.RequireAuthorization("Permission:Users.View")
         .WithSummary("Get User By Id");
+
+        app.MapGet("users/login-info", async (ClaimsPrincipal principal, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+            var userId = principal.Identity.GetUserId();
+
+            var result = await sender.Send(new GetUserLoginInfoQuery(userId));
+            return result.ToHttpResult();
+        })
+        //.RequireAuthorization("Permission:Users.View")
+        .WithSummary("Get Logeedin User Info");
 
         app.MapPost("users", async (CreateUserCommand command, ISender sender) =>
         {
