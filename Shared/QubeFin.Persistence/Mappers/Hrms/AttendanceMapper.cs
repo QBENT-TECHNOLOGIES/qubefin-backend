@@ -1,5 +1,4 @@
-﻿using QubeFin.Persistence.Models.App;
-using QubeFin.Persistence.Models.Hrms;
+﻿using QubeFin.Persistence.Models.Hrms;
 using Entity = QubeFin.Persistence.Entities.TblAttendance;
 
 namespace QubeFin.Persistence.Mappers.App;
@@ -19,12 +18,11 @@ public static class AttendanceMapper
             entity.ActualOutTime,
             entity.IsEarlyLeave,
             entity.IsLateEntry,
-            entity.InTimeLat,
-            entity.InTimeLong,
-            entity.OutTimeLat,
-            entity.OutTimeLong
-            
-            );
+            entity.InTimeLatitude,
+            entity.InTimeLongitude,
+            entity.OutTimeLatitude,
+            entity.OutTimeLongitude
+        );
     }
 
     public static Entity ToEntity(this Attendance domain)
@@ -41,10 +39,10 @@ public static class AttendanceMapper
             AttendanceDate = domain.AttendanceDate,
             IsEarlyLeave = domain.IsEarlyLeave,
             IsLateEntry = domain.IsLateEntry,
-            InTimeLat = domain.InTimeLat,
-            InTimeLong = domain.InTimeLong,
-            OutTimeLat = domain.OutTimeLat,
-            OutTimeLong = domain.OutTimeLong,
+            InTimeLatitude = domain.InTimeLatitude,
+            InTimeLongitude = domain.InTimeLongitude,
+            OutTimeLatitude = domain.OutTimeLatitude,
+            OutTimeLongitude = domain.OutTimeLongitude,
         };
     }
 }

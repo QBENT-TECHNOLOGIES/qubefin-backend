@@ -5,28 +5,19 @@ namespace QubeFin.Persistence.Models.Hrms;
 public class Attendance
 {
     public Guid Id { get; private set; }
-
     public Guid EmployeeId { get; private set; }
-
     public Guid? OrganizationUnitId { get; private set; }
-
     public DateOnly AttendanceDate { get; private set; }
-
     public TimeOnly? ExpectedInTime { get; private set; }
-
     public TimeOnly? ExpectedOutTime { get; private set; }
-
     public TimeOnly ActualInTime { get; private set; }
-
     public TimeOnly? ActualOutTime { get; private set; }
-
     public bool IsEarlyLeave { get; private set; }
-
     public bool IsLateEntry { get; private set; }
-    public decimal? InTimeLat {  get; private set; }
-    public decimal? InTimeLong { get; private set; }
-    public decimal? OutTimeLat { get; private set; }
-    public decimal? OutTimeLong { get; private set; }
+    public decimal? InTimeLatitude {  get; private set; }
+    public decimal? InTimeLongitude { get; private set; }
+    public decimal? OutTimeLatitude { get; private set; }
+    public decimal? OutTimeLongitude { get; private set; }
     public Attendance()
     {
 
@@ -43,10 +34,10 @@ public class Attendance
         ActualOutTime = actualOutTime;
         IsEarlyLeave = isEarlyLeave;
         IsLateEntry = isLateEntry;
-        InTimeLat = intimeLat;
-        InTimeLong = intimeLong;
-        OutTimeLat = outTimeLat;
-        OutTimeLong = outTimeLong;
+        InTimeLatitude = intimeLat;
+        InTimeLongitude = intimeLong;
+        OutTimeLatitude = outTimeLat;
+        OutTimeLongitude = outTimeLong;
     }
     public static Attendance MarkCheckIn(Guid id, Guid employeeId,  TimeOnly InTime, TimeOnly? OutTime, Guid? organizationUnitId, TimeOnly? expectedInTime, TimeOnly? expectedOutTime, decimal? InTimeLat, decimal? InTimeLong, decimal? OutTimeLat, decimal? OutTimeLong, DateOnly attendanceDate)
     {
@@ -59,10 +50,10 @@ public class Attendance
             OrganizationUnitId = organizationUnitId,
             ExpectedInTime = expectedInTime,
             ExpectedOutTime = expectedOutTime,
-            InTimeLat = InTimeLat,
-            InTimeLong = InTimeLong,
-            OutTimeLat = OutTimeLat,
-            OutTimeLong = OutTimeLong,
+            InTimeLatitude = InTimeLat,
+            InTimeLongitude = InTimeLong,
+            OutTimeLatitude = OutTimeLat,
+            OutTimeLongitude = OutTimeLong,
             AttendanceDate = attendanceDate,
         };
 
@@ -71,7 +62,7 @@ public class Attendance
     public void MarchCheckOut(TimeOnly? outTime, decimal? outTimeLat, decimal? outTimeLong)
     {
         ActualOutTime = outTime;
-        OutTimeLat = outTimeLat;
-        OutTimeLong = outTimeLong;
+        OutTimeLatitude = outTimeLat;
+        OutTimeLongitude = outTimeLong;
     }
 }

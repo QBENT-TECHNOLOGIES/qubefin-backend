@@ -15,7 +15,7 @@ public partial class TblLoanWorkflowDocument
 
     public bool IsMandatory { get; set; }
 
-    public virtual TblApplicatoinDocument Document { get; set; } = null!;
+    public virtual TblApplicationDocument Document { get; set; } = null!;
 
     public virtual TblLoanWorkflow Workflow { get; set; } = null!;
 }

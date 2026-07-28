@@ -30,11 +30,13 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblAnswer> TblAnswers { get; set; }
 
+    public virtual DbSet<TblApplicationDocument> TblApplicationDocuments { get; set; }
+
     public virtual DbSet<TblApplicationStep> TblApplicationSteps { get; set; }
 
-    public virtual DbSet<TblApplicatoinDocument> TblApplicatoinDocuments { get; set; }
-
     public virtual DbSet<TblAttendance> TblAttendances { get; set; }
+
+    public virtual DbSet<TblAttendanceRegularization> TblAttendanceRegularizations { get; set; }
 
     public virtual DbSet<TblBranchSurvey> TblBranchSurveys { get; set; }
 
@@ -196,6 +198,7 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<WegrowConsolidateEmployee> WegrowConsolidateEmployees { get; set; }
 
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<DboTempEmpBranch>(entity =>
@@ -313,6 +316,17 @@ public partial class QubeFinDataContext : DbContext
                 .HasConstraintName("FK_Tbl_HouseVisitAnswer_Tbl_HouseVisitQuestion");
         });
 
+        modelBuilder.Entity<TblApplicationDocument>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_Tbl_ApplicatoinDocument");
+
+            entity.ToTable("Tbl_ApplicationDocument", "Loan");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Name).HasMaxLength(100);
+            entity.Property(e => e.Sequence).ValueGeneratedOnAdd();
+        });
+
         modelBuilder.Entity<TblApplicationStep>(entity =>
         {
             entity.ToTable("Tbl_ApplicationStep", "Loan");
@@ -323,28 +337,41 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Description).HasMaxLength(50);
         });
 
-        modelBuilder.Entity<TblApplicatoinDocument>(entity =>
-        {
-            entity.ToTable("Tbl_ApplicatoinDocument", "Loan");
-
-            entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.Name).HasMaxLength(100);
-            entity.Property(e => e.Sequence).ValueGeneratedOnAdd();
-        });
-
         modelBuilder.Entity<TblAttendance>(entity =>
         {
             entity.ToTable("Tbl_Attendance", "Hrms");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.InTimeLat).HasColumnType("numeric(9, 6)");
-            entity.Property(e => e.InTimeLong).HasColumnType("numeric(9, 6)");
-            entity.Property(e => e.OutTimeLat).HasColumnType("numeric(9, 6)");
-            entity.Property(e => e.OutTimeLong).HasColumnType("numeric(9, 6)");
+            entity.Property(e => e.InTimeLatitude).HasColumnType("numeric(9, 6)");
+            entity.Property(e => e.InTimeLongitude).HasColumnType("numeric(9, 6)");
+            entity.Property(e => e.OutTimeLatitude).HasColumnType("numeric(9, 6)");
+            entity.Property(e => e.OutTimeLongitude).HasColumnType("numeric(9, 6)");
+
+            entity.HasOne(d => d.Employee).WithMany(p => p.TblAttendances)
+                .HasForeignKey(d => d.EmployeeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_Attendance_Tbl_Employee");
 
             entity.HasOne(d => d.OrganizationUnit).WithMany(p => p.TblAttendances)
                 .HasForeignKey(d => d.OrganizationUnitId)
                 .HasConstraintName("FK_Tbl_Attendance_Tbl_OrganizationUnit");
+        });
+
+        modelBuilder.Entity<TblAttendanceRegularization>(entity =>
+        {
+            entity.ToTable("Tbl_AttendanceRegularization", "Hrms");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.ActivityOn).HasColumnType("datetime");
+            entity.Property(e => e.AppliedOn).HasColumnType("datetime");
+            entity.Property(e => e.Attachment).HasMaxLength(500);
+            entity.Property(e => e.Reason).HasMaxLength(50);
+            entity.Property(e => e.SubmitOn).HasColumnType("datetime");
+
+            entity.HasOne(d => d.Employee).WithMany(p => p.TblAttendanceRegularizations)
+                .HasForeignKey(d => d.EmployeeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_AttendanceRegularization_Tbl_Employee");
         });
 
         modelBuilder.Entity<TblBranchSurvey>(entity =>
@@ -1147,12 +1174,18 @@ public partial class QubeFinDataContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Alias).HasMaxLength(5);
-            entity.Property(e => e.ConcurrencyStamp)
-                .IsRowVersion()
-                .IsConcurrencyToken();
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
             entity.Property(e => e.Title).HasMaxLength(50);
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.TblLeaveTypeCreatedByNavigations)
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_LeaveType_Tbl_User");
+
+            entity.HasOne(d => d.LastModifiedByNavigation).WithMany(p => p.TblLeaveTypeLastModifiedByNavigations)
+                .HasForeignKey(d => d.LastModifiedBy)
+                .HasConstraintName("FK_Tbl_LeaveType_Tbl_User1");
         });
 
         modelBuilder.Entity<TblLoanApplication>(entity =>
@@ -2076,9 +2109,18 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Password).HasMaxLength(500);
             entity.Property(e => e.UserName).HasMaxLength(30);
 
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.InverseCreatedByNavigation)
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_User_Tbl_User");
+
             entity.HasOne(d => d.Employee).WithMany(p => p.TblUsers)
                 .HasForeignKey(d => d.EmployeeId)
                 .HasConstraintName("FK_Tbl_User_Tbl_Employee");
+
+            entity.HasOne(d => d.LastModifiedByNavigation).WithMany(p => p.InverseLastModifiedByNavigation)
+                .HasForeignKey(d => d.LastModifiedBy)
+                .HasConstraintName("FK_Tbl_User_Tbl_User1");
         });
 
         modelBuilder.Entity<TblUserDevice>(entity =>

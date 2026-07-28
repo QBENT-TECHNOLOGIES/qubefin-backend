@@ -29,11 +29,23 @@ public partial class TblUser
 
     public Guid? LastModifiedBy { get; set; }
 
+    public virtual TblUser CreatedByNavigation { get; set; } = null!;
+
     public virtual TblEmployee? Employee { get; set; }
+
+    public virtual ICollection<TblUser> InverseCreatedByNavigation { get; set; } = new List<TblUser>();
+
+    public virtual ICollection<TblUser> InverseLastModifiedByNavigation { get; set; } = new List<TblUser>();
+
+    public virtual TblUser? LastModifiedByNavigation { get; set; }
 
     public virtual ICollection<TblAdministrativeUnit> TblAdministrativeUnitCreatedByNavigations { get; set; } = new List<TblAdministrativeUnit>();
 
     public virtual ICollection<TblAdministrativeUnit> TblAdministrativeUnitLastModifiedByNavigations { get; set; } = new List<TblAdministrativeUnit>();
+
+    public virtual ICollection<TblLeaveType> TblLeaveTypeCreatedByNavigations { get; set; } = new List<TblLeaveType>();
+
+    public virtual ICollection<TblLeaveType> TblLeaveTypeLastModifiedByNavigations { get; set; } = new List<TblLeaveType>();
 
     public virtual ICollection<TblLoanApplicationWorkflow> TblLoanApplicationWorkflows { get; set; } = new List<TblLoanApplicationWorkflow>();
 

@@ -153,6 +153,10 @@ public partial class TblEmployee
 
     public virtual TblAdministrativeUnit? PresentAdministrativeUnit { get; set; }
 
+    public virtual ICollection<TblAttendanceRegularization> TblAttendanceRegularizations { get; set; } = new List<TblAttendanceRegularization>();
+
+    public virtual ICollection<TblAttendance> TblAttendances { get; set; } = new List<TblAttendance>();
+
     public virtual ICollection<TblEmployeeDesignation> TblEmployeeDesignations { get; set; } = new List<TblEmployeeDesignation>();
 
     public virtual ICollection<TblEmployeeDocument> TblEmployeeDocuments { get; set; } = new List<TblEmployeeDocument>();
