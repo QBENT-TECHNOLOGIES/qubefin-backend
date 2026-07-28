@@ -19,7 +19,7 @@ public partial class TblLoanApplicationWorkflowDocument
 
     public DateTime UploadOn { get; set; }
 
-    public virtual TblApplicatoinDocument Document { get; set; } = null!;
+    public virtual TblApplicationDocument Document { get; set; } = null!;
 
     public virtual TblLoanApplicationWorkflow LoanApplicationWorkflow { get; set; } = null!;
 }

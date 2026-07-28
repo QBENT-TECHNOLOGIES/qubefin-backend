@@ -2,6 +2,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.LeaveTypes.Queries;
 
@@ -10,7 +11,7 @@ public record GetLeaveTypesByEmployeeIdQuery(Guid EmployeeId) : IRequest<Result<
 #endregion
 
 #region --- RESPONSE ---
-public record GetLeaveTypesByEmployeeIdResponse(Guid Id, string Title, string Alias, decimal LeaveEntitled, decimal LeaveTaken, decimal LeaveBalance);
+public record GetLeaveTypesByEmployeeIdResponse(Guid LeaveTypeId, string Title, string Alias, decimal LeaveEntitled, decimal LeaveTaken, decimal LeaveBalance);
 #endregion
 
 #region --- HANDLER ---
@@ -19,14 +20,12 @@ internal sealed class GetLeaveTypesByEmployeeIdQueryHandler(QubeFinDataContext c
 {
     public async Task<Result<List<GetLeaveTypesByEmployeeIdResponse>>> Handle(GetLeaveTypesByEmployeeIdQuery request, CancellationToken cancellationToken)
     {
-        var users = await context
-            .TblLeaveTypes
+        var leaveBalances = await context.Set<EmployeewiseLeaveTypeBalance>()
+            .FromSqlInterpolated($@"EXEC [Hrms].[USP_GetLeaveTypesByEmployee] @p_EmployeeId = {request.EmployeeId}")
             .AsNoTracking()
-            .OrderBy(m => m.SeqNo)
-            .Select(m => new GetLeaveTypesByEmployeeIdResponse(m.Id, m.Title, m.Alias, 0, 0, 0))
             .ToListAsync(cancellationToken);
 
-        return Result.Ok(users);
+        return Result.Ok(leaveBalances.Select(m => new GetLeaveTypesByEmployeeIdResponse(m.LeaveTypeId, m.Title, m.Alias, m.LeaveEntitled, m.LeaveTaken, m.LeaveBalance)).ToList());
     }
 }
 #endregion

@@ -46,7 +46,8 @@ public class OrganizationUnitEndpoints : IEndpoint
             }
             var userId = principal.Identity.GetUserId();
 
-            var result = await sender.Send(new CreateOrganizationUnitCommand(request.OrganizationUnitTypeId, request.Name, request.Codeval, request.ParentId, request.AttendanceInTime, request.AttendanceOutTime, userId));
+            var result = await sender.Send(new CreateOrganizationUnitCommand(request.OrganizationUnitTypeId, request.Name, request.Codeval, request.ParentId, 
+                request.Latitude, request.Longitude, request.AttendanceInTime, request.AttendanceOutTime, request.CheckRadiusInMeter, userId));
             return result.ToHttpResult();
         })
         //.RequireAuthorization("Permission:Users.Add")
@@ -60,7 +61,8 @@ public class OrganizationUnitEndpoints : IEndpoint
             }
             var userId = principal.Identity.GetUserId();
 
-            var result = await sender.Send(new UpdateOrganizationUnitCommand(id, request.OrganizationUnitTypeId, request.Name, request.Codeval, request.AttendanceInTime, request.AttendanceOutTime, request.ParentId, userId));
+            var result = await sender.Send(new UpdateOrganizationUnitCommand(id, request.OrganizationUnitTypeId, request.Name, request.Codeval, request.Latitude, request.Longitude, 
+                request.AttendanceInTime, request.AttendanceOutTime, request.CheckRadiusInMeter, request.ParentId, userId));
             return result.ToHttpResult();
         })
         .WithSummary("Update Document Type"); ;

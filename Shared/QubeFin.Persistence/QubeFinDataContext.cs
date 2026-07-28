@@ -30,11 +30,13 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblAnswer> TblAnswers { get; set; }
 
+    public virtual DbSet<TblApplicationDocument> TblApplicationDocuments { get; set; }
+
     public virtual DbSet<TblApplicationStep> TblApplicationSteps { get; set; }
 
-    public virtual DbSet<TblApplicatoinDocument> TblApplicatoinDocuments { get; set; }
-
     public virtual DbSet<TblAttendance> TblAttendances { get; set; }
+
+    public virtual DbSet<TblAttendanceRegularization> TblAttendanceRegularizations { get; set; }
 
     public virtual DbSet<TblBranchSurvey> TblBranchSurveys { get; set; }
 
@@ -313,6 +315,17 @@ public partial class QubeFinDataContext : DbContext
                 .HasConstraintName("FK_Tbl_HouseVisitAnswer_Tbl_HouseVisitQuestion");
         });
 
+        modelBuilder.Entity<TblApplicationDocument>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_Tbl_ApplicatoinDocument");
+
+            entity.ToTable("Tbl_ApplicationDocument", "Loan");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Name).HasMaxLength(100);
+            entity.Property(e => e.Sequence).ValueGeneratedOnAdd();
+        });
+
         modelBuilder.Entity<TblApplicationStep>(entity =>
         {
             entity.ToTable("Tbl_ApplicationStep", "Loan");
@@ -321,15 +334,6 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Color).HasMaxLength(10);
             entity.Property(e => e.Component).HasMaxLength(100);
             entity.Property(e => e.Description).HasMaxLength(50);
-        });
-
-        modelBuilder.Entity<TblApplicatoinDocument>(entity =>
-        {
-            entity.ToTable("Tbl_ApplicatoinDocument", "Loan");
-
-            entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.Name).HasMaxLength(100);
-            entity.Property(e => e.Sequence).ValueGeneratedOnAdd();
         });
 
         modelBuilder.Entity<TblAttendance>(entity =>
@@ -350,6 +354,23 @@ public partial class QubeFinDataContext : DbContext
             entity.HasOne(d => d.OrganizationUnit).WithMany(p => p.TblAttendances)
                 .HasForeignKey(d => d.OrganizationUnitId)
                 .HasConstraintName("FK_Tbl_Attendance_Tbl_OrganizationUnit");
+        });
+
+        modelBuilder.Entity<TblAttendanceRegularization>(entity =>
+        {
+            entity.ToTable("Tbl_AttendanceRegularization", "Hrms");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.ActivityOn).HasColumnType("datetime");
+            entity.Property(e => e.AppliedOn).HasColumnType("datetime");
+            entity.Property(e => e.Attachment).HasMaxLength(500);
+            entity.Property(e => e.Reason).HasMaxLength(50);
+            entity.Property(e => e.SubmitOn).HasColumnType("datetime");
+
+            entity.HasOne(d => d.Employee).WithMany(p => p.TblAttendanceRegularizations)
+                .HasForeignKey(d => d.EmployeeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_AttendanceRegularization_Tbl_Employee");
         });
 
         modelBuilder.Entity<TblBranchSurvey>(entity =>
@@ -1069,6 +1090,9 @@ public partial class QubeFinDataContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Address).HasMaxLength(100);
+            entity.Property(e => e.CurrentStatus).HasMaxLength(30);
+            entity.Property(e => e.EnclosedDocName).HasMaxLength(50);
+            entity.Property(e => e.EnclosedDocNo).HasMaxLength(30);
             entity.Property(e => e.Reason).HasMaxLength(500);
             entity.Property(e => e.RequestDate).HasColumnType("datetime");
             entity.Property(e => e.TotalDays).HasComputedColumnSql("(datediff(day,[FromDate],[ToDate])+(1))", false);
@@ -1700,6 +1724,8 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())", "DF_Tbl_OrganizationUnit_Id");
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
+            entity.Property(e => e.Latitude).HasColumnType("numeric(19, 10)");
+            entity.Property(e => e.Longitude).HasColumnType("numeric(19, 10)");
             entity.Property(e => e.Name).HasMaxLength(50);
 
             entity.HasOne(d => d.Company).WithMany(p => p.TblOrganizationUnits)

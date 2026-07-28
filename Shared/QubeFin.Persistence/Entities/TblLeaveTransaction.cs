@@ -27,7 +27,7 @@ public partial class TblLeaveTransaction
 
     public string? Remarks { get; set; }
 
-    public Guid CalenderYearId { get; set; }
+    public int LeaveYear { get; set; }
 
     public virtual TblEmployee Employee { get; set; } = null!;
 

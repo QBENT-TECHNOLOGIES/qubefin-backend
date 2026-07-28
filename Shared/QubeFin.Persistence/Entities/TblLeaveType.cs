@@ -17,6 +17,8 @@ public partial class TblLeaveType
 
     public bool IsEncashable { get; set; }
 
+    public bool IsCarryForwarded { get; set; }
+
     public int NoOfDaysEntitled { get; set; }
 
     public int? NoOfDaysCapped { get; set; }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using QubeFin.Persistence.Models.App;
 using QubeFin.Persistence.Models.Global;
+using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Persistence;
 
@@ -21,6 +22,10 @@ public partial class QubeFinDataContext : DbContext, IUnitOfWork
             .ToView(null);
 
         modelBuilder.Entity<SurveyResults>()
+            .HasNoKey()
+            .ToView(null);
+
+        modelBuilder.Entity<EmployeewiseLeaveTypeBalance>()
             .HasNoKey()
             .ToView(null);
     }
