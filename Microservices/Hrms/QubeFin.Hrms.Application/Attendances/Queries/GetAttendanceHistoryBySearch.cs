@@ -60,8 +60,8 @@ internal sealed class GetAttendanceHistoryByEmployeeQueryHandler(QubeFinDataCont
         {
             Id = m.Id,
             AttendanceDate = m.AttendanceDate,
-            ActualInTime = m.ActualInTime,
-            ActualOutTime = m.ActualOutTime,
+            ActualInTime = m.ActualInTime.ToString("h:mm tt"),
+            ActualOutTime = m.ActualOutTime?.ToString("h:mm tt"),
             WorkingHours = GetWorkingHours(m.ActualInTime, m.ActualOutTime),
             Status = GetAttendanceStatus(m.IsLateEntry, m.IsEarlyLeave)
         }).ToList();
