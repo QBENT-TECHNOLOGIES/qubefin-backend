@@ -29,7 +29,7 @@ internal sealed class ApproveRejectAttendanceRegularizationCommandHandler(IAtten
 {
     public async Task<Result<ApproveRejectAttendanceRegularizationResponse>> Handle(ApproveRejectAttendanceRegularizationCommand request, CancellationToken cancellationToken)
     {
-       await attendanceRepository.ApproveRejectAttendanceRegularization(request.Id, request.IsApproved, request.ActionBy);
+       //await attendanceRepository.ApproveRejectAttendanceRegularization(request.Id, request.IsApproved, request.ActionBy);
         return Result.Ok(new ApproveRejectAttendanceRegularizationResponse(true, $"Regularization { (request.IsApproved ? "Approved" : "Rejected") } successfully"));
     }
 }

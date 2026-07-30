@@ -46,10 +46,10 @@ internal sealed class CreateAttendanceRegularizationCommandHandler(IAttendanceRe
             var regularization = AttendanceRegularization.CreateNew(Guid.NewGuid(), request.EmployeeId, request.regularization.RegularizationDate, request.regularization.Reason, attachment);
             await attendanceRepository.CreateRegularization(regularization);
         }
-        else
-        {
-            await attendanceRepository.UpdateRegularization(request.regularization.Id, request.regularization.RegularizationDate, request.regularization.Reason, request.regularization.Attachment, attachment);
-        }
+        //else
+        //{
+        //    await attendanceRepository.UpdateRegularization(request.regularization.Id, request.regularization.RegularizationDate, request.regularization.Reason, request.regularization.Attachment, attachment);
+        //}
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Ok(new CreateAttendanceRegularizationResponse(true, $"Regularization applied successfully for : {request.regularization.RegularizationDate}"));
     }

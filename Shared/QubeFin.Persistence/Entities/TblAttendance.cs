@@ -33,6 +33,8 @@ public partial class TblAttendance
 
     public decimal? OutTimeLongitude { get; set; }
 
+    public bool IsRegularization { get; set; }
+
     public virtual TblEmployee Employee { get; set; } = null!;
 
     public virtual TblOrganizationUnit? OrganizationUnit { get; set; }

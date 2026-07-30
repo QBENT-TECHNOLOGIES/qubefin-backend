@@ -34,6 +34,10 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblApplicationStep> TblApplicationSteps { get; set; }
 
+    public virtual DbSet<TblApprovalRequestEvent> TblApprovalRequestEvents { get; set; }
+
+    public virtual DbSet<TblApprovalWorkflowEvent> TblApprovalWorkflowEvents { get; set; }
+
     public virtual DbSet<TblAttendance> TblAttendances { get; set; }
 
     public virtual DbSet<TblAttendanceRegularization> TblAttendanceRegularizations { get; set; }
@@ -97,8 +101,6 @@ public partial class QubeFinDataContext : DbContext
     public virtual DbSet<TblHoliday> TblHolidays { get; set; }
 
     public virtual DbSet<TblKycDocument> TblKycDocuments { get; set; }
-
-    public virtual DbSet<TblLeaveEvent> TblLeaveEvents { get; set; }
 
     public virtual DbSet<TblLeaveRequest> TblLeaveRequests { get; set; }
 
@@ -337,6 +339,59 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Description).HasMaxLength(50);
         });
 
+        modelBuilder.Entity<TblApprovalRequestEvent>(entity =>
+        {
+            entity.ToTable("Tbl_ApprovalRequestEvent", "Hrms");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Category).HasMaxLength(20);
+            entity.Property(e => e.EventDate).HasPrecision(0);
+            entity.Property(e => e.Remarks).HasMaxLength(500);
+
+            entity.HasOne(d => d.ReceiverDesignation).WithMany(p => p.TblApprovalRequestEventReceiverDesignations)
+                .HasForeignKey(d => d.ReceiverDesignationId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_ApprovalRequestEvent_Tbl_Designation1");
+
+            entity.HasOne(d => d.SenderDesignation).WithMany(p => p.TblApprovalRequestEventSenderDesignations)
+                .HasForeignKey(d => d.SenderDesignationId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_ApprovalRequestEvent_Tbl_Designation");
+        });
+
+        modelBuilder.Entity<TblApprovalWorkflowEvent>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_Tbl_WorkflowEvent");
+
+            entity.ToTable("Tbl_ApprovalWorkflowEvent", "Hrms");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Category).HasMaxLength(20);
+            entity.Property(e => e.EventButtonText).HasMaxLength(50);
+            entity.Property(e => e.EventStatus).HasMaxLength(50);
+
+            entity.HasOne(d => d.LeaveType).WithMany(p => p.TblApprovalWorkflowEvents)
+                .HasForeignKey(d => d.LeaveTypeId)
+                .HasConstraintName("FK_Tbl_ApprovalWorkflowEvent_Tbl_LeaveType");
+
+            entity.HasOne(d => d.OrganizationUnitType).WithMany(p => p.TblApprovalWorkflowEvents)
+                .HasForeignKey(d => d.OrganizationUnitTypeId)
+                .HasConstraintName("FK_Tbl_ApprovalWorkflowEvent_Tbl_OrganizationUnitType");
+
+            entity.HasOne(d => d.Post).WithMany(p => p.TblApprovalWorkflowEventPosts)
+                .HasForeignKey(d => d.PostId)
+                .HasConstraintName("FK_Tbl_ApprovalWorkflowEvent_Tbl_Post");
+
+            entity.HasOne(d => d.ReceiverPost).WithMany(p => p.TblApprovalWorkflowEventReceiverPosts)
+                .HasForeignKey(d => d.ReceiverPostId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_ApprovalWorkflowEvent_Tbl_Post1");
+
+            entity.HasOne(d => d.SalaryGrade).WithMany(p => p.TblApprovalWorkflowEvents)
+                .HasForeignKey(d => d.SalaryGradeId)
+                .HasConstraintName("FK_Tbl_ApprovalWorkflowEvent_Tbl_SalaryGrade");
+        });
+
         modelBuilder.Entity<TblAttendance>(entity =>
         {
             entity.ToTable("Tbl_Attendance", "Hrms");
@@ -362,11 +417,12 @@ public partial class QubeFinDataContext : DbContext
             entity.ToTable("Tbl_AttendanceRegularization", "Hrms");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.ActivityOn).HasColumnType("datetime");
-            entity.Property(e => e.AppliedOn).HasColumnType("datetime");
             entity.Property(e => e.Attachment).HasMaxLength(500);
+            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.CurrentStatus).HasMaxLength(30);
             entity.Property(e => e.Reason).HasMaxLength(50);
-            entity.Property(e => e.SubmitOn).HasColumnType("datetime");
+            entity.Property(e => e.RegularizationDates).HasMaxLength(200);
+            entity.Property(e => e.RegularizationType).HasMaxLength(50);
 
             entity.HasOne(d => d.Employee).WithMany(p => p.TblAttendanceRegularizations)
                 .HasForeignKey(d => d.EmployeeId)
@@ -1056,41 +1112,15 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Name).HasMaxLength(100);
         });
 
-        modelBuilder.Entity<TblLeaveEvent>(entity =>
-        {
-            entity.ToTable("Tbl_LeaveEvent", "Hrms");
-
-            entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.EventButtonText).HasMaxLength(50);
-            entity.Property(e => e.EventStatus).HasMaxLength(50);
-
-            entity.HasOne(d => d.LeaveType).WithMany(p => p.TblLeaveEvents)
-                .HasForeignKey(d => d.LeaveTypeId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Tbl_LeaveEvent_Tbl_LeaveType");
-
-            entity.HasOne(d => d.OrganizationUnitType).WithMany(p => p.TblLeaveEvents)
-                .HasForeignKey(d => d.OrganizationUnitTypeId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Tbl_LeaveEvent_Tbl_OrganizationUnitType");
-
-            entity.HasOne(d => d.ReceiverPost).WithMany(p => p.TblLeaveEvents)
-                .HasForeignKey(d => d.ReceiverPostId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Tbl_LeaveEvent_Tbl_Post");
-
-            entity.HasOne(d => d.SalaryGrade).WithMany(p => p.TblLeaveEvents)
-                .HasForeignKey(d => d.SalaryGradeId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Tbl_LeaveEvent_Tbl_SalaryGrade");
-        });
-
         modelBuilder.Entity<TblLeaveRequest>(entity =>
         {
             entity.ToTable("Tbl_LeaveRequest", "Hrms");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Address).HasMaxLength(100);
+            entity.Property(e => e.CurrentStatus).HasMaxLength(30);
+            entity.Property(e => e.EnclosedDocName).HasMaxLength(50);
+            entity.Property(e => e.EnclosedDocNo).HasMaxLength(30);
             entity.Property(e => e.Reason).HasMaxLength(500);
             entity.Property(e => e.RequestDate).HasColumnType("datetime");
             entity.Property(e => e.TotalDays).HasComputedColumnSql("(datediff(day,[FromDate],[ToDate])+(1))", false);
@@ -1115,19 +1145,10 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.EventDate).HasPrecision(0);
             entity.Property(e => e.Remarks).HasMaxLength(500);
 
-            entity.HasOne(d => d.LeaveEvent).WithMany(p => p.TblLeaveRequestEventLeaveEvents)
-                .HasForeignKey(d => d.LeaveEventId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Tbl_LeaveRequestEvent_Tbl_LeaveEvent");
-
             entity.HasOne(d => d.LeaveRequest).WithMany(p => p.TblLeaveRequestEvents)
                 .HasForeignKey(d => d.LeaveRequestId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_LeaveRequestEvent_Tbl_LeaveRequest");
-
-            entity.HasOne(d => d.NextLeaveEvent).WithMany(p => p.TblLeaveRequestEventNextLeaveEvents)
-                .HasForeignKey(d => d.NextLeaveEventId)
-                .HasConstraintName("FK_Tbl_LeaveRequestEvent_Tbl_LeaveEvent1");
 
             entity.HasOne(d => d.ReceiverDesignation).WithMany(p => p.TblLeaveRequestEventReceiverDesignations)
                 .HasForeignKey(d => d.ReceiverDesignationId)
@@ -1722,6 +1743,8 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())", "DF_Tbl_OrganizationUnit_Id");
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
+            entity.Property(e => e.Latitude).HasColumnType("numeric(19, 10)");
+            entity.Property(e => e.Longitude).HasColumnType("numeric(19, 10)");
             entity.Property(e => e.Name).HasMaxLength(50);
 
             entity.HasOne(d => d.Company).WithMany(p => p.TblOrganizationUnits)

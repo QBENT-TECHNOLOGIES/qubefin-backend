@@ -29,7 +29,7 @@ internal sealed class SubmitAttendanceRegularizationCommandHandler(IAttendanceRe
 {
     public async Task<Result<SubmitAttendanceRegularizationResponse>> Handle(SubmitAttendanceRegularizationCommand request, CancellationToken cancellationToken)
     {
-        await attendanceRepository.SubmitAttendanceRegularization(request.Id, request.EmployeeId);
+        //await attendanceRepository.SubmitAttendanceRegularization(request.Id, request.EmployeeId);
         return Result.Ok(new SubmitAttendanceRegularizationResponse(true, $"Regularization submited successfully"));
     }
 }

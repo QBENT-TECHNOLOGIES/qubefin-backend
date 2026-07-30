@@ -23,7 +23,15 @@ public partial class TblLeaveRequest
 
     public int? TotalDays { get; set; }
 
-    public byte Status { get; set; }
+    public string? EnclosedDocName { get; set; }
+
+    public string? EnclosedDocNo { get; set; }
+
+    public Guid? LeavePrayerId { get; set; }
+
+    public int LeaveYear { get; set; }
+
+    public string CurrentStatus { get; set; } = null!;
 
     public virtual ICollection<TblLeaveRequestEvent> TblLeaveRequestEvents { get; set; } = new List<TblLeaveRequestEvent>();
 }

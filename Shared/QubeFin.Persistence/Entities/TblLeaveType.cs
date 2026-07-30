@@ -43,7 +43,7 @@ public partial class TblLeaveType
 
     public virtual TblUser? LastModifiedByNavigation { get; set; }
 
-    public virtual ICollection<TblLeaveEvent> TblLeaveEvents { get; set; } = new List<TblLeaveEvent>();
+    public virtual ICollection<TblApprovalWorkflowEvent> TblApprovalWorkflowEvents { get; set; } = new List<TblApprovalWorkflowEvent>();
 
     public virtual ICollection<TblLeaveTransaction> TblLeaveTransactions { get; set; } = new List<TblLeaveTransaction>();
 }
