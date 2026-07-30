@@ -4,6 +4,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Hrms.Application.Attendances.Models;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.Attendances.Queries;
 
