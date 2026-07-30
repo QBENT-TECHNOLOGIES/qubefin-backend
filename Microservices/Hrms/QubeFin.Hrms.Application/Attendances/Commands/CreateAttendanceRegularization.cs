@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using QubeFin.Hrms.Application.Attendances.Models;
 using QubeFin.Persistence;
 using System.Data;
+using System.Text.Json;
 
 namespace QubeFin.Hrms.Application.Attendances.Commands;
 
@@ -40,7 +41,7 @@ internal sealed class CreateAttendanceRegularizationCommandHandler(QubeFinDataCo
         {
             //attachment = Convert.ToBase64String(request.regularization.Attachment);
         }
-
+        var regularizationDatesJson = JsonSerializer.Serialize(request.regularization.RegularizationDates.Select(d => d.ToString("yyyy-MM-dd")));
         var successParam = new SqlParameter("@Success", SqlDbType.Bit)
         {
             Direction = ParameterDirection.Output
@@ -70,7 +71,7 @@ internal sealed class CreateAttendanceRegularizationCommandHandler(QubeFinDataCo
         new SqlParameter("@EmployeeId", request.EmployeeId),
         new SqlParameter("@UserId", request.UserId),
         new SqlParameter("@RegularizationType", request.regularization.RegularizationType),
-        new SqlParameter("@RegularizationDates", request.regularization.RegularizationDates),
+        new SqlParameter("@RegularizationDates", regularizationDatesJson),
         new SqlParameter("@Reason", request.regularization.Reason),
         new SqlParameter("@Attachment", (object?)attachment ?? DBNull.Value),
         successParam,
