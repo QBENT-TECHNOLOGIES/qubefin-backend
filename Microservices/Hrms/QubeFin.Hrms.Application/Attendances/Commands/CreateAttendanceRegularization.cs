@@ -83,7 +83,7 @@ internal sealed class CreateAttendanceRegularizationCommandHandler(QubeFinDataCo
         Guid? regularizationId = regularizationIdParam.Value == DBNull.Value ? null : (Guid)regularizationIdParam.Value;
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result.Ok(new CreateAttendanceRegularizationResponse(true, $"Regularization applied successfully"));
+        return Result.Ok(new CreateAttendanceRegularizationResponse(success, $"{message}"));
     }
 }
 #endregion

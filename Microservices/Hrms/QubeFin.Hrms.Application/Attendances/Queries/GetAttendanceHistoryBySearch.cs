@@ -57,7 +57,7 @@ internal sealed class GetAttendanceHistoryByEmployeeQueryHandler(QubeFinDataCont
         {
             query = request.searchParam.SortOn switch
             {
-                _ => request.searchParam.SortDirection == "DESC" ? query.OrderByDescending(m => m.AttendanceDate) : query.OrderBy(m => m.AttendanceDate),
+                _ => request.searchParam.SortDirection == "ASC" ? query.OrderBy(m => m.AttendanceDate) : query.OrderByDescending(m => m.AttendanceDate),
             };
         }
 
@@ -82,10 +82,10 @@ internal sealed class GetAttendanceHistoryByEmployeeQueryHandler(QubeFinDataCont
         return new GetAttendanceHistoryResponse(attendances, total);
     }
 
-    private static string GetWorkingHours(TimeOnly? inTime, TimeOnly? outTime)
+    private static string? GetWorkingHours(TimeOnly? inTime, TimeOnly? outTime)
     {
         if (!inTime.HasValue || !outTime.HasValue)
-            return "-";
+            return null;
 
         var duration = outTime.Value.ToTimeSpan() - inTime.Value.ToTimeSpan();
 
