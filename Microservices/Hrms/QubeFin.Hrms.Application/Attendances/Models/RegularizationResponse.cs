@@ -2,23 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace QubeFin.Persistence.Models.Hrms
+namespace QubeFin.Hrms.Application.Attendances.Models
 {
-    public class RegularizationSearchResult
-    {
-        public Guid Id { get; set; }
-        public string RegularizationType { get; set; } = string.Empty;
-        public string RegularizationDate { get; set; } = string.Empty;
-        public string Reason { get; set; } = null!;
-        public string? Attachment { get; set; }
-        public DateTime CreatedOn { get; set; }
-        public string? Status { get; set; }
-        public string? Category { get; set; }
-        public string? EventStatus { get; set; }
-        public string? EventButtonText { get; set; }
-        public int? TotalCount { get; set; }
-    }
-    public class RegularizationResponse
+    public class RegularizationDetailResponse
     {
         public Guid Id { get; set; }
         public Guid EmployeeId { get; set; }
@@ -31,6 +17,10 @@ namespace QubeFin.Persistence.Models.Hrms
         public string? CurrentStatus { get; set; }
         public bool IsRecommendVisible { get; set; }
         public bool IsApprovalVisible { get; set; }
+        public List<RegularizationEvent> Events { get; set; } = [];
+    }
+    public class RegularizationEvent
+    {
         public string? ApprovalCategory { get; set; }
         public DateTime? EventDate { get; set; }
         public string? Remarks { get; set; }

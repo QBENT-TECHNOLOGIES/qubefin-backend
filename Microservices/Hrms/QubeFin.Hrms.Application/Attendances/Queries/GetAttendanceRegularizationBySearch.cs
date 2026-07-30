@@ -42,7 +42,7 @@ internal sealed class GetRegularizationHistoryBySearchHandler(QubeFinDataContext
           new SqlParameter("@PageIndex", request.searchParam.PageIndex),
           new SqlParameter("@PageSize", request.searchParam.PageSize),
           new SqlParameter("@EmployeeId", request.EmployeeId)
-          )
+        )
         .AsNoTracking()
         .ToListAsync(cancellationToken);
         int? totalRecords = searchResults.Count > 0 ? searchResults[0].TotalCount : 0;

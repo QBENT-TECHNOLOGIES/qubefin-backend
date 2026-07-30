@@ -65,7 +65,8 @@ public class AttendanceEndpoints : IEndpoint
                 return Results.Forbid();
             }
             var empId = principal.Identity.GetEmployeeId();
-            var command = new CreateAttendanceRegularizationCommand(request, empId);
+            var userId = principal.Identity.GetUserId();
+            var command = new CreateAttendanceRegularizationCommand(request, empId, userId);
             var result = await sender.Send(command);
             if (result.IsFailed)
             {
@@ -99,7 +100,8 @@ public class AttendanceEndpoints : IEndpoint
             {
                 return Results.Forbid();
             }
-            var response = await sender.Send(new GetAttendanceRegularizationsByIdQuery(id));
+            var empId = principal.Identity.GetEmployeeId();
+            var response = await sender.Send(new GetAttendanceRegularizationsByIdQuery(id, empId));
             return Results.Ok(response.Value);
         }).WithSummary("Get Attendance Regularizations by Id");
 
