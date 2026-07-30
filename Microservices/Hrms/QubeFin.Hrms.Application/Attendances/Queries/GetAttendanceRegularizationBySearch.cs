@@ -31,7 +31,7 @@ internal sealed class GetRegularizationHistoryBySearchHandler(QubeFinDataContext
     public async Task<GetAttendanceRegularizationBySearchResponse> Handle(GetAttendanceRegularizationBySearch request, CancellationToken cancellationToken)
     {
         var searchResults = await context.Set<RegularizationSearchResult>()
-        .FromSqlRaw("EXEC [Global].[USP_FilteredAttendanceRegularization] @SearchText, @Status, @FromDate, @ToDate, @SortOn, @SortDirection, @PageIndex, @PageSize, @EmployeeId",
+        .FromSqlRaw("EXEC [Hrms].[USP_FilteredAttendanceRegularization] @SearchText, @Status, @FromDate, @ToDate, @SortOn, @SortDirection, @PageIndex, @PageSize, @EmployeeId",
           new SqlParameter("@SearchText", request.searchParam.SearchText ?? ""),
           new SqlParameter("@Status", request.searchParam.Status ?? ""),
           new SqlParameter("@FromDate", request.searchParam.FromDate.ToString() ?? ""),
