@@ -105,26 +105,16 @@ public class AttendanceEndpoints : IEndpoint
             return Results.Ok(response.Value);
         }).WithSummary("Get Attendance Regularizations by Id");
 
-        app.MapGet("attendances/regularizations/decision/{id:guid}/{isApproved}", async (Guid id, bool isApproved, ClaimsPrincipal principal, ISender sender) =>
+        app.MapPost("attendances/regularizations/search-approval", async (ClaimsPrincipal principal, ISender sender, AttendanceSearchRequest request) =>
         {
             if (principal.Identity is null)
             {
                 return Results.Forbid();
             }
-            var userId = principal.Identity.GetUserId();
-            var result = await sender.Send(new ApproveRejectAttendanceRegularizationCommand(id, isApproved, userId));
-            if (result.IsFailed)
-            {
-                if (result.Errors[0] is QubeFin.Core.Results.RecordNotFoundError)
-                {
-                    return Results.NotFound(result.Errors[0]);
-                }
-                if (result.Errors[0] is QubeFin.Core.Results.ValidationError)
-                {
-                    return Results.BadRequest(result.Errors[0]);
-                }
-            }
-            return Results.Ok(result.Value);
-        }).WithSummary("Approve or Reject Attendance Regularization");
+
+            var empId = principal.Identity.GetEmployeeId();
+            var response = await sender.Send(new GetApprovalRegularizationBySearch(empId, request));
+            return Results.Ok(response);
+        }).WithSummary("Search approvals regularization for logged-in employee with optional filters");
     }
 }
