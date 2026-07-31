@@ -23,6 +23,7 @@ public static class DependencyInjection
         services.AddScoped<IAttendanceRepository, AttendanceRepository>();
         services.AddScoped<ISalaryComponentRepository, SalaryComponentRepository>();
         services.AddScoped<ISalaryComponentCategoryRepository, SalaryComponentCategoryRepository>();
+        services.AddScoped<ILeaveRepository, LeaveRepository>();
         return services;
     }
 }
