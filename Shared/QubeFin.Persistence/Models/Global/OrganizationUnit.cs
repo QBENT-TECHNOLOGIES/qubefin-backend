@@ -7,8 +7,11 @@ public class OrganizationUnit
     public string Name { get; set; } = null!;
     public int CodeVal { get; set; }
     public Guid? ParentId { get; set; }
+    public decimal? Latitude { get; set; }
+    public decimal? Longitude { get; set; }
     public TimeOnly? AttendanceInTime { get; set; }
     public TimeOnly? AttendanceOutTime { get; set; }
+    public int? CheckRadiusInMeter { get; set; }
     public DateTime CreatedOn { get; set; }
     public Guid CreatedBy { get; set; }
     public DateTime? LastModifiedOn { get; set; }
@@ -16,24 +19,27 @@ public class OrganizationUnit
 
     private OrganizationUnit() { }
 
-    public OrganizationUnit(Guid id, Guid organizationUnitTypeId, string name, int codeVal, TimeOnly? attendanceInTime, TimeOnly? attendanceOutTime, Guid? parentId,
-        Guid createdBy, DateTime createdOn, Guid? lastModifiedBy, DateTime? lastModifiedOn)
+    public OrganizationUnit(Guid id, Guid organizationUnitTypeId, string name, int codeVal, decimal? latitude, decimal? longitude, TimeOnly? attendanceInTime, TimeOnly? attendanceOutTime, 
+        int? checkRadiusInMeter, Guid? parentId, Guid createdBy, DateTime createdOn, Guid? lastModifiedBy, DateTime? lastModifiedOn)
     {
         Id = id;
         OrganizationUnitTypeId = organizationUnitTypeId;
         Name = name;
         CodeVal = codeVal;
         ParentId = parentId;
+        Latitude = latitude; 
+        Longitude = longitude;
+        AttendanceInTime = attendanceInTime;
+        AttendanceOutTime = attendanceOutTime;
+        CheckRadiusInMeter = checkRadiusInMeter;
         CreatedOn = createdOn;
         CreatedBy = createdBy;
         LastModifiedOn = lastModifiedOn;
         LastModifiedBy = lastModifiedBy;
-        AttendanceInTime = attendanceInTime;
-        AttendanceOutTime = attendanceOutTime;
     }
 
-    public static OrganizationUnit Create(Guid id, Guid organizationUnitTypeId, string name, int codeVal, Guid? parentId,
-        TimeOnly? attendanceInTime, TimeOnly? attendanceOutTime, Guid createdBy)
+    public static OrganizationUnit Create(Guid id, Guid organizationUnitTypeId, string name, int codeVal, Guid? parentId, decimal? latitude, decimal? longitude,
+        TimeOnly? attendanceInTime, TimeOnly? attendanceOutTime, int? checkRadiusInMeter, Guid createdBy)
     {
         var organizationUnit = new OrganizationUnit
         {
@@ -42,8 +48,11 @@ public class OrganizationUnit
             Name = name,
             CodeVal = codeVal,
             ParentId = parentId,
+            Latitude = latitude, 
+            Longitude = longitude,
             AttendanceInTime = attendanceInTime,
             AttendanceOutTime = attendanceOutTime,
+            CheckRadiusInMeter = checkRadiusInMeter,
             CreatedBy = createdBy,
             CreatedOn = DateTime.Now
         };
@@ -53,8 +62,11 @@ public class OrganizationUnit
     public void Update(Guid organizationUnitTypeId,
         string name,
         int codeVal,
+        decimal? latitude, 
+        decimal? longitude,
         TimeOnly? attendanceInTime,
         TimeOnly? attendanceOutTime,
+        int? checkRadiusInMeter,
         Guid? parentId,
         Guid lastModifiedBy)
     {
@@ -62,8 +74,11 @@ public class OrganizationUnit
         OrganizationUnitTypeId = organizationUnitTypeId;
         CodeVal = codeVal;
         ParentId = parentId;
+        Latitude = latitude;
+        Longitude = longitude;
         AttendanceInTime = attendanceInTime;
         AttendanceOutTime = attendanceOutTime;
+        CheckRadiusInMeter = checkRadiusInMeter;
         LastModifiedBy = lastModifiedBy;
         LastModifiedOn = DateTime.Now;
     }

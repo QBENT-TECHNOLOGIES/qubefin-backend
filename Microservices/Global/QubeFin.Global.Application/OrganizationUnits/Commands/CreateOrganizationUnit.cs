@@ -7,8 +7,8 @@ using QubeFin.Persistence.Models.Global;
 namespace QubeFin.Global.Application.OrganizationUnis.Commands;
 
 #region --- COMMAND ---
-public record CreateOrganizationUnitCommand(Guid OrganizationUnitTypeId, string Name, int CodeVal, Guid? ParentId,
-        TimeOnly? AttendanceInTime, TimeOnly? AttendanceOutTime, Guid UserId) : IRequest<Result<CreateOrganizationUnitResponse>>;
+public record CreateOrganizationUnitCommand(Guid OrganizationUnitTypeId, string Name, int CodeVal, Guid? ParentId, decimal? Latitude, decimal? Longitude,
+        TimeOnly? AttendanceInTime, TimeOnly? AttendanceOutTime, int? CheckRadiusInMeter, Guid UserId) : IRequest<Result<CreateOrganizationUnitResponse>>;
 #endregion
 
 #region --- RESPONSE ---
@@ -22,7 +22,7 @@ internal sealed class CreateOrganizationUnitCommandHandler(IOrganizationUnitRepo
     public async Task<Result<CreateOrganizationUnitResponse>> Handle(CreateOrganizationUnitCommand request, CancellationToken cancellationToken)
     {
         var organizationUnit = OrganizationUnit.Create(Guid.NewGuid(), request.OrganizationUnitTypeId, request.Name, request.CodeVal, request.ParentId,
-            request.AttendanceInTime, request.AttendanceOutTime, request.UserId);
+            request.Latitude, request.Longitude, request.AttendanceInTime, request.AttendanceOutTime, request.CheckRadiusInMeter, request.UserId);
         await organizationUnitRepository.AddAsync(organizationUnit);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Ok(new CreateOrganizationUnitResponse(true));

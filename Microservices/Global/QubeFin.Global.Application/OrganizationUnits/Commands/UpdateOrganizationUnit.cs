@@ -7,8 +7,8 @@ using QubeFin.Persistence;
 namespace QubeFin.Global.Application.OrganizationUnits.Commands;
 
 #region --- COMMAND ---
-public record UpdateOrganizationUnitCommand(Guid Id, Guid OrganizationUnitTypeId, string Name, int CodeVal, TimeOnly? AttendanceInTime,
-        TimeOnly? AttendanceOutTime, Guid? ParentId, Guid UserId) : IRequest<Result<UpdateOrganizationUnitResponse>>;
+public record UpdateOrganizationUnitCommand(Guid Id, Guid OrganizationUnitTypeId, string Name, int CodeVal, decimal? Latitude, decimal? Longitude,
+    TimeOnly? AttendanceInTime, TimeOnly? AttendanceOutTime, int? CheckRadiusInMeter, Guid? ParentId, Guid UserId) : IRequest<Result<UpdateOrganizationUnitResponse>>;
 #endregion
 
 #region --- RESPONSE ---
@@ -27,7 +27,7 @@ internal sealed class UpdateOrganizationUnitCommandHandler(IOrganizationUnitRepo
             return new RecordNotFoundError($"Organization Unit not found for the given Id");
         }
 
-        organizationUnit.Update(request.OrganizationUnitTypeId, request.Name, request.CodeVal, request.AttendanceInTime, request.AttendanceOutTime, request.ParentId, request.UserId);
+        organizationUnit.Update(request.OrganizationUnitTypeId, request.Name, request.CodeVal, request.Latitude, request.Longitude, request.AttendanceInTime, request.AttendanceOutTime, request.CheckRadiusInMeter, request.ParentId, request.UserId);
         organizationUnitRepository.Update(organizationUnit);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Ok(new UpdateOrganizationUnitResponse(true));

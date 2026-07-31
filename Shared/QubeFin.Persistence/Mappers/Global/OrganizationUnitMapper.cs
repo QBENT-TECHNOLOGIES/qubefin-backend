@@ -12,8 +12,11 @@ public static class OrganizationUnitMapper
             entity.OrganizationUnitTypeId,
             entity.Name,
             entity.CodeVal,
+            entity.Latitude,
+            entity.Longitude,
             entity.AttendanceInTime,
             entity.AttendanceOutTime,
+            entity.CheckRadiusInMeter,
             entity.ParentId,
             entity.CreatedBy,
             entity.CreatedOn,
@@ -31,12 +34,15 @@ public static class OrganizationUnitMapper
             Name = domain.Name,
             CodeVal = domain.CodeVal,
             ParentId = domain.ParentId,
+            Latitude = domain.Latitude,
+            Longitude = domain.Longitude,
+            AttendanceInTime = domain.AttendanceInTime,
+            AttendanceOutTime = domain.AttendanceOutTime,
+            CheckRadiusInMeter = domain.CheckRadiusInMeter,
             CreatedBy = domain.CreatedBy,
             CreatedOn = domain.CreatedOn,
             LastModifiedBy = domain.LastModifiedBy,
-            LastModifiedOn = domain.LastModifiedOn,
-            AttendanceInTime = domain.AttendanceInTime,
-            AttendanceOutTime = domain.AttendanceOutTime
+            LastModifiedOn = domain.LastModifiedOn
         };
     }
 
