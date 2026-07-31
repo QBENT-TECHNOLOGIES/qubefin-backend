@@ -32,7 +32,7 @@ internal sealed class GetApprovalRegularizationBySearchHandler(QubeFinDataContex
     public async Task<GetApprovalRegularizationBySearchResponse> Handle(GetApprovalRegularizationBySearch request, CancellationToken cancellationToken)
     {
         var searchResults = await context.Set<RegularizationSearchResult>()
-        .FromSqlRaw("EXEC [Hrms].[USP_FilteredRegularizationApprovals] @SearchText, @Status, @FromDate, @ToDate, @SortOn, @SortDirection, @PageIndex, @PageSize, @EmployeeId",
+        .FromSqlRaw("EXEC [Hrms].[USP_FilteredRegularizationApprovals] @SearchText, @FromDate, @ToDate, @SortOn, @SortDirection, @PageIndex, @PageSize, @EmployeeId",
           new SqlParameter("@SearchText", request.searchParam.SearchText ?? ""),
           new SqlParameter("@FromDate", (object?)request.searchParam.FromDate ?? DBNull.Value),
           new SqlParameter("@ToDate", (object?)request.searchParam.ToDate ?? DBNull.Value),
