@@ -105,7 +105,7 @@ public class AttendanceEndpoints : IEndpoint
             return Results.Ok(response.Value);
         }).WithSummary("Get Attendance Regularizations by Id");
 
-        app.MapPost("attendances/regularizations/search-approval", async (ClaimsPrincipal principal, ISender sender, AttendanceSearchRequest request) =>
+        app.MapPost("attendances/regularizations/search-approval", async (ClaimsPrincipal principal, ISender sender, AttendanceApprovalSearchRequest request) =>
         {
             if (principal.Identity is null)
             {

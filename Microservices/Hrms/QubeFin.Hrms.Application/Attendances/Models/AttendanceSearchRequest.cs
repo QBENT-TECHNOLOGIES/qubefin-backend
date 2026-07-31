@@ -8,4 +8,10 @@ namespace QubeFin.Hrms.Application.Attendances.Models
         public DateOnly? ToDate { get; set; }
         public string? Status { get; set; }
     }
+    public class AttendanceApprovalSearchRequest : SearchParam
+    {
+        public DateOnly? FromDate { get; set; }
+        public DateOnly? ToDate { get; set; }
+        public Guid? SearchEmployeeId { get; set; }
+    }
 }

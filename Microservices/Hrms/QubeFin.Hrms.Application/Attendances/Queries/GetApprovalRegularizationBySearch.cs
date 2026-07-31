@@ -9,7 +9,7 @@ using QubeFin.Persistence.Models.Hrms;
 namespace QubeFin.Hrms.Application.Attendances.Queries;
 
 #region --- QUERY ---
-public record GetApprovalRegularizationBySearch(Guid EmployeeId, AttendanceSearchRequest searchParam) : IRequest<GetApprovalRegularizationBySearchResponse>;
+public record GetApprovalRegularizationBySearch(Guid EmployeeId, AttendanceApprovalSearchRequest searchParam) : IRequest<GetApprovalRegularizationBySearchResponse>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -40,7 +40,8 @@ internal sealed class GetApprovalRegularizationBySearchHandler(QubeFinDataContex
           new SqlParameter("@SortDirection", request.searchParam.SortDirection ?? ""),
           new SqlParameter("@PageIndex", request.searchParam.PageIndex),
           new SqlParameter("@PageSize", request.searchParam.PageSize),
-          new SqlParameter("@EmployeeId", request.EmployeeId)
+          new SqlParameter("@EmployeeId", request.EmployeeId),
+          new SqlParameter("@SearchEmployeeId", (object?)request.searchParam.SearchEmployeeId ?? DBNull.Value)
         )
         .AsNoTracking()
         .ToListAsync(cancellationToken);
