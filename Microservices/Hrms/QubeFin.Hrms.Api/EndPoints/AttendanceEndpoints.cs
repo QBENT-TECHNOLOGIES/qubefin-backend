@@ -105,28 +105,6 @@ public class AttendanceEndpoints : IEndpoint
             return Results.Ok(response.Value);
         }).WithSummary("Get Attendance Regularizations by Id");
 
-        app.MapGet("attendances/regularizations/submit/{id:guid}", async (Guid id, ClaimsPrincipal principal, ISender sender) =>
-        {
-            if (principal.Identity is null)
-            {
-                return Results.Forbid();
-            }
-            var empId = principal.Identity.GetEmployeeId();
-            var result = await sender.Send(new SubmitAttendanceRegularizationCommand(id, empId));
-            if (result.IsFailed)
-            {
-                if (result.Errors[0] is QubeFin.Core.Results.RecordNotFoundError)
-                {
-                    return Results.NotFound(result.Errors[0]);
-                }
-                if (result.Errors[0] is QubeFin.Core.Results.ValidationError)
-                {
-                    return Results.BadRequest(result.Errors[0]);
-                }
-            }
-            return Results.Ok(result.Value);
-        }).WithSummary("Submit Attendance Regularization");
-
         app.MapGet("attendances/regularizations/decision/{id:guid}/{isApproved}", async (Guid id, bool isApproved, ClaimsPrincipal principal, ISender sender) =>
         {
             if (principal.Identity is null)

@@ -29,7 +29,8 @@ internal sealed class GetAttendanceHistoryByEmployeeQueryHandler(QubeFinDataCont
 {
     public async Task<GetAttendanceHistoryResponse> Handle(GetAttendanceHistoryByQuery request, CancellationToken cancellationToken)
     {
-        var query = context.TblAttendances.AsNoTracking().Where(m => m.EmployeeId == request.EmployeeId).AsQueryable();
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var query = context.TblAttendances.Where(x => x.EmployeeId == request.EmployeeId && x.AttendanceDate < today).AsNoTracking().AsQueryable();
 
         if (request.searchParam.FromDate.HasValue)
         {
