@@ -116,5 +116,17 @@ public class AttendanceEndpoints : IEndpoint
             var response = await sender.Send(new GetApprovalRegularizationBySearch(empId, request));
             return Results.Ok(response);
         }).WithSummary("Search approvals regularization for logged-in employee with optional filters");
+
+        app.MapPost("attendances/regularizations/submit", async (ClaimsPrincipal principal, ISender sender, RegularizationSubmit request) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+
+            var empId = principal.Identity.GetEmployeeId();
+            var response = await sender.Send(new SubmitAttendanceRegularizationCommand(request, empId));
+            return Results.Ok(response);
+        }).WithSummary("Decision regularization (Approved/Reject/Recommend)");
     }
 }

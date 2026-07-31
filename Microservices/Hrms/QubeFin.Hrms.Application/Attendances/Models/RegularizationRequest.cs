@@ -10,4 +10,10 @@ namespace QubeFin.Hrms.Application.Attendances.Models
         public string Reason { get; set; } = null!;
         public IFormFile? Attachment { get; set; }
     }
+    public class RegularizationSubmit
+    {
+        public Guid Id { get; set; }
+        public string Decision { get; set; } = string.Empty;
+        public string Remarks { get; set; } = string.Empty;
+    }
 }

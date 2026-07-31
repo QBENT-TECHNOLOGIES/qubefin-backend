@@ -23,7 +23,7 @@ public class GetApprovalRegularizationBySearchValidator : AbstractValidator<GetA
 #endregion
 
 #region --- RESPONSE ---
-public record GetApprovalRegularizationBySearchResponse(IReadOnlyList<RegularizationSearchResult> results, int TotalRecords);
+public record GetApprovalRegularizationBySearchResponse(IReadOnlyList<RegularizationApprovalSearchResult> results, int TotalRecords);
 #endregion
 
 #region --- HANDLER ---
@@ -31,7 +31,7 @@ internal sealed class GetApprovalRegularizationBySearchHandler(QubeFinDataContex
 {
     public async Task<GetApprovalRegularizationBySearchResponse> Handle(GetApprovalRegularizationBySearch request, CancellationToken cancellationToken)
     {
-        var searchResults = await context.Set<RegularizationSearchResult>()
+        var searchResults = await context.Set<RegularizationApprovalSearchResult>()
         .FromSqlRaw("EXEC [Hrms].[USP_FilteredRegularizationApprovals] @SearchText, @FromDate, @ToDate, @SortOn, @SortDirection, @PageIndex, @PageSize, @EmployeeId",
           new SqlParameter("@SearchText", request.searchParam.SearchText ?? ""),
           new SqlParameter("@FromDate", (object?)request.searchParam.FromDate ?? DBNull.Value),
