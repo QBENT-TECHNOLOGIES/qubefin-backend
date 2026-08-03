@@ -51,11 +51,11 @@ internal sealed class LeaveRequestActionCommandHandler(QubeFinDataContext contex
                 await cmd.ExecuteNonQueryAsync(cancellationToken);
             }
 
-            return Result.Ok(new LeaveRequestActionResponse(true, $"The leave request has been {(request.IsApproved ? "approved" : "rejected")} successfully."));
+            return Result.Ok(new LeaveRequestActionResponse(true, $"The leave request has been {(request.IsApproved  ? "approved" : request.IsRejected ? "rejected" : "recommended")} successfully."));
         }
         catch
         {
-            return Result.Ok(new LeaveRequestActionResponse(false, $"Faild to  {(request.IsApproved ? "approved" : "rejected")}. Please try again later."));
+            return Result.Ok(new LeaveRequestActionResponse(false, $"Faild to  {(request.IsApproved ? "approve" : request.IsRejected ? "reject" : "recommend")}. Please try again later."));
         }
     }
 }
