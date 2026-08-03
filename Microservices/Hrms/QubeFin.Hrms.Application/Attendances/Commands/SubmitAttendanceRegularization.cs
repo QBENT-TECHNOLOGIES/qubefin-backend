@@ -36,7 +36,7 @@ internal sealed class SubmitAttendanceRegularizationCommandHandler(QubeFinDataCo
         try
         {
             await context.Database.ExecuteSqlRawAsync(
-                @"EXEC [Hrms].[USP_SubmitRegularization]
+                @"EXEC [Hrms].[USP_RegularizationAction]
                     @Id,
                     @EmployeeId,
                     @Decision,

@@ -33,7 +33,7 @@ internal sealed class GetAttendanceRegularizationsByIdQueryHandler(QubeFinDataCo
     public async Task<Result<GetAttendanceRegularizationsByIdResponse>> Handle(GetAttendanceRegularizationsByIdQuery request, CancellationToken cancellationToken)
     {
         var regularizationResponse = await context.Set<RegularizationResponse>()
-       .FromSqlRaw("EXEC [Hrms].[USP_GetRegularization] @Id, @EmployeeId",
+       .FromSqlRaw("EXEC [Hrms].[USP_RegularizationGet] @Id, @EmployeeId",
          new SqlParameter("@Id", request.Id),
          new SqlParameter("@EmployeeId", request.EmployeeId)
         )
