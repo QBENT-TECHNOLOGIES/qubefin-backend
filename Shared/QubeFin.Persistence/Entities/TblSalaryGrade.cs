@@ -21,7 +21,7 @@ public partial class TblSalaryGrade
 
     public Guid? LastModifiedBy { get; set; }
 
-    public virtual ICollection<TblLeaveEvent> TblLeaveEvents { get; set; } = new List<TblLeaveEvent>();
+    public virtual ICollection<TblApprovalWorkflowEvent> TblApprovalWorkflowEvents { get; set; } = new List<TblApprovalWorkflowEvent>();
 
     public virtual ICollection<TblPayRoll> TblPayRolls { get; set; } = new List<TblPayRoll>();
 

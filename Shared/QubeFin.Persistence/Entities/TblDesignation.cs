@@ -27,15 +27,15 @@ public partial class TblDesignation
 
     public virtual TblPost Post { get; set; } = null!;
 
+    public virtual ICollection<TblApprovalRequestEvent> TblApprovalRequestEventReceiverDesignations { get; set; } = new List<TblApprovalRequestEvent>();
+
+    public virtual ICollection<TblApprovalRequestEvent> TblApprovalRequestEventSenderDesignations { get; set; } = new List<TblApprovalRequestEvent>();
+
     public virtual ICollection<TblDesignationRole> TblDesignationRoles { get; set; } = new List<TblDesignationRole>();
 
     public virtual ICollection<TblEmployeeDesignation> TblEmployeeDesignations { get; set; } = new List<TblEmployeeDesignation>();
 
     public virtual ICollection<TblGroup> TblGroups { get; set; } = new List<TblGroup>();
-
-    public virtual ICollection<TblLeaveRequestEvent> TblLeaveRequestEventReceiverDesignations { get; set; } = new List<TblLeaveRequestEvent>();
-
-    public virtual ICollection<TblLeaveRequestEvent> TblLeaveRequestEventSenderDesignations { get; set; } = new List<TblLeaveRequestEvent>();
 
     public virtual ICollection<TblLoanApplicationWorkflow> TblLoanApplicationWorkflows { get; set; } = new List<TblLoanApplicationWorkflow>();
 

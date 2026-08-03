@@ -1,13 +1,18 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using QubeFin.Core.Results;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Mappers.Hrms;
+using QubeFin.Persistence.Models.Hrms;
 using System.Data;
 
 namespace QubeFin.Hrms.Persistence.Repositories;
 
 public interface ILeaveRepository
 {
+    Task<LeaveRequest?> GetByIdAsync(Guid id);
     Task<string> AddAsync(Guid employeeId, Guid leaveTypeId, DateOnly fromDate, DateOnly toDate, string address, string reason, string enclosedFileName, string enclosedFileNo);
+    Task<bool> SubmitAsync(Guid id, Guid userId);
 }
 
 public class LeaveRepository(QubeFinDataContext context) : ILeaveRepository
@@ -53,5 +58,27 @@ public class LeaveRepository(QubeFinDataContext context) : ILeaveRepository
         }
 
         return returnMessage;
+    }
+
+    public async Task<LeaveRequest?> GetByIdAsync(Guid id)
+    {
+        var leaveRequestEntity = await context.TblLeaveRequests.AsNoTracking().SingleOrDefaultAsync(m => m.Id == id);
+        return leaveRequestEntity?.ToDomain();
+
+    }
+
+    public async Task<bool> SubmitAsync(Guid id, Guid userId)
+    {
+        var leaveRequestEntity = await context.TblLeaveRequests.AsNoTracking().SingleOrDefaultAsync(m => m.Id == id);
+        //if (leaveRequestEntity == null)
+        //{
+        //    return new RecordNotFoundError($"Leave Request not found for the given Id");
+        //}
+
+        leaveRequestEntity.IsSubmitted = true;
+        leaveRequestEntity.SubmittedOn = DateTime.Now;
+        leaveRequestEntity.SubmittedBy = userId;
+
+        return true;
     }
 }
