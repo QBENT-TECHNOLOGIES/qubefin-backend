@@ -2,6 +2,8 @@
 using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
 using QubeFin.Core.Results;
+using QubeFin.Hrms.Api.Requests;
+using QubeFin.Hrms.Application.Attendances.Queries;
 using QubeFin.Hrms.Application.Leaves.Commands;
 using QubeFin.Hrms.Application.Leaves.Queries;
 using System.Security.Claims;
@@ -58,6 +60,22 @@ public class LeaveEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         .WithSummary("Creates New Leave Request")
+        .WithTags("Leave Requests");
+        #endregion
+        #region --- ACTION ---
+
+        app.MapPost("leaves/action", async (ClaimsPrincipal principal, ISender sender, LeaveRequestActionRequest request) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+
+            var userId = principal.Identity.GetUserId();
+            var response = await sender.Send(new LeaveRequestActionCommand(request.LeaveRequestId, request.IsApproved, request.IsRejected, userId, request.RejectedReason));
+            return Results.Ok(response);
+        })
+        .WithSummary("Leave Request Action")
         .WithTags("Leave Requests");
         #endregion
     }
