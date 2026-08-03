@@ -21,11 +21,7 @@ public partial class TblLeaveRequestEvent
 
     public string? Remarks { get; set; }
 
-    public virtual TblLeaveEvent LeaveEvent { get; set; } = null!;
-
     public virtual TblLeaveRequest LeaveRequest { get; set; } = null!;
-
-    public virtual TblLeaveEvent? NextLeaveEvent { get; set; }
 
     public virtual TblDesignation ReceiverDesignation { get; set; } = null!;
 

@@ -11,29 +11,15 @@ public partial class QubeFinDataContext : DbContext, IUnitOfWork
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<MenuHierarchyItem>()
-            .HasNoKey()
-            .ToView(null);
-
-        modelBuilder.Entity<AdministrativeHierarchyItem>()
-            .HasNoKey()
-            .ToView(null);
-
-        modelBuilder.Entity<OrganizationUnitHierarchyItem>()
-            .HasNoKey()
-            .ToView(null);
-
-        modelBuilder.Entity<SurveyResults>()
-            .HasNoKey()
-            .ToView(null);
-
-        modelBuilder.Entity<EmployeewiseLeaveTypeBalance>()
-            .HasNoKey()
-            .ToView(null);
-
-        modelBuilder.Entity<EmployeeLeaveRequest>()
-            .HasNoKey()
-            .ToView(null);
+        modelBuilder.Entity<MenuHierarchyItem>().HasNoKey().ToView(null);
+        modelBuilder.Entity<AdministrativeHierarchyItem>().HasNoKey().ToView(null);
+        modelBuilder.Entity<OrganizationUnitHierarchyItem>().HasNoKey().ToView(null);
+        modelBuilder.Entity<SurveyResults>().HasNoKey().ToView(null);
+        modelBuilder.Entity<EmployeewiseLeaveTypeBalance>().HasNoKey().ToView(null);
+        modelBuilder.Entity<EmployeeLeaveRequest>().HasNoKey().ToView(null);
+        modelBuilder.Entity<RegularizationSearchResult>().HasNoKey().ToView(null);
+        modelBuilder.Entity<RegularizationResponse>().HasNoKey().ToView(null);
+        modelBuilder.Entity<RegularizationApprovalSearchResult>().HasNoKey().ToView(null);
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
