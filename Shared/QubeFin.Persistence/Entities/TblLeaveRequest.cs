@@ -33,5 +33,9 @@ public partial class TblLeaveRequest
 
     public string CurrentStatus { get; set; } = null!;
 
-    public virtual ICollection<TblLeaveRequestEvent> TblLeaveRequestEvents { get; set; } = new List<TblLeaveRequestEvent>();
+    public bool IsSubmitted { get; set; }
+
+    public DateTime? SubmittedOn { get; set; }
+
+    public Guid? SubmittedBy { get; set; }
 }

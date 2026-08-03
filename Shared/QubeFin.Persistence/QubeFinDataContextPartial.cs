@@ -7,6 +7,8 @@ namespace QubeFin.Persistence;
 
 public partial class QubeFinDataContext : DbContext, IUnitOfWork
 {
+    public virtual DbSet<EmployeeLeaveRequest> EmployeeLeaveRequest { get; set; }
+
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<MenuHierarchyItem>().HasNoKey().ToView(null);
@@ -14,6 +16,7 @@ public partial class QubeFinDataContext : DbContext, IUnitOfWork
         modelBuilder.Entity<OrganizationUnitHierarchyItem>().HasNoKey().ToView(null);
         modelBuilder.Entity<SurveyResults>().HasNoKey().ToView(null);
         modelBuilder.Entity<EmployeewiseLeaveTypeBalance>().HasNoKey().ToView(null);
+        modelBuilder.Entity<EmployeeLeaveRequest>().HasNoKey().ToView(null);
         modelBuilder.Entity<RegularizationSearchResult>().HasNoKey().ToView(null);
         modelBuilder.Entity<RegularizationResponse>().HasNoKey().ToView(null);
         modelBuilder.Entity<RegularizationApprovalSearchResult>().HasNoKey().ToView(null);
@@ -22,5 +25,12 @@ public partial class QubeFinDataContext : DbContext, IUnitOfWork
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         return base.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<List<EmployeeLeaveRequest>> SP_GetEmployeeLeaveRequests(int year, Guid employeeId)
+    {
+        return await EmployeeLeaveRequest
+            .FromSqlInterpolated($"[Hrms].[USP_GetLeaveRequestsByEmployee] @p_Year = {year}, @p_EmployeeId = {employeeId}")
+            .ToListAsync();
     }
 }

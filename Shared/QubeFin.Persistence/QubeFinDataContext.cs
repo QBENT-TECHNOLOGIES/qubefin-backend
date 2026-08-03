@@ -106,8 +106,6 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblLeaveRequestDocument> TblLeaveRequestDocuments { get; set; }
 
-    public virtual DbSet<TblLeaveRequestEvent> TblLeaveRequestEvents { get; set; }
-
     public virtual DbSet<TblLeaveStatus> TblLeaveStatuses { get; set; }
 
     public virtual DbSet<TblLeaveTransaction> TblLeaveTransactions { get; set; }
@@ -347,6 +345,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Category).HasMaxLength(20);
             entity.Property(e => e.EventDate).HasPrecision(0);
             entity.Property(e => e.Remarks).HasMaxLength(500);
+            entity.Property(e => e.SubmittedOn).HasColumnType("datetime");
 
             entity.HasOne(d => d.ReceiverDesignation).WithMany(p => p.TblApprovalRequestEventReceiverDesignations)
                 .HasForeignKey(d => d.ReceiverDesignationId)
@@ -1123,6 +1122,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.EnclosedDocNo).HasMaxLength(30);
             entity.Property(e => e.Reason).HasMaxLength(500);
             entity.Property(e => e.RequestDate).HasColumnType("datetime");
+            entity.Property(e => e.SubmittedOn).HasColumnType("datetime");
             entity.Property(e => e.TotalDays).HasComputedColumnSql("(datediff(day,[FromDate],[ToDate])+(1))", false);
         });
 
@@ -1135,30 +1135,6 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.DocumentFileSeq).HasMaxLength(200);
             entity.Property(e => e.DocumentType).HasMaxLength(100);
             entity.Property(e => e.UploadedOn).HasColumnType("datetime");
-        });
-
-        modelBuilder.Entity<TblLeaveRequestEvent>(entity =>
-        {
-            entity.ToTable("Tbl_LeaveRequestEvent", "Hrms");
-
-            entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.EventDate).HasPrecision(0);
-            entity.Property(e => e.Remarks).HasMaxLength(500);
-
-            entity.HasOne(d => d.LeaveRequest).WithMany(p => p.TblLeaveRequestEvents)
-                .HasForeignKey(d => d.LeaveRequestId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Tbl_LeaveRequestEvent_Tbl_LeaveRequest");
-
-            entity.HasOne(d => d.ReceiverDesignation).WithMany(p => p.TblLeaveRequestEventReceiverDesignations)
-                .HasForeignKey(d => d.ReceiverDesignationId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Tbl_LeaveRequestEvent_Tbl_Designation1");
-
-            entity.HasOne(d => d.SenderDesignation).WithMany(p => p.TblLeaveRequestEventSenderDesignations)
-                .HasForeignKey(d => d.SenderDesignationId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Tbl_LeaveRequestEvent_Tbl_Designation");
         });
 
         modelBuilder.Entity<TblLeaveStatus>(entity =>
@@ -1743,8 +1719,8 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())", "DF_Tbl_OrganizationUnit_Id");
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
-            entity.Property(e => e.Latitude).HasColumnType("numeric(19, 10)");
-            entity.Property(e => e.Longitude).HasColumnType("numeric(19, 10)");
+            entity.Property(e => e.Latitude).HasColumnType("numeric(19, 15)");
+            entity.Property(e => e.Longitude).HasColumnType("numeric(19, 15)");
             entity.Property(e => e.Name).HasMaxLength(50);
 
             entity.HasOne(d => d.Company).WithMany(p => p.TblOrganizationUnits)
