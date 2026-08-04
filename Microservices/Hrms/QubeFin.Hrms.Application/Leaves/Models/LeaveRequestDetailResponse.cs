@@ -14,7 +14,7 @@
         public string? EnclosedDocName { get; set; }
         public string? EnclosedDocNo { get; set; }
         public bool? IsSubmitted { get; set; }
-        public bool? IsCancelled { get; set; }
+        public bool? IsCancellable { get; set; }
         public string? RejectedReason { get; set; }
         public List<LeaveRequestEvent> Events { get; set;  } = new List<LeaveRequestEvent>();
 

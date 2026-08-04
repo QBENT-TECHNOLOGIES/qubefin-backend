@@ -82,7 +82,7 @@ public class LeaveEndpoints : IEndpoint
         #endregion
         #region --- SUBMIT ---
 
-        app.MapGet("leaves/submit/{id}", async (ClaimsPrincipal principal, ISender sender, Guid id) =>
+        app.MapGet("leaves/requests/submit/{id}", async (ClaimsPrincipal principal, ISender sender, Guid id) =>
         {
             if (principal.Identity is null)
             {
@@ -98,7 +98,7 @@ public class LeaveEndpoints : IEndpoint
         #endregion
         #region --- CANCEL ---
 
-        app.MapPost("leaves/cancel/{id}", async (ClaimsPrincipal principal, ISender sender, CancelLeaveRequest request) =>
+        app.MapPost("leaves/requests/cancel/{id}", async (ClaimsPrincipal principal, ISender sender, CancelLeaveRequest request) =>
         {
             if (principal.Identity is null)
             {

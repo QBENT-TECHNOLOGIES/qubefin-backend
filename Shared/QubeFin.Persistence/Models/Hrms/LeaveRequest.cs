@@ -75,7 +75,7 @@ public class LeaveRequestResponse
     public string? EnclosedDocName { get; set; }
     public string? EnclosedDocNo { get; set; }
     public bool? IsSubmitted { get; set; }
-    public bool? IsCancelled { get; set; }
+    public bool? IsCancellable { get; set; }
     public string? RejectedReason { get; set; }
     public string? ApprovalCategory { get; set; }
     public DateTime? EventDate { get; set; }

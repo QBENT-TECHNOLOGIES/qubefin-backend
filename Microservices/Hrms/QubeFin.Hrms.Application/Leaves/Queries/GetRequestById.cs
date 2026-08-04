@@ -57,7 +57,7 @@ internal sealed class GetRequestByIdQueryHandler(QubeFinDataContext context) : I
             EnclosedDocName = first.EnclosedDocName,
             EnclosedDocNo = first.EnclosedDocNo,
             IsSubmitted = first.IsSubmitted,
-            IsCancelled = first.IsCancelled,
+            IsCancellable = first.IsCancellable,
             RejectedReason = first.RejectedReason,
 
             Events = regularizationResponse.Select(x => new LeaveRequestEvent
