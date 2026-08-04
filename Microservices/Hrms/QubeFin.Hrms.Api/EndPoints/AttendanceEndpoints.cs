@@ -33,7 +33,7 @@ public class AttendanceEndpoints : IEndpoint
                 }
             }
             return Results.Ok(result.Value);
-        }).WithSummary("Attendance Check in and Check out Saved");
+        }).WithSummary("Attendance Check in and Check out Saved").WithTags("Attendance");
 
         app.MapGet("attendances", async (ClaimsPrincipal principal, ISender sender) =>
         {
@@ -44,7 +44,7 @@ public class AttendanceEndpoints : IEndpoint
             var empId = principal.Identity.GetEmployeeId();
             var response = await sender.Send(new GetAttendanceByEmployeeQuery(empId));
             return Results.Ok(response.Value);
-        }).WithSummary("Today's Attendance");
+        }).WithSummary("Today's Attendance").WithTags("Attendance");
 
         app.MapPost("attendances/history", async (ClaimsPrincipal principal, ISender sender, AttendanceSearchRequest request) =>
         {
@@ -56,7 +56,7 @@ public class AttendanceEndpoints : IEndpoint
             var empId = principal.Identity.GetEmployeeId();
             var response = await sender.Send(new GetAttendanceHistoryByQuery(empId, request));
             return Results.Ok(response);
-        }).WithSummary("Get attendance history for logged-in employee with optional filters");
+        }).WithSummary("Get attendance history for logged-in employee with optional filters").WithTags("Attendance");
 
         app.MapPost("attendances/regularizations", async (ClaimsPrincipal principal, [FromForm] RegularizationRequest request, ISender sender) =>
         {
@@ -80,7 +80,7 @@ public class AttendanceEndpoints : IEndpoint
                 }
             }
             return Results.Ok(result.Value);
-        }).DisableAntiforgery().WithSummary("Create Attendance Regularization");
+        }).DisableAntiforgery().WithSummary("Create Attendance Regularization").WithTags("Regularization");
 
         app.MapPost("attendances/regularizations/search", async (ClaimsPrincipal principal, ISender sender, AttendanceSearchRequest request) =>
         {
@@ -92,7 +92,7 @@ public class AttendanceEndpoints : IEndpoint
             var empId = principal.Identity.GetEmployeeId();
             var response = await sender.Send(new GetAttendanceRegularizationBySearch(empId, request));
             return Results.Ok(response);
-        }).WithSummary("Search attendance regularization for logged-in employee with optional filters");
+        }).WithSummary("Search attendance regularization for logged-in employee with optional filters").WithTags("Regularization"); ;
 
         app.MapGet("attendances/regularizations/{id:guid}", async (Guid id, ClaimsPrincipal principal, ISender sender) =>
         {
@@ -103,7 +103,7 @@ public class AttendanceEndpoints : IEndpoint
             var empId = principal.Identity.GetEmployeeId();
             var response = await sender.Send(new GetAttendanceRegularizationsByIdQuery(id, empId));
             return Results.Ok(response.Value);
-        }).WithSummary("Get Attendance Regularizations by Id");
+        }).WithSummary("Get Attendance Regularizations by Id").WithTags("Regularization");
 
         app.MapPost("attendances/regularizations/search-approval", async (ClaimsPrincipal principal, ISender sender, AttendanceApprovalSearchRequest request) =>
         {
@@ -115,7 +115,7 @@ public class AttendanceEndpoints : IEndpoint
             var empId = principal.Identity.GetEmployeeId();
             var response = await sender.Send(new GetApprovalRegularizationBySearch(empId, request));
             return Results.Ok(response);
-        }).WithSummary("Search approvals regularization for logged-in employee with optional filters");
+        }).WithSummary("Search approvals regularization for logged-in employee with optional filters").WithTags("Regularization");
 
         app.MapPost("attendances/regularizations/submit", async (ClaimsPrincipal principal, ISender sender, RegularizationSubmit request) =>
         {
@@ -127,6 +127,6 @@ public class AttendanceEndpoints : IEndpoint
             var empId = principal.Identity.GetEmployeeId();
             var response = await sender.Send(new SubmitAttendanceRegularizationCommand(request, empId));
             return Results.Ok(response);
-        }).WithSummary("Decision regularization (Approved/Reject/Recommend)");
+        }).WithSummary("Decision regularization (Approved/Reject/Recommend)").WithTags("Regularization");
     }
 }
