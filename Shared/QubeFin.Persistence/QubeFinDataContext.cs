@@ -1117,10 +1117,12 @@ public partial class QubeFinDataContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Address).HasMaxLength(100);
+            entity.Property(e => e.ApprovedOrRejectedOn).HasColumnType("datetime");
             entity.Property(e => e.CurrentStatus).HasMaxLength(30);
-            entity.Property(e => e.EnclosedDocName).HasMaxLength(50);
-            entity.Property(e => e.EnclosedDocNo).HasMaxLength(30);
+            entity.Property(e => e.EnclosedDocName).HasMaxLength(200);
+            entity.Property(e => e.EnclosedDocNo).HasMaxLength(200);
             entity.Property(e => e.Reason).HasMaxLength(500);
+            entity.Property(e => e.RejectedReason).HasMaxLength(50);
             entity.Property(e => e.RequestDate).HasColumnType("datetime");
             entity.Property(e => e.SubmittedOn).HasColumnType("datetime");
             entity.Property(e => e.TotalDays).HasComputedColumnSql("(datediff(day,[FromDate],[ToDate])+(1))", false);

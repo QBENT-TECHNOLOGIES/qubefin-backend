@@ -11,6 +11,7 @@ public interface ILeaveRepository
     Task<LeaveRequest?> GetByIdAsync(Guid id);
     Task<string> AddAsync(Guid employeeId, Guid leaveTypeId, DateOnly fromDate, DateOnly toDate, string address, string reason, string enclosedFileName, string enclosedFileNo);
     Task<bool> SubmitAsync(Guid id, Guid userId);
+    Task<bool> CancelAsync(Guid id, string? reason, Guid userId);
 }
 
 public class LeaveRepository(QubeFinDataContext context) : ILeaveRepository
@@ -64,7 +65,7 @@ public class LeaveRepository(QubeFinDataContext context) : ILeaveRepository
 
     public async Task<bool> SubmitAsync(Guid id, Guid userId)
     {
-        var leaveRequestEntity = await context.TblLeaveRequests.AsNoTracking().SingleOrDefaultAsync(m => m.Id == id);
+        var leaveRequestEntity = await context.TblLeaveRequests.AsNoTracking().SingleOrDefaultAsync(m => m.Id == id) ?? throw new Exception("Leave Request not found for the given Id");
         //if (leaveRequestEntity == null)
         //{
         //    return new RecordNotFoundError($"Leave Request not found for the given Id");
@@ -73,6 +74,16 @@ public class LeaveRepository(QubeFinDataContext context) : ILeaveRepository
         leaveRequestEntity.IsSubmitted = true;
         leaveRequestEntity.SubmittedOn = DateTime.Now;
         leaveRequestEntity.SubmittedBy = userId;
+        leaveRequestEntity.CurrentStatus = "Pending";
+
+        return true;
+    }
+
+    public async Task<bool> CancelAsync(Guid id, string? reason, Guid userId)
+    {
+        var leaveRequestEntity = await context.TblLeaveRequests.AsNoTracking().SingleOrDefaultAsync(m => m.Id == id) ?? throw new Exception("Leave Request not found for the given Id");
+        leaveRequestEntity.CurrentStatus = "Cancel";
+        leaveRequestEntity.RejectedReason = reason;
 
         return true;
     }
