@@ -29,8 +29,8 @@ namespace QubeFin.Persistence.Models.Hrms
         public Guid CreatedBy { get; set; }
         public DateTime CreatedOn { get; set; }
         public string? CurrentStatus { get; set; }
-        public bool IsRecommendVisible { get; set; }
-        public bool IsApprovalVisible { get; set; }
+        public bool IsRecommendEvent { get; set; }
+        public bool IsApprovalEvent { get; set; }
         public string? ApprovalCategory { get; set; }
         public DateTime? EventDate { get; set; }
         public string? Remarks { get; set; }

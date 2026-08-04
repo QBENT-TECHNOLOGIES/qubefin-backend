@@ -55,8 +55,8 @@ internal sealed class GetAttendanceRegularizationsByIdQueryHandler(QubeFinDataCo
             CreatedBy = first.CreatedBy,
             CreatedOn = first.CreatedOn,
             CurrentStatus = first.CurrentStatus,
-            IsRecommendVisible = first.IsRecommendVisible,
-            IsApprovalVisible = first.IsApprovalVisible,
+            IsRecommendEvent = first.IsRecommendEvent,
+            IsApprovalEvent = first.IsApprovalEvent,
 
             Events = regularizationResponse.Select(x => new RegularizationEvent
             {
