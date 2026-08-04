@@ -32,11 +32,11 @@ public class LeaveRepository(QubeFinDataContext context) : ILeaveRepository
         try
         {
             var result = await context.Database.ExecuteSqlRawAsync(@"EXEC [Hrms].[USP_CreateLeaveRequest]
-              @p_RequestId,
               @p_EmployeeId,
               @p_LeaveTypeId,
               @p_FromDate,
               @p_ToDate,
+              @p_Address,
               @p_Reason,
               @p_FileName,
               @p_FileNo", parameters);
