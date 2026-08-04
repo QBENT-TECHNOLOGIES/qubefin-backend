@@ -8,8 +8,8 @@ public class EmployeeLeaveRequest
     public DateTime ToDate { get; set; }
     public int TotalDays { get; set; }
     public DateTime RequestDate { get; set; }
-    public string Address { get; set; } = string.Empty;
-    public string Reason { get; set; } = string.Empty;
+    public string? Address { get; set; } = string.Empty;
+    public string? Reason { get; set; } = string.Empty;
     public bool IsSubmitted { get; set; }
     public string CurrentStatus { get; set; } = string.Empty;
 }

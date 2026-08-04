@@ -13,7 +13,7 @@ namespace QubeFin.Hrms.Api.EndPoints;
 public class LeaveEndpoints : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
-    {
+    { 
         #region --- REQUESTS ---
         app.MapGet("leaves/requests/by-year/{year}", async (ClaimsPrincipal principal, IMediator mediator, int year) =>
         {
@@ -29,6 +29,22 @@ public class LeaveEndpoints : IEndpoint
         .RequireAuthorization()
         .WithSummary("Get Leave Requests for Loggedin Employee")
         .WithTags("Leave Requests");
+
+        app.MapGet("leaves/requests/{id}/{employeeId}", async (ClaimsPrincipal principal, IMediator mediator, Guid id, Guid employeeId) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+
+            var result = await mediator.Send(new GetRequestByIdQuery(id, employeeId));
+            return result.ToHttpResult();
+        })
+        .RequireAuthorization()
+        .WithSummary("Get Leave Request Detail")
+        .WithTags("Leave Requests");
+        #endregion
+        #region --- REQUESTS ---
 
         app.MapPost("leaves/requests", async (ClaimsPrincipal principal, HttpRequest request, ISender sender) =>
         {
