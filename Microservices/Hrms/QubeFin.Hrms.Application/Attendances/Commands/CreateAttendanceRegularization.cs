@@ -56,7 +56,7 @@ internal sealed class CreateAttendanceRegularizationCommandHandler(QubeFinDataCo
         };
 
         await context.Database.ExecuteSqlRawAsync(
-            @"EXEC [Hrms].[USP_AppliedRegularization]
+            @"EXEC [Hrms].[USP_RegularizationApplied]
                 @Id,
                 @EmployeeId,
                 @UserId,

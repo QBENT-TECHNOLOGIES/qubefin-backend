@@ -27,7 +27,8 @@ public class LeaveEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         .RequireAuthorization()
-        .WithSummary("Get Leave Requests for Loggedin Employee");
+        .WithSummary("Get Leave Requests for Loggedin Employee")
+        .WithTags("Leave Requests");
 
         app.MapPost("leaves/requests", async (ClaimsPrincipal principal, HttpRequest request, ISender sender) =>
         {

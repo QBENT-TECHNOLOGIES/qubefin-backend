@@ -27,7 +27,10 @@ internal sealed class CreateRequestCommandHandler(ILeaveRepository leaveReposito
         if (request.EnclosedFile != null)
         {
             fileNo = DateTime.Now.ToString("yyyyMMddHHmmssfff") + Path.GetExtension(request.EnclosedFile.FileName);
-            var filePath = Path.Combine(appSettings.Value.DocumentPath, "LeaveRequests", fileNo);
+            var directory = Path.Combine(@"C:\WeGrow", "LeaveRequests");
+
+            Directory.CreateDirectory(directory);
+            var filePath = Path.Combine(directory, fileNo);
 
             using var stream = File.Create(filePath);
             await request.EnclosedFile.CopyToAsync(stream, cancellationToken);
