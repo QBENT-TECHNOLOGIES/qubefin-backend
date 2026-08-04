@@ -227,7 +227,7 @@ public class EmployeeEndpoints : IEndpoint
 
         // ---------- END  GET BY ID -----------//
 
-        app.MapPut("employees/update/personal/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] PersonalInfoRequest request, ISender sender) =>
+        app.MapPatch("employees/update/personal/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] PersonalInfoRequest request, ISender sender) =>
         {
             if (principal.Identity is null)
             {
@@ -254,7 +254,7 @@ public class EmployeeEndpoints : IEndpoint
         })
         .WithSummary("Update Employee Personal data");
 
-        app.MapPut("employees/update/official/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] OfficialInfoRequest request, ISender sender) =>
+        app.MapPatch("employees/update/official/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] OfficialInfoRequest request, ISender sender) =>
         {
             if (principal.Identity is null)
             {
@@ -281,7 +281,7 @@ public class EmployeeEndpoints : IEndpoint
         })
         .WithSummary("Update Employee Official data");
 
-        app.MapPut("employees/update/contact/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] ContactInfoRequest request, ISender sender) =>
+        app.MapPatch("employees/update/contact/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] ContactInfoRequest request, ISender sender) =>
         {
             if (principal.Identity is null)
             {
@@ -308,7 +308,7 @@ public class EmployeeEndpoints : IEndpoint
         })
         .WithSummary("Update Employee Contact data");
 
-        app.MapPut("employees/update/address/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] AddressInfoRequest request, ISender sender) =>
+        app.MapPatch("employees/update/address/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] AddressInfoRequest request, ISender sender) =>
         {
             if (principal.Identity is null)
             {
@@ -334,7 +334,7 @@ public class EmployeeEndpoints : IEndpoint
         })
         .WithSummary("Update Employee Address data");
 
-        app.MapPut("employees/update/kyc/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] List<DocumentDetailRequest> Documents, ISender sender) =>
+        app.MapPatch("employees/update/kyc/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] List<DocumentDetailRequest> Documents, ISender sender) =>
         {
             if (principal.Identity is null)
             {
@@ -360,7 +360,7 @@ public class EmployeeEndpoints : IEndpoint
         })
         .WithSummary("Update Employee Kyc data");
 
-        app.MapPut("employees/update/references/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] List<ReferenceDetailRequest> referenceDetail, ISender sender) =>
+        app.MapPatch("employees/update/references/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] List<ReferenceDetailRequest> referenceDetail, ISender sender) =>
         {
             if (principal.Identity is null)
             {
@@ -386,7 +386,7 @@ public class EmployeeEndpoints : IEndpoint
         })
         .WithSummary("Update Employee Reference data");
 
-        app.MapPut("employees/update/employments/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] List<EmploymentDetailRequest> employments, ISender sender) =>
+        app.MapPatch("employees/update/employments/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] List<EmploymentDetailRequest> employments, ISender sender) =>
         {
             if (principal.Identity is null)
             {
@@ -412,7 +412,7 @@ public class EmployeeEndpoints : IEndpoint
         })
         .WithSummary("Update Employee Employment data");
 
-        app.MapPut("employees/update/qualifications/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] List<QualificationRequest> employments, ISender sender) =>
+        app.MapPatch("employees/update/qualifications/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] List<QualificationRequest> employments, ISender sender) =>
         {
             if (principal.Identity is null)
             {
@@ -438,7 +438,7 @@ public class EmployeeEndpoints : IEndpoint
         })
         .WithSummary("Update Employee Qualification data");
 
-        app.MapPut("employees/update/banking-info/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] BankDetail request, ISender sender) =>
+        app.MapPatch("employees/update/banking-info/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] BankDetail request, ISender sender) =>
         {
             if (principal.Identity is null)
             {
