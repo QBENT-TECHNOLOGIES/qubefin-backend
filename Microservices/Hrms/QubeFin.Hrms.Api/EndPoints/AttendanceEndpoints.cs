@@ -125,7 +125,8 @@ public class AttendanceEndpoints : IEndpoint
             }
 
             var empId = principal.Identity.GetEmployeeId();
-            var response = await sender.Send(new SubmitAttendanceRegularizationCommand(request, empId));
+            var CurrentUserId = principal.Identity.GetUserId();
+            var response = await sender.Send(new SubmitAttendanceRegularizationCommand(request, empId, CurrentUserId));
             return Results.Ok(response);
         }).WithSummary("Decision regularization (Approved/Reject/Recommend)").WithTags("Regularization");
     }
