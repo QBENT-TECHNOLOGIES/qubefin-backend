@@ -43,7 +43,7 @@ internal sealed class GetAttendanceRegularizationsByIdQueryHandler(QubeFinDataCo
         if (regularizationResponse == null || !regularizationResponse.Any())
             return new GetAttendanceRegularizationsByIdResponse(null);
 
-        var first = regularizationResponse.First();
+        var first = regularizationResponse.OrderByDescending(g => g.EventDate).First();
         var response = new RegularizationDetailResponse
         {
             Id = first.Id,
