@@ -32,17 +32,17 @@ internal sealed class GetRequestByIdQueryHandler(QubeFinDataContext context) : I
 {
     public async Task<Result<GetRequestByIdResponse>> Handle(GetRequestByIdQuery request, CancellationToken cancellationToken)
     {
-        var regularizationResponse = await context.Set<LeaveRequestResponse>().FromSqlRaw("EXEC [Hrms].[USP_GetLeaveRequestById] @Id, @EmployeeId",
+        var leaveRequestResponse = await context.Set<LeaveRequestResponse>().FromSqlRaw("EXEC [Hrms].[USP_GetLeaveRequestById] @Id, @EmployeeId",
          new SqlParameter("@Id", request.Id),
          new SqlParameter("@EmployeeId", request.EmployeeId)
         )
        .AsNoTracking()
        .ToListAsync(cancellationToken);
 
-        if (regularizationResponse == null || !regularizationResponse.Any())
+        if (leaveRequestResponse == null || !leaveRequestResponse.Any())
             return new GetRequestByIdResponse(null);
 
-        var first = regularizationResponse.First();
+        var first = leaveRequestResponse.First();
         var response = new LeaveRequestDetailResponse
         {
             Id = first.Id,
@@ -57,10 +57,14 @@ internal sealed class GetRequestByIdQueryHandler(QubeFinDataContext context) : I
             EnclosedDocName = first.EnclosedDocName,
             EnclosedDocNo = first.EnclosedDocNo,
             IsSubmitted = first.IsSubmitted,
+            ApprovalCategory = first.ApprovalCategory,
+            EventButtonText = first.EventButtonText,
+            IsRecommendEvent = first.IsRecommendEvent,
+            IsApprovalEvent = first.IsApprovalEvent,
             IsCancellable = first.IsCancellable,
             RejectedReason = first.RejectedReason,
 
-            Events = regularizationResponse.Select(x => new LeaveRequestEvent
+            Events = leaveRequestResponse.Select(x => new LeaveRequestEvent
             {
                 Event = x.EventStatus,
                 EventOn = x.EventDate,

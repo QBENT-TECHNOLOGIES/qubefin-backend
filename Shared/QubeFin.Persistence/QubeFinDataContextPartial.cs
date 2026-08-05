@@ -21,6 +21,7 @@ public partial class QubeFinDataContext : DbContext, IUnitOfWork
         modelBuilder.Entity<RegularizationResponse>().HasNoKey().ToView(null);
         modelBuilder.Entity<RegularizationApprovalSearchResult>().HasNoKey().ToView(null);
         modelBuilder.Entity<LeaveRequestResponse>().HasNoKey().ToView(null);
+        modelBuilder.Entity<LeaveApprovalSearchResult>().HasNoKey().ToView(null);
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

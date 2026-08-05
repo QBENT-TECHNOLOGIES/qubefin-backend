@@ -41,7 +41,7 @@ internal sealed class CreateRequestCommandHandler(ILeaveRepository leaveReposito
         {
             return new ValidationError(message);
         }
-        return Result.Ok(new CreateRequestResponse(message));
+        return Result.Ok(new CreateRequestResponse(string.IsNullOrEmpty(message) ? "Leave request created successfully.": message));
     }
 }
 #endregion

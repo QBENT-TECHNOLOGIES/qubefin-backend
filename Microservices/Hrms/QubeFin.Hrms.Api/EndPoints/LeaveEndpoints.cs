@@ -3,7 +3,10 @@ using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
 using QubeFin.Core.Results;
 using QubeFin.Hrms.Api.Requests;
+using QubeFin.Hrms.Application.Attendances.Models;
 using QubeFin.Hrms.Application.Attendances.Queries;
+using QubeFin.Hrms.Application.LeaveApproval.Models;
+using QubeFin.Hrms.Application.LeaveApproval.Queries;
 using QubeFin.Hrms.Application.Leaves.Commands;
 using QubeFin.Hrms.Application.Leaves.Models;
 using QubeFin.Hrms.Application.Leaves.Queries;
@@ -112,8 +115,19 @@ public class LeaveEndpoints : IEndpoint
         .WithSummary("Leave Request Cancel")
         .WithTags("Leave Requests");
         #endregion
-        #region --- ACTION ---
+        #region --- LEAVE APPROVAL ---
 
+        app.MapPost("leaves/approval/search", async (ClaimsPrincipal principal, ISender sender, LeaveApprovalSearchRequest request) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+
+            var empId = principal.Identity.GetEmployeeId();
+            var response = await sender.Send(new GetLeaveApprovalsByEmployeeIdQuery(empId, request));
+            return Results.Ok(response);
+        }).WithSummary("Get Leave Approval List for logged-in employee with optional filters").WithTags("Leave Approval"); ;
         app.MapPost("leaves/action", async (ClaimsPrincipal principal, ISender sender, LeaveRequestActionRequest request) =>
         {
             if (principal.Identity is null)
@@ -126,7 +140,7 @@ public class LeaveEndpoints : IEndpoint
             return Results.Ok(response);
         })
         .WithSummary("Leave Request Action")
-        .WithTags("Leave Requests");
+        .WithTags("Leave Approval");
         #endregion
     }
 }
