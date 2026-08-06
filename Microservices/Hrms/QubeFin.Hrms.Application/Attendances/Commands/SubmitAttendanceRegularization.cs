@@ -9,7 +9,7 @@ using QubeFin.Persistence;
 namespace QubeFin.Hrms.Application.Attendances.Commands;
 
 #region --- COMMAND ---
-public record SubmitAttendanceRegularizationCommand(RegularizationSubmit submit, Guid EmployeeId) : IRequest<Result<SubmitAttendanceRegularizationResponse>>;
+public record SubmitAttendanceRegularizationCommand(RegularizationSubmit submit, Guid EmployeeId, Guid CurrentUserId) : IRequest<Result<SubmitAttendanceRegularizationResponse>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -38,13 +38,13 @@ internal sealed class SubmitAttendanceRegularizationCommandHandler(QubeFinDataCo
             await context.Database.ExecuteSqlRawAsync(
                 @"EXEC [Hrms].[USP_RegularizationAction]
                     @Id,
-                    @EmployeeId,
                     @Decision,
-                    @Remarks",
+                    @Remarks,
+                    @CurrentUserId",
             new SqlParameter("@Id", request.submit.Id),
-            new SqlParameter("@EmployeeId", request.EmployeeId),
             new SqlParameter("@Decision", request.submit.Decision),
-            new SqlParameter("@Remarks", request.submit.Remarks));
+            new SqlParameter("@Remarks", request.submit.Remarks),
+            new SqlParameter("@CurrentUserId", request.CurrentUserId));
 
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Ok(new SubmitAttendanceRegularizationResponse(true, $"Regularization {request.submit.Decision} successfully"));

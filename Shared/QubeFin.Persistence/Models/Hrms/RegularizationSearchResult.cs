@@ -9,7 +9,7 @@ namespace QubeFin.Persistence.Models.Hrms
         public Guid Id { get; set; }
         public string RegularizationType { get; set; } = string.Empty;
         public string RegularizationDate { get; set; } = string.Empty;
-        public string Reason { get; set; } = null!;
+        public string? Reason { get; set; } = null!;
         public string? Attachment { get; set; }
         public DateTime CreatedOn { get; set; }
         public string? Status { get; set; }
@@ -26,14 +26,15 @@ namespace QubeFin.Persistence.Models.Hrms
         public string? RegularizationDates { get; set; }
         public string? Reason { get; set; }
         public string? Attachment { get; set; }
+        public string? Remarks { get; set; }
         public Guid CreatedBy { get; set; }
         public DateTime CreatedOn { get; set; }
         public string? CurrentStatus { get; set; }
-        public bool IsRecommendVisible { get; set; }
-        public bool IsApprovalVisible { get; set; }
+        public bool IsRecommendEvent { get; set; }
+        public bool IsApprovalEvent { get; set; }
         public string? ApprovalCategory { get; set; }
         public DateTime? EventDate { get; set; }
-        public string? Remarks { get; set; }
+        public string? EventRemarks { get; set; }
         public string? SenderDesignation { get; set; }
         public string? ReceiverDesignation { get; set; }
         public string? EventCategory { get; set; }
@@ -47,7 +48,7 @@ namespace QubeFin.Persistence.Models.Hrms
         public string OrganizationUnit { get; set; } = string.Empty;
         public string RegularizationType { get; set; } = string.Empty;
         public string RegularizationDate { get; set; } = string.Empty;
-        public string Reason { get; set; } = null!;
+        public string? Reason { get; set; } = null!;
         public string? Attachment { get; set; }
         public DateTime CreatedOn { get; set; }
         public string? Status { get; set; }

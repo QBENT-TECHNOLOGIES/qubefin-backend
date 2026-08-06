@@ -38,4 +38,10 @@ public partial class TblLeaveRequest
     public DateTime? SubmittedOn { get; set; }
 
     public Guid? SubmittedBy { get; set; }
+
+    public DateTime? ApprovedOrRejectedOn { get; set; }
+
+    public Guid? ApprovedOrRejectedBy { get; set; }
+
+    public string? RejectedReason { get; set; }
 }

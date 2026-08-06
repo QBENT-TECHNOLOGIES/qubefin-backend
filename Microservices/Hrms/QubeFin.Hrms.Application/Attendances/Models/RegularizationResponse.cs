@@ -12,11 +12,13 @@ namespace QubeFin.Hrms.Application.Attendances.Models
         public string? RegularizationDates { get; set; }
         public string? Reason { get; set; }
         public string? Attachment { get; set; }
+        public string? AttachmentUrl { get; set; }
+        public string? Remarks { get; set; }
         public Guid CreatedBy { get; set; }
         public DateTime CreatedOn { get; set; }
         public string? CurrentStatus { get; set; }
-        public bool IsRecommendVisible { get; set; }
-        public bool IsApprovalVisible { get; set; }
+        public bool IsRecommendEvent { get; set; }
+        public bool IsApprovalEvent { get; set; }
         public List<RegularizationEvent> Events { get; set; } = [];
     }
     public class RegularizationEvent

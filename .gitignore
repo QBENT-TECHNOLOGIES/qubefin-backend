@@ -57,3 +57,4 @@ CodeCoverage/
 TestResult.xml
 nunit-*.xml
 /qubefin.slnLaunch.user
+/Microservices/Hrms/QubeFin.Hrms.Api/appsettings.json
