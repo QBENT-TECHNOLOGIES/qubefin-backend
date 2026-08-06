@@ -14,6 +14,7 @@
         public string? Address { get; set; }
         public string? EnclosedDocName { get; set; }
         public string? EnclosedDocNo { get; set; }
+        public string? EnclosedDocUrl { get; set; }
         public bool? IsSubmitted { get; set; }
         public bool? IsCancellable { get; set; }
         public string? RejectedReason { get; set; }

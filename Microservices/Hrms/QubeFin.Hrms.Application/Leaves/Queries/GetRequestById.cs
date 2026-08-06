@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Hrms.Application.Leaves.Models;
+using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Hrms;
 
@@ -28,7 +29,7 @@ public record GetRequestByIdResponse(LeaveRequestDetailResponse? response);
 #endregion
 
 #region --- HANDLER ---
-internal sealed class GetRequestByIdQueryHandler(QubeFinDataContext context) : IRequestHandler<GetRequestByIdQuery, Result<GetRequestByIdResponse>>
+internal sealed class GetRequestByIdQueryHandler(QubeFinDataContext context, IFileStorageRepository fileStorageRepository) : IRequestHandler<GetRequestByIdQuery, Result<GetRequestByIdResponse>>
 {
     public async Task<Result<GetRequestByIdResponse>> Handle(GetRequestByIdQuery request, CancellationToken cancellationToken)
     {
@@ -57,6 +58,7 @@ internal sealed class GetRequestByIdQueryHandler(QubeFinDataContext context) : I
             Address = first.Address,
             EnclosedDocName = first.EnclosedDocName,
             EnclosedDocNo = first.EnclosedDocNo,
+            EnclosedDocUrl = !string.IsNullOrEmpty(first.EnclosedDocNo) ? await fileStorageRepository.GetFileUrlAsync(first.EnclosedDocNo, cancellationToken) : null,
             IsSubmitted = first.IsSubmitted,
             ApprovalCategory = first.ApprovalCategory,
             EventButtonText = first.EventButtonText,

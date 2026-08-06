@@ -24,6 +24,7 @@ public static class DependencyInjection
         services.AddScoped<ISalaryComponentRepository, SalaryComponentRepository>();
         services.AddScoped<ISalaryComponentCategoryRepository, SalaryComponentCategoryRepository>();
         services.AddScoped<ILeaveRepository, LeaveRepository>();
+        services.AddScoped<IFileStorageRepository, FileStorageRepository>();
         return services;
     }
 }
