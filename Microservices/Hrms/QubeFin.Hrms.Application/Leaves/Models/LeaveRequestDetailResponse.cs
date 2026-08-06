@@ -16,6 +16,10 @@
         public bool? IsSubmitted { get; set; }
         public bool? IsCancellable { get; set; }
         public string? RejectedReason { get; set; }
+        public string? ApprovalCategory { get; set; }
+        public string? EventButtonText { get; set; }
+        public bool? IsRecommendEvent { get; set; }
+        public bool? IsApprovalEvent { get; set; }
         public List<LeaveRequestEvent> Events { get; set;  } = new List<LeaveRequestEvent>();
 
     }

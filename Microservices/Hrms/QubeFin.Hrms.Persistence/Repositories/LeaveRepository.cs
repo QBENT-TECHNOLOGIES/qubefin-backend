@@ -82,7 +82,7 @@ public class LeaveRepository(QubeFinDataContext context) : ILeaveRepository
     public async Task<bool> CancelAsync(Guid id, string? reason, Guid userId)
     {
         var leaveRequestEntity = await context.TblLeaveRequests.SingleOrDefaultAsync(m => m.Id == id) ?? throw new Exception("Leave Request not found for the given Id");
-        leaveRequestEntity.CurrentStatus = "Cancel";
+        leaveRequestEntity.CurrentStatus = "Cancelled";
         leaveRequestEntity.RejectedReason = reason;
 
         return true;
