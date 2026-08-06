@@ -64,6 +64,7 @@ internal sealed class CreateAttendanceRegularizationCommandHandler(QubeFinDataCo
                 @RegularizationDates,
                 @Reason,
                 @Attachment,
+                @Remarks,
                 @Success OUTPUT,
                 @Message OUTPUT,
                 @RegularizationId OUTPUT",
@@ -72,8 +73,9 @@ internal sealed class CreateAttendanceRegularizationCommandHandler(QubeFinDataCo
         new SqlParameter("@UserId", request.UserId),
         new SqlParameter("@RegularizationType", request.regularization.RegularizationType),
         new SqlParameter("@RegularizationDates", regularizationDatesJson),
-        new SqlParameter("@Reason", request.regularization.Reason),
+        new SqlParameter("@Reason", (object?)request.regularization.Reason ?? DBNull.Value),
         new SqlParameter("@Attachment", (object?)attachment ?? DBNull.Value),
+        new SqlParameter("@Remarks", (object?)request.regularization.Remarks ?? DBNull.Value),
         successParam,
         messageParam,
         regularizationIdParam);

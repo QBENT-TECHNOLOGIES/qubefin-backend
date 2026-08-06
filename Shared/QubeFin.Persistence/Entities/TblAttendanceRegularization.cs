@@ -13,9 +13,11 @@ public partial class TblAttendanceRegularization
 
     public string RegularizationDates { get; set; } = null!;
 
-    public string Reason { get; set; } = null!;
+    public string? Reason { get; set; }
 
     public string? Attachment { get; set; }
+
+    public string? Remarks { get; set; }
 
     public Guid CreatedBy { get; set; }
 

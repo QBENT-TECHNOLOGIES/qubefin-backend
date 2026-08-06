@@ -422,6 +422,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Reason).HasMaxLength(50);
             entity.Property(e => e.RegularizationDates).HasMaxLength(200);
             entity.Property(e => e.RegularizationType).HasMaxLength(50);
+            entity.Property(e => e.Remarks).HasMaxLength(200);
 
             entity.HasOne(d => d.Employee).WithMany(p => p.TblAttendanceRegularizations)
                 .HasForeignKey(d => d.EmployeeId)

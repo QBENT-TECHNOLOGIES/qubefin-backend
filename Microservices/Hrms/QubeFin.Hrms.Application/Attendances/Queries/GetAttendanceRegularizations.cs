@@ -52,6 +52,7 @@ internal sealed class GetAttendanceRegularizationsByIdQueryHandler(QubeFinDataCo
             RegularizationDates = first.RegularizationDates,
             Reason = first.Reason,
             Attachment = first.Attachment,
+            Remarks = first.Remarks,
             CreatedBy = first.CreatedBy,
             CreatedOn = first.CreatedOn,
             CurrentStatus = first.CurrentStatus,
