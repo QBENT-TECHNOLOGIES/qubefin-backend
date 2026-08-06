@@ -63,6 +63,18 @@ public class LeaveEndpoints : IEndpoint
 
             var form = await request.ReadFormAsync();
 
+            Guid? id = null;
+
+            if (!string.IsNullOrWhiteSpace(form["id"]))
+            {
+                if (!Guid.TryParse(form["id"], out var parsedId))
+                {
+                    return Results.BadRequest("Invalid id.");
+                }
+
+                id = parsedId;
+            }
+
             if (!Guid.TryParse(form["leaveTypeId"], out var leaveTypeId))
                 return Results.BadRequest("Invalid leaveTypeId");
 
@@ -77,10 +89,10 @@ public class LeaveEndpoints : IEndpoint
             var enclosedFileName = form["enclosedFileName"].ToString();
             var enclosedFile = form.Files["enclosedFile"];
 
-            var result = await sender.Send(new CreateRequestCommand(employeeId, leaveTypeId, fromDate, toDate, address, reason, enclosedFileName, enclosedFile));
+            var result = await sender.Send(new SaveRequestCommand(id, employeeId, leaveTypeId, fromDate, toDate, address, reason, enclosedFileName, enclosedFile));
             return result.ToHttpResult();
         })
-        .WithSummary("Creates New Leave Request")
+        .WithSummary("Create And save Leave Request")
         .WithTags("Leave Requests");
         #endregion
         #region --- SUBMIT ---

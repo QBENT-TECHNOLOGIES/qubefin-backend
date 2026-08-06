@@ -9,22 +9,23 @@ namespace QubeFin.Hrms.Persistence.Repositories;
 public interface ILeaveRepository
 {
     Task<LeaveRequest?> GetByIdAsync(Guid id);
-    Task<string> AddAsync(Guid employeeId, Guid leaveTypeId, DateOnly fromDate, DateOnly toDate, string address, string reason, string enclosedFileName, string enclosedFileNo);
+    Task<string> AddAsync(Guid Id, Guid employeeId, Guid leaveTypeId, DateOnly fromDate, DateOnly toDate, string address, string reason, string enclosedFileName, string enclosedFileNo);
     Task<bool> SubmitAsync(Guid id, Guid userId);
     Task<bool> CancelAsync(Guid id, string? reason, Guid userId);
 }
 
 public class LeaveRepository(QubeFinDataContext context) : ILeaveRepository
 {
-    public async Task<string> AddAsync(Guid employeeId, Guid leaveTypeId, DateOnly fromDate, DateOnly toDate, string address, string reason, string enclosedFileName, string enclosedFileNo)
+    public async Task<string> AddAsync(Guid Id, Guid employeeId, Guid leaveTypeId, DateOnly fromDate, DateOnly toDate, string address, string reason, string enclosedFileName, string enclosedFileNo)
     {
         var returnMessage = @"";
         var parameters = new[]
         {
+            new SqlParameter("@p_Id", Id),
             new SqlParameter("@p_EmployeeId", employeeId),
             new SqlParameter("@p_LeaveTypeId", leaveTypeId),
-            new SqlParameter("@p_FromDate", fromDate.ToDateTime(TimeOnly.MinValue)),
-            new SqlParameter("@p_ToDate", toDate.ToDateTime(TimeOnly.MinValue)),
+            new SqlParameter("@p_FromDate", fromDate),
+            new SqlParameter("@p_ToDate", toDate),
             new SqlParameter("@p_Address", (object?)address ?? DBNull.Value),
             new SqlParameter("@p_Reason", (object?)reason ?? DBNull.Value),
             new SqlParameter("@p_FileName", (object?)enclosedFileName ?? DBNull.Value),
@@ -32,7 +33,8 @@ public class LeaveRepository(QubeFinDataContext context) : ILeaveRepository
         };
         try
         {
-            var result = await context.Database.ExecuteSqlRawAsync(@"EXEC [Hrms].[USP_CreateLeaveRequest]
+            var result = await context.Database.ExecuteSqlRawAsync(@"EXEC [Hrms].[USP_LeaveRequestSave]
+              @p_Id,
               @p_EmployeeId,
               @p_LeaveTypeId,
               @p_FromDate,

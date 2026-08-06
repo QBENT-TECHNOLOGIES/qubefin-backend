@@ -65,6 +65,7 @@ public class LeaveRequestResponse
 {
     public Guid? Id { get; set; }
     public Guid? LeaveTypeId { get; set; }
+    public string? EmployeeName { get; set; }
     public string? LeaveType { get; set; }
     public DateOnly? FromDate { get; set; }
     public DateOnly? ToDate { get; set; }

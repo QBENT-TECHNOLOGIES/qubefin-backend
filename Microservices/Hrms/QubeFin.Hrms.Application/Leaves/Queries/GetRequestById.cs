@@ -46,6 +46,7 @@ internal sealed class GetRequestByIdQueryHandler(QubeFinDataContext context) : I
         var response = new LeaveRequestDetailResponse
         {
             Id = first.Id,
+            EmployeeName = first.EmployeeName,
             LeaveType = first.LeaveType,
             LeaveTypeId = first.LeaveTypeId,
             FromDate = first.FromDate,

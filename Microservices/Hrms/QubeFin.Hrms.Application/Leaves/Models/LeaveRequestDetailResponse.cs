@@ -3,6 +3,7 @@
     public class LeaveRequestDetailResponse
     {
         public Guid? Id { get; set; }
+        public string? EmployeeName { get; set; }
         public string? LeaveType { get; set; }
         public Guid? LeaveTypeId { get; set; }
         public DateOnly? FromDate { get; set; }
