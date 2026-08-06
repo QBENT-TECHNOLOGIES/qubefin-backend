@@ -4,8 +4,10 @@ using MediatR;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Hrms.Application.Attendances.Models;
+using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using System.Data;
+using System.IO;
 using System.Text.Json;
 
 namespace QubeFin.Hrms.Application.Attendances.Commands;
@@ -22,7 +24,8 @@ public class CreateAttendanceRegularizationCommandValidator : AbstractValidator<
         RuleFor(v => v.regularization).NotNull().WithMessage("Regularization request is required.");
         RuleFor(v => v.EmployeeId).NotEqual(Guid.Empty).WithMessage("Employee Id is required.");
         RuleFor(v => v.regularization.RegularizationDates).NotEmpty().WithMessage("Regularization date is required.");
-        RuleFor(v => v.regularization.Reason).NotEmpty().WithMessage("Reason is required.");
+        RuleFor(v => v.regularization.RegularizationType).NotEmpty().WithMessage("Regularization type is required.");
+        RuleFor(v => v.regularization.Reason).NotEmpty().When(r => r.regularization.RegularizationType == "ATTENDANCE").WithMessage("Reason is required for attendance regularization types.");
     }
 }
 #endregion
@@ -32,14 +35,23 @@ public record CreateAttendanceRegularizationResponse(bool success, string messag
 #endregion
 
 #region --- HANDLER ---
-internal sealed class CreateAttendanceRegularizationCommandHandler(QubeFinDataContext context, IUnitOfWork unitOfWork) : IRequestHandler<CreateAttendanceRegularizationCommand, Result<CreateAttendanceRegularizationResponse>>
+internal sealed class CreateAttendanceRegularizationCommandHandler(QubeFinDataContext context, IUnitOfWork unitOfWork, IFileStorageRepository fileStorageRepository) : IRequestHandler<CreateAttendanceRegularizationCommand, Result<CreateAttendanceRegularizationResponse>>
 {
     public async Task<Result<CreateAttendanceRegularizationResponse>> Handle(CreateAttendanceRegularizationCommand request, CancellationToken cancellationToken)
     {
         string? attachment = null;
         if (request.regularization.Attachment != null && request.regularization.Attachment.Length > 0)
         {
-            //attachment = Convert.ToBase64String(request.regularization.Attachment);
+            try
+            {
+                var file = request.regularization.Attachment;
+                await using var stream = file.OpenReadStream();
+                attachment = await fileStorageRepository.UploadFileAsync(stream, file.FileName, file.ContentType ?? "application/octet-stream", cancellationToken).ConfigureAwait(false);
+            }
+            catch
+            {
+                attachment = null;
+            }
         }
         var regularizationDatesJson = JsonSerializer.Serialize(request.regularization.RegularizationDates.Select(d => d.ToString("yyyy-MM-dd")));
         var successParam = new SqlParameter("@Success", SqlDbType.Bit)
