@@ -9,7 +9,7 @@ namespace QubeFin.Persistence.Models.Hrms
         public Guid Id { get; set; }
         public string RegularizationType { get; set; } = string.Empty;
         public string RegularizationDate { get; set; } = string.Empty;
-        public string Reason { get; set; } = null!;
+        public string? Reason { get; set; } = null!;
         public string? Attachment { get; set; }
         public DateTime CreatedOn { get; set; }
         public string? Status { get; set; }
@@ -48,7 +48,7 @@ namespace QubeFin.Persistence.Models.Hrms
         public string OrganizationUnit { get; set; } = string.Empty;
         public string RegularizationType { get; set; } = string.Empty;
         public string RegularizationDate { get; set; } = string.Empty;
-        public string Reason { get; set; } = null!;
+        public string? Reason { get; set; } = null!;
         public string? Attachment { get; set; }
         public DateTime CreatedOn { get; set; }
         public string? Status { get; set; }
