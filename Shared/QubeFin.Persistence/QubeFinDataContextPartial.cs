@@ -21,6 +21,8 @@ public partial class QubeFinDataContext : DbContext, IUnitOfWork
         modelBuilder.Entity<RegularizationSearchResult>().HasNoKey().ToView(null);
         modelBuilder.Entity<RegularizationResponse>().HasNoKey().ToView(null);
         modelBuilder.Entity<RegularizationApprovalSearchResult>().HasNoKey().ToView(null);
+        modelBuilder.Entity<LeaveRequestResponse>().HasNoKey().ToView(null);
+        modelBuilder.Entity<LeaveApprovalSearchResult>().HasNoKey().ToView(null);
         modelBuilder.Entity<ApprovalWorkflowEventGroupItem>().HasNoKey().ToView(null);
     }
 

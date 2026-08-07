@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Hrms.Application.Attendances.Models;
+using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Hrms;
 
@@ -28,7 +29,7 @@ public record GetAttendanceRegularizationsByIdResponse(RegularizationDetailRespo
 #endregion
 
 #region --- HANDLER ---
-internal sealed class GetAttendanceRegularizationsByIdQueryHandler(QubeFinDataContext context) : IRequestHandler<GetAttendanceRegularizationsByIdQuery, Result<GetAttendanceRegularizationsByIdResponse>>
+internal sealed class GetAttendanceRegularizationsByIdQueryHandler(QubeFinDataContext context, IFileStorageRepository fileStorageRepository) : IRequestHandler<GetAttendanceRegularizationsByIdQuery, Result<GetAttendanceRegularizationsByIdResponse>>
 {
     public async Task<Result<GetAttendanceRegularizationsByIdResponse>> Handle(GetAttendanceRegularizationsByIdQuery request, CancellationToken cancellationToken)
     {
@@ -43,7 +44,7 @@ internal sealed class GetAttendanceRegularizationsByIdQueryHandler(QubeFinDataCo
         if (regularizationResponse == null || !regularizationResponse.Any())
             return new GetAttendanceRegularizationsByIdResponse(null);
 
-        var first = regularizationResponse.First();
+        var first = regularizationResponse.OrderByDescending(g => g.EventDate).First();
         var response = new RegularizationDetailResponse
         {
             Id = first.Id,
@@ -52,17 +53,19 @@ internal sealed class GetAttendanceRegularizationsByIdQueryHandler(QubeFinDataCo
             RegularizationDates = first.RegularizationDates,
             Reason = first.Reason,
             Attachment = first.Attachment,
+            AttachmentUrl = !string.IsNullOrEmpty(first.Attachment) ? await fileStorageRepository.GetFileUrlAsync(first.Attachment, cancellationToken) : null,
+            Remarks = first.Remarks,
             CreatedBy = first.CreatedBy,
             CreatedOn = first.CreatedOn,
             CurrentStatus = first.CurrentStatus,
-            IsRecommendVisible = first.IsRecommendVisible,
-            IsApprovalVisible = first.IsApprovalVisible,
+            IsRecommendEvent = first.IsRecommendEvent,
+            IsApprovalEvent = first.IsApprovalEvent,
 
             Events = regularizationResponse.Select(x => new RegularizationEvent
             {
                 ApprovalCategory = x.ApprovalCategory,
                 EventDate = x.EventDate,
-                Remarks = x.Remarks,
+                Remarks = x.EventRemarks,
                 SenderDesignation = x.SenderDesignation,
                 ReceiverDesignation = x.ReceiverDesignation,
                 EventCategory = x.EventCategory,

@@ -12,7 +12,7 @@ public record GetUserLoginInfoQuery(Guid Id) : IRequest<Result<GetUserLoginInfoR
 
 #region --- RESPONSE ---
 public record GetUserLoginInfoResponse(Guid Id, string UserName, Guid? EmployeeId, string Employee, string Branch, decimal? Latitude, decimal? Longitude, 
-    TimeOnly AttendanceInTime, TimeOnly AttendanceOutTime, int CheckRadiusInMeter);
+    TimeOnly AttendanceInTime, TimeOnly AttendanceOutTime, int CheckRadiusInMeter, string Designation);
 #endregion
 
 #region --- HANDLER ---
@@ -25,10 +25,13 @@ internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context)
             .TblUsers
             .Include(m => m.Employee)
             .ThenInclude(m => m.OrganizationUnit)
+            .Include(m => m.Employee)
+            .ThenInclude(m => m.TblEmployeeDesignations)
+            .ThenInclude(m => m.Designation)
             .Where(m => m.Id == request.Id)
             .Select(m => new GetUserLoginInfoResponse(m.Id, m.UserName, m.EmployeeId, m.Employee == null ? string.Empty : m.Employee.FullName, m.Employee.OrganizationUnit.Name,
                 m.Employee.OrganizationUnit.Latitude, m.Employee.OrganizationUnit.Longitude, m.Employee.OrganizationUnit.AttendanceInTime.Value, m.Employee.OrganizationUnit.AttendanceOutTime.Value,
-                m.Employee.OrganizationUnit.CheckRadiusInMeter.HasValue ? m.Employee.OrganizationUnit.CheckRadiusInMeter.Value : 100))
+                m.Employee.OrganizationUnit.CheckRadiusInMeter.HasValue ? m.Employee.OrganizationUnit.CheckRadiusInMeter.Value : 100, m.Employee.TblEmployeeDesignations.FirstOrDefault().Designation.Name))
             .FirstOrDefaultAsync(cancellationToken);
 
         if (user is null)

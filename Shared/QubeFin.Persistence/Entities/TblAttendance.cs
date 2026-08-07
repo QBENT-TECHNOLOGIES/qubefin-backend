@@ -35,6 +35,8 @@ public partial class TblAttendance
 
     public bool IsRegularization { get; set; }
 
+    public bool IsOnDuty { get; set; }
+
     public virtual TblEmployee Employee { get; set; } = null!;
 
     public virtual TblOrganizationUnit? OrganizationUnit { get; set; }
