@@ -10,6 +10,15 @@ public class ApprovalWorkflowEventEndpoints : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
+        app.MapGet("approval-workflow-events/tree", async (ISender sender, CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(new GetApprovalWorkflowEventTreeQuery(), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get approval workflow event tree")
+        .WithDescription("Groups approval workflow events by category, leave type, salary grade, and organization unit type, with event details at each leaf.")
+        .WithTags("Approval Workflow Events");
+
         app.MapGet("approval-workflow-events", async (string? category, ISender sender, CancellationToken cancellationToken) =>
         {
             var result = await sender.Send(new GetApprovalWorkflowEventsQuery(category), cancellationToken);

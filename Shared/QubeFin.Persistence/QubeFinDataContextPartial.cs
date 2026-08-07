@@ -8,6 +8,7 @@ namespace QubeFin.Persistence;
 public partial class QubeFinDataContext : DbContext, IUnitOfWork
 {
     public virtual DbSet<EmployeeLeaveRequest> EmployeeLeaveRequest { get; set; }
+    public virtual DbSet<ApprovalWorkflowEventGroupItem> ApprovalWorkflowEventGroupItem { get; set; }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder)
     {
@@ -20,6 +21,7 @@ public partial class QubeFinDataContext : DbContext, IUnitOfWork
         modelBuilder.Entity<RegularizationSearchResult>().HasNoKey().ToView(null);
         modelBuilder.Entity<RegularizationResponse>().HasNoKey().ToView(null);
         modelBuilder.Entity<RegularizationApprovalSearchResult>().HasNoKey().ToView(null);
+        modelBuilder.Entity<ApprovalWorkflowEventGroupItem>().HasNoKey().ToView(null);
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -31,6 +33,13 @@ public partial class QubeFinDataContext : DbContext, IUnitOfWork
     {
         return await EmployeeLeaveRequest
             .FromSqlInterpolated($"[Hrms].[USP_GetLeaveRequestsByEmployee] @p_Year = {year}, @p_EmployeeId = {employeeId}")
+            .ToListAsync();
+    }
+
+    public async Task<List<ApprovalWorkflowEventGroupItem>> SP_GetApprovalWorkflowEventGroupItems()
+    {
+        return await ApprovalWorkflowEventGroupItem
+            .FromSqlInterpolated($"[Hrms].[USP_GetApprovalWorkflowEvents]")
             .ToListAsync();
     }
 }
