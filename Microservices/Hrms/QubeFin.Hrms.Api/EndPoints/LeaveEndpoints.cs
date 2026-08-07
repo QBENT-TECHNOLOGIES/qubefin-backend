@@ -113,7 +113,7 @@ public class LeaveEndpoints : IEndpoint
         #endregion
         #region --- CANCEL ---
 
-        app.MapPost("leaves/requests/cancel/{id}", async (ClaimsPrincipal principal, ISender sender, CancelLeaveRequest request) =>
+        app.MapPost("leaves/requests/cancel", async (ClaimsPrincipal principal, ISender sender, CancelLeaveRequest request) =>
         {
             if (principal.Identity is null)
             {
