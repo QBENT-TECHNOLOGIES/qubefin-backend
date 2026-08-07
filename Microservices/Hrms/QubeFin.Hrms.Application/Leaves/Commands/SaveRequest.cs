@@ -44,7 +44,7 @@ internal sealed class SaveRequestCommandHandler(ILeaveRepository leaveRepository
         {
             return new ValidationError(message);
         }
-        return Result.Ok(new SaveRequestResponse(string.IsNullOrEmpty(message) ? "Leave request created successfully.": message));
+        return Result.Ok(new SaveRequestResponse(string.IsNullOrEmpty(message) ? $"Leave request {(request.Id == null ? "created" : "updated")} successfully.": message));
     }
 }
 #endregion
