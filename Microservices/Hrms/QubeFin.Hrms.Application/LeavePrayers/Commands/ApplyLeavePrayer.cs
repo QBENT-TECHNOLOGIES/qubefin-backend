@@ -69,7 +69,7 @@ internal sealed class ApplyLeavePrayerCommandHandler(QubeFinDataContext context,
                 @LeaveTypeId ,
                 @PrayerDays,
                 @Attachment,
-                @Remarks
+                @Remarks,
                 @Success OUTPUT,
                 @Message OUTPUT,
                 @PrayerId OUTPUT",
