@@ -25,6 +25,10 @@ public partial class TblPost
 
     public virtual ICollection<TblApprovalWorkflowEvent> TblApprovalWorkflowEventReceiverPosts { get; set; } = new List<TblApprovalWorkflowEvent>();
 
+    public virtual ICollection<TblApprovalWorkflowStep> TblApprovalWorkflowSteps { get; set; } = new List<TblApprovalWorkflowStep>();
+
+    public virtual ICollection<TblApprovalWorkflow> TblApprovalWorkflows { get; set; } = new List<TblApprovalWorkflow>();
+
     public virtual ICollection<TblDesignation> TblDesignations { get; set; } = new List<TblDesignation>();
 
     public virtual ICollection<TblLoanProductQuestion> TblLoanProductQuestions { get; set; } = new List<TblLoanProductQuestion>();

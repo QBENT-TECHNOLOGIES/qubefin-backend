@@ -23,6 +23,8 @@ public partial class TblSalaryGrade
 
     public virtual ICollection<TblApprovalWorkflowEvent> TblApprovalWorkflowEvents { get; set; } = new List<TblApprovalWorkflowEvent>();
 
+    public virtual ICollection<TblApprovalWorkflow> TblApprovalWorkflows { get; set; } = new List<TblApprovalWorkflow>();
+
     public virtual ICollection<TblPayRoll> TblPayRolls { get; set; } = new List<TblPayRoll>();
 
     public virtual ICollection<TblSalaryStructure> TblSalaryStructures { get; set; } = new List<TblSalaryStructure>();

@@ -43,6 +43,10 @@ public partial class TblUser
 
     public virtual ICollection<TblAdministrativeUnit> TblAdministrativeUnitLastModifiedByNavigations { get; set; } = new List<TblAdministrativeUnit>();
 
+    public virtual ICollection<TblApprovalWorkflow> TblApprovalWorkflowCreatedByNavigations { get; set; } = new List<TblApprovalWorkflow>();
+
+    public virtual ICollection<TblApprovalWorkflow> TblApprovalWorkflowLastModifiedByNavigations { get; set; } = new List<TblApprovalWorkflow>();
+
     public virtual ICollection<TblLeaveType> TblLeaveTypeCreatedByNavigations { get; set; } = new List<TblLeaveType>();
 
     public virtual ICollection<TblLeaveType> TblLeaveTypeLastModifiedByNavigations { get; set; } = new List<TblLeaveType>();

@@ -21,6 +21,7 @@ public static class DependencyInjection
         services.AddScoped<ITokenGenerator, TokenGenerator>();
         services.AddScoped<IEmployeeRepository, EmployeeRepository>();
         services.AddScoped<IAttendanceRepository, AttendanceRepository>();
+        services.AddScoped<IApprovalWorkflowRepository, ApprovalWorkflowRepository>();
         services.AddScoped<IApprovalWorkflowEventRepository, ApprovalWorkflowEventRepository>();
         services.AddScoped<IHolidayRepository, HolidayRepository>();
         services.AddScoped<ISalaryComponentRepository, SalaryComponentRepository>();

@@ -36,7 +36,11 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblApprovalRequestEvent> TblApprovalRequestEvents { get; set; }
 
+    public virtual DbSet<TblApprovalWorkflow> TblApprovalWorkflows { get; set; }
+
     public virtual DbSet<TblApprovalWorkflowEvent> TblApprovalWorkflowEvents { get; set; }
+
+    public virtual DbSet<TblApprovalWorkflowStep> TblApprovalWorkflowSteps { get; set; }
 
     public virtual DbSet<TblAttendance> TblAttendances { get; set; }
 
@@ -200,6 +204,9 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<WegrowConsolidateEmployee> WegrowConsolidateEmployees { get; set; }
 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=65.2.146.91;Database=QubeFinData;User Id=sa;Password=KuPH8Bt97ipg;TrustServerCertificate=Yes;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -360,6 +367,41 @@ public partial class QubeFinDataContext : DbContext
                 .HasConstraintName("FK_Tbl_ApprovalRequestEvent_Tbl_Designation");
         });
 
+        modelBuilder.Entity<TblApprovalWorkflow>(entity =>
+        {
+            entity.ToTable("Tbl_ApprovalWorkflow", "Hrms");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Category).HasMaxLength(20);
+            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.TblApprovalWorkflowCreatedByNavigations)
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_ApprovalWorkflow_Tbl_User");
+
+            entity.HasOne(d => d.LastModifiedByNavigation).WithMany(p => p.TblApprovalWorkflowLastModifiedByNavigations)
+                .HasForeignKey(d => d.LastModifiedBy)
+                .HasConstraintName("FK_Tbl_ApprovalWorkflow_Tbl_User1");
+
+            entity.HasOne(d => d.LeaveType).WithMany(p => p.TblApprovalWorkflows)
+                .HasForeignKey(d => d.LeaveTypeId)
+                .HasConstraintName("FK_Tbl_ApprovalWorkflow_Tbl_LeaveType");
+
+            entity.HasOne(d => d.OrganizationUnitType).WithMany(p => p.TblApprovalWorkflows)
+                .HasForeignKey(d => d.OrganizationUnitTypeId)
+                .HasConstraintName("FK_Tbl_ApprovalWorkflow_Tbl_OrganizationUnitType");
+
+            entity.HasOne(d => d.Post).WithMany(p => p.TblApprovalWorkflows)
+                .HasForeignKey(d => d.PostId)
+                .HasConstraintName("FK_Tbl_ApprovalWorkflow_Tbl_Post");
+
+            entity.HasOne(d => d.SalaryGrade).WithMany(p => p.TblApprovalWorkflows)
+                .HasForeignKey(d => d.SalaryGradeId)
+                .HasConstraintName("FK_Tbl_ApprovalWorkflow_Tbl_SalaryGrade");
+        });
+
         modelBuilder.Entity<TblApprovalWorkflowEvent>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK_Tbl_WorkflowEvent");
@@ -391,6 +433,25 @@ public partial class QubeFinDataContext : DbContext
             entity.HasOne(d => d.SalaryGrade).WithMany(p => p.TblApprovalWorkflowEvents)
                 .HasForeignKey(d => d.SalaryGradeId)
                 .HasConstraintName("FK_Tbl_ApprovalWorkflowEvent_Tbl_SalaryGrade");
+        });
+
+        modelBuilder.Entity<TblApprovalWorkflowStep>(entity =>
+        {
+            entity.ToTable("Tbl_ApprovalWorkflowStep", "Hrms");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.EventButtonText).HasMaxLength(50);
+            entity.Property(e => e.EventStatus).HasMaxLength(50);
+
+            entity.HasOne(d => d.ApprovalWorkflow).WithMany(p => p.TblApprovalWorkflowSteps)
+                .HasForeignKey(d => d.ApprovalWorkflowId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_ApprovalWorkflowStep_Tbl_ApprovalWorkflow");
+
+            entity.HasOne(d => d.ReceiverPost).WithMany(p => p.TblApprovalWorkflowSteps)
+                .HasForeignKey(d => d.ReceiverPostId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_ApprovalWorkflowStep_Tbl_Post");
         });
 
         modelBuilder.Entity<TblAttendance>(entity =>
