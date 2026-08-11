@@ -27,5 +27,14 @@ public class LeaveTypeEndpoints : IEndpoint
         .WithSummary("Get all Leave balances by leave Types for specific employee")
         .WithDescription("Retrieves a list of all leave balances of an employee for all leave types in the system.")
         .WithTags("Leave Types");
+
+        app.MapGet("leave-types/prayer-balances/{id}", async (ISender sender, [FromRoute] Guid id, CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(new GetLeavePrayerTypeByEmployeeIdQuery(id));
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get Leave Payer balances by leave Types for specific employee")
+        .WithDescription("Retrieves a list of leave prayer balances of an employee for all leave types in the system.")
+        .WithTags("Leave Types");
     }
 }
