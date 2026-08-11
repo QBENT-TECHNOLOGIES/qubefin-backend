@@ -167,6 +167,8 @@ public partial class TblEmployee
 
     public virtual ICollection<TblEmployeeReference> TblEmployeeReferences { get; set; } = new List<TblEmployeeReference>();
 
+    public virtual ICollection<TblLeavePrayer> TblLeavePrayers { get; set; } = new List<TblLeavePrayer>();
+
     public virtual ICollection<TblLeaveTransaction> TblLeaveTransactions { get; set; } = new List<TblLeaveTransaction>();
 
     public virtual ICollection<TblPayRoll> TblPayRolls { get; set; } = new List<TblPayRoll>();

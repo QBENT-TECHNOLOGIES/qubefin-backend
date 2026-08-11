@@ -102,6 +102,8 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblKycDocument> TblKycDocuments { get; set; }
 
+    public virtual DbSet<TblLeavePrayer> TblLeavePrayers { get; set; }
+
     public virtual DbSet<TblLeaveRequest> TblLeaveRequests { get; set; }
 
     public virtual DbSet<TblLeaveRequestDocument> TblLeaveRequestDocuments { get; set; }
@@ -1110,6 +1112,27 @@ public partial class QubeFinDataContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Name).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<TblLeavePrayer>(entity =>
+        {
+            entity.ToTable("Tbl_LeavePrayer", "Hrms");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Attachment).HasMaxLength(500);
+            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.CurrentStatus).HasMaxLength(30);
+            entity.Property(e => e.Remarks).HasMaxLength(200);
+
+            entity.HasOne(d => d.Employee).WithMany(p => p.TblLeavePrayers)
+                .HasForeignKey(d => d.EmployeeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_LeavePrayer_Tbl_Employee");
+
+            entity.HasOne(d => d.LeaveType).WithMany(p => p.TblLeavePrayers)
+                .HasForeignKey(d => d.LeaveTypeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_LeavePrayer_Tbl_LeaveType");
         });
 
         modelBuilder.Entity<TblLeaveRequest>(entity =>
