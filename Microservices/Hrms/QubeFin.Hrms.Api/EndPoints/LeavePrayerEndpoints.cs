@@ -39,7 +39,7 @@ namespace QubeFin.Hrms.Api.EndPoints
                     }
                 }
                 return Results.Ok(result.Value);
-            }).DisableAntiforgery().WithSummary("Apply Leave prayer.").WithTags("Leave Prayer");
+            }).DisableAntiforgery().WithSummary("Apply Leave prayer").WithTags("Leave Prayer");
 
             app.MapGet("leave/prayers/by-year/{year}", async (ClaimsPrincipal principal, ISender sender, [FromRoute] int year, CancellationToken cancellationToken) =>
             {

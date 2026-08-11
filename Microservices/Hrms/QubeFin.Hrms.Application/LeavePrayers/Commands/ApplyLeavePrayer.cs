@@ -56,13 +56,13 @@ internal sealed class ApplyLeavePrayerCommandHandler(QubeFinDataContext context,
         {
             Direction = ParameterDirection.Output
         };
-        var regularizationIdParam = new SqlParameter("@RegularizationId", SqlDbType.UniqueIdentifier)
+        var prayerIdParam = new SqlParameter("@PrayerId", SqlDbType.UniqueIdentifier)
         {
             Direction = ParameterDirection.Output
         };
 
         await context.Database.ExecuteSqlRawAsync(
-            @"EXEC [Hrms].[USP_RegularizationApplied]
+            @"EXEC [Hrms].[USP_LeavePrayerApplied]
                 @Id,
                 @EmployeeId,
                 @UserId,
@@ -82,11 +82,11 @@ internal sealed class ApplyLeavePrayerCommandHandler(QubeFinDataContext context,
         new SqlParameter("@Remarks", (object?)request.prayer.Remarks ?? DBNull.Value),
         successParam,
         messageParam,
-        regularizationIdParam);
+        prayerIdParam);
 
         bool success = successParam.Value != DBNull.Value && (bool)successParam.Value;
         string message = messageParam.Value?.ToString() ?? string.Empty;
-        Guid? regularizationId = regularizationIdParam.Value == DBNull.Value ? null : (Guid)regularizationIdParam.Value;
+        Guid? regularizationId = prayerIdParam.Value == DBNull.Value ? null : (Guid)prayerIdParam.Value;
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Ok(new ApplyLeavePrayerResponse(success, $"{message}"));
