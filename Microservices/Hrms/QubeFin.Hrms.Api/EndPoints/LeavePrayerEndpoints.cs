@@ -8,6 +8,7 @@ using QubeFin.Hrms.Application.Attendances.Models;
 using QubeFin.Hrms.Application.LeavePrayers.Commands;
 using QubeFin.Hrms.Application.LeavePrayers.Models;
 using QubeFin.Hrms.Application.LeavePrayers.Queries;
+using QubeFin.Hrms.Application.Leaves.Queries;
 using QubeFin.Hrms.Application.LeaveTypes.Queries;
 using System.Security.Claims;
 
@@ -39,7 +40,7 @@ namespace QubeFin.Hrms.Api.EndPoints
                     }
                 }
                 return Results.Ok(result.Value);
-            }).DisableAntiforgery().WithSummary("Apply Leave prayer").WithTags("Leave Prayer");
+            }).DisableAntiforgery().WithSummary("Apply Leave prayer").WithTags("Leave Prayers");
 
             app.MapGet("leave/prayers/by-year/{year}", async (ClaimsPrincipal principal, ISender sender, [FromRoute] int year, CancellationToken cancellationToken) =>
             {
@@ -53,7 +54,21 @@ namespace QubeFin.Hrms.Api.EndPoints
                 return result.ToHttpResult();
             })
             .WithSummary("Get year wise Leave Payers for specific employee")
-            .WithTags("Leave Prayer");
+            .WithTags("Leave Prayers");
+
+            app.MapGet("leave/prayers/{id}/{employeeId}", async (ClaimsPrincipal principal, IMediator mediator, Guid id, Guid employeeId) =>
+            {
+                if (principal.Identity is null)
+                {
+                    return Results.Forbid();
+                }
+
+                var result = await mediator.Send(new GetPrayerByIdQuery(id, employeeId));
+                return result.ToHttpResult();
+            })
+            .RequireAuthorization()
+            .WithSummary("Get Leave Prayer Detail")
+            .WithTags("Leave Prayers");
         }
     }
 }
