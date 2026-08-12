@@ -6,7 +6,7 @@ using QubeFin.Persistence.Models.Hrms;
 namespace QubeFin.Payroll.Application.Payrolls.Queries
 {
     public record GetPayslipsQuery(Guid employeeId) : IRequest<Result<GetPayslipsResponse>>;
-    public record GetPayslipsResponse(IEnumerable<Payslip> payslips);
+    public record GetPayslipsResponse(IEnumerable<Payslip> Payslips);
     internal sealed class GetPayslipsQueryHandler(IPayrollRepository payrollRepository) : IRequestHandler<GetPayslipsQuery, Result<GetPayslipsResponse>>
     {
         public async Task<Result<GetPayslipsResponse>> Handle(GetPayslipsQuery request, CancellationToken cancellationToken)

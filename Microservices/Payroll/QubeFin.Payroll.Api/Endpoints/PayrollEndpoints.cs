@@ -75,7 +75,7 @@ namespace QubeFin.Payroll.Api.Endpoints
 
             app.MapGet("payslips", async (ISender sender, ClaimsPrincipal principal, CancellationToken cancellationToken) =>
             {
-                var employeeId = principal.Identity.GetUserId();
+                var employeeId = principal.Identity.GetEmployeeId();
                 var result = await sender.Send(new GetPayslipsQuery(employeeId), cancellationToken);
                 return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Errors);
             }).WithSummary("Get last 6 months Payslips")
