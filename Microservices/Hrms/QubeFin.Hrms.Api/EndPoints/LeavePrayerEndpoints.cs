@@ -1,15 +1,13 @@
-﻿using Amazon.Auth.AccessControlPolicy;
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
 using QubeFin.Core.Results;
-using QubeFin.Hrms.Application.Attendances.Models;
+using QubeFin.Hrms.Api.Requests;
+using QubeFin.Hrms.Application.LeaveApproval.Models;
 using QubeFin.Hrms.Application.LeavePrayers.Commands;
 using QubeFin.Hrms.Application.LeavePrayers.Models;
 using QubeFin.Hrms.Application.LeavePrayers.Queries;
-using QubeFin.Hrms.Application.Leaves.Queries;
-using QubeFin.Hrms.Application.LeaveTypes.Queries;
 using System.Security.Claims;
 
 namespace QubeFin.Hrms.Api.EndPoints
@@ -40,7 +38,7 @@ namespace QubeFin.Hrms.Api.EndPoints
                     }
                 }
                 return Results.Ok(result.Value);
-            }).DisableAntiforgery().WithSummary("Apply Leave prayer").WithTags("Leave Prayers");
+            }).DisableAntiforgery().WithSummary("Apply Leave prayer").RequireAuthorization().WithTags("Leave Prayers");
 
             app.MapGet("leave/prayers/by-year/{year}", async (ClaimsPrincipal principal, ISender sender, [FromRoute] int year, CancellationToken cancellationToken) =>
             {
@@ -53,6 +51,7 @@ namespace QubeFin.Hrms.Api.EndPoints
                 var result = await sender.Send(new GetPrayerByEmployeeIdQuery(year, employeeId));
                 return result.ToHttpResult();
             })
+            .RequireAuthorization()
             .WithSummary("Get year wise Leave Payers for specific employee")
             .WithTags("Leave Prayers");
 
@@ -69,6 +68,36 @@ namespace QubeFin.Hrms.Api.EndPoints
             .RequireAuthorization()
             .WithSummary("Get Leave Prayer Detail")
             .WithTags("Leave Prayers");
+
+            #region --- LEAVE PRAYER APPROVAL ---
+
+            app.MapPost("leave/prayers/approval/search", async (ClaimsPrincipal principal, ISender sender, LeaveApprovalSearchRequest request) =>
+            {
+                if (principal.Identity is null)
+                {
+                    return Results.Forbid();
+                }
+
+                var empId = principal.Identity.GetEmployeeId();
+                var response = await sender.Send(new GetLeavePrayerApprovalListByEmployeeIdQuery(empId, request));
+                return Results.Ok(response);
+            }).WithSummary("Get Leave Approval List for logged-in employee with optional filters")
+            .WithTags("Leave Prayer Approval");
+
+            app.MapPost("leaves/prayer/action", async (ClaimsPrincipal principal, ISender sender, LeaveRequestActionRequest request) =>
+            {
+                if (principal.Identity is null)
+                {
+                    return Results.Forbid();
+                }
+
+                var userId = principal.Identity.GetUserId();
+                var response = await sender.Send(new LeavePrayerActionCommand(request.LeaveRequestId, request.IsApproved, request.IsRejected, userId));
+                return Results.Ok(response);
+            })
+            .WithSummary("Leave Request Action")
+            .WithTags("Leave Prayer Approval");
+            #endregion
         }
     }
 }

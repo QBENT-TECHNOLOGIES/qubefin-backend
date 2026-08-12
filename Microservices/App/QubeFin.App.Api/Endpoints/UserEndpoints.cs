@@ -51,8 +51,13 @@ public class UserEndpoints : IEndpoint
         //.RequireAuthorization("Permission:Users.View")
         .WithSummary("Get Logeedin User Info");
 
-        app.MapPost("users", async (CreateUserCommand command, ISender sender) =>
+        app.MapPost("users", async (ClaimsPrincipal principal, CreateUserCommand command, ISender sender) =>
         {
+            command = command with
+            {
+                UserId = principal.Identity.GetUserId()
+            };
+
             var result = await sender.Send(command);
             return result.ToHttpResult();
         })

@@ -25,6 +25,7 @@ public partial class QubeFinDataContext : DbContext, IUnitOfWork
         modelBuilder.Entity<LeaveApprovalSearchResult>().HasNoKey().ToView(null);
         modelBuilder.Entity<ApprovalWorkflowEventGroupItem>().HasNoKey().ToView(null);
         modelBuilder.Entity<LeavePrayerResponse>().HasNoKey().ToView(null);
+        modelBuilder.Entity<LeavePrayerApprovalSearchResult>().HasNoKey().ToView(null);
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
