@@ -17,7 +17,7 @@ namespace QubeFin.Global.Api.Endpoints
             {
                 var resp = await sender.Send(new FilterCommitteeMemberQuery(searchText, sortOn, sortDirection, pageIndex, pageSize));
                 return TypedResults.Ok(resp);
-            }).WithSummary("Filter Committee Members");
+            }).WithSummary("Filter Committee Members").WithTags("SurveyCommittees");
 
             app.MapGet("survey-committees/{id:guid}", async (Guid id, ISender sender) =>
             {
@@ -34,7 +34,7 @@ namespace QubeFin.Global.Api.Endpoints
                     }
                 }
                 return Results.Ok(result.Value);
-            }).WithSummary("Get Committee Member By Id");
+            }).WithSummary("Get Committee Member By Id").WithTags("SurveyCommittees");
 
             app.MapPost("survey-committees", async (MemberAddRequest request, ISender sender, ClaimsPrincipal principal) =>
             {
@@ -51,7 +51,7 @@ namespace QubeFin.Global.Api.Endpoints
                     }
                 }
                 return Results.Ok();
-            }).WithSummary("Add Member To Survey Committee");
+            }).WithSummary("Add Member To Survey Committee").WithTags("SurveyCommittees");
 
             app.MapPut("survey-committees", async (MemberUpdateRequest request, ISender sender, ClaimsPrincipal principal) =>
             {
@@ -68,7 +68,7 @@ namespace QubeFin.Global.Api.Endpoints
                     }
                 }
                 return Results.Ok();
-            }).WithSummary("Update Member To Survey Committee");
+            }).WithSummary("Update Member To Survey Committee").WithTags("SurveyCommittees");
         }
     }
 }

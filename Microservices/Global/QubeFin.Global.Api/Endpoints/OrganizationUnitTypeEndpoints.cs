@@ -20,6 +20,7 @@ public class OrganizationUnitTypeEndpoints : IEndpoint
         .WithName("GetOrganizationUnitTree")
         .WithSummary("Get Organization Unit hierarchy")
         .WithDescription("Returns the complete hierarchical tree of all Organization Units.")
+        .WithTags("OrganizationUnitTypes")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
