@@ -12,7 +12,7 @@ using System.Text;
 namespace QubeFin.Hrms.Application.LeavePrayers.Commands;
 
 #region --- COMMAND --
-public record LeavePrayerActionCommand(Guid LeaveRequestId, bool IsApproved, bool IsRejected, Guid CurrentUserId) : IRequest<Result<LeavePrayerActionResponse>>;
+public record LeavePrayerActionCommand(Guid LeavePrayerId, bool IsApproved, bool IsRejected, Guid CurrentUserId) : IRequest<Result<LeavePrayerActionResponse>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -20,7 +20,7 @@ public class LeavePrayerActionCommandValidator : AbstractValidator<LeavePrayerAc
 {
     public LeavePrayerActionCommandValidator()
     {
-        RuleFor(v => v.LeaveRequestId).NotNull().WithMessage("Leave Request Id is required.");
+        RuleFor(v => v.LeavePrayerId).NotNull().WithMessage("Leave Prayer Id is required.");
         //RuleFor(v => v.RejectedReason).NotEmpty().WithMessage("Rejected Reason is required.").When(x => x.IsRejected == true);
     }
 }
@@ -42,7 +42,7 @@ internal sealed class LeavePrayerActionCommandHandler(QubeFinDataContext context
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.CommandText = "[Hrms].[USP_LeavePrayerAction]";
 
-                cmd.Parameters.Add(new SqlParameter("@p_LeavePrayerId", SqlDbType.UniqueIdentifier) { Value = request.LeaveRequestId });
+                cmd.Parameters.Add(new SqlParameter("@p_LeavePrayerId", SqlDbType.UniqueIdentifier) { Value = request.LeavePrayerId });
                 cmd.Parameters.Add(new SqlParameter("@p_IsApproved", SqlDbType.Bit) { Value = request.IsApproved });
                 cmd.Parameters.Add(new SqlParameter("@p_IsRejected", SqlDbType.Bit) { Value = request.IsRejected });
                 cmd.Parameters.Add(new SqlParameter("@p_CurrentUserId", SqlDbType.UniqueIdentifier) { Value = request.CurrentUserId });

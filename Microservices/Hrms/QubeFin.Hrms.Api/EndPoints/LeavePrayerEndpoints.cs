@@ -84,7 +84,7 @@ namespace QubeFin.Hrms.Api.EndPoints
             }).WithSummary("Get Leave Approval List for logged-in employee with optional filters")
             .WithTags("Leave Prayer Approval");
 
-            app.MapPost("leaves/prayer/action", async (ClaimsPrincipal principal, ISender sender, LeaveRequestActionRequest request) =>
+            app.MapPost("leaves/prayer/action", async (ClaimsPrincipal principal, ISender sender, LeavePrayerActionRequest request) =>
             {
                 if (principal.Identity is null)
                 {
@@ -92,7 +92,7 @@ namespace QubeFin.Hrms.Api.EndPoints
                 }
 
                 var userId = principal.Identity.GetUserId();
-                var response = await sender.Send(new LeavePrayerActionCommand(request.LeaveRequestId, request.IsApproved, request.IsRejected, userId));
+                var response = await sender.Send(new LeavePrayerActionCommand(request.LeavePrayerId, request.IsApproved, request.IsRejected, userId));
                 return Results.Ok(response);
             })
             .WithSummary("Leave Request Action")
