@@ -43,5 +43,7 @@ public partial class TblDesignation
 
     public virtual ICollection<TblMember> TblMembers { get; set; } = new List<TblMember>();
 
+    public virtual ICollection<TblNotification> TblNotifications { get; set; } = new List<TblNotification>();
+
     public virtual ICollection<TblPayRoll> TblPayRolls { get; set; } = new List<TblPayRoll>();
 }
