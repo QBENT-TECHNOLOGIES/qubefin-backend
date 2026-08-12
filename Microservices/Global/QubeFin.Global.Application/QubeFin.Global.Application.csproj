@@ -18,7 +18,6 @@
   </ItemGroup>
 
   <ItemGroup>
-	  <Folder Include="Notifications\Commands\" />
 	  <Folder Include="Notifications\Models\" />
 	  <Folder Include="OrganizationUnits\Commands\" />
     <Folder Include="OrganizationUnits\Queries\" />
