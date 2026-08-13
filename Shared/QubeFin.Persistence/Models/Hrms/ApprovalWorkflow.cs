@@ -1,5 +1,7 @@
 namespace QubeFin.Persistence.Models.Hrms;
 
+using System.Text.Json.Serialization;
+
 public class ApprovalWorkflow
 {
     private readonly List<ApprovalWorkflowStep> _steps = [];
@@ -10,6 +12,17 @@ public class ApprovalWorkflow
     public Guid? OrganizationUnitTypeId { get; private set; }
     public Guid? SalaryGradeId { get; private set; }
     public Guid? PostId { get; private set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? LeaveTypeName { get; private set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? SalaryGradeName { get; private set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? OrganizationUnitTypeName { get; private set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? PostName { get; private set; }
     public int MinimumDays { get; private set; }
     public int MaximumDays { get; private set; }
     public DateTime CreatedOn { get; private set; }
@@ -17,6 +30,10 @@ public class ApprovalWorkflow
     public DateTime? LastModifiedOn { get; private set; }
     public Guid? LastModifiedBy { get; private set; }
     public IReadOnlyCollection<ApprovalWorkflowStep> Steps => _steps;
+    public string StepPost => string.Join(" -> ", _steps
+        .OrderBy(step => step.SequenceNo)
+        .Select(step => step.ReceiverPostName)
+        .Where(name => !string.IsNullOrWhiteSpace(name)));
 
     private ApprovalWorkflow()
     {
@@ -35,7 +52,11 @@ public class ApprovalWorkflow
         Guid createdBy,
         DateTime? lastModifiedOn,
         Guid? lastModifiedBy,
-        IEnumerable<ApprovalWorkflowStep>? steps = null)
+        IEnumerable<ApprovalWorkflowStep>? steps = null,
+        string? leaveTypeName = null,
+        string? salaryGradeName = null,
+        string? organizationUnitTypeName = null,
+        string? postName = null)
     {
         Id = id;
         Category = category;
@@ -49,6 +70,10 @@ public class ApprovalWorkflow
         CreatedBy = createdBy;
         LastModifiedOn = lastModifiedOn;
         LastModifiedBy = lastModifiedBy;
+        LeaveTypeName = leaveTypeName;
+        SalaryGradeName = salaryGradeName;
+        OrganizationUnitTypeName = organizationUnitTypeName;
+        PostName = postName;
 
         if (steps is not null)
         {

@@ -20,6 +20,21 @@ public class ApprovalWorkflowEndpoints : IEndpoint
         .WithSummary("Get approval workflows")
         .WithTags("Approval Workflows");
 
+        app.MapGet("approval-workflows/search", async (
+            string? category,
+            Guid? organizationUnitTypeId,
+            ISender sender,
+            CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(
+                new SearchApprovalWorkflowQuery(category, organizationUnitTypeId),
+                cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Search approval workflows")
+        .WithDescription("Searches approval workflows by category and organization unit type.")
+        .WithTags("Approval Workflows");
+
         app.MapGet("approval-workflows/{id:guid}", async (Guid id, ISender sender, CancellationToken cancellationToken) =>
         {
             var result = await sender.Send(new GetApprovalWorkflowByIdQuery(id), cancellationToken);

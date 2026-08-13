@@ -20,7 +20,11 @@ public static class ApprovalWorkflowMapper
             entity.CreatedBy,
             entity.LastModifiedOn,
             entity.LastModifiedBy,
-            entity.TblApprovalWorkflowSteps.Select(x => x.ToDomain()));
+            entity.TblApprovalWorkflowSteps.Select(x => x.ToDomain()),
+            entity.LeaveType?.Title,
+            entity.SalaryGrade?.Name,
+            entity.OrganizationUnitType?.Name,
+            entity.Post?.Name);
     }
 
     public static Entity ToEntity(this ApprovalWorkflow domain)
