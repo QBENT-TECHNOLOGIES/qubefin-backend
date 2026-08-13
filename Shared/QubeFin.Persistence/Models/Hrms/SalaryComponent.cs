@@ -3,32 +3,19 @@
     public class SalaryComponent
     {
         public Guid Id { get; private set; }
-
         public string Name { get; private set; } = null!;
-
         public string Code { get; private set; } = null!;
-
         public Guid CategoryId { get; private set; }
         public string? CategoryName { get; private set; }
-
         public bool IsTaxable { get; private set; }
-
         public bool IsPfapplicable { get; private set; }
-
         public bool IsEsiapplicable { get; private set; }
-
         public bool IsCtccomponent { get; private set; }
-
         public bool IsActive { get; private set; }
-
         public int DisplayOrder { get; private set; }
-
         public DateTime CreatedOn { get; private set; }
-
         public Guid CreatedBy { get; private set; }
-
         public DateTime? LastModifiedOn { get; private set; }
-
         public Guid? LastModifiedBy { get; private set; }
         private SalaryComponent() { }
         public SalaryComponent(
@@ -36,6 +23,7 @@
             string name,
             string code,
             Guid categoryId,
+            string? categoryName,
             bool isTaxable,
             bool isPfapplicable,
             bool isEsiapplicable,
@@ -51,6 +39,7 @@
             Name = name;
             Code = code;
             CategoryId = categoryId;
+            CategoryName = categoryName;
             IsTaxable = isTaxable;
             IsPfapplicable = isPfapplicable;
             IsEsiapplicable = isEsiapplicable;
@@ -115,10 +104,6 @@
             DisplayOrder = displayOrder;
             LastModifiedOn = DateTime.Now;
             LastModifiedBy = lastModifiedBy;
-        }
-        public void SetCategoryName(string categoryName)
-        {
-            CategoryName = categoryName;
         }
     }
 }
