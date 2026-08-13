@@ -45,6 +45,7 @@ namespace QubeFin.Persistence.Models.Hrms
     {
         public Guid Id { get; set; }
         public string EmployeeName { get; set; } = string.Empty;
+        public string EmployeeCode { get; set; } = string.Empty;
         public string OrganizationUnit { get; set; } = string.Empty;
         public string RegularizationType { get; set; } = string.Empty;
         public string RegularizationDate { get; set; } = string.Empty;
