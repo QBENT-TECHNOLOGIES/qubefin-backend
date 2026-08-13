@@ -11,6 +11,8 @@ public class ApprovalWorkflowStep
     public string EventButtonText { get; private set; } = null!;
     public int SequenceNo { get; private set; }
 
+    public string? ReceiverPostName { get; private set; }
+
     private ApprovalWorkflowStep()
     {
     }
@@ -23,7 +25,8 @@ public class ApprovalWorkflowStep
         bool isApprovalEvent,
         string eventStatus,
         string eventButtonText,
-        int sequenceNo)
+        int sequenceNo,
+        string? receiverPostName = null)
     {
         Id = id;
         ApprovalWorkflowId = approvalWorkflowId;
@@ -33,6 +36,7 @@ public class ApprovalWorkflowStep
         EventStatus = eventStatus;
         EventButtonText = eventButtonText;
         SequenceNo = sequenceNo;
+        ReceiverPostName = receiverPostName;
     }
 
     public static ApprovalWorkflowStep Create(

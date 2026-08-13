@@ -15,7 +15,8 @@ public static class ApprovalWorkflowStepMapper
             entity.IsApprovalEvent,
             entity.EventStatus,
             entity.EventButtonText,
-            entity.SequenceNo);
+            entity.SequenceNo,
+            entity.ReceiverPost.Name);
     }
 
     public static Entity ToEntity(this ApprovalWorkflowStep domain)
