@@ -7,17 +7,16 @@ using QubeFin.Persistence;
 namespace QubeFin.App.Application.Users.Queries;
 
 #region --- QUERY ---
-public record GetUserLoginInfoQuery(Guid Id) : IRequest<Result<GetUserLoginInfoResponse>>;
+public record GetUserLoginInfoQuery(Guid Id, Guid EmployeeId) : IRequest<Result<GetUserLoginInfoResponse>>;
 #endregion
 
 #region --- RESPONSE ---
 public record GetUserLoginInfoResponse(Guid Id, string UserName, Guid? EmployeeId, string Employee, string Branch, decimal? Latitude, decimal? Longitude, 
-    TimeOnly AttendanceInTime, TimeOnly AttendanceOutTime, int CheckRadiusInMeter, string Designation);
+    TimeOnly AttendanceInTime, TimeOnly AttendanceOutTime, int CheckRadiusInMeter, string Designation, int NotificationCount);
 #endregion
 
 #region --- HANDLER ---
-internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context)
-    : IRequestHandler<GetUserLoginInfoQuery, Result<GetUserLoginInfoResponse>>
+internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context) : IRequestHandler<GetUserLoginInfoQuery, Result<GetUserLoginInfoResponse>>
 {
     public async Task<Result<GetUserLoginInfoResponse>> Handle(GetUserLoginInfoQuery request, CancellationToken cancellationToken)
     {
@@ -25,20 +24,38 @@ internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context)
             .TblUsers
             .Include(m => m.Employee)
             .ThenInclude(m => m.OrganizationUnit)
-            .Include(m => m.Employee)
-            .ThenInclude(m => m.TblEmployeeDesignations)
-            .ThenInclude(m => m.Designation)
             .Where(m => m.Id == request.Id)
-            .Select(m => new GetUserLoginInfoResponse(m.Id, m.UserName, m.EmployeeId, m.Employee == null ? string.Empty : m.Employee.FullName, m.Employee.OrganizationUnit.Name,
-                m.Employee.OrganizationUnit.Latitude, m.Employee.OrganizationUnit.Longitude, m.Employee.OrganizationUnit.AttendanceInTime.Value, m.Employee.OrganizationUnit.AttendanceOutTime.Value,
-                m.Employee.OrganizationUnit.CheckRadiusInMeter.HasValue ? m.Employee.OrganizationUnit.CheckRadiusInMeter.Value : 100, m.Employee.TblEmployeeDesignations.FirstOrDefault().Designation.Name))
             .FirstOrDefaultAsync(cancellationToken);
 
         if (user is null)
         {
             return new RecordNotFoundError($"User not found for the given Id");
         }
-        return Result.Ok(user);
+        var employeeDesignation = await context.TblEmployeeDesignations
+            .Include(m => m.Designation)
+            .Where(m => m.EmployeeId == request.EmployeeId)
+            .OrderByDescending(m => m.EffectiveFrom)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        //int notificationCount =  context.TblNotifications
+        //    .Where(m => m.EmployeeId == request.EmployeeId && !m.IsRead)
+        //    .CountAsync(cancellationToken);
+
+        var response = new GetUserLoginInfoResponse(
+            user.Id,
+            user.UserName,
+            user.EmployeeId,
+            user.Employee?.FullName ?? string.Empty,
+            user.Employee?.OrganizationUnit?.Name ?? string.Empty,
+            user.Employee?.OrganizationUnit?.Latitude,
+            user.Employee?.OrganizationUnit?.Longitude,
+            user.Employee?.OrganizationUnit?.AttendanceInTime ?? TimeOnly.MinValue,
+            user.Employee?.OrganizationUnit?.AttendanceOutTime ?? TimeOnly.MinValue,
+            user.Employee?.OrganizationUnit?.CheckRadiusInMeter ?? 100,
+            employeeDesignation?.Designation?.Name ?? string.Empty,
+            0
+        );
+        return Result.Ok(response);
     }
 }
 #endregion
