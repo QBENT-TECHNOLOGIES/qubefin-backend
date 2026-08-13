@@ -19,7 +19,8 @@ public static class UserMapper
             entity.CreatedBy,
             entity.CreatedOn,
             entity.LastModifiedBy,
-            entity.LastModifiedOn);
+            entity.LastModifiedOn,
+            entity.Employee?.FullName);
     }
 
     public static Entity ToEntity(this User domain)
