@@ -1,8 +1,11 @@
-﻿using MediatR;
+﻿using Amazon.Auth.AccessControlPolicy;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using QubeFin.Core.Endpoint;
+using QubeFin.Core.Identity;
 using QubeFin.Core.Results;
 using QubeFin.Hrms.Application.LeaveTypes.Queries;
+using System.Security.Claims;
 
 namespace QubeFin.Hrms.Api.EndPoints;
 
@@ -19,18 +22,20 @@ public class LeaveTypeEndpoints : IEndpoint
         .WithDescription("Retrieves a list of all leave types in the system.")
         .WithTags("Leave Types");
 
-        app.MapGet("leave-types/balances/{id}", async (ISender sender, [FromRoute] Guid id, CancellationToken cancellationToken) =>
+        app.MapGet("leave-types/balances", async (ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
-            var result = await sender.Send(new GetLeaveTypesByEmployeeIdQuery(id));
+            var employeeId = principal.Identity.GetEmployeeId();
+            var result = await sender.Send(new GetLeaveTypesByEmployeeIdQuery(employeeId));
             return result.ToHttpResult();
         })
         .WithSummary("Get all Leave balances by leave Types for specific employee")
         .WithDescription("Retrieves a list of all leave balances of an employee for all leave types in the system.")
         .WithTags("Leave Types");
 
-        app.MapGet("leave-types/prayer-balances/{id}", async (ISender sender, [FromRoute] Guid id, CancellationToken cancellationToken) =>
+        app.MapGet("leave-types/prayer-balances", async (ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
-            var result = await sender.Send(new GetLeavePrayerTypeByEmployeeIdQuery(id));
+            var employeeId = principal.Identity.GetEmployeeId();
+            var result = await sender.Send(new GetLeavePrayerTypeByEmployeeIdQuery(employeeId));
             return result.ToHttpResult();
         })
         .WithSummary("Get Leave Payer balances by leave Types for specific employee")
