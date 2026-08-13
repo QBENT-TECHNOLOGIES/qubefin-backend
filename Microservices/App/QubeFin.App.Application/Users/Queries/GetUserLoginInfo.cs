@@ -12,7 +12,7 @@ public record GetUserLoginInfoQuery(Guid Id, Guid EmployeeId) : IRequest<Result<
 
 #region --- RESPONSE ---
 public record GetUserLoginInfoResponse(Guid Id, string UserName, Guid? EmployeeId, string Employee, string Branch, decimal? Latitude, decimal? Longitude, 
-    TimeOnly AttendanceInTime, TimeOnly AttendanceOutTime, int CheckRadiusInMeter, string Designation, int NotificationCount);
+    TimeOnly? AttendanceInTime, TimeOnly? AttendanceOutTime, int CheckRadiusInMeter, string Designation, int NotificationCount);
 #endregion
 
 #region --- HANDLER ---
@@ -37,9 +37,9 @@ internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context) :
             .OrderByDescending(m => m.EffectiveFrom)
             .FirstOrDefaultAsync(cancellationToken);
 
-        //int notificationCount =  context.TblNotifications
-        //    .Where(m => m.EmployeeId == request.EmployeeId && !m.IsRead)
-        //    .CountAsync(cancellationToken);
+        int notificationCount = employeeDesignation != null ? await context.TblNotifications
+            .Where(m => m.DesignationId == employeeDesignation.DesignationId && !m.IsRead)
+            .CountAsync(cancellationToken) : 0;
 
         var response = new GetUserLoginInfoResponse(
             user.Id,
@@ -49,11 +49,11 @@ internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context) :
             user.Employee?.OrganizationUnit?.Name ?? string.Empty,
             user.Employee?.OrganizationUnit?.Latitude,
             user.Employee?.OrganizationUnit?.Longitude,
-            user.Employee?.OrganizationUnit?.AttendanceInTime ?? TimeOnly.MinValue,
-            user.Employee?.OrganizationUnit?.AttendanceOutTime ?? TimeOnly.MinValue,
+            user.Employee?.OrganizationUnit?.AttendanceInTime,
+            user.Employee?.OrganizationUnit?.AttendanceOutTime,
             user.Employee?.OrganizationUnit?.CheckRadiusInMeter ?? 100,
             employeeDesignation?.Designation?.Name ?? string.Empty,
-            0
+            notificationCount
         );
         return Result.Ok(response);
     }
