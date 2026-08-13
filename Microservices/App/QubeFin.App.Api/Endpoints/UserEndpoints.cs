@@ -45,6 +45,7 @@ public class UserEndpoints : IEndpoint
             }
             var userId = principal.Identity.GetUserId();
             var employeeId = principal.Identity.GetEmployeeId();
+
             var result = await sender.Send(new GetUserLoginInfoQuery(userId, employeeId));
             return result.ToHttpResult();
         })

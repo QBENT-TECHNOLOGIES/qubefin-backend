@@ -468,7 +468,7 @@ public class EmployeeEndpoints : IEndpoint
         app.MapPost("employees/search-by-text", async (IMediator mediator, SearchTextRequest request) =>
         {
             var resp = await mediator.Send(new GetEmployeeBySearchTextQuery(request.SearchText));
-            return TypedResults.Ok(resp);
+            return TypedResults.Ok(resp.Value);
         }).WithSummary("Search Employees by Text");
     }
 }
