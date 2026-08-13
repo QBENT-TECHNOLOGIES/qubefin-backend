@@ -19,7 +19,7 @@ namespace QubeFin.Global.Api.Endpoints
                 searchParam.UserId = principal.Identity.GetUserId();
                 var searchResults = await sender.Send(new GetSurveyBySearchQuery(searchParam));
                 return Results.Ok(searchResults);
-            }).WithSummary("Search All Surveys");
+            }).WithSummary("Search All Surveys").WithTags("Surveys");
 
             app.MapGet("surveys/{id:guid}", async (Guid id, ClaimsPrincipal principal, ISender sender) =>
             {
@@ -37,7 +37,7 @@ namespace QubeFin.Global.Api.Endpoints
                     }
                 }
                 return Results.Ok(result.Value);
-            }).WithSummary("Get Survey By Id");
+            }).WithSummary("Get Survey By Id").WithTags("Surveys");
 
             app.MapPost("surveys", async (ClaimsPrincipal principal, SurveyRequest request, ISender sender) =>
             {
@@ -61,7 +61,7 @@ namespace QubeFin.Global.Api.Endpoints
                     }
                 }
                 return Results.Ok();
-            }).WithSummary("Create Survey");
+            }).WithSummary("Create Survey").WithTags("Surveys");
 
 
             app.MapPut("surveys", async (ClaimsPrincipal principal, SurveyRequest request, ISender sender) =>
@@ -87,7 +87,7 @@ namespace QubeFin.Global.Api.Endpoints
                 }
 
                 return Results.Ok();
-            }).WithSummary("Update Survey");
+            }).WithSummary("Update Survey").WithTags("Surveys");
         }
     }
 }

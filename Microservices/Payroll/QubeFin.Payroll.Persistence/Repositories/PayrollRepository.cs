@@ -1,12 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using QubeFin.Core.Results;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Mappers.Payrolls;
+using QubeFin.Persistence.Models.Hrms;
 using QubeFin.Persistence.Models.Payroll;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace QubeFin.Payroll.Persistence.Repositories
 {   
@@ -21,6 +18,7 @@ namespace QubeFin.Payroll.Persistence.Repositories
         Task CreatePayrollAsync(Guid companyId, Guid? userId, CancellationToken cancellationToken);
         Task<bool> IsPayrollAvailableForUpdateAsync(Guid id, CancellationToken cancellationToken = default);
         Task<bool> UpdatePayrollComponentsAsync(Guid payrollId, List<PayrollComponentModel> updatedComponents, CancellationToken cancellationToken = default);
+        Task<List<Payslip>> GetEmployeePayslipsAsync(Guid employeeId);
     }
     public class PayrollRepository(QubeFinDataContext context) : IPayrollRepository
     {
@@ -112,6 +110,10 @@ namespace QubeFin.Payroll.Persistence.Repositories
                 }
             }
             return true;
+        }
+        public async Task<List<Payslip>> GetEmployeePayslipsAsync(Guid employeeId)
+        {
+            return await context.SP_GetEmployeePayslip(employeeId);
         }
     }
 }

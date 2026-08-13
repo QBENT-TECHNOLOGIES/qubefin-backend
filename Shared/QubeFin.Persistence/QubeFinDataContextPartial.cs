@@ -9,6 +9,7 @@ public partial class QubeFinDataContext : DbContext, IUnitOfWork
 {
     public virtual DbSet<EmployeeLeaveRequest> EmployeeLeaveRequest { get; set; }
     public virtual DbSet<ApprovalWorkflowEventGroupItem> ApprovalWorkflowEventGroupItem { get; set; }
+    public virtual DbSet<Payslip> Payslips { get; set; }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder)
     {
@@ -26,6 +27,7 @@ public partial class QubeFinDataContext : DbContext, IUnitOfWork
         modelBuilder.Entity<ApprovalWorkflowEventGroupItem>().HasNoKey().ToView(null);
         modelBuilder.Entity<LeavePrayerResponse>().HasNoKey().ToView(null);
         modelBuilder.Entity<LeavePrayerApprovalSearchResult>().HasNoKey().ToView(null);
+        modelBuilder.Entity<Payslip>().HasNoKey().ToView(null);
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -39,11 +41,16 @@ public partial class QubeFinDataContext : DbContext, IUnitOfWork
             .FromSqlInterpolated($"[Hrms].[USP_GetLeaveRequestsByEmployee] @p_Year = {year}, @p_EmployeeId = {employeeId}")
             .ToListAsync();
     }
-
     public async Task<List<ApprovalWorkflowEventGroupItem>> SP_GetApprovalWorkflowEventGroupItems()
     {
         return await ApprovalWorkflowEventGroupItem
             .FromSqlInterpolated($"[Hrms].[USP_GetApprovalWorkflowEvents]")
+            .ToListAsync();
+    }
+    public async Task<List<Payslip>> SP_GetEmployeePayslip(Guid employeeId)
+    {
+        return await Payslips
+            .FromSqlInterpolated($"[Payroll].[USP_GetEmployeePayslip] @EmployeeId = {employeeId}")
             .ToListAsync();
     }
 }

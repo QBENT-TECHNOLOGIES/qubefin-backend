@@ -4,7 +4,6 @@ using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
 using QubeFin.Core.Results;
 using QubeFin.Global.Api.Requests;
-using QubeFin.Global.Application.AdministrativeUnits.Commands;
 using QubeFin.Global.Application.OrganizationUnis.Commands;
 using QubeFin.Global.Application.OrganizationUnits.Commands;
 using QubeFin.Global.Application.OrganizationUnits.Queries;
@@ -22,7 +21,7 @@ public class OrganizationUnitEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         //.RequireAuthorization("Permission:Users.View")
-        .WithSummary("Get Organization Unit By Id");
+        .WithSummary("Get Organization Unit By Id").WithTags("OrganizationUnits");
 
         app.MapGet("organization-units/children/", async (ISender sender, Guid? id) =>
         {
@@ -30,13 +29,14 @@ public class OrganizationUnitEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         //.RequireAuthorization("Permission:Users.View")
-        .WithSummary("Get Organization Units By Parent Id");
+        .WithSummary("Get Organization Units By Parent Id").WithTags("OrganizationUnits");
 
         app.MapGet("organization-units/tree", async (ISender sender) =>
         {
             var result = await sender.Send(new GetOrganizationUnitTreeQuery());
             return result.ToHttpResult();
-        });
+        })
+        .WithSummary("Get Organization Unit Tree").WithTags("OrganizationUnits");
 
         app.MapPost("organization-units", async (ISender sender, ClaimsPrincipal principal, [FromBody] OrganizationUnitRequest request) =>
         {
@@ -51,7 +51,7 @@ public class OrganizationUnitEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         //.RequireAuthorization("Permission:Users.Add")
-        .WithSummary("Create Organization Unit"); ;
+        .WithSummary("Create Organization Unit").WithTags("OrganizationUnits");
 
         app.MapPut("organization-units/{id:guid}", async (ISender sender, ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] OrganizationUnitRequest request) =>
         {
@@ -65,6 +65,6 @@ public class OrganizationUnitEndpoints : IEndpoint
                 request.AttendanceInTime, request.AttendanceOutTime, request.CheckRadiusInMeter, request.ParentId, userId));
             return result.ToHttpResult();
         })
-        .WithSummary("Update Document Type"); ;
+        .WithSummary("Update Organization Unit").WithTags("OrganizationUnits");
     }
 }
