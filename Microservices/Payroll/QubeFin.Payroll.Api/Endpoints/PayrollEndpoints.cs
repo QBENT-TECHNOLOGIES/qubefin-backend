@@ -1,8 +1,12 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
+using QubeFin.Core.Results;
 using QubeFin.Payroll.Application.Payrolls.Commands;
 using QubeFin.Payroll.Application.Payrolls.Queries;
+using QubeFin.Payroll.Application.Payrolls.Report;
+using System.Net;
 using System.Reflection;
 using System.Security.Claims;
 
@@ -44,14 +48,15 @@ namespace QubeFin.Payroll.Api.Endpoints
               .WithDescription("Retrieves a list of month wise payrolls in the system.")
               .WithTags("Payrolls");
 
-            app.MapPut("lock-payrolls/{year:int}/{month:int}", async(int year,int month, ISender sender, CancellationToken cancellationToken) => {
+            app.MapPut("lock-payrolls/{year:int}/{month:int}", async (int year, int month, ISender sender, CancellationToken cancellationToken) =>
+            {
                 var result = await sender.Send(new LockPayrollCommand(month, year), cancellationToken);
                 return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Errors);
             }).WithSummary("Lock monthly payrolls")
             .WithDescription("Locks all payroll data for the specified month and year, preventing further modifications.")
             .WithTags("Payrolls");
 
-            app.MapPost("create", async(Guid companyId, ISender sender, ClaimsPrincipal principal, CancellationToken cancellationToken) =>
+            app.MapPost("create", async (Guid companyId, ISender sender, ClaimsPrincipal principal, CancellationToken cancellationToken) =>
             {
                 if (principal.Identity is null || !principal.Identity.IsAuthenticated)
                 {
@@ -81,6 +86,50 @@ namespace QubeFin.Payroll.Api.Endpoints
             }).WithSummary("Get last 6 months Payslips")
               .WithDescription("Retrieves a list of payslips for the last 6 months for the authenticated employee.")
               .WithTags("Payrolls");
+
+
+            app.MapGet("/reports/payslip/{payslipId:guid}", [Authorize] async (Guid payslipId, ISender sender) =>
+            {
+                var command = new GenerateSSRSReportsCommand(
+                "Rpt_Employee_Payslip",         //Report name
+                "PDF",                          //Report Format
+                new Dictionary<string, string>  //Report Parameter
+                {
+                    ["PayslipId"] = payslipId.ToString()
+                });
+
+                var result = await sender.Send(command);
+
+                if (result.IsFailed)
+                    return result.ToHttpResult();
+
+                var file = result.Value;
+                return Results.File(file.FileStream, file.ContentType, file.FileName);
+            }).WithSummary("Generate payslip report.");
+
+            app.MapGet("/generate-pf-report/{month:int}/{year:int}", [Authorize] async (int month, int year, ISender sender) =>
+            {
+                var command = new GenerateNPOIReportsCommand("Payroll.USP_GetPFReport",
+                    new Dictionary<string, object?>
+                    {
+                        ["@Month"] = month,
+                        ["@Year"] = year
+                    },
+                    "PF Report",
+                    $"Month: {month}, Year: {year}",
+                    true
+                );
+
+                var result = await sender.Send(command);
+
+                if (result.IsFailed)
+                    return result.ToHttpResult();
+
+                var file = result.Value;
+
+                return Results.File(file.FileStream, file.ContentType, $"PF_Report_{month}_{year}.xlsx");
+            })
+    .WithSummary("Generate PF report.");
         }
     }
 }
