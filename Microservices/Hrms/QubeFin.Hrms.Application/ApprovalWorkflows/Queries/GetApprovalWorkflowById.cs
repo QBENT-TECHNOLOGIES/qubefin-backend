@@ -6,18 +6,18 @@ using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.ApprovalWorkflows.Queries;
 
-public record GetApprovalWorkflowByIdQuery(Guid Id) : IRequest<Result<GetApprovalWorkflowByIdResponse>>;
+public record GetApprovalWorkflowByIdQuery(Guid Id) : IRequest<Result<ApprovalWorkflow>>;
 
-public record GetApprovalWorkflowByIdResponse(ApprovalWorkflow Workflow);
+//public record GetApprovalWorkflowByIdResponse(ApprovalWorkflow Workflow);
 
 internal sealed class GetApprovalWorkflowByIdQueryHandler(IApprovalWorkflowRepository approvalWorkflowRepository)
-    : IRequestHandler<GetApprovalWorkflowByIdQuery, Result<GetApprovalWorkflowByIdResponse>>
+    : IRequestHandler<GetApprovalWorkflowByIdQuery, Result<ApprovalWorkflow>>
 {
-    public async Task<Result<GetApprovalWorkflowByIdResponse>> Handle(GetApprovalWorkflowByIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<ApprovalWorkflow>> Handle(GetApprovalWorkflowByIdQuery request, CancellationToken cancellationToken)
     {
         var workflow = await approvalWorkflowRepository.GetByIdAsync(request.Id);
         return workflow is null
             ? new RecordNotFoundError("Approval workflow not found.")
-            : Result.Ok(new GetApprovalWorkflowByIdResponse(workflow));
+            : Result.Ok(workflow);
     }
 }

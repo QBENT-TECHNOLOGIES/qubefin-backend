@@ -12,6 +12,7 @@ public interface IApprovalWorkflowRepository
     Task<ApprovalWorkflow?> GetByIdAsync(Guid id);
     Task<IEnumerable<ApprovalWorkflow>> GetAllAsync();
     Task<IEnumerable<ApprovalWorkflow>> GetByCategoryAsync(string category);
+    Task<IEnumerable<ApprovalWorkflow>> SearchAsync(string? category, Guid? organizationUnitTypeId);
 }
 
 public class ApprovalWorkflowRepository(QubeFinDataContext context) : IApprovalWorkflowRepository
@@ -63,7 +64,12 @@ public class ApprovalWorkflowRepository(QubeFinDataContext context) : IApprovalW
     public async Task<ApprovalWorkflow?> GetByIdAsync(Guid id)
     {
         var entity = await context.TblApprovalWorkflows
+            .Include(m => m.LeaveType)
+            .Include(m => m.OrganizationUnitType)
+            .Include(m => m.SalaryGrade)
+            .Include(m => m.Post)
             .Include(x => x.TblApprovalWorkflowSteps)
+            .ThenInclude(x => x.ReceiverPost)
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id);
 
@@ -73,7 +79,12 @@ public class ApprovalWorkflowRepository(QubeFinDataContext context) : IApprovalW
     public async Task<IEnumerable<ApprovalWorkflow>> GetAllAsync()
     {
         var entities = await context.TblApprovalWorkflows
+            .Include(m => m.LeaveType)
+            .Include(m => m.OrganizationUnitType)
+            .Include(m => m.SalaryGrade)
+            .Include(m => m.Post)
             .Include(x => x.TblApprovalWorkflowSteps)
+            .ThenInclude(x => x.ReceiverPost)
             .AsNoTracking()
             .OrderBy(x => x.Category)
             .ThenBy(x => x.MinimumDays)
@@ -85,10 +96,45 @@ public class ApprovalWorkflowRepository(QubeFinDataContext context) : IApprovalW
     public async Task<IEnumerable<ApprovalWorkflow>> GetByCategoryAsync(string category)
     {
         var entities = await context.TblApprovalWorkflows
+            .Include(x => x.LeaveType)
+            .Include(x => x.OrganizationUnitType)
+            .Include(x => x.SalaryGrade)
+            .Include(x => x.Post)
             .Include(x => x.TblApprovalWorkflowSteps)
+            .ThenInclude(x => x.ReceiverPost)
             .AsNoTracking()
             .Where(x => x.Category == category)
             .OrderBy(x => x.MinimumDays)
+            .ToListAsync();
+
+        return entities.Select(x => x.ToDomain());
+    }
+
+    public async Task<IEnumerable<ApprovalWorkflow>> SearchAsync(string? category, Guid? organizationUnitTypeId)
+    {
+        var query = context.TblApprovalWorkflows
+            .Include(x => x.LeaveType)
+            .Include(x => x.OrganizationUnitType)
+            .Include(x => x.SalaryGrade)
+            .Include(x => x.Post)
+            .Include(x => x.TblApprovalWorkflowSteps)
+            .ThenInclude(x => x.ReceiverPost)
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(category))
+        {
+            query = query.Where(x => x.Category == category);
+        }
+
+        if (organizationUnitTypeId.HasValue && organizationUnitTypeId != Guid.Empty)
+        {
+            query = query.Where(x => x.OrganizationUnitTypeId == organizationUnitTypeId.Value);
+        }
+
+        var entities = await query
+            .OrderBy(x => x.Category)
+            .ThenBy(x => x.MinimumDays)
             .ToListAsync();
 
         return entities.Select(x => x.ToDomain());

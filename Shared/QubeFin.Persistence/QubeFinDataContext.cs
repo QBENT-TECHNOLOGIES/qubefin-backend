@@ -150,6 +150,8 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblMenuPermission> TblMenuPermissions { get; set; }
 
+    public virtual DbSet<TblNotification> TblNotifications { get; set; }
+
     public virtual DbSet<TblOrganizationUnit> TblOrganizationUnits { get; set; }
 
     public virtual DbSet<TblOrganizationUnitType> TblOrganizationUnitTypes { get; set; }
@@ -203,10 +205,6 @@ public partial class QubeFinDataContext : DbContext
     public virtual DbSet<TblUserSession> TblUserSessions { get; set; }
 
     public virtual DbSet<WegrowConsolidateEmployee> WegrowConsolidateEmployees { get; set; }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=65.2.146.91;Database=QubeFinData;User Id=sa;Password=KuPH8Bt97ipg;TrustServerCertificate=Yes;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -1797,6 +1795,29 @@ public partial class QubeFinDataContext : DbContext
                 .HasForeignKey(d => d.PermissionId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_MenuPermission_Tbl_Permission");
+        });
+
+        modelBuilder.Entity<TblNotification>(entity =>
+        {
+            entity.ToTable("Tbl_Notification", "Global");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.ActionUrl).HasMaxLength(200);
+            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.Message).HasMaxLength(100);
+            entity.Property(e => e.NotificationType)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.ReadDate).HasColumnType("datetime");
+            entity.Property(e => e.ReferenceType)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.Title).HasMaxLength(50);
+
+            entity.HasOne(d => d.Designation).WithMany(p => p.TblNotifications)
+                .HasForeignKey(d => d.DesignationId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_Notification_Tbl_Designation");
         });
 
         modelBuilder.Entity<TblOrganizationUnit>(entity =>

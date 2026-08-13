@@ -14,7 +14,7 @@ public class UtilityEndpoints : IEndpoint
             return Results.Ok(user.Value);
         })
         //.RequireAuthorization("Permission:Users.View")
-        .WithSummary("Get Utility");
+        .WithSummary("Get Utility").WithTags("Utilities");
 
         app.MapGet("police-stations", async (ISender sender) =>
         {
@@ -22,7 +22,7 @@ public class UtilityEndpoints : IEndpoint
             return Results.Ok(user.Value);
         })
         //.RequireAuthorization("Permission:Users.View")
-        .WithSummary("Get Police Station");
+        .WithSummary("Get Police Station").WithTags("Utilities");
 
         app.MapGet("post-office", async (ISender sender) =>
         {
@@ -30,7 +30,7 @@ public class UtilityEndpoints : IEndpoint
             return Results.Ok(user.Value);
         })
         //.RequireAuthorization("Permission:Users.View")
-        .WithSummary("Get Post Office");
+        .WithSummary("Get Post Office").WithTags("Utilities");
 
         app.MapGet("kyc-documents", async (ISender sender) =>
         {
@@ -38,6 +38,6 @@ public class UtilityEndpoints : IEndpoint
             return Results.Ok(user.Value);
         })
         //.RequireAuthorization("Permission:Users.View")
-        .WithSummary("Get KYC Documents");
+        .WithSummary("Get KYC Documents").WithTags("Utilities");
     }
 }
