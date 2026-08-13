@@ -16,10 +16,10 @@ public class EmployeeEndpoints : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("employees/search", async (IMediator mediator, string searchType, string? searchText, Guid? searchOrganizationUnitId,
+        app.MapGet("employees/search", async (IMediator mediator, string searchType, string? searchText, DateOnly? srchJoiningDate, Guid? searchOrganizationUnitId,
             string sortOn, string sortDirection, int pageIndex, int pageSize) =>
         {
-            var resp = await mediator.Send(new GetEmployeesBySearchQuery(searchType, searchText, searchOrganizationUnitId,
+            var resp = await mediator.Send(new GetEmployeesBySearchQuery(searchType, searchText, srchJoiningDate, searchOrganizationUnitId,
                 sortOn, sortDirection, pageIndex, pageSize));
             return TypedResults.Ok(resp);
         })

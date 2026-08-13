@@ -3,7 +3,6 @@ using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
 using QubeFin.Payroll.Application.Payrolls.Commands;
 using QubeFin.Payroll.Application.Payrolls.Queries;
-using System.Reflection;
 using System.Security.Claims;
 
 namespace QubeFin.Payroll.Api.Endpoints

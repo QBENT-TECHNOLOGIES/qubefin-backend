@@ -5,7 +5,7 @@ using QubeFin.Persistence;
 namespace QubeFin.Hrms.Application.Employees.Queries;
 
 #region --- QUERY ---
-public record GetEmployeesBySearchQuery(string SearchType, string? SearchText, Guid? SearchOrganizationUnitId,
+public record GetEmployeesBySearchQuery(string SearchType, string? SearchText, DateOnly? srchJoiningDate, Guid? SearchOrganizationUnitId,
     string? SortOn, string? SortDirection, int PageIndex, int PageSize) : IRequest<GetEmployeesBySearchResponse>;
 #endregion
 
@@ -39,6 +39,10 @@ internal sealed class GetEmployeesBySearchQueryHandler(QubeFinDataContext contex
         {
             filterEntitiesQuery = filterEntitiesQuery.Where(m => m.Code!.Contains(request.SearchText.Trim()) || m.FullName.Contains(request.SearchText.Trim())
                 || m.MobileNo!.Contains(request.SearchText.Trim()) || m.PersonalEmail!.Contains(request.SearchText.Trim()) || m.OfficialEmail!.Contains(request.SearchText.Trim()));
+        }
+        if (request.srchJoiningDate != null)
+        {
+            filterEntitiesQuery = filterEntitiesQuery.Where(m => m.JoiningDate == request.srchJoiningDate);
         }
 
         if (request.SortOn is not null && request.SortDirection is not null)
