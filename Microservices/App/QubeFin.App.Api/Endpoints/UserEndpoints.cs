@@ -44,15 +44,21 @@ public class UserEndpoints : IEndpoint
                 return Results.Forbid();
             }
             var userId = principal.Identity.GetUserId();
+            var employeeId = principal.Identity.GetEmployeeId();
 
-            var result = await sender.Send(new GetUserLoginInfoQuery(userId));
+            var result = await sender.Send(new GetUserLoginInfoQuery(userId, employeeId));
             return result.ToHttpResult();
         })
         //.RequireAuthorization("Permission:Users.View")
         .WithSummary("Get Logeedin User Info");
 
-        app.MapPost("users", async (CreateUserCommand command, ISender sender) =>
+        app.MapPost("users", async (ClaimsPrincipal principal, CreateUserCommand command, ISender sender) =>
         {
+            command = command with
+            {
+                UserId = principal.Identity.GetUserId()
+            };
+
             var result = await sender.Send(command);
             return result.ToHttpResult();
         })

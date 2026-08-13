@@ -3,10 +3,7 @@ using MediatR;
 using QubeFin.Core.Results;
 using QubeFin.Payroll.Persistence.Repositories;
 using QubeFin.Persistence.Models.Payroll;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Text;
 
 namespace QubeFin.Payroll.Application.Payrolls.Queries
 {

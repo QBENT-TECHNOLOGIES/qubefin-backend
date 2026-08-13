@@ -1,7 +1,4 @@
 ﻿using QubeFin.Persistence.Models.Hrms;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Entity = QubeFin.Persistence.Entities.TblSalaryComponent;
 
 namespace QubeFin.Persistence.Mappers.Hrms
@@ -15,6 +12,7 @@ namespace QubeFin.Persistence.Mappers.Hrms
                 entity.Name,
                 entity.Code,
                 entity.CategoryId,
+                entity.Category.Name,
                 entity.IsTaxable,
                 entity.IsPfapplicable,
                 entity.IsEsiapplicable,
@@ -26,7 +24,6 @@ namespace QubeFin.Persistence.Mappers.Hrms
                 entity.LastModifiedOn,
                 entity.LastModifiedBy
             );
-            domain.SetCategoryName(entity.Category.Name);
             return domain;
         }
         public static Entity ToEntity(this SalaryComponent domain)
