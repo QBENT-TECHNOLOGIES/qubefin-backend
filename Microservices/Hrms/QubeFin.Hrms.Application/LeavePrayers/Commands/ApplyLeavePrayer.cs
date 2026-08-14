@@ -19,8 +19,9 @@ public class ApplyLeavePrayerCommandValidator : AbstractValidator<ApplyLeavePray
 {
     public ApplyLeavePrayerCommandValidator()
     {
-        RuleFor(v => v.prayer).NotNull().WithMessage("Regularization request is required.");
-        RuleFor(v => v.EmployeeId).NotEqual(Guid.Empty).WithMessage("Employee Id is required.");
+        RuleFor(v => v.EmployeeId).NotNull().NotEqual(Guid.Empty).WithMessage("Employee Id is required.");
+        RuleFor(v => v.prayer.LeaveTypeId).NotNull().WithMessage("Regularization request is required.");
+        RuleFor(v => v.prayer.PrayerDays).GreaterThan(0).WithMessage("Applied prayer days should be greater than 0.");
     }
 }
 #endregion
