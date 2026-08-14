@@ -7,17 +7,11 @@ using QubeFin.Persistence.Models.Payroll;
 
 namespace QubeFin.Payroll.Application.Payrolls.Commands
 {
-    public record UpdatePayrollComponentsCommand(
-        Guid PayrollId,
-        List<PayrollComponentModel> EarningHeads,
-        List<PayrollComponentModel> DeductionHeads
-    ) : IRequest<Result<UpdatePayrollComponentsResponse>>;
-
-    public record UpdatePayrollComponentsResponse(bool IsUpdated);
-
-    internal sealed class UpdateEmployeePayrollCommandHandler(IPayrollRepository payrollRepository, IUnitOfWork unitOfWork) : IRequestHandler<UpdatePayrollComponentsCommand, Result<UpdatePayrollComponentsResponse>>
+    public record UpdatePayrollComponentsCommand(Guid PayrollId, List<PayrollComponentModel> EarningHeads, List<PayrollComponentModel> DeductionHeads) : IRequest<Result<bool>>;
+    internal sealed class UpdateEmployeePayrollCommandHandler(IPayrollRepository payrollRepository, IUnitOfWork unitOfWork) : 
+        IRequestHandler<UpdatePayrollComponentsCommand, Result<bool>>
     {
-        public async Task<Result<UpdatePayrollComponentsResponse>> Handle(UpdatePayrollComponentsCommand request, CancellationToken cancellationToken)
+        public async Task<Result<bool>> Handle(UpdatePayrollComponentsCommand request, CancellationToken cancellationToken)
         {
             var isAvailable = await payrollRepository.IsPayrollAvailableForUpdateAsync(request.PayrollId, cancellationToken);
             if (!isAvailable)
@@ -27,7 +21,7 @@ namespace QubeFin.Payroll.Application.Payrolls.Commands
             var componentsToUpdate = request.EarningHeads.Concat(request.DeductionHeads).ToList();
             await payrollRepository.UpdatePayrollComponentsAsync(request.PayrollId, componentsToUpdate, cancellationToken);
             await unitOfWork.SaveChangesAsync(cancellationToken);
-            return Result.Ok(new UpdatePayrollComponentsResponse(true));
+            return Result.Ok(true);
         }
     }
 }

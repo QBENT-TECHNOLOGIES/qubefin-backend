@@ -10,19 +10,13 @@ using QubeFin.Persistence.Models.Hrms;
 namespace QubeFin.Hrms.Application.Employees.Queries;
 
 #region --- QUERY ---
-public record GetEmployeeEmploymentQuery(Guid Id) : IRequest<Result<GetEmploymentResponse>>;
-#endregion
-#region --- RESPONSE ---
-public record GetEmploymentResponse(
-    List<EmploymentDetailRequest> Employments
-    );
-
+public record GetEmployeeEmploymentQuery(Guid Id) : IRequest<Result<List<EmploymentDetailRequest>>>;
 #endregion
 #region --- HANDLER ---
 internal sealed class GetEmployeeEmploymentQueryHandler(QubeFinDataContext context)
-    : IRequestHandler<GetEmployeeEmploymentQuery, Result<GetEmploymentResponse>>
+    : IRequestHandler<GetEmployeeEmploymentQuery, Result<List<EmploymentDetailRequest>>>
 {
-    public async Task<Result<GetEmploymentResponse>> Handle(GetEmployeeEmploymentQuery request, CancellationToken cancellationToken)
+    public async Task<Result<List<EmploymentDetailRequest>>> Handle(GetEmployeeEmploymentQuery request, CancellationToken cancellationToken)
     {
         var employee = await context.TblEmployees.Include(m => m.TblEmployeeEmployments).Where(m => m.Id == request.Id).FirstOrDefaultAsync(cancellationToken: cancellationToken);
 
@@ -46,10 +40,8 @@ internal sealed class GetEmployeeEmploymentQueryHandler(QubeFinDataContext conte
             ExpCertFileName = d.ExpCertFileName,
             ExpCertFileNo = d.ExpCertFileNo,
             Sequence = d.Sequence
-        })]
-
-                    : new List<EmploymentDetailRequest>();
-        return Result.Ok(new GetEmploymentResponse(docs.OrderBy(m => m.Sequence).ToList()));
+        })] : new List<EmploymentDetailRequest>();
+        return Result.Ok(docs.OrderBy(m => m.Sequence).ToList());
     }
 }
 #endregion

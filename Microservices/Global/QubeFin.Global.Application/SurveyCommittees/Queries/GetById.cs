@@ -3,7 +3,6 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
-using QubeFin.Global.Application.SurveyCommittees.Commands;
 using QubeFin.Global.Application.SurveyCommittees.Models;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Global;
@@ -11,7 +10,7 @@ using QubeFin.Persistence.Models.Global;
 namespace QubeFin.Global.Application.SurveyCommittees.Queries;
 
 #region --- QUERY ---
-public record GetByIdQuery(Guid Id) : IRequest<Result<GetByIdResponse>>;
+public record GetByIdQuery(Guid Id) : IRequest<Result<SurveyCommitteeMemberResponse>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -23,14 +22,11 @@ public class GetByIdQueryValidator : AbstractValidator<GetByIdQuery>
     }
 }
 #endregion
-#region --- RESPONSE ---
-public record GetByIdResponse(SurveyCommitteeMemberResponse SurveyCommitteeMember);
-#endregion
 
 #region --- HANDLER ---
-internal sealed class GetByIdQueryHandler(QubeFinDataContext context) : IRequestHandler<GetByIdQuery, Result<GetByIdResponse>>
+internal sealed class GetByIdQueryHandler(QubeFinDataContext context) : IRequestHandler<GetByIdQuery, Result<SurveyCommitteeMemberResponse>>
 {
-    public async Task<Result<GetByIdResponse>> Handle(GetByIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<SurveyCommitteeMemberResponse>> Handle(GetByIdQuery request, CancellationToken cancellationToken)
     {
         var SurveyCommitteeMember = await context.TblSurveyCommittees.Include(m => m.Employee).AsNoTracking().FirstOrDefaultAsync(m => m.Id == request.Id, cancellationToken: cancellationToken);
 
@@ -38,7 +34,7 @@ internal sealed class GetByIdQueryHandler(QubeFinDataContext context) : IRequest
         {
             return new RecordNotFoundError($"Survey committee member not found for the given Id");
         }
-        return new GetByIdResponse(new SurveyCommitteeMemberResponse
+        return new SurveyCommitteeMemberResponse
         {
             Id = SurveyCommitteeMember.Id,
             EmployeeId = SurveyCommitteeMember.EmployeeId,
@@ -54,7 +50,7 @@ internal sealed class GetByIdQueryHandler(QubeFinDataContext context) : IRequest
                 LastModifiedBy = SurveyCommitteeMember.LastModifiedBy != null ? SurveyCommitteeMember.LastModifiedBy.ToString() : null,
                 LastModifiedOn = SurveyCommitteeMember.LastModifiedOn
             }
-        });
+        };
     }
 }
 #endregion

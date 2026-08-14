@@ -1,24 +1,20 @@
 ﻿using FluentResults;
 using FluentValidation;
 using MediatR;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
-using QubeFin.Persistence.Models.App;
 using QubeFin.Persistence.Models.Hrms;
-using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace QubeFin.Hrms.Application.Employees.Commands;
-
 
 #region --- COMMAND ---
 public record CreateEmployeeCommand(string Code, string? Salutation, string FirstName, string? MiddleName, string LastName, string? FatherName, string? MotherName, 
     DateTime DateOfBirth, string Gender, string Religion, string? Caste, string Nationality, string BloodGroup, string? DisabilityType, string? MaritalStatus,
     Guid CreatedBy
-) : IRequest<Result<CreateEmployeeResponse>>;
+) : IRequest<Result<string>>;
 #endregion
 
 #region --- VALIDATION ---
@@ -45,15 +41,11 @@ public class CreateEmployeeCommandValidator : AbstractValidator<CreateEmployeeCo
 }
 #endregion
 
-#region --- RESPONSE ---
-public record CreateEmployeeResponse(bool Created);
-#endregion
-
 #region --- HANDLER ---
 internal sealed class CreateEmployeeCommandHandler(IEmployeeRepository employeeRepository, IUnitOfWork unitOfWork, QubeFinDataContext context)
-    : IRequestHandler<CreateEmployeeCommand, Result<CreateEmployeeResponse>>
+    : IRequestHandler<CreateEmployeeCommand, Result<string>>
 {
-    public async Task<Result<CreateEmployeeResponse>> Handle(CreateEmployeeCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(CreateEmployeeCommand request, CancellationToken cancellationToken)
     {
         var existingEmployee = await context.TblEmployees.FirstOrDefaultAsync(m => m.Code == request.Code);
         if (existingEmployee != null)
@@ -77,7 +69,7 @@ internal sealed class CreateEmployeeCommandHandler(IEmployeeRepository employeeR
         await employeeRepository.AddAsync(employee);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Ok(new CreateEmployeeResponse(true));
+        return Result.Ok($"Employee created successfully with Name : {request.FirstName} {request.LastName}");
     }
 }
 #endregion

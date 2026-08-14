@@ -8,14 +8,14 @@ using System.Text;
 
 namespace QubeFin.Payroll.Application.Payrolls.Queries
 {
-    public record GetMonthwisePayrollSummaryQuery() : IRequest<Result<GetMonthWisePayrollResponse>>;
-    public record GetMonthWisePayrollResponse(IEnumerable<MonthwisePayrollData> Payrolls);
-    internal class GetMonthWisePayrollQueryHandler(IPayrollRepository payrollRepository) : IRequestHandler<GetMonthwisePayrollSummaryQuery, Result<GetMonthWisePayrollResponse>>
+    public record GetMonthwisePayrollSummaryQuery() : IRequest<Result<IEnumerable<MonthwisePayrollData>>>;
+    internal class GetMonthWisePayrollQueryHandler(IPayrollRepository payrollRepository) : 
+        IRequestHandler<GetMonthwisePayrollSummaryQuery, Result<IEnumerable<MonthwisePayrollData>>>
     {
-        public async Task<Result<GetMonthWisePayrollResponse>> Handle(GetMonthwisePayrollSummaryQuery request, CancellationToken cancellationToken)
+        public async Task<Result<IEnumerable<MonthwisePayrollData>>> Handle(GetMonthwisePayrollSummaryQuery request, CancellationToken cancellationToken)
         {
             var payrolls = await payrollRepository.GetMonthwisePayrollSummaryAsync();
-            return Result.Ok(new GetMonthWisePayrollResponse(payrolls));
+            return Result.Ok(payrolls);
         }
     }
 }

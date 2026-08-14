@@ -1,14 +1,10 @@
 ﻿using FluentResults;
 using FluentValidation;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
-using QubeFin.Persistence.Mappers.Hrms;
-using QubeFin.Persistence.Models.App;
 using QubeFin.Persistence.Models.Hrms;
-using System.Text.RegularExpressions;
 
 namespace QubeFin.Hrms.Application.Employees.Commands;
 
@@ -17,7 +13,7 @@ public record UpdateEmployeeOfficialCommand(
         Guid Id, Guid? CompanyId, Guid? OrganizationUnitId, Guid? DepartmentId, string? EmployementType, DateOnly? DateOfJoining, DateOnly? DateOfConfirmation,
         DateOnly? SeparationDate, Guid? ReferedBy, string? HowYouKnow, string? OfficialEmail, bool IsActive,
         Guid UserId
-    ) : IRequest<Result<UpdateEmployeeOfficialResponse>>;
+    ) : IRequest<Result<string>>;
 #endregion
 
 #region --- VALIDATION ---
@@ -25,31 +21,27 @@ public class UpdateEmployeeOfficialCommandValidator : AbstractValidator<UpdateEm
 {
     public UpdateEmployeeOfficialCommandValidator()
     {
-            //RuleFor(x => x.FirstName)
-            //    .Must(value => !string.IsNullOrWhiteSpace(value)
-            //        && Regex.IsMatch(value, @"^[A-Za-z]+$")
-            //        && !value.Equals("Select", StringComparison.OrdinalIgnoreCase))
-            //    .WithMessage("Please enter a valid First Name name.")
-            //    .MinimumLength(3).WithMessage("First Name must be more than 2 characters.")
-            //    .MaximumLength(30).WithMessage("First Name cannot exceed 30 characters.");
-            //RuleFor(x => x.LastName)
-            //    .NotEmpty()
-            //    .Matches("^[A-Za-z]{3,30}$")
-            //    .WithMessage("Last name must contain only letters and be between 3 and 30 characters long.");
-            
+        //RuleFor(x => x.FirstName)
+        //    .Must(value => !string.IsNullOrWhiteSpace(value)
+        //        && Regex.IsMatch(value, @"^[A-Za-z]+$")
+        //        && !value.Equals("Select", StringComparison.OrdinalIgnoreCase))
+        //    .WithMessage("Please enter a valid First Name name.")
+        //    .MinimumLength(3).WithMessage("First Name must be more than 2 characters.")
+        //    .MaximumLength(30).WithMessage("First Name cannot exceed 30 characters.");
+        //RuleFor(x => x.LastName)
+        //    .NotEmpty()
+        //    .Matches("^[A-Za-z]{3,30}$")
+        //    .WithMessage("Last name must contain only letters and be between 3 and 30 characters long.");
+
     }
 }
 #endregion
 
-#region --- RESPONSE ---
-public record UpdateEmployeeOfficialResponse(bool Created);
-#endregion
-
 #region --- HANDLER ---
 internal sealed class UpdateEmployeeOfficialCommandHandler(IEmployeeRepository employeeRepository, IUnitOfWork unitOfWork)
-    : IRequestHandler<UpdateEmployeeOfficialCommand, Result<UpdateEmployeeOfficialResponse>>
+    : IRequestHandler<UpdateEmployeeOfficialCommand, Result<string>>
 {
-    public async Task<Result<UpdateEmployeeOfficialResponse>> Handle(UpdateEmployeeOfficialCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(UpdateEmployeeOfficialCommand request, CancellationToken cancellationToken)
     {
         var employee = await employeeRepository.GetByIdAsync(request.Id);
         if (employee == null)
@@ -62,13 +54,11 @@ internal sealed class UpdateEmployeeOfficialCommandHandler(IEmployeeRepository e
                 request.SeparationDate, request.ReferedBy, request.HowYouKnow, request.OfficialEmail, request.IsActive),
             request.UserId
             );
-            //employeeRepository.UpdateEmployee(existingEmployee);
+        //employeeRepository.UpdateEmployee(existingEmployee);
 
         await employeeRepository.UpdateAsync(employee);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result.Ok(new UpdateEmployeeOfficialResponse(true));
-
-
+        return Result.Ok($"Employee official information updated successfully for Name : {employee.PersonalInfo.FirstName} {employee.PersonalInfo.LastName}");
     }
 }
 #endregion

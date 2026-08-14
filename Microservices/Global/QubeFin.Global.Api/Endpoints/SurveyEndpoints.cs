@@ -25,18 +25,7 @@ namespace QubeFin.Global.Api.Endpoints
             {
                 var employeeId = principal.Identity.GetEmployeeId();
                 var result = await sender.Send(new GetSurveyByIdQuery(id, employeeId));
-                if (result.IsFailed)
-                {
-                    if (result.Errors[0] is RecordNotFoundError)
-                    {
-                        return Results.NotFound(result.Errors[0]);
-                    }
-                    if (result.Errors[0] is ValidationError)
-                    {
-                        return Results.BadRequest(result.Errors[0]);
-                    }
-                }
-                return Results.Ok(result.Value);
+                return result.ToHttpResult();
             }).WithSummary("Get Survey By Id").WithTags("Surveys");
 
             app.MapPost("surveys", async (ClaimsPrincipal principal, SurveyRequest request, ISender sender) =>
@@ -49,20 +38,8 @@ namespace QubeFin.Global.Api.Endpoints
 
                 var command = new CreateSurveyCommand(request, userId);
                 var result = await sender.Send(command);
-                if (result.IsFailed)
-                {
-                    if (result.Errors[0] is RecordNotFoundError)
-                    {
-                        return Results.NotFound(result.Errors[0]);
-                    }
-                    if (result.Errors[0] is ValidationError)
-                    {
-                        return Results.BadRequest(result.Errors[0]);
-                    }
-                }
-                return Results.Ok();
+                return result.ToHttpResult();
             }).WithSummary("Create Survey").WithTags("Surveys");
-
 
             app.MapPut("surveys", async (ClaimsPrincipal principal, SurveyRequest request, ISender sender) =>
             {
@@ -74,19 +51,7 @@ namespace QubeFin.Global.Api.Endpoints
 
                 var command = new UpdateSurveyCommand(request, userId);
                 var result = await sender.Send(command);
-                if (result.IsFailed)
-                {
-                    if (result.Errors[0] is RecordNotFoundError)
-                    {
-                        return Results.NotFound(result.Errors[0]);
-                    }
-                    if (result.Errors[0] is ValidationError)
-                    {
-                        return Results.BadRequest(result.Errors[0]);
-                    }
-                }
-
-                return Results.Ok();
+                return result.ToHttpResult();
             }).WithSummary("Update Survey").WithTags("Surveys");
         }
     }

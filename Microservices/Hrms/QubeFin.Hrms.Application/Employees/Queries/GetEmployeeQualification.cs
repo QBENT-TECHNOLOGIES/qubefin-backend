@@ -10,19 +10,13 @@ using QubeFin.Persistence.Models.Hrms;
 namespace QubeFin.Hrms.Application.Employees.Queries;
 
 #region --- QUERY ---
-public record GetEmployeeQualificationQuery(Guid Id) : IRequest<Result<GetQualificationResponse>>;
-#endregion
-#region --- RESPONSE ---
-public record GetQualificationResponse(
-    List<QualificationRequest> Qualifications
-    );
-
+public record GetEmployeeQualificationQuery(Guid Id) : IRequest<Result<List<QualificationRequest>>>;
 #endregion
 #region --- HANDLER ---
 internal sealed class GetEmployeeQualificationQueryHandler(QubeFinDataContext context)
-    : IRequestHandler<GetEmployeeQualificationQuery, Result<GetQualificationResponse>>
+    : IRequestHandler<GetEmployeeQualificationQuery, Result<List<QualificationRequest>>>
 {
-    public async Task<Result<GetQualificationResponse>> Handle(GetEmployeeQualificationQuery request, CancellationToken cancellationToken)
+    public async Task<Result<List<QualificationRequest>>> Handle(GetEmployeeQualificationQuery request, CancellationToken cancellationToken)
     {
         var employee = await context.TblEmployees.Include(m => m.TblEmployeeQualifications).Where(m => m.Id == request.Id).FirstOrDefaultAsync(cancellationToken: cancellationToken);
 
@@ -44,10 +38,8 @@ internal sealed class GetEmployeeQualificationQueryHandler(QubeFinDataContext co
             DocFileName = d.DocFileName,
             DocFileNo = d.DocFileNo,
             Sequence = d.Sequence
-        })]
-
-                    : new List<QualificationRequest>();
-        return Result.Ok(new GetQualificationResponse(qualifications.OrderBy(m => m.Sequence).ToList()));
+        })] : new List<QualificationRequest>();
+        return Result.Ok(qualifications.OrderBy(m => m.Sequence).ToList());
     }
 }
 #endregion

@@ -44,8 +44,8 @@ public class AttendanceEndpoints : IEndpoint
             }
 
             var empId = principal.Identity.GetEmployeeId();
-            var response = await sender.Send(new GetAttendanceHistoryByQuery(empId, request));
-            return Results.Ok(response);
+            var result = await sender.Send(new GetAttendanceHistoryByQuery(empId, request));
+            return Results.Ok(result);
         }).WithSummary("Get attendance history for logged-in employee with optional filters").WithTags("Attendance");
 
         app.MapPost("attendances/regularizations", async (ClaimsPrincipal principal, [FromForm] RegularizationRequest request, ISender sender) =>
@@ -69,8 +69,8 @@ public class AttendanceEndpoints : IEndpoint
             }
 
             var empId = principal.Identity.GetEmployeeId();
-            var response = await sender.Send(new GetAttendanceRegularizationBySearch(empId, request));
-            return Results.Ok(response);
+            var result = await sender.Send(new GetAttendanceRegularizationBySearch(empId, request));
+            return Results.Ok(result);
         }).WithSummary("Search attendance regularization for logged-in employee with optional filters").WithTags("Regularization"); ;
 
         app.MapGet("attendances/regularizations/{id:guid}", async (Guid id, ClaimsPrincipal principal, ISender sender) =>
@@ -92,8 +92,8 @@ public class AttendanceEndpoints : IEndpoint
             }
 
             var empId = principal.Identity.GetEmployeeId();
-            var response = await sender.Send(new GetApprovalRegularizationBySearch(empId, request));
-            return Results.Ok(response);
+            var result = await sender.Send(new GetApprovalRegularizationBySearch(empId, request));
+            return Results.Ok(result);
         }).WithSummary("Search approvals regularization for logged-in employee with optional filters").WithTags("Regularization");
 
         app.MapPost("attendances/regularizations/submit", async (ClaimsPrincipal principal, ISender sender, RegularizationSubmit request) =>
