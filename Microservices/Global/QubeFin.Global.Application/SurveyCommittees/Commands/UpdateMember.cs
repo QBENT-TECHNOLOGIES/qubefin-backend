@@ -9,7 +9,7 @@ using QubeFin.Persistence;
 namespace QubeFin.Global.Application.SurveyCommittees.Commands;
 
 #region --- COMMAND ---
-public record UpdateMemberCommand(MemberUpdateRequest member, Guid UserId) : IRequest<Result<bool>>;
+public record UpdateMemberCommand(MemberUpdateRequest member, Guid UserId) : IRequest<Result<string>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -25,9 +25,9 @@ public class UpdateMemberCommandValidator : AbstractValidator<UpdateMemberComman
 
 #region --- HANDLER ---
 internal sealed class UpdateMemberCommandHandler(ISurveyCommitteeRepository surveyCommitteeRepository, IUnitOfWork unitOfWork) : 
-    IRequestHandler<UpdateMemberCommand, Result<bool>>
+    IRequestHandler<UpdateMemberCommand, Result<string>>
 {
-    public async Task<Result<bool>> Handle(UpdateMemberCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(UpdateMemberCommand request, CancellationToken cancellationToken)
     {
         var existingSurveyCommitteeMember = await surveyCommitteeRepository.GetByIdAsync(request.member.Id);
         if (existingSurveyCommitteeMember is null) return new RecordNotFoundError("Member not found");
@@ -40,7 +40,7 @@ internal sealed class UpdateMemberCommandHandler(ISurveyCommitteeRepository surv
 
         await surveyCommitteeRepository.UpdateMember(existingSurveyCommitteeMember);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result.Ok(true);
+        return Result.Ok("Committee member updated successfully.");
     }
 }
 #endregion

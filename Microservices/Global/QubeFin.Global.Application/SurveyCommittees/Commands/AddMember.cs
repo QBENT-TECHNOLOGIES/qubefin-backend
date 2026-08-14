@@ -10,7 +10,7 @@ using QubeFin.Persistence.Models.Global;
 namespace QubeFin.Global.Application.SurveyCommittees.Commands;
 
 #region --- COMMAND ---
-public record AddMemberCommand(MemberAddRequest member, Guid UserId) : IRequest<Result<bool>>;
+public record AddMemberCommand(MemberAddRequest member, Guid UserId) : IRequest<Result<string>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -25,9 +25,9 @@ public class AddMemberCommandValidator : AbstractValidator<AddMemberCommand>
 
 #region --- HANDLER ---
 internal sealed class AddMemberCommandHandler(ISurveyCommitteeRepository surveyCommitteeRepository, IUnitOfWork unitOfWork) : 
-    IRequestHandler<AddMemberCommand, Result<bool>>
+    IRequestHandler<AddMemberCommand, Result<string>>
 {
-    public async Task<Result<bool>> Handle(AddMemberCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(AddMemberCommand request, CancellationToken cancellationToken)
     {
         DateOnly toDay = DateOnly.FromDateTime(DateTime.UtcNow);
 
@@ -38,7 +38,7 @@ internal sealed class AddMemberCommandHandler(ISurveyCommitteeRepository surveyC
 
         await surveyCommitteeRepository.AddMember(surveyCommitte);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result.Ok(true);
+        return Result.Ok("Committee member added successfully.");
     }
 }
 #endregion

@@ -12,7 +12,7 @@ public record UpdateHolidayCommand(
     Guid OrgUnitId,
     DateOnly HolidayDate,
     string Description,
-    Guid ModifiedBy) : IRequest<Result<UpdateHolidayResponse>>;
+    Guid ModifiedBy) : IRequest<Result<string>>;
 
 public class UpdateHolidayCommandValidator : AbstractValidator<UpdateHolidayCommand>
 {
@@ -24,13 +24,10 @@ public class UpdateHolidayCommandValidator : AbstractValidator<UpdateHolidayComm
         RuleFor(x => x.ModifiedBy).NotEmpty();
     }
 }
-
-public record UpdateHolidayResponse(bool Updated);
-
 internal sealed class UpdateHolidayCommandHandler(IHolidayRepository holidayRepository, IUnitOfWork unitOfWork)
-    : IRequestHandler<UpdateHolidayCommand, Result<UpdateHolidayResponse>>
+    : IRequestHandler<UpdateHolidayCommand, Result<string>>
 {
-    public async Task<Result<UpdateHolidayResponse>> Handle(UpdateHolidayCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(UpdateHolidayCommand request, CancellationToken cancellationToken)
     {
         var holiday = await holidayRepository.GetByIdAsync(request.Id);
         if (holiday is null)
@@ -47,6 +44,6 @@ internal sealed class UpdateHolidayCommandHandler(IHolidayRepository holidayRepo
         await holidayRepository.UpdateAsync(holiday);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Ok(new UpdateHolidayResponse(true));
+        return Result.Ok($"{request.HolidayDate.ToString("dd-MM-yyyy")} Holiday updated successfully.");
     }
 }

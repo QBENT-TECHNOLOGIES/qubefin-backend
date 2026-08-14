@@ -89,6 +89,10 @@ internal sealed class CreateAttendanceRegularizationCommandHandler(QubeFinDataCo
         regularizationIdParam);
 
         bool success = successParam.Value != DBNull.Value && (bool)successParam.Value;
+        if (!success)
+        {
+            return Result.Fail(messageParam.Value?.ToString() ?? "An error occurred while processing the regularization request.");
+        }
         string message = messageParam.Value?.ToString() ?? string.Empty;
         Guid? regularizationId = regularizationIdParam.Value == DBNull.Value ? null : (Guid)regularizationIdParam.Value;
 

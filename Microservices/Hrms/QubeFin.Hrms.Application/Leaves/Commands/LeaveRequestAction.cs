@@ -7,9 +7,8 @@ using QubeFin.Persistence;
 using System.Data;
 namespace QubeFin.Hrms.Application.Leaves.Commands;
 
-
 #region --- COMMAND --
-public record LeaveRequestActionCommand(Guid LeaveRequestId, bool IsApproved, bool IsRejected, Guid CurrentUserId, string? RejectedReason) : IRequest<Result<LeaveRequestActionResponse>>;
+public record LeaveRequestActionCommand(Guid LeaveRequestId, bool IsApproved, bool IsRejected, Guid CurrentUserId, string? RejectedReason) : IRequest<Result<string>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -23,14 +22,10 @@ public class LeaveRequestActionCommandValidator : AbstractValidator<LeaveRequest
 }
 #endregion
 
-#region --- RESPONSE ---
-public record LeaveRequestActionResponse(bool success, string message);
-#endregion
-
 #region --- HANDLER ---
-internal sealed class LeaveRequestActionCommandHandler(QubeFinDataContext context) : IRequestHandler<LeaveRequestActionCommand, Result<LeaveRequestActionResponse>>
+internal sealed class LeaveRequestActionCommandHandler(QubeFinDataContext context) : IRequestHandler<LeaveRequestActionCommand, Result<string>>
 {
-    public async Task<Result<LeaveRequestActionResponse>> Handle(LeaveRequestActionCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(LeaveRequestActionCommand request, CancellationToken cancellationToken)
     {
         try
         {
@@ -51,11 +46,11 @@ internal sealed class LeaveRequestActionCommandHandler(QubeFinDataContext contex
                 await cmd.ExecuteNonQueryAsync(cancellationToken);
             }
 
-            return Result.Ok(new LeaveRequestActionResponse(true, $"The leave request has been {(request.IsApproved  ? "approved" : request.IsRejected ? "rejected" : "recommended")} successfully."));
+            return Result.Ok($"The leave request has been {(request.IsApproved ? "approved" : request.IsRejected ? "rejected" : "recommended")} successfully.");
         }
         catch
         {
-            return Result.Ok(new LeaveRequestActionResponse(false, $"Faild to  {(request.IsApproved ? "approve" : request.IsRejected ? "reject" : "recommend")}. Please try again later."));
+            return Result.Fail($"Failed to {(request.IsApproved ? "approve" : request.IsRejected ? "reject" : "recommend")} the leave request. Please try again later.");
         }
     }
 }

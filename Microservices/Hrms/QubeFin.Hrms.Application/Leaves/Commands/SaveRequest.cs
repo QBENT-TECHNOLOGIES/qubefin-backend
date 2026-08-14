@@ -3,23 +3,18 @@ using MediatR;
 using Microsoft.AspNetCore.Http;
 using QubeFin.Core.Results;
 using QubeFin.Hrms.Persistence.Repositories;
-using System.Net.Mail;
 
 namespace QubeFin.Hrms.Application.Leaves.Commands;
 
 #region --- QUERY --
 public record SaveRequestCommand(Guid? Id, Guid EmployeeId, Guid LeaveTypeId, DateOnly FromDate, DateOnly ToDate, string Address, string Reason, string EnclosedFileName, IFormFile EnclosedFile)
-    : IRequest<Result<SaveRequestResponse>>;
+    : IRequest<Result<string>>;
 #endregion
-
-#region --- RESPONSE ---
-public record SaveRequestResponse(string Message);
-#endregion
-
 #region --- HANDLER ---
-internal sealed class SaveRequestCommandHandler(ILeaveRepository leaveRepository, IFileStorageRepository fileStorageRepository) : IRequestHandler<SaveRequestCommand, Result<SaveRequestResponse>>
+internal sealed class SaveRequestCommandHandler(ILeaveRepository leaveRepository, IFileStorageRepository fileStorageRepository) : 
+    IRequestHandler<SaveRequestCommand, Result<string>>
 {
-    public async Task<Result<SaveRequestResponse>> Handle(SaveRequestCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(SaveRequestCommand request, CancellationToken cancellationToken)
     {
         var fileNo = string.Empty;
         if (request.EnclosedFile != null && request.EnclosedFile.Length > 0)
@@ -44,7 +39,7 @@ internal sealed class SaveRequestCommandHandler(ILeaveRepository leaveRepository
         {
             return new ValidationError(message);
         }
-        return Result.Ok(new SaveRequestResponse(string.IsNullOrEmpty(message) ? $"Leave request {(request.Id == null ? "created" : "updated")} successfully.": message));
+        return Result.Ok(string.IsNullOrEmpty(message) ? $"Leave request {(request.Id == null ? "created" : "updated")} successfully." : message);
     }
 }
 #endregion

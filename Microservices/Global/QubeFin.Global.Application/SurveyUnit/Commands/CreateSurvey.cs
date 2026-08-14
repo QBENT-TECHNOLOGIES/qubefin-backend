@@ -10,7 +10,7 @@ namespace QubeFin.Global.Application.SurveyUnit.Commands;
 
 
 #region --- COMMAND ---
-public record CreateSurveyCommand(SurveyRequest SurveyRequest, Guid userId) : IRequest<Result<bool>>;
+public record CreateSurveyCommand(SurveyRequest SurveyRequest, Guid userId) : IRequest<Result<string>>;
 #endregion
 
 #region --- VALIDATION ---
@@ -29,9 +29,9 @@ public class CreateSurveyCommandValidator : AbstractValidator<CreateSurveyComman
 #endregion
 
 #region --- HANDLER ---
-internal sealed class CreateSurveyCommandHandler(ISurveyRepository surveyRepository, IUnitOfWork unitOfWork) : IRequestHandler<CreateSurveyCommand, Result<bool>>
+internal sealed class CreateSurveyCommandHandler(ISurveyRepository surveyRepository, IUnitOfWork unitOfWork) : IRequestHandler<CreateSurveyCommand, Result<string>>
 {
-    public async Task<Result<bool>> Handle(CreateSurveyCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(CreateSurveyCommand request, CancellationToken cancellationToken)
     {
         var surveyAssigneds = request.SurveyRequest.SurveyAssigneds
             .Select(x => SurveyAssigned.Create(
@@ -55,7 +55,7 @@ internal sealed class CreateSurveyCommandHandler(ISurveyRepository surveyReposit
         await surveyRepository.AddSurvey(survey);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Ok(true);
+        return Result.Ok("Survey created successfully.");
     }
 }
 #endregion

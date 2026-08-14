@@ -12,7 +12,7 @@ public record CreateHolidayCommand(
     Guid OrgUnitId,
     DateOnly HolidayDate,
     string Description,
-    Guid CreatedBy) : IRequest<Result<CreateHolidayResponse>>;
+    Guid CreatedBy) : IRequest<Result<string>>;
 
 public class CreateHolidayCommandValidator : AbstractValidator<CreateHolidayCommand>
 {
@@ -24,12 +24,10 @@ public class CreateHolidayCommandValidator : AbstractValidator<CreateHolidayComm
     }
 }
 
-public record CreateHolidayResponse(bool Created);
-
 internal sealed class CreateHolidayCommandHandler(IHolidayRepository holidayRepository, IUnitOfWork unitOfWork)
-    : IRequestHandler<CreateHolidayCommand, Result<CreateHolidayResponse>>
+    : IRequestHandler<CreateHolidayCommand, Result<string>>
 {
-    public async Task<Result<CreateHolidayResponse>> Handle(CreateHolidayCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(CreateHolidayCommand request, CancellationToken cancellationToken)
     {
         if (await holidayRepository.ExistsAsync(request.OrgUnitId, request.HolidayDate))
         {
@@ -46,6 +44,6 @@ internal sealed class CreateHolidayCommandHandler(IHolidayRepository holidayRepo
         await holidayRepository.AddAsync(holiday);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Ok(new CreateHolidayResponse(true));
+        return Result.Ok($"{request.HolidayDate.ToString("dd-MM-yyyy")} Marked as Holiday");
     }
 }
