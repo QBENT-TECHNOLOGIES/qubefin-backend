@@ -11,7 +11,7 @@ using System.Data;
 namespace QubeFin.Hrms.Application.LeavePrayers.Commands;
 
 #region --- COMMAND ---
-public record ApplyLeavePrayerCommand(LeavePrayerRequest prayer, Guid EmployeeId, Guid UserId) : IRequest<Result<ApplyLeavePrayerResponse>>;
+public record ApplyLeavePrayerCommand(LeavePrayerRequest prayer, Guid EmployeeId, Guid UserId) : IRequest<Result<string>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -25,14 +25,10 @@ public class ApplyLeavePrayerCommandValidator : AbstractValidator<ApplyLeavePray
 }
 #endregion
 
-#region --- RESPONSE ---
-public record ApplyLeavePrayerResponse(bool success, string message);
-#endregion
-
 #region --- HANDLER ---
-internal sealed class ApplyLeavePrayerCommandHandler(QubeFinDataContext context, IUnitOfWork unitOfWork, IFileStorageRepository fileStorageRepository) : IRequestHandler<ApplyLeavePrayerCommand, Result<ApplyLeavePrayerResponse>>
+internal sealed class ApplyLeavePrayerCommandHandler(QubeFinDataContext context, IUnitOfWork unitOfWork, IFileStorageRepository fileStorageRepository) : IRequestHandler<ApplyLeavePrayerCommand, Result<string>>
 {
-    public async Task<Result<ApplyLeavePrayerResponse>> Handle(ApplyLeavePrayerCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(ApplyLeavePrayerCommand request, CancellationToken cancellationToken)
     {
         string? attachment = null;
         if (request.prayer.Attachment != null && request.prayer.Attachment.Length > 0)
@@ -86,10 +82,17 @@ internal sealed class ApplyLeavePrayerCommandHandler(QubeFinDataContext context,
 
         bool success = successParam.Value != DBNull.Value && (bool)successParam.Value;
         string message = messageParam.Value?.ToString() ?? string.Empty;
-        Guid? regularizationId = prayerIdParam.Value == DBNull.Value ? null : (Guid)prayerIdParam.Value;
+
+        Guid? prayerId = prayerIdParam.Value == DBNull.Value ? null : (Guid)prayerIdParam.Value;
+
+        if (!success)
+        {
+            return Result.Fail(message);
+        }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result.Ok(new ApplyLeavePrayerResponse(success, $"{message}"));
+
+        return Result.Ok(message);
     }
 }
 #endregion

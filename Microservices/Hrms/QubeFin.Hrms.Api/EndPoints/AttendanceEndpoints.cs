@@ -1,5 +1,4 @@
-﻿using FluentResults;
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
@@ -23,18 +22,7 @@ public class AttendanceEndpoints : IEndpoint
             }
             var empId = principal.Identity.GetEmployeeId();
             var result = await sender.Send(new CreateAttendanceCommand(empId, command.time, command.Lat, command.Long));
-            if (result.IsFailed)
-            {
-                if (result.Errors[0] is QubeFin.Core.Results.RecordNotFoundError)
-                {
-                    return Results.NotFound(result.Errors[0]);
-                }
-                if (result.Errors[0] is QubeFin.Core.Results.ValidationError)
-                {
-                    return Results.BadRequest(result.Errors[0]);
-                }
-            }
-            return Results.Ok(result.Value);
+            return result.ToHttpResult();
         }).WithSummary("Attendance Check in and Check out Saved").WithTags("Attendance");
 
         app.MapGet("attendances", async (ClaimsPrincipal principal, ISender sender) =>
@@ -44,8 +32,8 @@ public class AttendanceEndpoints : IEndpoint
                 return Results.Forbid();
             }
             var empId = principal.Identity.GetEmployeeId();
-            var response = await sender.Send(new GetAttendanceByEmployeeQuery(empId));
-            return Results.Ok(response.Value);
+            var result = await sender.Send(new GetAttendanceByEmployeeQuery(empId));
+            return result.ToHttpResult();
         }).WithSummary("Today's Attendance").WithTags("Attendance");
 
         app.MapPost("attendances/history", async (ClaimsPrincipal principal, ISender sender, AttendanceSearchRequest request) =>
@@ -70,18 +58,7 @@ public class AttendanceEndpoints : IEndpoint
             var userId = principal.Identity.GetUserId();
             var command = new CreateAttendanceRegularizationCommand(request, empId, userId);
             var result = await sender.Send(command);
-            if (result.IsFailed)
-            {
-                if (result.Errors[0] is QubeFin.Core.Results.RecordNotFoundError)
-                {
-                    return Results.NotFound(result.Errors[0]);
-                }
-                if (result.Errors[0] is QubeFin.Core.Results.ValidationError)
-                {
-                    return Results.BadRequest(result.Errors[0]);
-                }
-            }
-            return Results.Ok(result.Value);
+            return result.ToHttpResult();
         }).DisableAntiforgery().WithSummary("Create Attendance Regularization").WithTags("Regularization");
 
         app.MapPost("attendances/regularizations/search", async (ClaimsPrincipal principal, ISender sender, AttendanceSearchRequest request) =>
@@ -103,8 +80,8 @@ public class AttendanceEndpoints : IEndpoint
                 return Results.Forbid();
             }
             var empId = principal.Identity.GetEmployeeId();
-            var response = await sender.Send(new GetAttendanceRegularizationsByIdQuery(id, empId));
-            return Results.Ok(response.Value);
+            var result = await sender.Send(new GetAttendanceRegularizationsByIdQuery(id, empId));
+            return result.ToHttpResult();
         }).WithSummary("Get Attendance Regularizations by Id").WithTags("Regularization");
 
         app.MapPost("attendances/regularizations/search-approval", async (ClaimsPrincipal principal, ISender sender, AttendanceApprovalSearchRequest request) =>
@@ -129,18 +106,7 @@ public class AttendanceEndpoints : IEndpoint
             var empId = principal.Identity.GetEmployeeId();
             var CurrentUserId = principal.Identity.GetUserId();
             var result = await sender.Send(new SubmitAttendanceRegularizationCommand(request, empId, CurrentUserId));
-            if (result.IsFailed)
-            {
-                if (result.Errors[0] is RecordNotFoundError)
-                {
-                    return Results.NotFound(result.Errors[0]);
-                }
-                if (result.Errors[0] is ValidationError)
-                {
-                    return Results.BadRequest(result.Errors[0]);
-                }
-            }
-            return Results.Ok(result.Value);
+            return result.ToHttpResult();
         }).WithSummary("Decision regularization (Approved/Reject/Recommend)").WithTags("Regularization");
     }
 }
