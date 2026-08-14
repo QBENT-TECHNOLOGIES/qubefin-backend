@@ -6,18 +6,15 @@ using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.Holidays.Queries;
 
-public record GetHolidayByIdQuery(Guid Id) : IRequest<Result<GetHolidayByIdResponse>>;
-
-public record GetHolidayByIdResponse(Holiday Holiday);
-
+public record GetHolidayByIdQuery(Guid Id) : IRequest<Result<Holiday>>;
 internal sealed class GetHolidayByIdQueryHandler(IHolidayRepository holidayRepository)
-    : IRequestHandler<GetHolidayByIdQuery, Result<GetHolidayByIdResponse>>
+    : IRequestHandler<GetHolidayByIdQuery, Result<Holiday>>
 {
-    public async Task<Result<GetHolidayByIdResponse>> Handle(GetHolidayByIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<Holiday>> Handle(GetHolidayByIdQuery request, CancellationToken cancellationToken)
     {
         var holiday = await holidayRepository.GetByIdAsync(request.Id);
         return holiday is null
             ? new RecordNotFoundError("Holiday not found.")
-            : Result.Ok(new GetHolidayByIdResponse(holiday));
+            : Result.Ok(holiday);
     }
 }

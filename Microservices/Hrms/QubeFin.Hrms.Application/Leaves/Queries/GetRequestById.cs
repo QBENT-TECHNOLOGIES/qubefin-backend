@@ -11,7 +11,7 @@ using QubeFin.Persistence.Models.Hrms;
 namespace QubeFin.Hrms.Application.Leaves.Queries;
 
 #region --- QUERY ---
-public record GetRequestByIdQuery(Guid Id, Guid EmployeeId) : IRequest<Result<GetRequestByIdResponse>>;
+public record GetRequestByIdQuery(Guid Id, Guid EmployeeId) : IRequest<Result<LeaveRequestDetailResponse?>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -24,14 +24,11 @@ public class GetRequestByIdQueryValidator : AbstractValidator<GetRequestByIdQuer
 }
 #endregion
 
-#region --- RESPONSE ---
-public record GetRequestByIdResponse(LeaveRequestDetailResponse? response);
-#endregion
-
 #region --- HANDLER ---
-internal sealed class GetRequestByIdQueryHandler(QubeFinDataContext context, IFileStorageRepository fileStorageRepository) : IRequestHandler<GetRequestByIdQuery, Result<GetRequestByIdResponse>>
+internal sealed class GetRequestByIdQueryHandler(QubeFinDataContext context, IFileStorageRepository fileStorageRepository) :
+    IRequestHandler<GetRequestByIdQuery, Result<LeaveRequestDetailResponse?>>
 {
-    public async Task<Result<GetRequestByIdResponse>> Handle(GetRequestByIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<LeaveRequestDetailResponse?>> Handle(GetRequestByIdQuery request, CancellationToken cancellationToken)
     {
         var leaveRequestResponse = await context.Set<LeaveRequestResponse>().FromSqlRaw("EXEC [Hrms].[USP_GetLeaveRequestById] @Id, @EmployeeId",
          new SqlParameter("@Id", request.Id),
@@ -41,7 +38,7 @@ internal sealed class GetRequestByIdQueryHandler(QubeFinDataContext context, IFi
        .ToListAsync(cancellationToken);
 
         if (leaveRequestResponse == null || !leaveRequestResponse.Any())
-            return new GetRequestByIdResponse(null);
+            return Result.Ok((LeaveRequestDetailResponse?)null);
 
         var first = leaveRequestResponse.First();
         var response = new LeaveRequestDetailResponse
@@ -76,7 +73,7 @@ internal sealed class GetRequestByIdQueryHandler(QubeFinDataContext context, IFi
                 ReceiverDesignation = x.ReceiverDesignation
             }).ToList()
         };
-        return Result.Ok(new GetRequestByIdResponse(response));
+        return Result.Ok((LeaveRequestDetailResponse?)response);
     }
 }
 #endregion

@@ -5,14 +5,13 @@ using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Payroll.Application.Payrolls.Queries
 {
-    public record GetPayslipsQuery(Guid employeeId) : IRequest<Result<GetPayslipsResponse>>;
-    public record GetPayslipsResponse(IEnumerable<Payslip> Payslips);
-    internal sealed class GetPayslipsQueryHandler(IPayrollRepository payrollRepository) : IRequestHandler<GetPayslipsQuery, Result<GetPayslipsResponse>>
+    public record GetPayslipsQuery(Guid employeeId) : IRequest<Result<List<Payslip>>>;
+    internal sealed class GetPayslipsQueryHandler(IPayrollRepository payrollRepository) : IRequestHandler<GetPayslipsQuery, Result<List<Payslip>>>
     {
-        public async Task<Result<GetPayslipsResponse>> Handle(GetPayslipsQuery request, CancellationToken cancellationToken)
+        public async Task<Result<List<Payslip>>> Handle(GetPayslipsQuery request, CancellationToken cancellationToken)
         {
             var payslips = await payrollRepository.GetEmployeePayslipsAsync(request.employeeId);
-            return Result.Ok(new GetPayslipsResponse(payslips));
+            return Result.Ok(payslips);
         }
     }
 }

@@ -7,10 +7,6 @@ using QubeFin.Hrms.Application.Employees.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Entities;
-using QubeFin.Persistence.Mappers.Hrms;
-using QubeFin.Persistence.Models.App;
-using QubeFin.Persistence.Models.Hrms;
-using System.Text.RegularExpressions;
 
 namespace QubeFin.Hrms.Application.Employees.Commands
 {
@@ -18,7 +14,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
     #region --- COMMAND ---
     public record UpdateEmployeeQualificationCommand(
             Guid Id, IReadOnlyList<QualificationRequest> Qualifications, Guid LastModifiedBy
-        ) : IRequest<Result<UpdateEmployeeQualificationResponse>>;
+        ) : IRequest<Result<string>>;
     #endregion
     #region --- VALIDATION ---
     public class UpdateEmployeeQualificationCommandValidator : AbstractValidator<UpdateEmployeeQualificationCommand>
@@ -70,15 +66,11 @@ namespace QubeFin.Hrms.Application.Employees.Commands
 
     #endregion
 
-    #region --- RESPONSE ---
-    public record UpdateEmployeeQualificationResponse(bool Created);
-    #endregion
-
     #region --- HANDLER ---
     internal sealed class UpdateEmployeeQualificationCommandHandler(IEmployeeRepository employeeRepository, IUnitOfWork unitOfWork, QubeFinDataContext context)
-        : IRequestHandler<UpdateEmployeeQualificationCommand, Result<UpdateEmployeeQualificationResponse>>
+        : IRequestHandler<UpdateEmployeeQualificationCommand, Result<string>>
     {
-        public async Task<Result<UpdateEmployeeQualificationResponse>> Handle(UpdateEmployeeQualificationCommand request, CancellationToken cancellationToken)
+        public async Task<Result<string>> Handle(UpdateEmployeeQualificationCommand request, CancellationToken cancellationToken)
         {
             var existingEmployee = await employeeRepository.GetByIdAsync(request.Id);
             if (existingEmployee == null)
@@ -120,9 +112,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
             context.TblEmployeeQualifications.AddRange(updatedQualificationList);
             existingEmployee.SetModified(request.LastModifiedBy);
             await unitOfWork.SaveChangesAsync(cancellationToken);
-            return Result.Ok(new UpdateEmployeeQualificationResponse(true));
-
-
+            return Result.Ok($"Employee qualifications information updated successfully for Name : {existingEmployee.PersonalInfo.FirstName} {existingEmployee.PersonalInfo.LastName}");
         }
     }
     #endregion

@@ -10,7 +10,7 @@ namespace QubeFin.Global.Application.SurveyUnit.Commands;
 
 
 #region --- COMMAND ---
-public record UpdateSurveyCommand(SurveyRequest SurveyRequest, Guid userId) : IRequest<Result<UpdateSurveyResponse>>;
+public record UpdateSurveyCommand(SurveyRequest SurveyRequest, Guid userId) : IRequest<Result<string>>;
 #endregion
 
 #region --- VALIDATION ---
@@ -28,14 +28,10 @@ public class UpdateSurveyCommandValidator : AbstractValidator<UpdateSurveyComman
 }
 #endregion
 
-#region --- RESPONSE ---
-public record UpdateSurveyResponse(bool Created);
-#endregion
-
 #region --- HANDLER ---
-internal sealed class UpdateSurveyCommandHandler(ISurveyRepository surveyRepository, IUnitOfWork unitOfWork) : IRequestHandler<UpdateSurveyCommand, Result<UpdateSurveyResponse>>
+internal sealed class UpdateSurveyCommandHandler(ISurveyRepository surveyRepository, IUnitOfWork unitOfWork) : IRequestHandler<UpdateSurveyCommand, Result<string>>
 {
-    public async Task<Result<UpdateSurveyResponse>> Handle(UpdateSurveyCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(UpdateSurveyCommand request, CancellationToken cancellationToken)
     {
         var surveyAssigneds = request.SurveyRequest.SurveyAssigneds
             .Select(x => new SurveyAssigned(
@@ -52,7 +48,7 @@ internal sealed class UpdateSurveyCommandHandler(ISurveyRepository surveyReposit
         await surveyRepository.UpdateSurvey(survey);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Ok(new UpdateSurveyResponse(true));
+        return Result.Ok("Survey updated successfully.");
     }
 }
 #endregion

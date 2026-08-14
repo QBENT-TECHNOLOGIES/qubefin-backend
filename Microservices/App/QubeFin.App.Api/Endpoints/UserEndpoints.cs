@@ -44,8 +44,9 @@ public class UserEndpoints : IEndpoint
                 return Results.Forbid();
             }
             var userId = principal.Identity.GetUserId();
+            var employeeId = principal.Identity.GetEmployeeId();
 
-            var result = await sender.Send(new GetUserLoginInfoQuery(userId));
+            var result = await sender.Send(new GetUserLoginInfoQuery(userId, employeeId));
             return result.ToHttpResult();
         })
         //.RequireAuthorization("Permission:Users.View")

@@ -12,7 +12,7 @@ using System.Text;
 namespace QubeFin.Hrms.Application.LeavePrayers.Commands;
 
 #region --- COMMAND --
-public record LeavePrayerActionCommand(Guid LeavePrayerId, bool IsApproved, bool IsRejected, Guid CurrentUserId) : IRequest<Result<LeavePrayerActionResponse>>;
+public record LeavePrayerActionCommand(Guid LeavePrayerId, bool IsApproved, bool IsRejected, Guid CurrentUserId) : IRequest<Result<string>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -26,14 +26,10 @@ public class LeavePrayerActionCommandValidator : AbstractValidator<LeavePrayerAc
 }
 #endregion
 
-#region --- RESPONSE ---
-public record LeavePrayerActionResponse(bool success, string message);
-#endregion
-
 #region --- HANDLER ---
-internal sealed class LeavePrayerActionCommandHandler(QubeFinDataContext context) : IRequestHandler<LeavePrayerActionCommand, Result<LeavePrayerActionResponse>>
+internal sealed class LeavePrayerActionCommandHandler(QubeFinDataContext context) : IRequestHandler<LeavePrayerActionCommand, Result<string>>
 {
-    public async Task<Result<LeavePrayerActionResponse>> Handle(LeavePrayerActionCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(LeavePrayerActionCommand request, CancellationToken cancellationToken)
     {
         try
         {
@@ -54,11 +50,11 @@ internal sealed class LeavePrayerActionCommandHandler(QubeFinDataContext context
                 await cmd.ExecuteNonQueryAsync(cancellationToken);
             }
 
-            return Result.Ok(new LeavePrayerActionResponse(true, $"The leave prayer request has been {(request.IsApproved ? "approved" : request.IsRejected ? "rejected" : "recommended")} successfully."));
+            return Result.Ok($"The leave prayer request has been {(request.IsApproved ? "approved" : request.IsRejected ? "rejected" : "recommended")} successfully.");
         }
-        catch
+        catch(Exception ex)
         {
-            return Result.Ok(new LeavePrayerActionResponse(false, $"Faild to  {(request.IsApproved ? "approve" : request.IsRejected ? "reject" : "recommend")}. Please try again later."));
+            return Result.Fail($"Faild to  {(request.IsApproved ? "approve" : request.IsRejected ? "reject" : "recommend")}. Please try again later.");
         }
     }
 }

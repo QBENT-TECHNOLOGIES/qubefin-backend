@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using QubeFin.Core.Endpoint;
+using QubeFin.Core.Results;
 using QubeFin.Global.Application.Companies.Queries;
 using QubeFin.Global.Application.OrganizationUnitTypes.Queries;
 
@@ -12,11 +13,7 @@ namespace QubeFin.Global.Api.Endpoints
             app.MapGet("companies", async(ISender sender, CancellationToken cancellationToken) =>
             {
                 var result = await sender.Send(new GetAllCompanyQuery(), cancellationToken);
-                if (result.IsFailed)
-                {
-                    return Results.Problem("Failed to retrieve Organization Unit tree");
-                }
-                return Results.Ok(result.Value);
+                return result.ToHttpResult();
             }).WithName("GetAllCompanies")
             .WithSummary("Get All Companies")
             .WithDescription("Returns the all company name.")

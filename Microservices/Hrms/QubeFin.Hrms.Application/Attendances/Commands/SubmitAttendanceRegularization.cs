@@ -9,7 +9,7 @@ using QubeFin.Persistence;
 namespace QubeFin.Hrms.Application.Attendances.Commands;
 
 #region --- COMMAND ---
-public record SubmitAttendanceRegularizationCommand(RegularizationSubmit submit, Guid EmployeeId, Guid CurrentUserId) : IRequest<Result<SubmitAttendanceRegularizationResponse>>;
+public record SubmitAttendanceRegularizationCommand(RegularizationSubmit submit, Guid EmployeeId, Guid CurrentUserId) : IRequest<Result<string>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -23,15 +23,12 @@ public class SubmitAttendanceRegularizationCommandValidator : AbstractValidator<
 }
 #endregion
 
-#region --- RESPONSE ---
-public record SubmitAttendanceRegularizationResponse(bool success, string message);
-#endregion
-
 #region --- HANDLER ---
 
-internal sealed class SubmitAttendanceRegularizationCommandHandler(QubeFinDataContext context, IUnitOfWork unitOfWork) : IRequestHandler<SubmitAttendanceRegularizationCommand, Result<SubmitAttendanceRegularizationResponse>>
+internal sealed class SubmitAttendanceRegularizationCommandHandler(QubeFinDataContext context, IUnitOfWork unitOfWork) :
+    IRequestHandler<SubmitAttendanceRegularizationCommand, Result<string>>
 {
-    public async Task<Result<SubmitAttendanceRegularizationResponse>> Handle(SubmitAttendanceRegularizationCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(SubmitAttendanceRegularizationCommand request, CancellationToken cancellationToken)
     {
         try
         {
@@ -47,7 +44,7 @@ internal sealed class SubmitAttendanceRegularizationCommandHandler(QubeFinDataCo
             new SqlParameter("@CurrentUserId", request.CurrentUserId));
 
             await unitOfWork.SaveChangesAsync(cancellationToken);
-            return Result.Ok(new SubmitAttendanceRegularizationResponse(true, $"Regularization {request.submit.Decision} successfully"));
+            return Result.Ok($"Regularization {request.submit.Decision} successfully");
         }
         catch (Exception ex)
         {

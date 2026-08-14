@@ -3,8 +3,6 @@ using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
 using QubeFin.Core.Results;
 using QubeFin.Hrms.Api.Requests;
-using QubeFin.Hrms.Application.Attendances.Models;
-using QubeFin.Hrms.Application.Attendances.Queries;
 using QubeFin.Hrms.Application.LeaveApproval.Models;
 using QubeFin.Hrms.Application.LeaveApproval.Queries;
 using QubeFin.Hrms.Application.Leaves.Commands;
@@ -105,8 +103,8 @@ public class LeaveEndpoints : IEndpoint
             }
 
             var userId = principal.Identity.GetUserId();
-            var response = await sender.Send(new SubmitRequestCommand(id, userId));
-            return Results.Ok(response);
+            var result = await sender.Send(new SubmitRequestCommand(id, userId));
+            return result.ToHttpResult();
         })
         .WithSummary("Leave Request Submit")
         .WithTags("Leave Requests");
@@ -121,8 +119,8 @@ public class LeaveEndpoints : IEndpoint
             }
 
             var userId = principal.Identity.GetUserId();
-            var response = await sender.Send(new CancelRequestCommand(request.Id, request.Reason, userId));
-            return Results.Ok(response);
+            var result = await sender.Send(new CancelRequestCommand(request.Id, request.Reason, userId));
+            return result.ToHttpResult();
         })
         .WithSummary("Leave Request Cancel")
         .WithTags("Leave Requests");
@@ -137,9 +135,12 @@ public class LeaveEndpoints : IEndpoint
             }
 
             var empId = principal.Identity.GetEmployeeId();
-            var response = await sender.Send(new GetLeaveApprovalsByEmployeeIdQuery(empId, request));
-            return Results.Ok(response);
-        }).WithSummary("Get Leave Approval List for logged-in employee with optional filters").WithTags("Leave Approval"); ;
+            var result = await sender.Send(new GetLeaveApprovalsByEmployeeIdQuery(empId, request));
+            return Results.Ok(result);
+        })
+        .WithSummary("Get Leave Approval List for logged-in employee with optional filters")
+        .WithTags("Leave Approval");
+
         app.MapPost("leaves/action", async (ClaimsPrincipal principal, ISender sender, LeaveRequestActionRequest request) =>
         {
             if (principal.Identity is null)
@@ -148,8 +149,8 @@ public class LeaveEndpoints : IEndpoint
             }
 
             var userId = principal.Identity.GetUserId();
-            var response = await sender.Send(new LeaveRequestActionCommand(request.LeaveRequestId, request.IsApproved, request.IsRejected, userId, request.RejectedReason));
-            return Results.Ok(response);
+            var result = await sender.Send(new LeaveRequestActionCommand(request.LeaveRequestId, request.IsApproved, request.IsRejected, userId, request.RejectedReason));
+            return result.ToHttpResult();
         })
         .WithSummary("Leave Request Action")
         .WithTags("Leave Approval");

@@ -10,7 +10,7 @@ using QubeFin.Persistence.Models.Global;
 namespace QubeFin.Global.Application.SurveyUnit.Queries;
 
 #region --- QUERY ---
-public record GetSurveyByIdQuery(Guid Id, Guid EmployeeId) : IRequest<Result<GetByIdResponse>>;
+public record GetSurveyByIdQuery(Guid Id, Guid EmployeeId) : IRequest<Result<SurveyResponse>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -22,22 +22,21 @@ public class GetSurveyByIdQueryValidator : AbstractValidator<GetSurveyByIdQuery>
     }
 }
 #endregion
-#region --- RESPONSE ---
-public record GetByIdResponse(SurveyResponse SurveyResponse);
-#endregion
 
 #region --- HANDLER ---
-internal sealed class GetSurveyByIdQueryHandler(QubeFinDataContext context) : IRequestHandler<GetSurveyByIdQuery, Result<GetByIdResponse>>
+internal sealed class GetSurveyByIdQueryHandler(QubeFinDataContext context) : IRequestHandler<GetSurveyByIdQuery, Result<SurveyResponse>>
 {
-    public async Task<Result<GetByIdResponse>> Handle(GetSurveyByIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<SurveyResponse>> Handle(GetSurveyByIdQuery request, CancellationToken cancellationToken)
     {
-        var surveyEntity = await context.TblSurveys.Include(m => m.TblSurveyAssigneds).ThenInclude(m => m.Employee).AsNoTracking().FirstOrDefaultAsync(m => m.Id == request.Id, cancellationToken: cancellationToken);
+        var surveyEntity = await context.TblSurveys.Include(m => m.TblSurveyAssigneds).ThenInclude(m => m.Employee).
+                AsNoTracking().
+                FirstOrDefaultAsync(m => m.Id == request.Id, cancellationToken: cancellationToken);
         if (surveyEntity is null)
         {
             return new RecordNotFoundError($"Survey not found for the given Id");
         }
         var users = await context.TblUsers.Where(u => u.Id == surveyEntity.CreatedBy || u.Id == surveyEntity.LastModifiedBy).AsNoTracking().ToListAsync(cancellationToken);
-        return new GetByIdResponse(new SurveyResponse
+        return new SurveyResponse
         {
             Id = surveyEntity.Id,
             SurveyType = surveyEntity.SurveyType,
@@ -64,7 +63,7 @@ internal sealed class GetSurveyByIdQueryHandler(QubeFinDataContext context) : IR
                 AssignedDate = s.AssignedDate,
                 AssignedBy = s.AssignedBy
             }).ToList()
-        });
+        };
     }
 }
 #endregion

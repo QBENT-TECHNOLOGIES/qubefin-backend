@@ -20,9 +20,11 @@ public static class DependencyInjection
             options.EnableSensitiveDataLogging(false);
         });
         services.AddScoped<IUnitOfWork>(options => options.GetRequiredService<QubeFinDataContext>());
+        services.AddHttpClient();
 
         services.AddScoped<ITokenGenerator, TokenGenerator>();
         services.AddScoped<IPayrollRepository, PayrollRepository>();
+        services.AddScoped<IReportRepository, ReportRepository>();
         return services;
     }
 }

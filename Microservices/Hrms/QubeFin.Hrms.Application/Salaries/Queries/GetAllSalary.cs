@@ -5,15 +5,14 @@ using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.Salaries.Queries
 {
-    public record GetAllSalaryComponentsQuery() : IRequest<Result<GetAllSalaryComponentsResponse>>;
-    public record GetAllSalaryComponentsResponse(IEnumerable<SalaryComponent> SalaryComponents);
-
-    internal sealed class GetAllSalaryComponentsQueryHandler(ISalaryComponentRepository salaryRepository) : IRequestHandler<GetAllSalaryComponentsQuery, Result<GetAllSalaryComponentsResponse>>
+    public record GetAllSalaryComponentsQuery() : IRequest<Result<IEnumerable<SalaryComponent>>>;
+    internal sealed class GetAllSalaryComponentsQueryHandler(ISalaryComponentRepository salaryRepository) :
+        IRequestHandler<GetAllSalaryComponentsQuery, Result<IEnumerable<SalaryComponent>>>
     {
-        public async Task<Result<GetAllSalaryComponentsResponse>> Handle(GetAllSalaryComponentsQuery request, CancellationToken cancellationToken)
+        public async Task<Result<IEnumerable<SalaryComponent>>> Handle(GetAllSalaryComponentsQuery request, CancellationToken cancellationToken)
         {
             var salaryComponents = await salaryRepository.GetAllSalaryComponents();
-            return Result.Ok(new GetAllSalaryComponentsResponse(salaryComponents));
+            return Result.Ok(salaryComponents);
         }
     }
 }

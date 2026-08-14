@@ -9,7 +9,7 @@ using QubeFin.Persistence;
 namespace QubeFin.Global.Application.SurveyCommittees.Commands;
 
 #region --- COMMAND ---
-public record UpdateMemberCommand(MemberUpdateRequest member, Guid UserId) : IRequest<Result<UpdateMemberResponse>>;
+public record UpdateMemberCommand(MemberUpdateRequest member, Guid UserId) : IRequest<Result<string>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -23,14 +23,11 @@ public class UpdateMemberCommandValidator : AbstractValidator<UpdateMemberComman
 }
 #endregion
 
-#region --- RESPONSE ---
-public record UpdateMemberResponse(bool Created);
-#endregion
-
 #region --- HANDLER ---
-internal sealed class UpdateMemberCommandHandler(ISurveyCommitteeRepository surveyCommitteeRepository, IUnitOfWork unitOfWork) : IRequestHandler<UpdateMemberCommand, Result<UpdateMemberResponse>>
+internal sealed class UpdateMemberCommandHandler(ISurveyCommitteeRepository surveyCommitteeRepository, IUnitOfWork unitOfWork) : 
+    IRequestHandler<UpdateMemberCommand, Result<string>>
 {
-    public async Task<Result<UpdateMemberResponse>> Handle(UpdateMemberCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(UpdateMemberCommand request, CancellationToken cancellationToken)
     {
         var existingSurveyCommitteeMember = await surveyCommitteeRepository.GetByIdAsync(request.member.Id);
         if (existingSurveyCommitteeMember is null) return new RecordNotFoundError("Member not found");
@@ -43,7 +40,7 @@ internal sealed class UpdateMemberCommandHandler(ISurveyCommitteeRepository surv
 
         await surveyCommitteeRepository.UpdateMember(existingSurveyCommitteeMember);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result.Ok(new UpdateMemberResponse(true));
+        return Result.Ok("Committee member updated successfully.");
     }
 }
 #endregion

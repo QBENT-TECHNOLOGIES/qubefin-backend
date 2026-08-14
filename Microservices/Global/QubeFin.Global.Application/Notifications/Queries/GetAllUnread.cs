@@ -7,7 +7,7 @@ using QubeFin.Persistence.Models.Global;
 namespace QubeFin.Global.Application.Notifications.Queries;
 
 #region --- QUERY ---
-public record GetAllUnreadQuery(Guid EmployeeId) : IRequest<Result<GetAllUnreadResponse>>;
+public record GetAllUnreadQuery(Guid EmployeeId) : IRequest<Result<IEnumerable<Notification>>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -19,17 +19,14 @@ public class GetAllUnreadQueryValidator : AbstractValidator<GetAllUnreadQuery>
     }
 }
 #endregion
-#region --- RESPONSE ---
-public record GetAllUnreadResponse(IEnumerable<Notification> Notifications);
-#endregion
 
 #region --- HANDLER ---
-internal sealed class GetAllUnreadQueryHandler(INotificationRepository notificationRepository) : IRequestHandler<GetAllUnreadQuery, Result<GetAllUnreadResponse>>
+internal sealed class GetAllUnreadQueryHandler(INotificationRepository notificationRepository) : IRequestHandler<GetAllUnreadQuery, Result<IEnumerable<Notification>>>
 {
-    public async Task<Result<GetAllUnreadResponse>> Handle(GetAllUnreadQuery request, CancellationToken cancellationToken)
+    public async Task<Result<IEnumerable<Notification>>> Handle(GetAllUnreadQuery request, CancellationToken cancellationToken)
     {
         var notifications = await notificationRepository.GetAllUnreadAsync(request.EmployeeId);
-        return new GetAllUnreadResponse(notifications);
+        return Result.Ok(notifications);
     }
 }
 #endregion

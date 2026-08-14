@@ -11,7 +11,7 @@ using QubeFin.Persistence.Models.Hrms;
 namespace QubeFin.Hrms.Application.Attendances.Queries;
 
 #region --- QUERY ---
-public record GetAttendanceRegularizationsByIdQuery(Guid Id, Guid EmployeeId) : IRequest<Result<GetAttendanceRegularizationsByIdResponse>>;
+public record GetAttendanceRegularizationsByIdQuery(Guid Id, Guid EmployeeId) : IRequest<Result<RegularizationDetailResponse?>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -24,14 +24,11 @@ public class GetAttendanceRegularizationsByIdQueryValidator : AbstractValidator<
 }
 #endregion
 
-#region --- RESPONSE ---
-public record GetAttendanceRegularizationsByIdResponse(RegularizationDetailResponse? response);
-#endregion
-
 #region --- HANDLER ---
-internal sealed class GetAttendanceRegularizationsByIdQueryHandler(QubeFinDataContext context, IFileStorageRepository fileStorageRepository) : IRequestHandler<GetAttendanceRegularizationsByIdQuery, Result<GetAttendanceRegularizationsByIdResponse>>
+internal sealed class GetAttendanceRegularizationsByIdQueryHandler(QubeFinDataContext context, IFileStorageRepository fileStorageRepository) :
+    IRequestHandler<GetAttendanceRegularizationsByIdQuery, Result<RegularizationDetailResponse?>>
 {
-    public async Task<Result<GetAttendanceRegularizationsByIdResponse>> Handle(GetAttendanceRegularizationsByIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<RegularizationDetailResponse?>> Handle(GetAttendanceRegularizationsByIdQuery request, CancellationToken cancellationToken)
     {
         var regularizationResponse = await context.Set<RegularizationResponse>()
        .FromSqlRaw("EXEC [Hrms].[USP_RegularizationGet] @Id, @EmployeeId",
@@ -42,7 +39,7 @@ internal sealed class GetAttendanceRegularizationsByIdQueryHandler(QubeFinDataCo
        .ToListAsync(cancellationToken);
 
         if (regularizationResponse == null || !regularizationResponse.Any())
-            return new GetAttendanceRegularizationsByIdResponse(null);
+            return Result.Ok((RegularizationDetailResponse?)null);
 
         var first = regularizationResponse.OrderByDescending(g => g.EventDate).First();
         var response = new RegularizationDetailResponse
@@ -73,7 +70,7 @@ internal sealed class GetAttendanceRegularizationsByIdQueryHandler(QubeFinDataCo
                 EventButtonText = x.EventButtonText
             }).ToList()
         };
-        return Result.Ok(new GetAttendanceRegularizationsByIdResponse(response));
+        return Result.Ok((RegularizationDetailResponse?)response);
     }
 }
 #endregion

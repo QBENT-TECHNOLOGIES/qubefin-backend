@@ -16,7 +16,7 @@ namespace QubeFin.Hrms.Application.LeavePrayers.Queries;
 
 
 #region --- QUERY ---
-public record GetPrayerByIdQuery(Guid Id, Guid EmployeeId) : IRequest<Result<GetPrayerByIdResponse>>;
+public record GetPrayerByIdQuery(Guid Id, Guid EmployeeId) : IRequest<Result<LeavePrayerDetailResponse?>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -30,23 +30,20 @@ public class GetPrayerByIdQueryValidator : AbstractValidator<GetPrayerByIdQuery>
 #endregion
 
 #region --- RESPONSE ---
-public record GetPrayerByIdResponse(LeavePrayerDetailResponse? response);
 #endregion
 
 #region --- HANDLER ---
-internal sealed class GetPrayerByIdQueryHandler(QubeFinDataContext context, IFileStorageRepository fileStorageRepository) : IRequestHandler<GetPrayerByIdQuery, Result<GetPrayerByIdResponse>>
+internal sealed class GetPrayerByIdQueryHandler(QubeFinDataContext context, IFileStorageRepository fileStorageRepository) : IRequestHandler<GetPrayerByIdQuery, Result<LeavePrayerDetailResponse?>>
 {
-    public async Task<Result<GetPrayerByIdResponse>> Handle(GetPrayerByIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<LeavePrayerDetailResponse?>> Handle(GetPrayerByIdQuery request, CancellationToken cancellationToken)
     {
         var leaveRequestResponse = await context.Set<LeavePrayerResponse>().FromSqlRaw("EXEC [Hrms].[USP_GetLeavePrayerById] @Id, @EmployeeId",
          new SqlParameter("@Id", request.Id),
          new SqlParameter("@EmployeeId", request.EmployeeId)
-        )
-       .AsNoTracking()
-       .ToListAsync(cancellationToken);
+        ).AsNoTracking().ToListAsync(cancellationToken);
 
         if (leaveRequestResponse == null || !leaveRequestResponse.Any())
-            return new GetPrayerByIdResponse(null);
+            return Result.Fail("Something went wrong. Please try again later.");
 
         var first = leaveRequestResponse.First();
         var response = new LeavePrayerDetailResponse
@@ -75,7 +72,7 @@ internal sealed class GetPrayerByIdQueryHandler(QubeFinDataContext context, IFil
                 ReceiverDesignation = x.ReceiverDesignation
             }).ToList()
         };
-        return Result.Ok(new GetPrayerByIdResponse(response));
+        return Result.Ok((LeavePrayerDetailResponse?)response);
     }
 }
 #endregion

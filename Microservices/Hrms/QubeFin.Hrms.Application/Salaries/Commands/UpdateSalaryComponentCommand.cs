@@ -21,16 +21,15 @@ namespace QubeFin.Hrms.Application.Salaries.Commands
         bool IsCtccomponent,
         bool IsActive,
         int DisplayOrder,
-        Guid? LastModifiedBy) : IRequest<Result<UpdateSalaryComponentResponse>>;
+        Guid? LastModifiedBy) : IRequest<Result<string>>;
     #endregion
-
-    public record UpdateSalaryComponentResponse(bool Updated);
-    internal sealed class UpdateSalaryComponentCommandHandler(ISalaryComponentRepository salaryRepository, IUnitOfWork unitOfWork) : IRequestHandler<UpdateSalaryComponentCommand, Result<UpdateSalaryComponentResponse>>
+    internal sealed class UpdateSalaryComponentCommandHandler(ISalaryComponentRepository salaryRepository, IUnitOfWork unitOfWork) :
+        IRequestHandler<UpdateSalaryComponentCommand, Result<string>>
     {
-        public async Task<Result<UpdateSalaryComponentResponse>> Handle(UpdateSalaryComponentCommand request, CancellationToken cancellationToken)
-        {   
+        public async Task<Result<string>> Handle(UpdateSalaryComponentCommand request, CancellationToken cancellationToken)
+        {
             var existingSalaryComponent = await salaryRepository.GetSalaryComponentById(request.Id);
-            if(existingSalaryComponent is null) return new RecordNotFoundError("Salary Component not found");
+            if (existingSalaryComponent is null) return new RecordNotFoundError("Salary Component not found");
             var duplicateName = await salaryRepository.ExistsByNameAsync(request.Name, request.CategoryId, request.Id);
             if (duplicateName) return new ValidationError("A salary component with this name already exists in the selected category.");
             existingSalaryComponent.Update(
@@ -47,7 +46,7 @@ namespace QubeFin.Hrms.Application.Salaries.Commands
             );
             await salaryRepository.UpdateSalaryComponent(existingSalaryComponent);
             await unitOfWork.SaveChangesAsync(cancellationToken);
-            return Result.Ok(new UpdateSalaryComponentResponse(true));
+            return Result.Ok($"{request.Name} Salary component updated successfully.");
         }
     }
 }
