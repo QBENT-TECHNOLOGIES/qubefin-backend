@@ -30,7 +30,7 @@ public class AuthEndpoints : IEndpoint
             return result.ToHttpResult();
         });
 
-        app.MapPost("refresh-token", async ([FromHeader(Name = "Refresh-Token")] string refreshToken, ISender sender) =>
+        app.MapGet("refresh-token", async ([FromHeader(Name = "Refresh-Token")] string refreshToken, ISender sender) =>
         {
             var result = await sender.Send(new ValidateRefreshTokenQuery(refreshToken));
             return result.ToHttpResult();
