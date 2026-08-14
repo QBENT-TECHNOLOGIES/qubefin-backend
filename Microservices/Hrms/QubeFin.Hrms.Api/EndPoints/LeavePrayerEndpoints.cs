@@ -26,18 +26,7 @@ namespace QubeFin.Hrms.Api.EndPoints
                 var userId = principal.Identity.GetUserId();
                 var command = new ApplyLeavePrayerCommand(request, empId, userId);
                 var result = await sender.Send(command);
-                if (result.IsFailed)
-                {
-                    if (result.Errors[0] is QubeFin.Core.Results.RecordNotFoundError)
-                    {
-                        return Results.NotFound(result.Errors[0]);
-                    }
-                    if (result.Errors[0] is QubeFin.Core.Results.ValidationError)
-                    {
-                        return Results.BadRequest(result.Errors[0]);
-                    }
-                }
-                return Results.Ok(result.Value);
+                return result.ToHttpResult();
             }).DisableAntiforgery().WithSummary("Apply Leave prayer").RequireAuthorization().WithTags("Leave Prayers");
 
             app.MapGet("leave/prayers/by-year/{year}", async (ClaimsPrincipal principal, ISender sender, [FromRoute] int year, CancellationToken cancellationToken) =>
@@ -92,8 +81,8 @@ namespace QubeFin.Hrms.Api.EndPoints
                 }
 
                 var userId = principal.Identity.GetUserId();
-                var response = await sender.Send(new LeavePrayerActionCommand(request.LeavePrayerId, request.IsApproved, request.IsRejected, userId));
-                return Results.Ok(response);
+                var result = await sender.Send(new LeavePrayerActionCommand(request.LeavePrayerId, request.IsApproved, request.IsRejected, userId));
+                return result.ToHttpResult();
             })
             .WithSummary("Leave Request Action")
             .WithTags("Leave Prayer Approval");

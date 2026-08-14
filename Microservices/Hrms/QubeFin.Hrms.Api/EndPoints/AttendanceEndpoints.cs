@@ -1,5 +1,4 @@
-﻿using FluentResults;
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
