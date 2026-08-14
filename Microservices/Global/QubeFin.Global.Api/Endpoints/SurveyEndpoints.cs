@@ -19,14 +19,20 @@ namespace QubeFin.Global.Api.Endpoints
                 searchParam.UserId = principal.Identity.GetUserId();
                 var searchResults = await sender.Send(new GetSurveyBySearchQuery(searchParam));
                 return Results.Ok(searchResults);
-            }).WithSummary("Search All Surveys").WithTags("Surveys");
+            })
+            .WithSummary("Search All Surveys")
+            .WithTags("Surveys")
+            .RequireAuthorization();
 
             app.MapGet("surveys/{id:guid}", async (Guid id, ClaimsPrincipal principal, ISender sender) =>
             {
                 var employeeId = principal.Identity.GetEmployeeId();
                 var result = await sender.Send(new GetSurveyByIdQuery(id, employeeId));
                 return result.ToHttpResult();
-            }).WithSummary("Get Survey By Id").WithTags("Surveys");
+            })
+            .WithSummary("Get Survey By Id")
+            .WithTags("Surveys")
+            .RequireAuthorization();
 
             app.MapPost("surveys", async (ClaimsPrincipal principal, SurveyRequest request, ISender sender) =>
             {
@@ -39,7 +45,10 @@ namespace QubeFin.Global.Api.Endpoints
                 var command = new CreateSurveyCommand(request, userId);
                 var result = await sender.Send(command);
                 return result.ToHttpResult();
-            }).WithSummary("Create Survey").WithTags("Surveys");
+            })
+            .WithSummary("Create Survey")
+            .WithTags("Surveys")
+            .RequireAuthorization();
 
             app.MapPut("surveys", async (ClaimsPrincipal principal, SurveyRequest request, ISender sender) =>
             {
@@ -52,7 +61,10 @@ namespace QubeFin.Global.Api.Endpoints
                 var command = new UpdateSurveyCommand(request, userId);
                 var result = await sender.Send(command);
                 return result.ToHttpResult();
-            }).WithSummary("Update Survey").WithTags("Surveys");
+            })
+            .WithSummary("Update Survey")
+            .WithTags("Surveys")
+            .RequireAuthorization();
         }
     }
 }

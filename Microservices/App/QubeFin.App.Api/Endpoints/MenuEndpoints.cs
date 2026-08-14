@@ -20,6 +20,7 @@ public class MenuEndpoints : IEndpoint
             var result = await sender.Send(new GetMenuTreeQuery(), cancellationToken);
             return result.ToHttpResult();
         })
+        .RequireAuthorization()
         .WithName("GetMenuTree")
         .WithSummary("Get menu hierarchy")
         .WithDescription("Returns the complete hierarchical tree of all application menus.")
@@ -32,6 +33,7 @@ public class MenuEndpoints : IEndpoint
             var result = await sender.Send(new GetParentMenusQuery(), cancellationToken);
             return result.ToHttpResult();
         })
+        .RequireAuthorization()
         .WithName("GetParentMenus")
         .WithSummary("Get parent menus")
         .WithDescription("Returns the parent menus only.")
@@ -44,6 +46,7 @@ public class MenuEndpoints : IEndpoint
             var result = await sender.Send(new GetMenuByIdQuery(id));
             return result.ToHttpResult();
         })
+        .RequireAuthorization()
         .WithName("GetMenuById")
         .WithSummary("Get menu by ID")
         .WithDescription("Retrieves a single menu using its unique identifier.")
@@ -56,6 +59,7 @@ public class MenuEndpoints : IEndpoint
             var result = await sender.Send(new GetMenuByTargetQuery(Uri.UnescapeDataString(target)));
             return result.ToHttpResult();
         })
+        .RequireAuthorization()
         .WithName("GetMenuByTarget")
         .WithSummary("Get menu by Target Path")
         .WithDescription("Retrieves a single menu using its target path.")
@@ -78,6 +82,7 @@ public class MenuEndpoints : IEndpoint
             var result = await sender.Send(new CreateMenuCommand(menu.Name, menu.Icon, menu.Target, menu.ParentId, userId, permissions));
             return result.ToHttpResult();
         })
+        .RequireAuthorization()
         .WithSummary("Create Menu")
         .WithTags("Menus");
 
@@ -96,6 +101,7 @@ public class MenuEndpoints : IEndpoint
             var result = await sender.Send(new UpdateMenuCommand(id, menu.Name, menu.Icon, menu.Target, menu.ParentId, userId, permissions));
             return result.ToHttpResult();
         })
+        .RequireAuthorization()
         .WithSummary("Update Menu")
         .WithTags("Menus");
     }

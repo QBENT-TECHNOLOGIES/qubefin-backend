@@ -19,6 +19,7 @@ public class AdministrativeUnitEndpoints : IEndpoint
             var result = await sender.Send(new GetAdministrativeUnitByIdQuery(id));
             return result.ToHttpResult();
         })
+        .RequireAuthorization()
         //.RequireAuthorization("Permission:Users.View")
         .WithSummary("Get Administrative Unit By Id");
 
@@ -27,6 +28,7 @@ public class AdministrativeUnitEndpoints : IEndpoint
             var result = await sender.Send(new GetAdministrativeChildUnitsQuery(id));
             return result.ToHttpResult();
         })
+        .RequireAuthorization()
         //.RequireAuthorization("Permission:Users.View")
         .WithSummary("Get Administrative Units By Parent Id");
 
@@ -35,6 +37,7 @@ public class AdministrativeUnitEndpoints : IEndpoint
             var result = await sender.Send(new GetAdministrativeUnitTreeQuery());
             return result.ToHttpResult();
         })
+        .RequireAuthorization()
         .WithSummary("Get Administrative Units Tree"); ;
 
         app.MapPost("administrative-units", async (ISender sender, ClaimsPrincipal principal, [FromBody] AdministrativeUnitRequest request) =>
@@ -48,6 +51,7 @@ public class AdministrativeUnitEndpoints : IEndpoint
             var result = await sender.Send(new CreateAdministrativeUnitCommand(request.AdministrativeUnitTypeId, request.Name, request.ParentId, userId));
             return result.ToHttpResult();
         })
+        .RequireAuthorization()
         //.RequireAuthorization("Permission:Users.Add")
         .WithSummary("Create Administrative Unit");
 
@@ -62,6 +66,7 @@ public class AdministrativeUnitEndpoints : IEndpoint
             var result = await sender.Send(new UpdateAdministrativeUnitCommand(id, request.AdministrativeUnitTypeId, request.Name, request.ParentId, userId));
             return result.ToHttpResult();
         })
-        .WithSummary("Update Document Type"); ;
+        .RequireAuthorization()
+        .WithSummary("Update Administrative Unit"); ;
     }
 }

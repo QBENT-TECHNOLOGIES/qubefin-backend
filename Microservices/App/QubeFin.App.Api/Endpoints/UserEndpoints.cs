@@ -1,6 +1,4 @@
-﻿using FluentResults;
-using MediatR;
-using QubeFin.App.Application.Roles.Queries;
+﻿using MediatR;
 using QubeFin.App.Application.Users.Commands;
 using QubeFin.App.Application.Users.Queries;
 using QubeFin.Core.Endpoint;
@@ -19,6 +17,7 @@ public class UserEndpoints : IEndpoint
             var result = await sender.Send(new GetUsersQuery());
             return result.ToHttpResult();
         })
+        .RequireAuthorization()
         //.RequireAuthorization("Permission:Users.View")
         .WithSummary("Get All Users");
 
@@ -27,6 +26,7 @@ public class UserEndpoints : IEndpoint
             var result = await sender.Send(new GetUsersBySearchQuery(searchText, sortOn, sortDirection, pageIndex, pageSize));
             return result.ToHttpResult();
         })
+        .RequireAuthorization()
         .WithSummary("Search Users by User Name or Employee Name");
 
         app.MapGet("users/{id:guid}", async (Guid id, ISender sender) =>
@@ -34,6 +34,7 @@ public class UserEndpoints : IEndpoint
             var result = await sender.Send(new GetUserByIdQuery(id));
             return result.ToHttpResult();
         })
+        .RequireAuthorization()
         //.RequireAuthorization("Permission:Users.View")
         .WithSummary("Get User By Id");
 
@@ -49,6 +50,7 @@ public class UserEndpoints : IEndpoint
             var result = await sender.Send(new GetUserLoginInfoQuery(userId, employeeId));
             return result.ToHttpResult();
         })
+        .RequireAuthorization()
         //.RequireAuthorization("Permission:Users.View")
         .WithSummary("Get Logeedin User Info");
 
@@ -62,6 +64,7 @@ public class UserEndpoints : IEndpoint
             var result = await sender.Send(command);
             return result.ToHttpResult();
         })
+        .RequireAuthorization()
         //.RequireAuthorization("Permission:Users.Add")
         .WithSummary("Create User");
 

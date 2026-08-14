@@ -19,7 +19,8 @@ namespace QubeFin.Hrms.Api.Endpoints
                 return result.ToHttpResult();
             }).WithSummary("Get all salary components")
               .WithDescription("Retrieves a list of all salary components in the system.")
-              .WithTags("Salary Components");
+              .WithTags("Salary Components")
+            .RequireAuthorization();
 
             app.MapGet("salary-components/{id}", async (Guid id, ISender sender) =>
             {
@@ -27,7 +28,8 @@ namespace QubeFin.Hrms.Api.Endpoints
                 return result.ToHttpResult();
             }).WithSummary("Get a salary component by ID")
               .WithDescription("Retrieves a specific salary component by its unique identifier.")
-              .WithTags("Salary Components");
+              .WithTags("Salary Components")
+            .RequireAuthorization();
 
             app.MapPost("salary-components", async (CreateSalaryComponentCommand command, ISender sender, ClaimsPrincipal principal) =>
             {
@@ -41,7 +43,8 @@ namespace QubeFin.Hrms.Api.Endpoints
                 return result.ToHttpResult();
             }).WithSummary("Create a new salary component")
               .WithDescription("Creates a new salary component in the system.")
-              .WithTags("Salary Components");
+              .WithTags("Salary Components")
+            .RequireAuthorization();
 
             app.MapPut("salary-components/{id}", async (Guid id, UpdateSalaryComponentCommand command, ISender sender, ClaimsPrincipal principal) =>
             {
@@ -55,7 +58,8 @@ namespace QubeFin.Hrms.Api.Endpoints
                 return result.ToHttpResult();
             }).WithSummary("Update an existing salary component")
               .WithDescription("Updates an existing salary component in the system.")
-              .WithTags("Salary Components");
+              .WithTags("Salary Components")
+            .RequireAuthorization();
 
             app.MapGet("salary-components/categories", async (ISender sender, CancellationToken cancellationToken) =>
             {
@@ -63,7 +67,8 @@ namespace QubeFin.Hrms.Api.Endpoints
                 return result.ToHttpResult();
             }).WithSummary("Get all salary component categories")
               .WithDescription("Retrieves a list of all salary component categories in the system.")
-              .WithTags("Salary Components");
+              .WithTags("Salary Components")
+            .RequireAuthorization();
         }
     }
 }

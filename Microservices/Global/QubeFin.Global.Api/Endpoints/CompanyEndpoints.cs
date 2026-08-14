@@ -2,7 +2,6 @@
 using QubeFin.Core.Endpoint;
 using QubeFin.Core.Results;
 using QubeFin.Global.Application.Companies.Queries;
-using QubeFin.Global.Application.OrganizationUnitTypes.Queries;
 
 namespace QubeFin.Global.Api.Endpoints
 {
@@ -14,7 +13,9 @@ namespace QubeFin.Global.Api.Endpoints
             {
                 var result = await sender.Send(new GetAllCompanyQuery(), cancellationToken);
                 return result.ToHttpResult();
-            }).WithName("GetAllCompanies")
+            })
+            .RequireAuthorization()
+            .WithName("GetAllCompanies")
             .WithSummary("Get All Companies")
             .WithDescription("Returns the all company name.")
             .Produces(StatusCodes.Status200OK)

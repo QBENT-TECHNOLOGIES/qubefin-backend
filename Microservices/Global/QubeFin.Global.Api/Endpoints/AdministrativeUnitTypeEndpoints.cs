@@ -13,6 +13,7 @@ public class AdministrativeUnitTypeEndpoints : IEndpoint
         {
             var result = await sender.Send(new GetAdministrativeUnitTypesQuery(), cancellationToken);
             return result.ToHttpResult();
-        });
+        })
+        .RequireAuthorization();
     }
 }

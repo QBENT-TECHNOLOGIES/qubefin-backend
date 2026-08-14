@@ -14,6 +14,7 @@ public class PermissionEndpoints : IEndpoint
             var result = await sender.Send(new GetPermissionsQuery());
             return result.ToHttpResult();
         })
+        .RequireAuthorization()
         //.RequireAuthorization("Permission:Users.View")
         .WithSummary("Get All Permission Tokens");
     }

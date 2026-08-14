@@ -27,7 +27,10 @@ namespace QubeFin.Hrms.Api.EndPoints
                 var command = new ApplyLeavePrayerCommand(request, empId, userId);
                 var result = await sender.Send(command);
                 return result.ToHttpResult();
-            }).DisableAntiforgery().WithSummary("Apply Leave prayer").RequireAuthorization().WithTags("Leave Prayers");
+            }).DisableAntiforgery()
+            .WithSummary("Apply Leave prayer")
+            .WithTags("Leave Prayers")
+            .RequireAuthorization();
 
             app.MapGet("leave/prayers/by-year/{year}", async (ClaimsPrincipal principal, ISender sender, [FromRoute] int year, CancellationToken cancellationToken) =>
             {
@@ -70,8 +73,10 @@ namespace QubeFin.Hrms.Api.EndPoints
                 var empId = principal.Identity.GetEmployeeId();
                 var response = await sender.Send(new GetLeavePrayerApprovalListByEmployeeIdQuery(empId, request));
                 return Results.Ok(response);
-            }).WithSummary("Get Leave Approval List for logged-in employee with optional filters")
-            .WithTags("Leave Prayer Approval");
+            })
+            .WithSummary("Get Leave Approval List for logged-in employee with optional filters")
+            .WithTags("Leave Prayer Approval")
+            .RequireAuthorization();
 
             app.MapPost("leave/prayers/action", async (ClaimsPrincipal principal, ISender sender, LeavePrayerActionRequest request) =>
             {
@@ -85,7 +90,8 @@ namespace QubeFin.Hrms.Api.EndPoints
                 return result.ToHttpResult();
             })
             .WithSummary("Leave Request Action")
-            .WithTags("Leave Prayer Approval");
+            .WithTags("Leave Prayer Approval")
+            .RequireAuthorization();
             #endregion
         }
     }

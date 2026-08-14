@@ -22,7 +22,8 @@ namespace QubeFin.Global.Api.Endpoints
             .WithDescription("Returns the all unread notifications for the authenticated user.")
             .WithTags("Notifications")
             .Produces(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status500InternalServerError);
+            .ProducesProblem(StatusCodes.Status500InternalServerError)
+            .RequireAuthorization();
 
             app.MapGet("notifications/{notificationId:guid}/read", async (ISender sender, ClaimsPrincipal principal, Guid notificationId, CancellationToken cancellationToken) =>
             {
@@ -32,7 +33,8 @@ namespace QubeFin.Global.Api.Endpoints
             }).WithName("MarkAsRead")
             .WithSummary("Mark Notification as Read")
             .WithDescription("Marks a specific notification as read for the authenticated user.")
-            .WithTags("Notifications");
+            .WithTags("Notifications")
+            .RequireAuthorization();
 
             app.MapGet("notifications/read-all", async (ISender sender, ClaimsPrincipal principal, CancellationToken cancellationToken) =>
             {
@@ -42,7 +44,8 @@ namespace QubeFin.Global.Api.Endpoints
             }).WithName("MarkAllAsRead")
             .WithSummary("Mark All Notifications as Read")
             .WithDescription("Marks all notifications as read for the authenticated user.")
-            .WithTags("Notifications");
+            .WithTags("Notifications")
+            .RequireAuthorization();
         }
     }
 }

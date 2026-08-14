@@ -14,6 +14,7 @@ public class RoleEndpoints : IEndpoint
             var result = await sender.Send(new GetRolesQuery());
             return result.ToHttpResult();
         })
+        .RequireAuthorization()
         //.RequireAuthorization("Permission:Users.View")
         .WithSummary("Get All Roles");
 
@@ -22,6 +23,7 @@ public class RoleEndpoints : IEndpoint
             var result = await sender.Send(new GetRolesBySearchQuery(searchText, sortOn, sortDirection, pageIndex, pageSize));
             return result.ToHttpResult();
         })
+        .RequireAuthorization()
         .WithSummary("Search Employees by Free Text, Office Or Designation");
     }
 }

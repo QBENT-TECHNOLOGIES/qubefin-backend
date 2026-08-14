@@ -21,7 +21,9 @@ public class OrganizationUnitEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         //.RequireAuthorization("Permission:Users.View")
-        .WithSummary("Get Organization Unit By Id").WithTags("OrganizationUnits");
+        .WithSummary("Get Organization Unit By Id")
+        .WithTags("OrganizationUnits")
+        .RequireAuthorization();
 
         app.MapGet("organization-units/children/", async (ISender sender, Guid? id) =>
         {
@@ -29,14 +31,18 @@ public class OrganizationUnitEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         //.RequireAuthorization("Permission:Users.View")
-        .WithSummary("Get Organization Units By Parent Id").WithTags("OrganizationUnits");
+        .WithSummary("Get Organization Units By Parent Id")
+        .WithTags("OrganizationUnits")
+        .RequireAuthorization();
 
         app.MapGet("organization-units/tree", async (ISender sender) =>
         {
             var result = await sender.Send(new GetOrganizationUnitTreeQuery());
             return result.ToHttpResult();
         })
-        .WithSummary("Get Organization Unit Tree").WithTags("OrganizationUnits");
+        .WithSummary("Get Organization Unit Tree")
+        .WithTags("OrganizationUnits")
+        .RequireAuthorization();
 
         app.MapPost("organization-units", async (ISender sender, ClaimsPrincipal principal, [FromBody] OrganizationUnitRequest request) =>
         {
@@ -51,7 +57,9 @@ public class OrganizationUnitEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         //.RequireAuthorization("Permission:Users.Add")
-        .WithSummary("Create Organization Unit").WithTags("OrganizationUnits");
+        .WithSummary("Create Organization Unit")
+        .WithTags("OrganizationUnits")
+        .RequireAuthorization();
 
         app.MapPut("organization-units/{id:guid}", async (ISender sender, ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] OrganizationUnitRequest request) =>
         {
@@ -65,6 +73,8 @@ public class OrganizationUnitEndpoints : IEndpoint
                 request.AttendanceInTime, request.AttendanceOutTime, request.CheckRadiusInMeter, request.ParentId, userId));
             return result.ToHttpResult();
         })
-        .WithSummary("Update Organization Unit").WithTags("OrganizationUnits");
+        .WithSummary("Update Organization Unit")
+        .WithTags("OrganizationUnits")
+        .RequireAuthorization();
     }
 }

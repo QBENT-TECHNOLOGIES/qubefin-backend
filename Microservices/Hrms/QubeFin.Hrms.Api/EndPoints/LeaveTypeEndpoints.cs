@@ -18,7 +18,8 @@ public class LeaveTypeEndpoints : IEndpoint
         })
         .WithSummary("Get all Leave Types")
         .WithDescription("Retrieves a list of all leave types in the system.")
-        .WithTags("Leave Types");
+        .WithTags("Leave Types")
+        .RequireAuthorization();
 
         app.MapGet("leave-types/balances", async (ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
@@ -28,7 +29,8 @@ public class LeaveTypeEndpoints : IEndpoint
         })
         .WithSummary("Get all Leave balances by leave Types for specific employee")
         .WithDescription("Retrieves a list of all leave balances of an employee for all leave types in the system.")
-        .WithTags("Leave Types");
+        .WithTags("Leave Types")
+        .RequireAuthorization();
 
         app.MapGet("leave-types/prayer-balances", async (ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
@@ -38,6 +40,7 @@ public class LeaveTypeEndpoints : IEndpoint
         })
         .WithSummary("Get Leave Payer balances by leave Types for specific employee")
         .WithDescription("Retrieves a list of leave prayer balances of an employee for all leave types in the system.")
-        .WithTags("Leave Types");
+        .WithTags("Leave Types")
+        .RequireAuthorization();
     }
 }

@@ -91,7 +91,8 @@ public class LeaveEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         .WithSummary("Create And save Leave Request")
-        .WithTags("Leave Requests");
+        .WithTags("Leave Requests")
+        .RequireAuthorization();
         #endregion
         #region --- SUBMIT ---
 
@@ -107,7 +108,8 @@ public class LeaveEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         .WithSummary("Leave Request Submit")
-        .WithTags("Leave Requests");
+        .WithTags("Leave Requests")
+        .RequireAuthorization();
         #endregion
         #region --- CANCEL ---
 
@@ -123,7 +125,8 @@ public class LeaveEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         .WithSummary("Leave Request Cancel")
-        .WithTags("Leave Requests");
+        .WithTags("Leave Requests")
+        .RequireAuthorization();
         #endregion
         #region --- LEAVE APPROVAL ---
 
@@ -139,7 +142,8 @@ public class LeaveEndpoints : IEndpoint
             return Results.Ok(result);
         })
         .WithSummary("Get Leave Approval List for logged-in employee with optional filters")
-        .WithTags("Leave Approval");
+        .WithTags("Leave Approval")
+        .RequireAuthorization();
 
         app.MapPost("leaves/action", async (ClaimsPrincipal principal, ISender sender, LeaveRequestActionRequest request) =>
         {
@@ -153,7 +157,8 @@ public class LeaveEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         .WithSummary("Leave Request Action")
-        .WithTags("Leave Approval");
+        .WithTags("Leave Approval")
+        .RequireAuthorization();
         #endregion
     }
 }
