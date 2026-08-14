@@ -87,6 +87,7 @@ namespace QubeFin.Payroll.Api.Endpoints
               .WithDescription("Retrieves a list of payslips for the last 6 months for the authenticated employee.")
               .WithTags("Payrolls");
 
+            #region SSRS REPORTS
 
             app.MapGet("/reports/payslip/{payslipId:guid}", [Authorize] async (Guid payslipId, ISender sender) =>
             {
@@ -106,7 +107,9 @@ namespace QubeFin.Payroll.Api.Endpoints
                 var file = result.Value;
                 return Results.File(file.FileStream, file.ContentType, file.FileName);
             }).WithSummary("Generate payslip report.");
+            #endregion
 
+            #region NPOI REPORTS
             app.MapGet("/generate-pf-report/{month:int}/{year:int}", [Authorize] async (int month, int year, ISender sender) =>
             {
                 var command = new GenerateNPOIReportsCommand("Payroll.USP_GetPFReport",
@@ -175,6 +178,7 @@ namespace QubeFin.Payroll.Api.Endpoints
 
                 return Results.File(file.FileStream, file.ContentType, $"Professional_Tax_Report_{month}_{year}.xlsx");
             }).WithSummary("Generate Professional Tax Report.");
+            #endregion
         }
     }
 }
