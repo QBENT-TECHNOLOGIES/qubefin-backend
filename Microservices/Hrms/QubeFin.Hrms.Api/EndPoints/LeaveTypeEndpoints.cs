@@ -42,5 +42,15 @@ public class LeaveTypeEndpoints : IEndpoint
         .WithDescription("Retrieves a list of leave prayer balances of an employee for all leave types in the system.")
         .WithTags("Leave Types")
         .RequireAuthorization();
+
+        app.MapGet("posts", async (ISender sender, CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(new GetAllPostQuery());
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get all Posts")
+        .WithDescription("Retrieves a list of all posts in the system.")
+        .WithTags("Leave Types")
+        .RequireAuthorization();
     }
 }
