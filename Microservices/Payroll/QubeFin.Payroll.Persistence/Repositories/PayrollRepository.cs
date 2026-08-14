@@ -19,6 +19,7 @@ namespace QubeFin.Payroll.Persistence.Repositories
         Task<bool> IsPayrollAvailableForUpdateAsync(Guid id, CancellationToken cancellationToken = default);
         Task<bool> UpdatePayrollComponentsAsync(Guid payrollId, List<PayrollComponentModel> updatedComponents, CancellationToken cancellationToken = default);
         Task<List<Payslip>> GetEmployeePayslipsAsync(Guid employeeId);
+        Task<List<TblSalaryGrade>> GetAllSalaryGrade();
     }
     public class PayrollRepository(QubeFinDataContext context) : IPayrollRepository
     {
@@ -114,6 +115,11 @@ namespace QubeFin.Payroll.Persistence.Repositories
         public async Task<List<Payslip>> GetEmployeePayslipsAsync(Guid employeeId)
         {
             return await context.SP_GetEmployeePayslip(employeeId);
+        }
+
+        public  async Task<List<TblSalaryGrade>> GetAllSalaryGrade()
+        {
+            return await context.TblSalaryGrades.Where(m => m.IsActive).ToListAsync();
         }
     }
 }
