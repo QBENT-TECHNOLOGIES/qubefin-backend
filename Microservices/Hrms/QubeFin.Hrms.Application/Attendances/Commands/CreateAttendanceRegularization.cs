@@ -7,13 +7,12 @@ using QubeFin.Hrms.Application.Attendances.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using System.Data;
-using System.IO;
 using System.Text.Json;
 
 namespace QubeFin.Hrms.Application.Attendances.Commands;
 
 #region --- COMMAND ---
-public record CreateAttendanceRegularizationCommand(RegularizationRequest regularization, Guid EmployeeId, Guid UserId) : IRequest<Result<CreateAttendanceRegularizationResponse>>;
+public record CreateAttendanceRegularizationCommand(RegularizationRequest regularization, Guid EmployeeId, Guid UserId) : IRequest<Result<string>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -30,14 +29,11 @@ public class CreateAttendanceRegularizationCommandValidator : AbstractValidator<
 }
 #endregion
 
-#region --- RESPONSE ---
-public record CreateAttendanceRegularizationResponse(bool success, string message);
-#endregion
-
 #region --- HANDLER ---
-internal sealed class CreateAttendanceRegularizationCommandHandler(QubeFinDataContext context, IUnitOfWork unitOfWork, IFileStorageRepository fileStorageRepository) : IRequestHandler<CreateAttendanceRegularizationCommand, Result<CreateAttendanceRegularizationResponse>>
+internal sealed class CreateAttendanceRegularizationCommandHandler(QubeFinDataContext context, IUnitOfWork unitOfWork, IFileStorageRepository fileStorageRepository) : 
+    IRequestHandler<CreateAttendanceRegularizationCommand, Result<string>>
 {
-    public async Task<Result<CreateAttendanceRegularizationResponse>> Handle(CreateAttendanceRegularizationCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(CreateAttendanceRegularizationCommand request, CancellationToken cancellationToken)
     {
         string? attachment = null;
         if (request.regularization.Attachment != null && request.regularization.Attachment.Length > 0)
@@ -97,7 +93,7 @@ internal sealed class CreateAttendanceRegularizationCommandHandler(QubeFinDataCo
         Guid? regularizationId = regularizationIdParam.Value == DBNull.Value ? null : (Guid)regularizationIdParam.Value;
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result.Ok(new CreateAttendanceRegularizationResponse(success, $"{message}"));
+        return Result.Ok($"{message}");
     }
 }
 #endregion

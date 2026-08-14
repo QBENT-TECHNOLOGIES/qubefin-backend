@@ -1,7 +1,9 @@
-﻿using MediatR;
+﻿using FluentResults;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
+using QubeFin.Core.Results;
 using QubeFin.Hrms.Application.Attendances.Commands;
 using QubeFin.Hrms.Application.Attendances.Models;
 using QubeFin.Hrms.Application.Attendances.Queries;
@@ -126,8 +128,19 @@ public class AttendanceEndpoints : IEndpoint
 
             var empId = principal.Identity.GetEmployeeId();
             var CurrentUserId = principal.Identity.GetUserId();
-            var response = await sender.Send(new SubmitAttendanceRegularizationCommand(request, empId, CurrentUserId));
-            return Results.Ok(response);
+            var result = await sender.Send(new SubmitAttendanceRegularizationCommand(request, empId, CurrentUserId));
+            if (result.IsFailed)
+            {
+                if (result.Errors[0] is RecordNotFoundError)
+                {
+                    return Results.NotFound(result.Errors[0]);
+                }
+                if (result.Errors[0] is ValidationError)
+                {
+                    return Results.BadRequest(result.Errors[0]);
+                }
+            }
+            return Results.Ok(result.Value);
         }).WithSummary("Decision regularization (Approved/Reject/Recommend)").WithTags("Regularization");
     }
 }

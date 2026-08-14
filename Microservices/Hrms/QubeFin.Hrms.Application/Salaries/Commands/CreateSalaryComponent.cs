@@ -17,14 +17,12 @@ namespace QubeFin.Hrms.Application.Salaries.Commands
         bool IsCtccomponent,
         bool IsActive,
         int DisplayOrder,
-        Guid CreatedBy) : IRequest<Result<CreateSalaryComponentResponse>>;
+        Guid CreatedBy) : IRequest<Result<string>>;
     #endregion
-    #region --- RESPONSE ---
-    public record CreateSalaryComponentResponse(bool Created);
-    #endregion
-    internal sealed class CreateSalaryComponentCommandHandler(ISalaryComponentRepository salaryRepository, IUnitOfWork unitOfWork) : IRequestHandler<CreateSalaryComponentCommand, Result<CreateSalaryComponentResponse>>
+    internal sealed class CreateSalaryComponentCommandHandler(ISalaryComponentRepository salaryRepository, IUnitOfWork unitOfWork) : 
+            IRequestHandler<CreateSalaryComponentCommand, Result<string>>
     {
-        public async Task<Result<CreateSalaryComponentResponse>> Handle(CreateSalaryComponentCommand request, CancellationToken cancellationToken)
+        public async Task<Result<string>> Handle(CreateSalaryComponentCommand request, CancellationToken cancellationToken)
         {   
             var duplicateName = await salaryRepository.ExistsByNameAsync(request.Name, request.CategoryId);
             if(duplicateName) return new ValidationError("A salary component with this name already exists in the selected category.");
@@ -43,7 +41,7 @@ namespace QubeFin.Hrms.Application.Salaries.Commands
             );
             await salaryRepository.CreateSalaryComponent(createSalaryComponent);
             await unitOfWork.SaveChangesAsync(cancellationToken);
-            return Result.Ok(new CreateSalaryComponentResponse(true));
+            return Result.Ok($"{request.Name} Salary component created successfully.");
         }
     }
 }

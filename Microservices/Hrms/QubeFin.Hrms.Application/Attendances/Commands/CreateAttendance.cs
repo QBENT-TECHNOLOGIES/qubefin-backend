@@ -10,7 +10,7 @@ namespace QubeFin.Hrms.Application.Attendances.Commands
 {
 
     #region --- COMMAND ---
-    public record CreateAttendanceCommand(Guid EmployeeId, TimeOnly time, decimal Lat, decimal Long) : IRequest<Result<CreateAttendanceResponse>>;
+    public record CreateAttendanceCommand(Guid EmployeeId, TimeOnly time, decimal Lat, decimal Long) : IRequest<Result<string>>;
     #endregion
 
     #region --- VALIDATOR ---
@@ -26,15 +26,11 @@ namespace QubeFin.Hrms.Application.Attendances.Commands
     }
     #endregion
 
-    #region --- RESPONSE ---
-    public record CreateAttendanceResponse(bool success, string message);
-    #endregion
-
     #region --- HANDLER ---
     internal sealed class CreateAttendanceCommandHandler(IAttendanceRepository attendanceRepository, IEmployeeRepository employeeRepository, IUnitOfWork unitOfWork)
-        : IRequestHandler<CreateAttendanceCommand, Result<CreateAttendanceResponse>>
+        : IRequestHandler<CreateAttendanceCommand, Result<string>>
     {
-        public async Task<Result<CreateAttendanceResponse>> Handle(CreateAttendanceCommand request, CancellationToken cancellationToken)
+        public async Task<Result<string>> Handle(CreateAttendanceCommand request, CancellationToken cancellationToken)
         {
             var employeeOrganization = await employeeRepository.GetEmloyeeOrganization(request.EmployeeId);
             if (employeeOrganization == null || employeeOrganization.OrganizationInfo.AttendanceInTime == null || employeeOrganization.OrganizationInfo.AttendanceOutTime == null)
@@ -58,7 +54,7 @@ namespace QubeFin.Hrms.Application.Attendances.Commands
             }
 
             await unitOfWork.SaveChangesAsync(cancellationToken);
-            return Result.Ok(new CreateAttendanceResponse(true, $"{(todayAttendance is null ? "Checked In Success" : "Checked Out Success")}"));
+            return Result.Ok($"{(todayAttendance is null ? "Checked In Success" : "Checked Out Success")}");
         }
     }
     #endregion

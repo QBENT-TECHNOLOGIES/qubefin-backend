@@ -9,11 +9,11 @@ using QubeFin.Persistence.Models.Global;
 
 namespace QubeFin.Hrms.Application.Salaries.Queries
 {
-    public record GetSalaryComponentByIdQuery(Guid Id) : IRequest<Result<GetSalaryComponentByIdResponse>>;
-    public record GetSalaryComponentByIdResponse(SalaryComponentResponse SalaryComponent);
-    internal sealed class GetSalaryByIdQueryHandler(ISalaryComponentRepository salaryRepository, QubeFinDataContext context) : IRequestHandler<GetSalaryComponentByIdQuery, Result<GetSalaryComponentByIdResponse>>
+    public record GetSalaryComponentByIdQuery(Guid Id) : IRequest<Result<SalaryComponentResponse>>;
+    internal sealed class GetSalaryByIdQueryHandler(ISalaryComponentRepository salaryRepository, QubeFinDataContext context) : 
+        IRequestHandler<GetSalaryComponentByIdQuery, Result<SalaryComponentResponse>>
     {
-        public async Task<Result<GetSalaryComponentByIdResponse>> Handle(GetSalaryComponentByIdQuery request, CancellationToken cancellationToken)
+        public async Task<Result<SalaryComponentResponse>> Handle(GetSalaryComponentByIdQuery request, CancellationToken cancellationToken)
         {
             var salaryComponent = await salaryRepository.GetSalaryComponentById(request.Id);
             if (salaryComponent is null) return new RecordNotFoundError("Salary Component not found");
@@ -45,7 +45,7 @@ namespace QubeFin.Hrms.Application.Salaries.Queries
                 LastModifiedOn = salaryComponent.LastModifiedOn
             };
 
-            return Result.Ok(new GetSalaryComponentByIdResponse(response));
+            return Result.Ok(response);
         }
     }
 }
