@@ -9,6 +9,10 @@ public static class ResultExtensions
     {
         if (result.IsSuccess)
         {
+            if (result.Value is null)
+            {
+                return Microsoft.AspNetCore.Http.Results.Text("null", contentType: "application/json", statusCode: StatusCodes.Status200OK);
+            }
             return Microsoft.AspNetCore.Http.Results.Ok(result.Value);
         }
 
