@@ -9,6 +9,7 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
     public static class ExcelReportHelper
     {
         public record ExcelReportOptions(bool ShowCompanyHeader = false, string? ReportTitle = null, string? SubHeader = null);
+
         public static MemoryStream CreateExcel(DataTable dataTable, ExcelReportOptions options, byte[]? logoBytes)
         {
             var workbook = new XSSFWorkbook();
@@ -16,6 +17,7 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
             try
             {
                 var sheet = workbook.CreateSheet("Report");
+                ApplyColumnWidths(sheet, dataTable);
 
                 var currentRow = 0;
 
@@ -50,9 +52,6 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
                     AddData(workbook, sheet, ref currentRow, dataTable);
                 }
 
-                // Auto Size
-                AutoSizeColumns(sheet, dataTable.Columns.Count);
-
                 var stream = new MemoryStream();
 
                 workbook.Write(stream, leaveOpen: true);
@@ -66,6 +65,32 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
                 workbook.Close();
             }
         }
+
+        // =============================================================
+        // COLUMN WIDTHS (now computed up front, not auto-sized at the end)
+        // =============================================================
+
+        private static void ApplyColumnWidths(ISheet sheet, DataTable dataTable)
+        {
+            for (var i = 0; i < dataTable.Columns.Count; i++)
+            {
+                var maxLength = ToDisplayName(dataTable.Columns[i].ColumnName).Length;
+
+                foreach (DataRow row in dataTable.Rows)
+                {
+                    var text = row[i]?.ToString() ?? string.Empty;
+
+                    if (text.Length > maxLength)
+                        maxLength = text.Length;
+                }
+
+                // padding + sane min/max bounds, in characters
+                var widthChars = Math.Min(Math.Max(maxLength + 4, 10), 45);
+
+                sheet.SetColumnWidth(i, widthChars * 256);
+            }
+        }
+
         private static void AddHeader(IWorkbook workbook, ISheet sheet, ref int currentRow, string header, int columnCount)
         {
             var row = sheet.CreateRow(currentRow++);
@@ -154,14 +179,6 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
             }
         }
 
-        private static void AutoSizeColumns(ISheet sheet, int columnCount)
-        {
-            for (var i = 0; i < columnCount; i++)
-            {
-                sheet.AutoSizeColumn(i);
-            }
-        }
-
         private static void MergeCells(ISheet sheet, int row, int columnCount)
         {
             if (columnCount > 1)
@@ -213,6 +230,7 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
 
             return style;
         }
+
         public static string ToDisplayName(string value)
         {
             if (string.IsNullOrWhiteSpace(value))

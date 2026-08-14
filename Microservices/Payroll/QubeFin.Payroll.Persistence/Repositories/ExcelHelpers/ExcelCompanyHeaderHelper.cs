@@ -1,37 +1,39 @@
 ﻿using NPOI.SS.UserModel;
 using NPOI.SS.Util;
-using NPOI.XSSF.UserModel;
 
 namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers;
 
 public static class ExcelCompanyHeaderHelper
 {
-    public static int AddCompanyHeader(
-        IWorkbook workbook,
-        ISheet sheet,
-        int currentRow,
-        int columnCount,
-        byte[]? logoBytes)
+    public static int AddCompanyHeader(IWorkbook workbook, ISheet sheet, int currentRow, int columnCount, byte[]? logoBytes)
     {
-        if (columnCount <= 0)
-            columnCount = 1;
+        if (columnCount <= 0) columnCount = 1;
 
         var companyStyle = CreateCompanyStyle(workbook);
         var companyNameStyle = CreateCompanyNameStyle(workbook);
         var contactStyle = CreateContactStyle(workbook);
+        var separatorStyle = CreateSeparatorStyle(workbook);
 
-        // ---------------------------------------------------------
-        // Logo
-        // ---------------------------------------------------------
+        // =========================================================
+        // LOGO
+        // =========================================================
 
         if (logoBytes is not null && logoBytes.Length > 0)
         {
-            AddLogo(
-                workbook,
-                sheet,
-                currentRow,
-                columnCount,
-                logoBytes);
+            AddLogo(workbook, sheet, currentRow, columnCount, logoBytes);
+
+            // Make sure the rows exist, then merge the whole 4x(columnCount)
+            // block the logo sits on into one region — merges both across
+            // rows and across columns, matching the rest of the header.
+            for (var i = 0; i < 4; i++)
+            {
+                if (sheet.GetRow(currentRow + i) is null)
+                {
+                    sheet.CreateRow(currentRow + i);
+                }
+            }
+
+            MergeBlock(sheet, currentRow, currentRow + 3, columnCount);
 
             currentRow += 4;
         }
@@ -40,161 +42,124 @@ public static class ExcelCompanyHeaderHelper
             currentRow++;
         }
 
-        // ---------------------------------------------------------
-        // Company Name
-        // ---------------------------------------------------------
+        // =========================================================
+        // COMPANY NAME
+        // =========================================================
 
         var companyRow = sheet.CreateRow(currentRow++);
         companyRow.HeightInPoints = 22;
 
         var companyCell = companyRow.CreateCell(0);
-
-        companyCell.SetCellValue(
-            "WeGrow Financial Services Private Limited");
-
+        companyCell.SetCellValue("WeGrow Financial Services Private Limited");
         companyCell.CellStyle = companyNameStyle;
 
-        Merge(
-            sheet,
-            companyRow.RowNum,
-            columnCount);
+        Merge(sheet, companyRow.RowNum, columnCount);
 
-        // ---------------------------------------------------------
-        // Address
-        // ---------------------------------------------------------
+        // =========================================================
+        // ADDRESS
+        // =========================================================
 
         var addressRow = sheet.CreateRow(currentRow++);
         addressRow.HeightInPoints = 20;
 
         var addressCell = addressRow.CreateCell(0);
-
-        addressCell.SetCellValue(
-            "AE -592, Salt Lake City, Sector – I, Kolkata, West Bengal");
-
+        addressCell.SetCellValue("AE -592, Salt Lake City, Sector – I, Kolkata, West Bengal");
         addressCell.CellStyle = companyStyle;
 
-        Merge(
-            sheet,
-            addressRow.RowNum,
-            columnCount);
+        Merge(sheet, addressRow.RowNum, columnCount);
 
-
-
-        // ---------------------------------------------------------
-        // Phone + Email
-        // ---------------------------------------------------------
+        // =========================================================
+        // PHONE + EMAIL
+        // =========================================================
 
         var contactRow = sheet.CreateRow(currentRow++);
         contactRow.HeightInPoints = 20;
 
-        var middleColumn = columnCount / 2;
+        var contactCell = contactRow.CreateCell(0);
+        contactCell.SetCellValue("Phone: +91 9836036541       Email ID: hr@wegrowindia.com");
+        contactCell.CellStyle = contactStyle;
 
-        // Phone - left half
-        var phoneCell = contactRow.CreateCell(0);
+        // Merge entire row
+        Merge(sheet, contactRow.RowNum, columnCount);
 
-        phoneCell.SetCellValue(
-            "Phone: +91 9836036541");
-
-        phoneCell.CellStyle = contactStyle;
-
-        if (middleColumn > 0)
-        {
-            sheet.AddMergedRegion(
-                new CellRangeAddress(
-                    contactRow.RowNum,
-                    contactRow.RowNum,
-                    0,
-                    middleColumn - 1));
-        }
-
-        // Email - right half
-        var emailCell = contactRow.CreateCell(middleColumn);
-
-        emailCell.SetCellValue(
-            "Email ID: hr@wegrowindia.com");
-
-        emailCell.CellStyle = contactStyle;
-
-        if (columnCount - 1 >= middleColumn)
-        {
-            sheet.AddMergedRegion(
-                new CellRangeAddress(
-                    contactRow.RowNum,
-                    contactRow.RowNum,
-                    middleColumn,
-                    columnCount - 1));
-        }
-
-        // ---------------------------------------------------------
-        // Separator
-        // ---------------------------------------------------------
+        // =========================================================
+        // SEPARATOR
+        // =========================================================
 
         var separatorRow = sheet.CreateRow(currentRow++);
-        separatorRow.HeightInPoints = 8;
-
+        separatorRow.HeightInPoints = 20; // was 8 — now matches the other header rows
         var separatorCell = separatorRow.CreateCell(0);
-
-        separatorCell.SetCellValue(
-            "________________________________________________________________________");
-
-        separatorCell.CellStyle = CreateSeparatorStyle(workbook);
-
-        Merge(
-            sheet,
-            separatorRow.RowNum,
-            columnCount);
-
-        // Small spacing
-        currentRow++;
+        separatorCell.SetCellValue("");
+        separatorCell.CellStyle = separatorStyle;
+        Merge(sheet, separatorRow.RowNum, columnCount);
 
         return currentRow;
     }
+    private const double EmuPerPixel = 9525.0;      // 914400 EMU/inch ÷ 96 DPI
+    private const double DefaultCharWidthPx = 7.0;  // ~digit width for Calibri 11 / Arial 10
 
-    // =============================================================
-    // LOGO
-    // =============================================================
-
-    private static void AddLogo(
-        IWorkbook workbook,
-        ISheet sheet,
-        int currentRow,
-        int columnCount,
-        byte[] logoBytes)
+    private static void AddLogo(IWorkbook workbook, ISheet sheet, int currentRow, int columnCount, byte[] logoBytes)
     {
         var pictureType = DetectPictureType(logoBytes);
-
-        var pictureIndex = workbook.AddPicture(
-            logoBytes,
-            pictureType);
-
+        var pictureIndex = workbook.AddPicture(logoBytes, pictureType);
         var drawing = sheet.CreateDrawingPatriarch();
 
-        // Center logo horizontally
-        var logoStartColumn = Math.Max(
-            (columnCount - 4) / 2,
-            0);
+        // Real pixel width of every column — columns are rarely equal,
+        // so centering has to use actual widths, not just column count.
+        var columnPixelWidths = new double[columnCount];
+        double totalWidthPx = 0;
 
-        var logoEndColumn = Math.Min(
-            logoStartColumn + 4,
-            columnCount);
+        for (var i = 0; i < columnCount; i++)
+        {
+            var widthInChars = sheet.GetColumnWidth(i) / 256.0;
+            columnPixelWidths[i] = widthInChars * DefaultCharWidthPx;
+            totalWidthPx += columnPixelWidths[i];
+        }
 
-        var anchor = drawing.CreateAnchor(
-            0,
-            0,
-            0,
-            0,
-            logoStartColumn,
-            currentRow,
-            logoEndColumn,
-            currentRow + 4);
+        // Keep the same "roughly 4 columns wide" footprint as before,
+        // just sized from the real average column width instead of a
+        // raw column-count guess.
+        var logoWidthPx = columnCount > 0 ? Math.Min(totalWidthPx, (totalWidthPx / columnCount) * 2) : totalWidthPx;
 
-        drawing.CreatePicture(
-            anchor,
-            pictureIndex);
+        var offsetXPx = Math.Max((totalWidthPx - logoWidthPx) / 2.0, 0);
+
+        var (col1, dx1) = ResolveColumnOffset(columnPixelWidths, offsetXPx);
+        var (col2, dx2) = ResolveColumnOffset(columnPixelWidths, offsetXPx + logoWidthPx);
+
+        var anchor = drawing.CreateAnchor((int)Math.Round(dx1 * EmuPerPixel), 0, (int)Math.Round(dx2 * EmuPerPixel), 0, col1, currentRow, col2, currentRow + 4);
+
+        drawing.CreatePicture(anchor, pictureIndex);
+    }
+
+    /// <summary>
+    /// Given a target pixel offset from the left edge of the sheet,
+    /// returns which column it falls in and how far into that column
+    /// it is — Excel anchors are expressed as (column, offset-in-column),
+    /// not raw pixel coordinates.
+    /// </summary>
+    private static (int column, double offsetInColumnPx) ResolveColumnOffset(double[] columnPixelWidths, double targetOffsetPx)
+    {
+        double cumulative = 0;
+
+        for (var i = 0; i < columnPixelWidths.Length; i++)
+        {
+            var next = cumulative + columnPixelWidths[i];
+
+            if (targetOffsetPx <= next || i == columnPixelWidths.Length - 1)
+            {
+                var offsetInColumn = Math.Max(targetOffsetPx - cumulative, 0);
+                offsetInColumn = Math.Min(offsetInColumn, columnPixelWidths[i]);
+                return (i, offsetInColumn);
+            }
+
+            cumulative = next;
+        }
+
+        return (columnPixelWidths.Length - 1, 0);
     }
 
     // =============================================================
-    // STYLES
+    // COMPANY NAME STYLE
     // =============================================================
 
     private static ICellStyle CreateCompanyNameStyle(
@@ -216,6 +181,10 @@ public static class ExcelCompanyHeaderHelper
         return style;
     }
 
+    // =============================================================
+    // COMPANY STYLE
+    // =============================================================
+
     private static ICellStyle CreateCompanyStyle(
         IWorkbook workbook)
     {
@@ -233,6 +202,10 @@ public static class ExcelCompanyHeaderHelper
 
         return style;
     }
+
+    // =============================================================
+    // CONTACT STYLE
+    // =============================================================
 
     private static ICellStyle CreateContactStyle(
         IWorkbook workbook)
@@ -253,6 +226,10 @@ public static class ExcelCompanyHeaderHelper
         return style;
     }
 
+    // =============================================================
+    // SEPARATOR STYLE
+    // =============================================================
+
     private static ICellStyle CreateSeparatorStyle(
         IWorkbook workbook)
     {
@@ -272,7 +249,7 @@ public static class ExcelCompanyHeaderHelper
     }
 
     // =============================================================
-    // HELPERS
+    // MERGE
     // =============================================================
 
     private static void Merge(
@@ -290,6 +267,31 @@ public static class ExcelCompanyHeaderHelper
                 0,
                 columnCount - 1));
     }
+
+    // =============================================================
+    // MERGE (multi-row block)
+    // =============================================================
+
+    private static void MergeBlock(
+        ISheet sheet,
+        int firstRow,
+        int lastRow,
+        int columnCount)
+    {
+        if (columnCount <= 1 && firstRow == lastRow)
+            return;
+
+        sheet.AddMergedRegion(
+            new CellRangeAddress(
+                firstRow,
+                lastRow,
+                0,
+                Math.Max(columnCount - 1, 0)));
+    }
+
+    // =============================================================
+    // IMAGE TYPE
+    // =============================================================
 
     private static PictureType DetectPictureType(
         byte[] imageBytes)

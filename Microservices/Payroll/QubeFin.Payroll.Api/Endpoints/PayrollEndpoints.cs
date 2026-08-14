@@ -128,8 +128,53 @@ namespace QubeFin.Payroll.Api.Endpoints
                 var file = result.Value;
 
                 return Results.File(file.FileStream, file.ContentType, $"PF_Report_{month}_{year}.xlsx");
-            })
-    .WithSummary("Generate PF report.");
+            }).WithSummary("Generate PF Report.");
+
+            app.MapGet("/generate-esi-report/{month:int}/{year:int}", [Authorize] async (int month, int year, ISender sender) =>
+            {
+                var command = new GenerateNPOIReportsCommand("Payroll.USP_GetESIReport",
+                    new Dictionary<string, object?>
+                    {
+                        ["@Month"] = month,
+                        ["@Year"] = year
+                    },
+                    "ESI Report",
+                    $"Month: {month}, Year: {year}",
+                    true
+                );
+
+                var result = await sender.Send(command);
+
+                if (result.IsFailed)
+                    return result.ToHttpResult();
+
+                var file = result.Value;
+
+                return Results.File(file.FileStream, file.ContentType, $"ESI_Report_{month}_{year}.xlsx");
+            }).WithSummary("Generate ESI Report.");
+
+            app.MapGet("/generate-ptax-report/{month:int}/{year:int}", [Authorize] async (int month, int year, ISender sender) =>
+            {
+                var command = new GenerateNPOIReportsCommand("Payroll.USP_GetProfTaxReport",
+                    new Dictionary<string, object?>
+                    {
+                        ["@Month"] = month,
+                        ["@Year"] = year
+                    },
+                    "Professional Tax Report",
+                    $"Month: {month}, Year: {year}",
+                    true
+                );
+
+                var result = await sender.Send(command);
+
+                if (result.IsFailed)
+                    return result.ToHttpResult();
+
+                var file = result.Value;
+
+                return Results.File(file.FileStream, file.ContentType, $"Professional_Tax_Report_{month}_{year}.xlsx");
+            }).WithSummary("Generate Professional Tax Report.");
         }
     }
 }
