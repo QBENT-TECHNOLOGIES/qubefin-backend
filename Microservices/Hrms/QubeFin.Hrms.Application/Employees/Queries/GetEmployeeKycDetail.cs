@@ -3,26 +3,18 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
 using QubeFin.Hrms.Application.Employees.Models;
-using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
-using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.Employees.Queries;
 
 #region --- QUERY ---
-public record GetEmployeeKycDetailQuery(Guid Id) : IRequest<Result<GetKycResponse>>;
-#endregion
-#region --- RESPONSE ---
-public record GetKycResponse(
-    List<DocumentDetailRequest> Documents
-    );
-
+public record GetEmployeeKycDetailQuery(Guid Id) : IRequest<Result<List<DocumentDetailRequest>>>;
 #endregion
 #region --- HANDLER ---
 internal sealed class GetEmployeeKycDetailQueryHandler(QubeFinDataContext context)
-    : IRequestHandler<GetEmployeeKycDetailQuery, Result<GetKycResponse>>
+    : IRequestHandler<GetEmployeeKycDetailQuery, Result<List<DocumentDetailRequest>>>
 {
-    public async Task<Result<GetKycResponse>> Handle(GetEmployeeKycDetailQuery request, CancellationToken cancellationToken)
+    public async Task<Result<List<DocumentDetailRequest>>> Handle(GetEmployeeKycDetailQuery request, CancellationToken cancellationToken)
     {
         var employee = await context.TblEmployees.Include(m => m.TblEmployeeDocuments).Where(m => m.Id == request.Id).FirstOrDefaultAsync(cancellationToken: cancellationToken);
 
@@ -45,7 +37,7 @@ internal sealed class GetEmployeeKycDetailQueryHandler(QubeFinDataContext contex
         }).OrderBy(m => m.DocumentName)]
 
                     : new List<DocumentDetailRequest>();
-        return Result.Ok(new GetKycResponse(docs));
+        return Result.Ok(docs);
     }
 }
 #endregion

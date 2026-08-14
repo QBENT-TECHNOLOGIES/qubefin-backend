@@ -14,7 +14,7 @@ public record UpdateEmployeePersonalCommand(
     Guid Id, string Code, string? Salutation, string FirstName, string? MiddleName, string LastName, string? FatherName, string? MotherName,
     DateOnly DateOfBirth, string Gender, string Religion, string? Caste, string Nationality, string BloodGroup, string? DisabilityType, string? MaritalStatus,
     Guid UserId
-    ) : IRequest<Result<UpdateEmployeePersonalResponse>>;
+    ) : IRequest<Result<string>>;
 #endregion
 
 #region --- VALIDATION ---
@@ -38,15 +38,11 @@ public class UpdateEmployeePersonalCommandValidator : AbstractValidator<UpdateEm
 }
 #endregion
 
-#region --- RESPONSE ---
-public record UpdateEmployeePersonalResponse(bool Created);
-#endregion
-
 #region --- HANDLER ---
 internal sealed class UpdateEmployeePersonalCommandHandler(IEmployeeRepository employeeRepository, IUnitOfWork unitOfWork)
-    : IRequestHandler<UpdateEmployeePersonalCommand, Result<UpdateEmployeePersonalResponse>>
+    : IRequestHandler<UpdateEmployeePersonalCommand, Result<string>>
 {
-    public async Task<Result<UpdateEmployeePersonalResponse>> Handle(UpdateEmployeePersonalCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(UpdateEmployeePersonalCommand request, CancellationToken cancellationToken)
     {
         var employee = await employeeRepository.GetByIdAsync(request.Id);
         if (employee == null)
@@ -55,14 +51,14 @@ internal sealed class UpdateEmployeePersonalCommandHandler(IEmployeeRepository e
         }
 
         employee.UpdatePersonalInfo(
-            new PersonalInfo(request.Code,request.Salutation, request.FirstName, request.MiddleName, request.LastName, request.FatherName, request.MotherName,
+            new PersonalInfo(request.Code, request.Salutation, request.FirstName, request.MiddleName, request.LastName, request.FatherName, request.MotherName,
                 request.DateOfBirth, request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisabilityType, request.MaritalStatus),
             request.UserId
             );
 
         await employeeRepository.UpdateAsync(employee);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result.Ok(new UpdateEmployeePersonalResponse(true));
+        return Result.Ok($"Employee personal information updated successfully for Name : {request.FirstName} {request.LastName}");
     }
 }
 #endregion

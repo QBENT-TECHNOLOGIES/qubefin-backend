@@ -1,5 +1,4 @@
-﻿using Azure.Core;
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using QubeFin.App.Api.Requests;
 using QubeFin.App.Application.Menus.Commands;
@@ -19,15 +18,12 @@ public class MenuEndpoints : IEndpoint
         app.MapGet("menus/tree", async (ISender sender, CancellationToken cancellationToken) =>
         {
             var result = await sender.Send(new GetMenuTreeQuery(), cancellationToken);
-            if (result.IsFailed)
-            {
-                return Results.Problem("Failed to retrieve menu tree.");
-            }
-            return Results.Ok(result.Value);
+            return result.ToHttpResult();
         })
         .WithName("GetMenuTree")
         .WithSummary("Get menu hierarchy")
         .WithDescription("Returns the complete hierarchical tree of all application menus.")
+        .WithTags("Menus")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
 
@@ -39,22 +35,19 @@ public class MenuEndpoints : IEndpoint
         .WithName("GetParentMenus")
         .WithSummary("Get parent menus")
         .WithDescription("Returns the parent menus only.")
+        .WithTags("Menus")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         app.MapGet("menus/{id:guid}", async (Guid id, ISender sender) =>
         {
             var result = await sender.Send(new GetMenuByIdQuery(id));
-            if (result.IsFailed)
-            {
-                return Results.NotFound();
-            }
-
-            return Results.Ok(result.Value);
+            return result.ToHttpResult();
         })
         .WithName("GetMenuById")
         .WithSummary("Get menu by ID")
         .WithDescription("Retrieves a single menu using its unique identifier.")
+        .WithTags("Menus")
         .Produces(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
@@ -66,6 +59,7 @@ public class MenuEndpoints : IEndpoint
         .WithName("GetMenuByTarget")
         .WithSummary("Get menu by Target Path")
         .WithDescription("Retrieves a single menu using its target path.")
+        .WithTags("Menus")
         .Produces(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
@@ -81,10 +75,11 @@ public class MenuEndpoints : IEndpoint
                 .Select(x => new PermissionAssigned { Id = x.Id })
             .ToList();
 
-            await sender.Send(new CreateMenuCommand(menu.Name, menu.Icon, menu.Target, menu.ParentId, userId, permissions));
-            return Results.Ok();
+            var result = await sender.Send(new CreateMenuCommand(menu.Name, menu.Icon, menu.Target, menu.ParentId, userId, permissions));
+            return result.ToHttpResult();
         })
-       .WithSummary("Create Menu");
+        .WithSummary("Create Menu")
+        .WithTags("Menus");
 
         app.MapPut("menus/{id:guid}", async (ClaimsPrincipal principal, ISender sender, [FromRoute] Guid id, [FromBody] MenuRequest menu) =>
         {
@@ -98,9 +93,10 @@ public class MenuEndpoints : IEndpoint
                 .Select(x => new PermissionAssigned { Id = x.Id })
             .ToList();
 
-            await sender.Send(new UpdateMenuCommand(id, menu.Name, menu.Icon, menu.Target, menu.ParentId, userId, permissions));
-            return Results.Ok();
+            var result = await sender.Send(new UpdateMenuCommand(id, menu.Name, menu.Icon, menu.Target, menu.ParentId, userId, permissions));
+            return result.ToHttpResult();
         })
-        .WithSummary("Update Menu");
+        .WithSummary("Update Menu")
+        .WithTags("Menus");
     }
 }

@@ -1,15 +1,11 @@
 ﻿using FluentResults;
 using FluentValidation;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
 using QubeFin.Hrms.Application.Employees.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
-using QubeFin.Persistence.Mappers.Hrms;
-using QubeFin.Persistence.Models.App;
 using QubeFin.Persistence.Models.Hrms;
-using System.Text.RegularExpressions;
 
 namespace QubeFin.Hrms.Application.Employees.Commands
 {
@@ -18,7 +14,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
     public record UpdateEmployeeAddressCommand(
         Guid Id, AddressModel? PresentAddress, AddressModel? PermanentAddress,
         Guid UserId
-        ) : IRequest<Result<UpdateEmployeeAddressResponse>>;
+        ) : IRequest<Result<string>>;
     #endregion
     #region --- VALIDATION ---
     public class UpdateEmployeeAddressCommandValidator : AbstractValidator<UpdateEmployeeAddressCommand>
@@ -36,20 +32,16 @@ namespace QubeFin.Hrms.Application.Employees.Commands
             //    .NotEmpty()
             //    .Matches("^[A-Za-z]{3,30}$")
             //    .WithMessage("Last name must contain only letters and be between 3 and 30 characters long.");
-            
+
         }
     }
     #endregion
 
-    #region --- RESPONSE ---
-    public record UpdateEmployeeAddressResponse(bool Created);
-    #endregion
-
     #region --- HANDLER ---
     internal sealed class UpdateEmployeeAddressCommandHandler(IEmployeeRepository employeeRepository, IUnitOfWork unitOfWork, QubeFinDataContext context)
-        : IRequestHandler<UpdateEmployeeAddressCommand, Result<UpdateEmployeeAddressResponse>>
+        : IRequestHandler<UpdateEmployeeAddressCommand, Result<string>>
     {
-        public async Task<Result<UpdateEmployeeAddressResponse>> Handle(UpdateEmployeeAddressCommand request, CancellationToken cancellationToken)
+        public async Task<Result<string>> Handle(UpdateEmployeeAddressCommand request, CancellationToken cancellationToken)
         {
             var employee = await employeeRepository.GetByIdAsync(request.Id);
             if (employee == null)
@@ -85,9 +77,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
 
             await employeeRepository.UpdateAsync(employee);
             await unitOfWork.SaveChangesAsync(cancellationToken);
-            return Result.Ok(new UpdateEmployeeAddressResponse(true));
-
-
+            return Result.Ok($"Employee address information updated successfully for Name : {employee.PersonalInfo.FirstName} {employee.PersonalInfo.LastName}");
         }
     }
     #endregion

@@ -7,11 +7,10 @@ using QubeFin.Persistence.Mappers.Payrolls;
 
 namespace QubeFin.Payroll.Application.Payrolls.Commands
 {
-    public record LockPayrollCommand(int Month, int Year) : IRequest<Result<LockPayrollResponse>>;
-    public record LockPayrollResponse(bool lockPayroll);
-    internal sealed class LockPayrollCommandHandler(IPayrollRepository payrollRepository, IUnitOfWork unitOfWork) : IRequestHandler<LockPayrollCommand, Result<LockPayrollResponse>>
+    public record LockPayrollCommand(int Month, int Year) : IRequest<Result<bool>>;
+    internal sealed class LockPayrollCommandHandler(IPayrollRepository payrollRepository, IUnitOfWork unitOfWork) : IRequestHandler<LockPayrollCommand, Result<bool>>
     {
-        public async Task<Result<LockPayrollResponse>> Handle(LockPayrollCommand request, CancellationToken cancellationToken)
+        public async Task<Result<bool>> Handle(LockPayrollCommand request, CancellationToken cancellationToken)
         {
             var payrolls = await payrollRepository.GetPayrollsForUpdateAsync(request.Month, request.Year);
             if (payrolls is null || payrolls.Count < 0) return new RecordNotFoundError("No data found");
@@ -22,7 +21,7 @@ namespace QubeFin.Payroll.Application.Payrolls.Commands
                 domainModel.ApplyToEntity(payroll);
             }
             await unitOfWork.SaveChangesAsync(cancellationToken);
-            return Result.Ok(new LockPayrollResponse(true));
+            return Result.Ok(true);
         }
     }
 }

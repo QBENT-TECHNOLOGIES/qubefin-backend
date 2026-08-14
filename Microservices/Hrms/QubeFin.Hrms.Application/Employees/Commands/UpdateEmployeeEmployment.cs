@@ -7,10 +7,6 @@ using QubeFin.Hrms.Application.Employees.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Entities;
-using QubeFin.Persistence.Mappers.Hrms;
-using QubeFin.Persistence.Models.App;
-using QubeFin.Persistence.Models.Hrms;
-using System.Text.RegularExpressions;
 
 namespace QubeFin.Hrms.Application.Employees.Commands
 {
@@ -18,7 +14,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
     #region --- COMMAND ---
     public record UpdateEmployeeEmploymentCommand(
         Guid Id, List<EmploymentDetailRequest> Employments, Guid LastModifiedBy
-        ) : IRequest<Result<UpdateEmployeeEmploymentResponse>>;
+        ) : IRequest<Result<string>>;
     #endregion
     #region --- VALIDATION ---
     public class UpdateEmployeeEmploymentCommandValidator : AbstractValidator<UpdateEmployeeEmploymentCommand>
@@ -36,20 +32,16 @@ namespace QubeFin.Hrms.Application.Employees.Commands
             //    .NotEmpty()
             //    .Matches("^[A-Za-z]{3,30}$")
             //    .WithMessage("Last name must contain only letters and be between 3 and 30 characters long.");
-            
+
         }
     }
     #endregion
 
-    #region --- RESPONSE ---
-    public record UpdateEmployeeEmploymentResponse(bool Created);
-    #endregion
-
     #region --- HANDLER ---
     internal sealed class UpdateEmployeeEmploymentCommandHandler(IEmployeeRepository employeeRepository, IUnitOfWork unitOfWork, QubeFinDataContext context)
-        : IRequestHandler<UpdateEmployeeEmploymentCommand, Result<UpdateEmployeeEmploymentResponse>>
+        : IRequestHandler<UpdateEmployeeEmploymentCommand, Result<string>>
     {
-        public async Task<Result<UpdateEmployeeEmploymentResponse>> Handle(UpdateEmployeeEmploymentCommand request, CancellationToken cancellationToken)
+        public async Task<Result<string>> Handle(UpdateEmployeeEmploymentCommand request, CancellationToken cancellationToken)
         {
             var existingEmployee = await employeeRepository.GetByIdAsync(request.Id);
             if (existingEmployee == null)
@@ -66,7 +58,8 @@ namespace QubeFin.Hrms.Application.Employees.Commands
                 int sequenceValue = i + 1;
                 //int sequenceValue = i + 1;
 
-                var employmentEntity = new TblEmployeeEmployment(){
+                var employmentEntity = new TblEmployeeEmployment()
+                {
                     Id = req.Id,
                     EmployeeId = request.Id,
                     EmployerName = req.EmployerName,
@@ -94,8 +87,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
             context.TblEmployeeEmployments.AddRange(updatedEmploymentEntityList);
             existingEmployee.SetModified(request.LastModifiedBy);
             await unitOfWork.SaveChangesAsync(cancellationToken);
-            return Result.Ok(new UpdateEmployeeEmploymentResponse(true));
-
+            return Result.Ok($"Employee employment information updated successfully for Name : {existingEmployee.PersonalInfo.FirstName} {existingEmployee.PersonalInfo.LastName}");
         }
     }
     #endregion

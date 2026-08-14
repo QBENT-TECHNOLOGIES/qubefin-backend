@@ -1,5 +1,4 @@
-﻿using Azure.Core;
-using FluentResults;
+﻿using FluentResults;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -8,10 +7,6 @@ using QubeFin.Hrms.Application.Employees.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Entities;
-using QubeFin.Persistence.Mappers.Hrms;
-using QubeFin.Persistence.Models.App;
-using QubeFin.Persistence.Models.Hrms;
-using System.Text.RegularExpressions;
 
 namespace QubeFin.Hrms.Application.Employees.Commands
 {
@@ -19,7 +14,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
     #region --- COMMAND ---
     public record UpdateEmployeeDocumentCommand(
         Guid Id, List<DocumentDetailRequest> Documents, Guid LastModifiedBy
-        ) : IRequest<Result<UpdateEmployeeDocumentResponse>>;
+        ) : IRequest<Result<string>>;
     #endregion
     #region --- VALIDATION ---
     //public class UpdateEmployeeDocumentCommandValidator : AbstractValidator<UpdateEmployeeDocumentCommand>
@@ -37,20 +32,16 @@ namespace QubeFin.Hrms.Application.Employees.Commands
     //            .NotEmpty()
     //            .Matches("^[A-Za-z]{3,30}$")
     //            .WithMessage("Last name must contain only letters and be between 3 and 30 characters long.");
-            
+
     //    }
     //}
     #endregion
 
-    #region --- RESPONSE ---
-    public record UpdateEmployeeDocumentResponse(bool Created);
-    #endregion
-
     #region --- HANDLER ---
     internal sealed class UpdateEmployeeDocumentCommandHandler(IEmployeeRepository employeeRepository, IUnitOfWork unitOfWork, QubeFinDataContext context)
-        : IRequestHandler<UpdateEmployeeDocumentCommand, Result<UpdateEmployeeDocumentResponse>>
+        : IRequestHandler<UpdateEmployeeDocumentCommand, Result<string>>
     {
-        public async Task<Result<UpdateEmployeeDocumentResponse>> Handle(UpdateEmployeeDocumentCommand request, CancellationToken cancellationToken)
+        public async Task<Result<string>> Handle(UpdateEmployeeDocumentCommand request, CancellationToken cancellationToken)
         {
             var existingEmployee = await employeeRepository.GetByIdAsync(request.Id);
             if (existingEmployee == null)
@@ -79,22 +70,20 @@ namespace QubeFin.Hrms.Application.Employees.Commands
                     UploadedBy = request.LastModifiedBy,
                     UploadedOn = DateTime.Now
                 };
-                    
-                
+
+
                 updatedDocumentEntityList.Add(documentEntity);
             }
 
             var docs = await context.TblEmployeeDocuments.Where(m => m.EmployeeId == request.Id && m.DocumentCategory == "KYC").ToListAsync(cancellationToken: cancellationToken);
             if (docs != null && docs.Count() > 0)
             {
-                 context.TblEmployeeDocuments.RemoveRange(docs);
+                context.TblEmployeeDocuments.RemoveRange(docs);
             }
             context.TblEmployeeDocuments.AddRange(updatedDocumentEntityList);
             existingEmployee.SetModified(request.LastModifiedBy);
             await unitOfWork.SaveChangesAsync(cancellationToken);
-            return Result.Ok(new UpdateEmployeeDocumentResponse(true));
-
-
+            return Result.Ok($"Employee document information updated successfully for Name : {existingEmployee.PersonalInfo.FirstName} {existingEmployee.PersonalInfo.LastName}");
         }
     }
     #endregion

@@ -5,7 +5,6 @@ using QubeFin.Core.Results;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Hrms;
-using System.Text.RegularExpressions;
 
 namespace QubeFin.Hrms.Application.Employees.Commands;
 
@@ -14,7 +13,7 @@ public record UpdateEmployeeContactCommand(
     Guid Id, string MobileNo, string? PersonalEmail, string? PrimaryEmergencyRelation, string? PrimaryEmergencyName, string? PrimaryEmergencyMobile,
         string? SecondaryEmergencyRelation, string? SecondaryEmergencyName, string? SecondaryEmergencyMobile,
     Guid UserId
-    ) : IRequest<Result<UpdateEmployeeContactResponse>>;
+    ) : IRequest<Result<string>>;
 #endregion
 
 #region --- VALIDATION ---
@@ -38,15 +37,11 @@ public class UpdateEmployeeContactCommandValidator : AbstractValidator<UpdateEmp
 }
 #endregion
 
-#region --- RESPONSE ---
-public record UpdateEmployeeContactResponse(bool Created);
-#endregion
-
 #region --- HANDLER ---
 internal sealed class UpdateEmployeeContactCommandHandler(IEmployeeRepository employeeRepository, IUnitOfWork unitOfWork)
-    : IRequestHandler<UpdateEmployeeContactCommand, Result<UpdateEmployeeContactResponse>>
+    : IRequestHandler<UpdateEmployeeContactCommand, Result<string>>
 {
-    public async Task<Result<UpdateEmployeeContactResponse>> Handle(UpdateEmployeeContactCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(UpdateEmployeeContactCommand request, CancellationToken cancellationToken)
     {
         var employee = await employeeRepository.GetByIdAsync(request.Id);
         if (employee == null)
@@ -62,7 +57,7 @@ internal sealed class UpdateEmployeeContactCommandHandler(IEmployeeRepository em
 
         await employeeRepository.UpdateAsync(employee);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result.Ok(new UpdateEmployeeContactResponse(true));
+        return Result.Ok($"Employee contact information updated successfully for Name : {employee.PersonalInfo.FirstName} {employee.PersonalInfo.LastName}");
     }
 }
 #endregion

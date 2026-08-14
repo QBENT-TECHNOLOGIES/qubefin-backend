@@ -3,26 +3,18 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
 using QubeFin.Hrms.Application.Employees.Models;
-using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
-using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.Employees.Queries;
 
 #region --- QUERY ---
-public record GetEmployeeReferenceQuery(Guid Id) : IRequest<Result<GetReferenceResponse>>;
-#endregion
-#region --- RESPONSE ---
-public record GetReferenceResponse(
-    List<ReferenceDetailRequest> References
-    );
-
+public record GetEmployeeReferenceQuery(Guid Id) : IRequest<Result<List<ReferenceDetailRequest>>>;
 #endregion
 #region --- HANDLER ---
 internal sealed class GetEmployeeReferenceQueryHandler(QubeFinDataContext context)
-    : IRequestHandler<GetEmployeeReferenceQuery, Result<GetReferenceResponse>>
+    : IRequestHandler<GetEmployeeReferenceQuery, Result<List<ReferenceDetailRequest>>>
 {
-    public async Task<Result<GetReferenceResponse>> Handle(GetEmployeeReferenceQuery request, CancellationToken cancellationToken)
+    public async Task<Result<List<ReferenceDetailRequest>>> Handle(GetEmployeeReferenceQuery request, CancellationToken cancellationToken)
     {
         var employee = await context.TblEmployees.Include(m => m.TblEmployeeReferences).Where(m => m.Id == request.Id).FirstOrDefaultAsync(cancellationToken: cancellationToken);
 
@@ -41,10 +33,8 @@ internal sealed class GetEmployeeReferenceQueryHandler(QubeFinDataContext contex
             Address = d.Address,
             Occupation = d.Occupation,
             HowDoYouKnow = d.HowDoYouKnow,
-        })]
-
-                    : new List<ReferenceDetailRequest>();
-        return Result.Ok(new GetReferenceResponse(docs));
+        })] : new List<ReferenceDetailRequest>();
+        return Result.Ok(docs);
     }
 }
 #endregion

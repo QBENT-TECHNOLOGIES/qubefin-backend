@@ -15,59 +15,26 @@ namespace QubeFin.Global.Api.Endpoints
         {
             app.MapGet("survey-committees/filter", async (ISender sender, string? searchText, string? sortOn, string? sortDirection, int pageIndex, int pageSize) =>
             {
-                var resp = await sender.Send(new FilterCommitteeMemberQuery(searchText, sortOn, sortDirection, pageIndex, pageSize));
-                return TypedResults.Ok(resp);
+                var result = await sender.Send(new FilterCommitteeMemberQuery(searchText, sortOn, sortDirection, pageIndex, pageSize));
+                return Results.Ok(result);
             }).WithSummary("Filter Committee Members").WithTags("SurveyCommittees");
 
             app.MapGet("survey-committees/{id:guid}", async (Guid id, ISender sender) =>
             {
                 var result = await sender.Send(new GetByIdQuery(id));
-                if (result.IsFailed)
-                {
-                    if (result.Errors[0] is RecordNotFoundError)
-                    {
-                        return Results.NotFound(result.Errors[0]);
-                    }
-                    if (result.Errors[0] is ValidationError)
-                    {
-                        return Results.BadRequest(result.Errors[0]);
-                    }
-                }
-                return Results.Ok(result.Value);
+                return result.ToHttpResult();
             }).WithSummary("Get Committee Member By Id").WithTags("SurveyCommittees");
 
             app.MapPost("survey-committees", async (MemberAddRequest request, ISender sender, ClaimsPrincipal principal) =>
             {
                 var result = await sender.Send(new AddMemberCommand(request, principal.Identity.GetUserId()));
-                if (result.IsFailed)
-                {
-                    if (result.Errors[0] is RecordNotFoundError)
-                    {
-                        return Results.NotFound(result.Errors[0]);
-                    }
-                    if (result.Errors[0] is ValidationError)
-                    {
-                        return Results.BadRequest(result.Errors[0]);
-                    }
-                }
-                return Results.Ok();
+                return result.ToHttpResult();
             }).WithSummary("Add Member To Survey Committee").WithTags("SurveyCommittees");
 
             app.MapPut("survey-committees", async (MemberUpdateRequest request, ISender sender, ClaimsPrincipal principal) =>
             {
                 var result = await sender.Send(new UpdateMemberCommand(request, principal.Identity.GetUserId()));
-                if (result.IsFailed)
-                {
-                    if (result.Errors[0] is RecordNotFoundError)
-                    {
-                        return Results.NotFound(result.Errors[0]);
-                    }
-                    if (result.Errors[0] is ValidationError)
-                    {
-                        return Results.BadRequest(result.Errors[0]);
-                    }
-                }
-                return Results.Ok();
+                return result.ToHttpResult();
             }).WithSummary("Update Member To Survey Committee").WithTags("SurveyCommittees");
         }
     }
