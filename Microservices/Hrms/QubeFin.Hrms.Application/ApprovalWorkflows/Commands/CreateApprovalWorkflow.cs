@@ -9,7 +9,7 @@ using QubeFin.Persistence.Models.Hrms;
 namespace QubeFin.Hrms.Application.ApprovalWorkflows.Commands;
 
 public record CreateApprovalWorkflowCommand(ApprovalWorkflowRequest Workflow, Guid CreatedBy)
-    : IRequest<Result<CreateApprovalWorkflowResponse>>;
+    : IRequest<Result<string>>;
 
 public class CreateApprovalWorkflowCommandValidator : AbstractValidator<CreateApprovalWorkflowCommand>
 {
@@ -20,18 +20,16 @@ public class CreateApprovalWorkflowCommandValidator : AbstractValidator<CreateAp
     }
 }
 
-public record CreateApprovalWorkflowResponse(Guid Id);
-
 internal sealed class CreateApprovalWorkflowCommandHandler(IApprovalWorkflowRepository approvalWorkflowRepository, IUnitOfWork unitOfWork)
-    : IRequestHandler<CreateApprovalWorkflowCommand, Result<CreateApprovalWorkflowResponse>>
+    : IRequestHandler<CreateApprovalWorkflowCommand, Result<string>>
 {
-    public async Task<Result<CreateApprovalWorkflowResponse>> Handle(CreateApprovalWorkflowCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(CreateApprovalWorkflowCommand request, CancellationToken cancellationToken)
     {
         var workflow = CreateWorkflow(request.Workflow, Guid.NewGuid(), request.CreatedBy);
         await approvalWorkflowRepository.AddAsync(workflow);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Ok(new CreateApprovalWorkflowResponse(workflow.Id));
+        return Result.Ok("Approval workflow created successfully.");
     }
 
     internal static ApprovalWorkflow CreateWorkflow(ApprovalWorkflowRequest request, Guid workflowId, Guid createdBy)

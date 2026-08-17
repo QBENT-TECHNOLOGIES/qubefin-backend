@@ -1,8 +1,10 @@
+using Azure.Core;
 using MediatR;
 using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
 using QubeFin.Core.Results;
 using QubeFin.Hrms.Application.ApprovalWorkflows.Commands;
+using QubeFin.Hrms.Application.ApprovalWorkflows.Models;
 using QubeFin.Hrms.Application.ApprovalWorkflows.Queries;
 using System.Security.Claims;
 
@@ -43,27 +45,26 @@ public class ApprovalWorkflowEndpoints : IEndpoint
         .WithSummary("Get an approval workflow by ID")
         .WithTags("Approval Workflows");
 
-        app.MapPost("approval-workflows", async (CreateApprovalWorkflowCommand command, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        app.MapPost("approval-workflows", async (ApprovalWorkflowRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)
             {
                 return Results.Forbid();
             }
-
-            var result = await sender.Send(command with { CreatedBy = principal.Identity.GetUserId() }, cancellationToken);
+            var result = await sender.Send(new CreateApprovalWorkflowCommand(request, principal.Identity.GetUserId()), cancellationToken);
             return result.ToHttpResult();
         })
         .WithSummary("Create an approval workflow")
         .WithTags("Approval Workflows");
 
-        app.MapPut("approval-workflows/{id:guid}", async (Guid id, UpdateApprovalWorkflowCommand command, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        app.MapPut("approval-workflows/{id:guid}", async (Guid id, ApprovalWorkflowRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)
             {
                 return Results.Forbid();
             }
 
-            var result = await sender.Send(command with { Id = id, ModifiedBy = principal.Identity.GetUserId() }, cancellationToken);
+            var result = await sender.Send(new UpdateApprovalWorkflowCommand(id, request, principal.Identity.GetUserId()), cancellationToken);
             return result.ToHttpResult();
         })
         .WithSummary("Update an approval workflow")
