@@ -2,8 +2,8 @@
 <!-- https://go.microsoft.com/fwlink/?LinkID=208121. -->
 <Project>
   <PropertyGroup>
-    <_PublishTargetUrl>D:\Projects\QubeFin\BackEnd\Microservices\Global\QubeFin.Global.Api\bin\Release\net10.0\publish\</_PublishTargetUrl>
-    <History>True|2026-07-22T10:09:10.3438840Z||;True|2026-07-08T16:34:18.9099600+05:30||;</History>
+    <_PublishTargetUrl>D:\projects\qubefin-backend\Microservices\Global\QubeFin.Global.Api\bin\Release\net10.0\publish\</_PublishTargetUrl>
+    <History>True|2026-08-17T07:25:18.5284251Z||;True|2026-08-17T12:55:12.3986334+05:30||;True|2026-07-22T15:39:10.3438840+05:30||;True|2026-07-08T16:34:18.9099600+05:30||;</History>
     <LastFailureDetails />
   </PropertyGroup>
 </Project>

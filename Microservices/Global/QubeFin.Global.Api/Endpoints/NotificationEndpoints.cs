@@ -15,11 +15,11 @@ namespace QubeFin.Global.Api.Endpoints
             app.MapGet("notifications", async (ISender sender, ClaimsPrincipal principal, CancellationToken cancellationToken) =>
             {
                 var employeeId = principal.Identity.GetEmployeeId();
-                var result = await sender.Send(new GetAllUnreadQuery(employeeId), cancellationToken);
+                var result = await sender.Send(new GetAllQuery(employeeId), cancellationToken);
                 return result.ToHttpResult();
-            }).WithName("GetAllUnread")
-            .WithSummary("Get All Unread Notifications")
-            .WithDescription("Returns the all unread notifications for the authenticated user.")
+            }).WithName("GetAll")
+            .WithSummary("Get All Notifications")
+            .WithDescription("Returns all notifications for the authenticated user.")
             .WithTags("Notifications")
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status500InternalServerError)

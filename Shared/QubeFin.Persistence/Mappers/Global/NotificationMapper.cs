@@ -8,7 +8,7 @@ namespace QubeFin.Persistence.Mappers.Global
         public static Notification ToDomain(this Entity entity)
         {
             return new Notification
-            (entity.Id, entity.DesignationId, entity.Title, entity.Message, entity.NotificationType, entity.ReferenceId, entity.ReferenceType, entity.ActionUrl, entity.IsRead, entity.ReadDate, entity.CreatedBy, entity.CreatedOn);
+            (entity.Id, entity.DesignationId, entity.Title, entity.Icon, entity.Message, entity.NotificationType, entity.ReferenceId, entity.ReferenceType, entity.ActionUrl, entity.IsRead, entity.ReadDate, entity.CreatedBy, entity.CreatedOn);
 
         }
     }

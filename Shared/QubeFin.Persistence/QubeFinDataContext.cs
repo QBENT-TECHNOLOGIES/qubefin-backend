@@ -150,6 +150,8 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblMenuPermission> TblMenuPermissions { get; set; }
 
+    public virtual DbSet<TblMobileAppVersion> TblMobileAppVersions { get; set; }
+
     public virtual DbSet<TblNotification> TblNotifications { get; set; }
 
     public virtual DbSet<TblOrganizationUnit> TblOrganizationUnits { get; set; }
@@ -205,6 +207,7 @@ public partial class QubeFinDataContext : DbContext
     public virtual DbSet<TblUserSession> TblUserSessions { get; set; }
 
     public virtual DbSet<WegrowConsolidateEmployee> WegrowConsolidateEmployees { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -1235,8 +1238,8 @@ public partial class QubeFinDataContext : DbContext
             entity.ToTable("Tbl_LeaveTransaction", "Hrms");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.LeaveCredit).HasColumnType("numeric(5, 3)");
-            entity.Property(e => e.LeaveDebit).HasColumnType("numeric(5, 3)");
+            entity.Property(e => e.LeaveCredit).HasColumnType("numeric(6, 3)");
+            entity.Property(e => e.LeaveDebit).HasColumnType("numeric(6, 3)");
             entity.Property(e => e.Remarks).HasMaxLength(200);
 
             entity.HasOne(d => d.Employee).WithMany(p => p.TblLeaveTransactions)
@@ -1797,6 +1800,16 @@ public partial class QubeFinDataContext : DbContext
                 .HasConstraintName("FK_Tbl_MenuPermission_Tbl_Permission");
         });
 
+        modelBuilder.Entity<TblMobileAppVersion>(entity =>
+        {
+            entity.ToTable("Tbl_MobileAppVersion", "Global");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.AppUrl).HasMaxLength(200);
+            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.Version).HasMaxLength(50);
+        });
+
         modelBuilder.Entity<TblNotification>(entity =>
         {
             entity.ToTable("Tbl_Notification", "Global");
@@ -1804,6 +1817,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.ActionUrl).HasMaxLength(200);
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.Icon).HasMaxLength(50);
             entity.Property(e => e.Message).HasMaxLength(100);
             entity.Property(e => e.NotificationType)
                 .HasMaxLength(50)

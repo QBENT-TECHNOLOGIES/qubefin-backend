@@ -11,6 +11,8 @@ public partial class TblNotification
 
     public string Title { get; set; } = null!;
 
+    public string? Icon { get; set; }
+
     public string Message { get; set; } = null!;
 
     public string? NotificationType { get; set; }

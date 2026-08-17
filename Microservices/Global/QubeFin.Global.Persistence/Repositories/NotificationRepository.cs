@@ -7,13 +7,13 @@ namespace QubeFin.Global.Persistence.Repositories
 {
     public interface INotificationRepository
     {
-        Task<IEnumerable<Notification>> GetAllUnreadAsync(Guid employeeId);
+        Task<IEnumerable<Notification>> GetAllAsync(Guid employeeId);
         Task<bool> MarkAsReadAsync(Guid id);
         Task<bool> MarkAllReadAsync(Guid employeeId);
     }
     public class NotificationRepository(QubeFinDataContext context) : INotificationRepository
     {
-        public async Task<IEnumerable<Notification>> GetAllUnreadAsync(Guid employeeId)
+        public async Task<IEnumerable<Notification>> GetAllAsync(Guid employeeId)
         {
             var employeeDesignationId = context.TblEmployeeDesignations
                 .Where(ed => ed.EmployeeId == employeeId)
@@ -24,7 +24,7 @@ namespace QubeFin.Global.Persistence.Repositories
                 return Enumerable.Empty<Notification>();
             }
             var entities = await context.TblNotifications.AsNoTracking()
-                .Where(n => n.DesignationId == employeeDesignationId && !n.IsRead)
+                .Where(n => n.DesignationId == employeeDesignationId && (!n.IsRead || (n.IsRead && n.CreatedOn.Date == DateTime.UtcNow.Date)))
                 .OrderByDescending(n => n.CreatedOn)
                 .ToListAsync();
             return entities.Select(m => m.ToDomain());

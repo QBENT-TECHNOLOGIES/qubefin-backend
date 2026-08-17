@@ -7,13 +7,13 @@ using QubeFin.Persistence.Models.Global;
 namespace QubeFin.Global.Application.Notifications.Queries;
 
 #region --- QUERY ---
-public record GetAllUnreadQuery(Guid EmployeeId) : IRequest<Result<IEnumerable<Notification>>>;
+public record GetAllQuery(Guid EmployeeId) : IRequest<Result<IEnumerable<Notification>>>;
 #endregion
 
 #region --- VALIDATOR ---
-public class GetAllUnreadQueryValidator : AbstractValidator<GetAllUnreadQuery>
+public class GetAllQueryValidator : AbstractValidator<GetAllQuery>
 {
-    public GetAllUnreadQueryValidator()
+    public GetAllQueryValidator()
     {
         RuleFor(v => v.EmployeeId).NotEmpty().WithMessage("Employee Id is required.");
     }
@@ -21,11 +21,11 @@ public class GetAllUnreadQueryValidator : AbstractValidator<GetAllUnreadQuery>
 #endregion
 
 #region --- HANDLER ---
-internal sealed class GetAllUnreadQueryHandler(INotificationRepository notificationRepository) : IRequestHandler<GetAllUnreadQuery, Result<IEnumerable<Notification>>>
+internal sealed class GetAllQueryHandler(INotificationRepository notificationRepository) : IRequestHandler<GetAllQuery, Result<IEnumerable<Notification>>>
 {
-    public async Task<Result<IEnumerable<Notification>>> Handle(GetAllUnreadQuery request, CancellationToken cancellationToken)
+    public async Task<Result<IEnumerable<Notification>>> Handle(GetAllQuery request, CancellationToken cancellationToken)
     {
-        var notifications = await notificationRepository.GetAllUnreadAsync(request.EmployeeId);
+        var notifications = await notificationRepository.GetAllAsync(request.EmployeeId);
         return Result.Ok(notifications);
     }
 }
