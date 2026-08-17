@@ -41,7 +41,7 @@ internal sealed class GetAttendanceRegularizationsByIdQueryHandler(QubeFinDataCo
         if (regularizationResponse == null || !regularizationResponse.Any())
             return Result.Ok((RegularizationDetailResponse?)null);
 
-        var first = regularizationResponse.OrderByDescending(g => g.EventDate).First();
+        var first = regularizationResponse.OrderBy(g => g.EventDate).First();
         var response = new RegularizationDetailResponse
         {
             Id = first.Id,
@@ -60,16 +60,21 @@ internal sealed class GetAttendanceRegularizationsByIdQueryHandler(QubeFinDataCo
 
             Events = regularizationResponse.Select(x => new RegularizationEvent
             {
-                ApprovalCategory = x.ApprovalCategory,
-                EventDate = x.EventDate,
-                Remarks = x.EventRemarks,
-                SenderDesignation = x.SenderDesignation,
-                ReceiverDesignation = x.ReceiverDesignation,
-                EventCategory = x.EventCategory,
                 EventStatus = x.EventStatus,
-                EventButtonText = x.EventButtonText
+                EventDate = x.EventDate,
+                Designation = x.ReceiverDesignation,
+                Remarks = x.EventRemarks
             }).ToList()
         };
+        if (response != null)
+        {
+            response.Events.Insert(0, new RegularizationEvent
+            {
+                EventStatus = "Requested",
+                EventDate = response.CreatedOn,
+                Designation = first.SenderDesignation
+            });
+        }
         return Result.Ok((RegularizationDetailResponse?)response);
     }
 }

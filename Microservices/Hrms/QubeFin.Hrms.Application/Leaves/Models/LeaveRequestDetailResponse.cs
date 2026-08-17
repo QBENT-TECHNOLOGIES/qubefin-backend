@@ -28,11 +28,9 @@
 
     public class LeaveRequestEvent
     {
-        public string? Event { get; set;  }
-        public string? EventBy { get; set; }
-        public DateTime? EventOn { get; set; }
-        public string? SenderDesignation { get; set; }
-        public string? ReceiverDesignation { get; set; }
-        public string? EventRemarks { get; set; }
+        public string? EventStatus { get; set; }
+        public DateTime? EventDate { get; set; }
+        public string? Designation { get; set; }
+        public string? Remarks { get; set; }
     }
 }
