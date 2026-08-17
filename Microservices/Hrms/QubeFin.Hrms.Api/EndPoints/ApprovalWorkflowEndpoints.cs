@@ -18,7 +18,7 @@ public class ApprovalWorkflowEndpoints : IEndpoint
         {
             var result = await sender.Send(new GetApprovalWorkflowsQuery(category), cancellationToken);
             return result.ToHttpResult();
-        })
+        }).RequireAuthorization()
         .WithSummary("Get approval workflows")
         .WithTags("Approval Workflows");
 
@@ -32,7 +32,7 @@ public class ApprovalWorkflowEndpoints : IEndpoint
                 new SearchApprovalWorkflowQuery(category, organizationUnitTypeId),
                 cancellationToken);
             return result.ToHttpResult();
-        })
+        }).RequireAuthorization()
         .WithSummary("Search approval workflows")
         .WithDescription("Searches approval workflows by category and organization unit type.")
         .WithTags("Approval Workflows");
@@ -41,7 +41,7 @@ public class ApprovalWorkflowEndpoints : IEndpoint
         {
             var result = await sender.Send(new GetApprovalWorkflowByIdQuery(id), cancellationToken);
             return result.ToHttpResult();
-        })
+        }).RequireAuthorization()
         .WithSummary("Get an approval workflow by ID")
         .WithTags("Approval Workflows");
 
@@ -53,7 +53,7 @@ public class ApprovalWorkflowEndpoints : IEndpoint
             }
             var result = await sender.Send(new CreateApprovalWorkflowCommand(request, principal.Identity.GetUserId()), cancellationToken);
             return result.ToHttpResult();
-        })
+        }).RequireAuthorization()
         .WithSummary("Create an approval workflow")
         .WithTags("Approval Workflows");
 
@@ -66,7 +66,7 @@ public class ApprovalWorkflowEndpoints : IEndpoint
 
             var result = await sender.Send(new UpdateApprovalWorkflowCommand(id, request, principal.Identity.GetUserId()), cancellationToken);
             return result.ToHttpResult();
-        })
+        }).RequireAuthorization()
         .WithSummary("Update an approval workflow")
         .WithTags("Approval Workflows");
     }
