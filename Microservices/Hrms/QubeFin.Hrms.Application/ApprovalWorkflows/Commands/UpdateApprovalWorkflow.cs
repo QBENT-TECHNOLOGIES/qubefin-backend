@@ -10,7 +10,7 @@ using QubeFin.Persistence.Models.Hrms;
 namespace QubeFin.Hrms.Application.ApprovalWorkflows.Commands;
 
 public record UpdateApprovalWorkflowCommand(Guid Id, ApprovalWorkflowRequest Workflow, Guid ModifiedBy)
-    : IRequest<Result<UpdateApprovalWorkflowResponse>>;
+    : IRequest<Result<string>>;
 
 public class UpdateApprovalWorkflowCommandValidator : AbstractValidator<UpdateApprovalWorkflowCommand>
 {
@@ -22,12 +22,11 @@ public class UpdateApprovalWorkflowCommandValidator : AbstractValidator<UpdateAp
     }
 }
 
-public record UpdateApprovalWorkflowResponse(bool Updated);
 
 internal sealed class UpdateApprovalWorkflowCommandHandler(IApprovalWorkflowRepository approvalWorkflowRepository, IUnitOfWork unitOfWork)
-    : IRequestHandler<UpdateApprovalWorkflowCommand, Result<UpdateApprovalWorkflowResponse>>
+    : IRequestHandler<UpdateApprovalWorkflowCommand, Result<string>>
 {
-    public async Task<Result<UpdateApprovalWorkflowResponse>> Handle(UpdateApprovalWorkflowCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(UpdateApprovalWorkflowCommand request, CancellationToken cancellationToken)
     {
         var workflow = await approvalWorkflowRepository.GetByIdAsync(request.Id);
         if (workflow is null)
@@ -59,6 +58,6 @@ internal sealed class UpdateApprovalWorkflowCommandHandler(IApprovalWorkflowRepo
         await approvalWorkflowRepository.UpdateAsync(workflow);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Ok(new UpdateApprovalWorkflowResponse(true));
+        return Result.Ok("Approval workflow updated successfully.");
     }
 }

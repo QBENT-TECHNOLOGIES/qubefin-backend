@@ -14,7 +14,7 @@ public class ApprovalWorkflowEventEndpoints : IEndpoint
         {
             var result = await sender.Send(new GetApprovalWorkflowEventTreeQuery(), cancellationToken);
             return result.ToHttpResult();
-        })
+        }).RequireAuthorization()
         .WithSummary("Get approval workflow event tree")
         .WithDescription("Groups approval workflow events by category, leave type, salary grade, and organization unit type, with event details at each leaf.")
         .WithTags("Approval Workflow Events");
@@ -23,7 +23,7 @@ public class ApprovalWorkflowEventEndpoints : IEndpoint
         {
             var result = await sender.Send(new GetApprovalWorkflowEventsQuery(category), cancellationToken);
             return result.ToHttpResult();
-        })
+        }).RequireAuthorization()
         .WithSummary("Get approval workflow events")
         .WithDescription("Gets all approval workflow events, optionally filtered by category.")
         .WithTags("Approval Workflow Events");
@@ -32,7 +32,7 @@ public class ApprovalWorkflowEventEndpoints : IEndpoint
         {
             var result = await sender.Send(new GetApprovalWorkflowEventByIdQuery(id), cancellationToken);
             return result.ToHttpResult();
-        })
+        }).RequireAuthorization()
         .WithSummary("Get an approval workflow event by ID")
         .WithTags("Approval Workflow Events");
 
@@ -40,7 +40,7 @@ public class ApprovalWorkflowEventEndpoints : IEndpoint
         {
             var result = await sender.Send(command, cancellationToken);
             return result.ToHttpResult();
-        })
+        }).RequireAuthorization()
         .WithSummary("Create approval workflow events")
         .WithDescription("Creates multiple approval workflow events in one request.")
         .WithTags("Approval Workflow Events");
@@ -49,7 +49,7 @@ public class ApprovalWorkflowEventEndpoints : IEndpoint
         {
             var result = await sender.Send(command, cancellationToken);
             return result.ToHttpResult();
-        })
+        }).RequireAuthorization()
         .WithSummary("Update approval workflow events")
         .WithDescription("Updates existing events and creates entries without an ID in one request.")
         .WithTags("Approval Workflow Events");

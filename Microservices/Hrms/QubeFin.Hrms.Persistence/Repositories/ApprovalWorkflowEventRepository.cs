@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Mappers.Hrms;
 using QubeFin.Persistence.Models.Hrms;
 
@@ -12,6 +13,7 @@ public interface IApprovalWorkflowEventRepository
     Task<ApprovalWorkflowEvent?> GetByIdAsync(Guid id);
     Task<IEnumerable<ApprovalWorkflowEvent>> GetAllAsync();
     Task<IEnumerable<ApprovalWorkflowEvent>> GetByCategoryAsync(string category);
+    Task<List<TblPost>> GetAllPost();
 }
 
 public class ApprovalWorkflowEventRepository(QubeFinDataContext context) : IApprovalWorkflowEventRepository
@@ -56,5 +58,10 @@ public class ApprovalWorkflowEventRepository(QubeFinDataContext context) : IAppr
             .ToListAsync();
 
         return entities.Select(x => x.ToDomain());
+    }
+
+    public async Task<List<TblPost>> GetAllPost()
+    {
+        return await context.TblPosts.Where(m => m.IsActive).AsNoTracking().ToListAsync();
     }
 }

@@ -91,6 +91,16 @@ namespace QubeFin.Payroll.Api.Endpoints
               .WithTags("Payrolls")
             .RequireAuthorization();
 
+            app.MapGet("salary-grade", async (ISender sender, ClaimsPrincipal principal, CancellationToken cancellationToken) =>
+            {
+                var result = await sender.Send(new GetAllSalaryGradeQuery(), cancellationToken);
+                return result.ToHttpResult();
+            }).WithSummary("Get All Salary Grade.")
+              .WithDescription("Retrieves a list of Salary Grades.")
+              .WithTags("Payrolls")
+            .RequireAuthorization();
+
+
             #region SSRS REPORTS
 
             app.MapGet("/reports/payslip/{payslipId:guid}", [Authorize] async (Guid payslipId, ISender sender) =>

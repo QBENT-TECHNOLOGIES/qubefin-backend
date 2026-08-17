@@ -70,6 +70,8 @@ public class ApprovalWorkflowRepository(QubeFinDataContext context) : IApprovalW
             .Include(m => m.Post)
             .Include(x => x.TblApprovalWorkflowSteps)
             .ThenInclude(x => x.ReceiverPost)
+            .Include(u => u.CreatedByNavigation)
+            .Include(u => u.LastModifiedByNavigation)
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id);
 

@@ -27,8 +27,14 @@ public class ApprovalWorkflow
     public int MaximumDays { get; private set; }
     public DateTime CreatedOn { get; private set; }
     public Guid CreatedBy { get; private set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string CreatedByName { get; private set; }
     public DateTime? LastModifiedOn { get; private set; }
     public Guid? LastModifiedBy { get; private set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? LastModifiedByName { get; private set; }
     public IReadOnlyCollection<ApprovalWorkflowStep> Steps => _steps;
     public string StepPost => string.Join(" -> ", _steps
         .OrderBy(step => step.SequenceNo)
@@ -50,8 +56,10 @@ public class ApprovalWorkflow
         int maximumDays,
         DateTime createdOn,
         Guid createdBy,
+        string? createdByName,
         DateTime? lastModifiedOn,
         Guid? lastModifiedBy,
+        string? lastModifiedByName,
         IEnumerable<ApprovalWorkflowStep>? steps = null,
         string? leaveTypeName = null,
         string? salaryGradeName = null,
@@ -68,8 +76,11 @@ public class ApprovalWorkflow
         MaximumDays = maximumDays;
         CreatedOn = createdOn;
         CreatedBy = createdBy;
+        CreatedByName = createdByName;
+
         LastModifiedOn = lastModifiedOn;
         LastModifiedBy = lastModifiedBy;
+        LastModifiedByName = lastModifiedByName;
         LeaveTypeName = leaveTypeName;
         SalaryGradeName = salaryGradeName;
         OrganizationUnitTypeName = organizationUnitTypeName;
@@ -94,7 +105,7 @@ public class ApprovalWorkflow
         IEnumerable<ApprovalWorkflowStep>? steps = null)
     {
         return new ApprovalWorkflow(id, category, leaveTypeId, organizationUnitTypeId, salaryGradeId, postId,
-            minimumDays, maximumDays, DateTime.Now, createdBy, null, null, steps);
+            minimumDays, maximumDays, DateTime.Now, createdBy, null, null, null, null, steps);
     }
 
     public void Update(
