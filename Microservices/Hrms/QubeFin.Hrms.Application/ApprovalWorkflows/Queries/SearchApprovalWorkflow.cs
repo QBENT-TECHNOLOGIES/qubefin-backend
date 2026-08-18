@@ -1,11 +1,12 @@
 using FluentResults;
 using MediatR;
+using QubeFin.Hrms.Application.ApprovalWorkflows.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.ApprovalWorkflows.Queries;
 
-public record SearchApprovalWorkflowQuery(string? Category, Guid? OrganizationUnitTypeId)
+public record SearchApprovalWorkflowQuery(ApprovalWorkflowSearchRequest filterParam)
     : IRequest<Result<SearchApprovalWorkflowResponse>>;
 
 public record SearchApprovalWorkflowResponse(
@@ -20,9 +21,7 @@ internal sealed class SearchApprovalWorkflowQueryHandler(
         SearchApprovalWorkflowQuery request,
         CancellationToken cancellationToken)
     {
-        var workflows = (await approvalWorkflowRepository.SearchAsync(
-                request.Category?.Trim(),
-                request.OrganizationUnitTypeId))
+        var workflows = (await approvalWorkflowRepository.SearchAsync(request.filterParam.category, request.filterParam.organizationUnitTypeId, request.filterParam.SortDirection, request.filterParam.SortOn, request.filterParam.PageIndex, request.filterParam.PageSize))
             .ToList();
 
         return Result.Ok(new SearchApprovalWorkflowResponse(workflows, workflows.Count));

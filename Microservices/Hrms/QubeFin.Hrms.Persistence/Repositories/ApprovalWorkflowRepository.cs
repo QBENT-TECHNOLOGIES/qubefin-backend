@@ -12,7 +12,7 @@ public interface IApprovalWorkflowRepository
     Task<ApprovalWorkflow?> GetByIdAsync(Guid id);
     Task<IEnumerable<ApprovalWorkflow>> GetAllAsync();
     Task<IEnumerable<ApprovalWorkflow>> GetByCategoryAsync(string category);
-    Task<IEnumerable<ApprovalWorkflow>> SearchAsync(string? category, Guid? organizationUnitTypeId);
+    Task<IEnumerable<ApprovalWorkflow>> SearchAsync(string? category, Guid? organizationUnitTypeId, string sortDirection, string sortOn, int pageIndex, int pageSize);
 }
 
 public class ApprovalWorkflowRepository(QubeFinDataContext context) : IApprovalWorkflowRepository
@@ -112,7 +112,7 @@ public class ApprovalWorkflowRepository(QubeFinDataContext context) : IApprovalW
         return entities.Select(x => x.ToDomain());
     }
 
-    public async Task<IEnumerable<ApprovalWorkflow>> SearchAsync(string? category, Guid? organizationUnitTypeId)
+    public async Task<IEnumerable<ApprovalWorkflow>> SearchAsync(string? category, Guid? organizationUnitTypeId, string sortDirection, string sortOn, int pageIndex, int pageSize)
     {
         var query = context.TblApprovalWorkflows
             .Include(x => x.LeaveType)
@@ -120,24 +120,48 @@ public class ApprovalWorkflowRepository(QubeFinDataContext context) : IApprovalW
             .Include(x => x.SalaryGrade)
             .Include(x => x.Post)
             .Include(x => x.TblApprovalWorkflowSteps)
-            .ThenInclude(x => x.ReceiverPost)
+                .ThenInclude(x => x.ReceiverPost)
             .AsNoTracking()
             .AsQueryable();
 
+        // Category filter
         if (!string.IsNullOrWhiteSpace(category))
         {
             query = query.Where(x => x.Category == category);
         }
 
-        if (organizationUnitTypeId.HasValue && organizationUnitTypeId != Guid.Empty)
+        // Organization Unit Type filter
+        if (organizationUnitTypeId.HasValue &&
+            organizationUnitTypeId != Guid.Empty)
         {
-            query = query.Where(x => x.OrganizationUnitTypeId == organizationUnitTypeId.Value);
+            query = query.Where(x =>
+                x.OrganizationUnitTypeId == organizationUnitTypeId.Value);
         }
 
-        var entities = await query
-            .OrderBy(x => x.Category)
-            .ThenBy(x => x.MinimumDays)
-            .ToListAsync();
+        // Sorting
+        query = sortOn?.ToLower() switch
+        {
+            "category" => sortDirection?.ToLower() == "asc"
+                ? query.OrderBy(x => x.Category)
+                : query.OrderByDescending(x => x.Category),
+
+            "minimumdays" => sortDirection?.ToLower() == "asc"
+                ? query.OrderBy(x => x.MinimumDays)
+                : query.OrderByDescending(x => x.MinimumDays),
+
+            _ => query.OrderBy(x => x.Category)
+                      .ThenBy(x => x.MinimumDays)
+        };
+
+        // Pagination
+        if (pageSize > 0)
+        {
+            query = query
+                .Skip(pageIndex * pageSize)
+                .Take(pageSize);
+        }
+
+        var entities = await query.ToListAsync();
 
         return entities.Select(x => x.ToDomain());
     }
