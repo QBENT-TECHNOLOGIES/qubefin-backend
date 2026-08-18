@@ -33,7 +33,7 @@ internal sealed class GetAttendanceHistoryByQueryHandler(QubeFinDataContext cont
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
         var query = request.searchParam.FromDate == null && request.searchParam.ToDate == null ?
-            context.TblAttendances.Include(a => a.Employee).ThenInclude(e => e.OrganizationUnit).Where(x => x.AttendanceDate == today).AsNoTracking().AsQueryable() :
+            context.TblAttendances.Include(a => a.Employee).ThenInclude(e => e.OrganizationUnit).AsNoTracking().AsQueryable() :
             request.searchParam.FromDate.HasValue && request.searchParam.ToDate.HasValue ?
             context.TblAttendances.Include(a => a.Employee).ThenInclude(e => e.OrganizationUnit).Where(x => x.AttendanceDate >= request.searchParam.FromDate.Value && x.AttendanceDate <= request.searchParam.ToDate.Value).AsNoTracking().AsQueryable() :
             request.searchParam.FromDate.HasValue ?

@@ -59,7 +59,7 @@ public class AttendanceEndpoints : IEndpoint
             }
 
             var empId = principal.Identity.GetEmployeeId();
-            var result = await sender.Send(new GetAttendanceHistoryByEmployee(empId, request));
+            var result = await sender.Send(new GetAttendanceHistoryByQuery(request));
             return Results.Ok(result);
         }).WithSummary("Get all employees attendance history with optional filters").WithTags("Attendance").RequireAuthorization();
 
