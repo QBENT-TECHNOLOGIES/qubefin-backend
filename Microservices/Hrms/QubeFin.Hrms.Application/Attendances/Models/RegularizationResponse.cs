@@ -23,13 +23,9 @@ namespace QubeFin.Hrms.Application.Attendances.Models
     }
     public class RegularizationEvent
     {
-        public string? ApprovalCategory { get; set; }
-        public DateTime? EventDate { get; set; }
-        public string? Remarks { get; set; }
-        public string? SenderDesignation { get; set; }
-        public string? ReceiverDesignation { get; set; }
-        public string? EventCategory { get; set; }
         public string? EventStatus { get; set; }
-        public string? EventButtonText { get; set; }
+        public DateTime? EventDate { get; set; }
+        public string? Designation { get; set; }
+        public string? Remarks { get; set; }
     }
 }

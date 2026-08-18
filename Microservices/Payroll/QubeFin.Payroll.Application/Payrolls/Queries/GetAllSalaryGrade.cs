@@ -12,6 +12,6 @@ internal sealed class GetAllSalaryGradeQueryHandler(IPayrollRepository payrollRe
     public async Task<Result<List<GetAllSalaryGradeResponse>>> Handle(GetAllSalaryGradeQuery request, CancellationToken cancellationToken)
     {
         var salaryGrade = await payrollRepository.GetAllSalaryGrade();
-        return Result.Ok(salaryGrade.Select(m => new GetAllSalaryGradeResponse(m.Id, m.Name, m.Code, m.IsActive)).ToList());
+        return Result.Ok(salaryGrade.Select(m => new GetAllSalaryGradeResponse(m.Id, m.Name, m.Code, m.IsActive)).OrderBy(m  => m.Code).ToList());
     }
 }

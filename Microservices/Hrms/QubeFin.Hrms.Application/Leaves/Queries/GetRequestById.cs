@@ -3,6 +3,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using QubeFin.Hrms.Application.Attendances.Models;
 using QubeFin.Hrms.Application.Leaves.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
@@ -40,7 +41,7 @@ internal sealed class GetRequestByIdQueryHandler(QubeFinDataContext context, IFi
         if (leaveRequestResponse == null || !leaveRequestResponse.Any())
             return Result.Ok((LeaveRequestDetailResponse?)null);
 
-        var first = leaveRequestResponse.First();
+        var first = leaveRequestResponse.OrderBy(g => g.EventDate).First();
         var response = new LeaveRequestDetailResponse
         {
             Id = first.Id,
@@ -66,13 +67,21 @@ internal sealed class GetRequestByIdQueryHandler(QubeFinDataContext context, IFi
 
             Events = leaveRequestResponse.Select(x => new LeaveRequestEvent
             {
-                Event = x.EventStatus,
-                EventOn = x.EventDate,
-                EventRemarks = x.Remarks,
-                SenderDesignation = x.SenderDesignation,
-                ReceiverDesignation = x.ReceiverDesignation
+                EventStatus = x.EventStatus,
+                EventDate = x.EventDate,
+                Designation = x.ReceiverDesignation,
+                Remarks = x.Remarks
             }).ToList()
         };
+        if (response != null)
+        {
+            response.Events.Insert(0, new LeaveRequestEvent
+            {
+                EventStatus = "Requested",
+                EventDate = first.EventDate,
+                Designation = first.SenderDesignation
+            });
+        }
         return Result.Ok((LeaveRequestDetailResponse?)response);
     }
 }
