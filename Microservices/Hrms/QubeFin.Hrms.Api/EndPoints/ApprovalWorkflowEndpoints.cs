@@ -22,14 +22,12 @@ public class ApprovalWorkflowEndpoints : IEndpoint
         .WithSummary("Get approval workflows")
         .WithTags("Approval Workflows");
 
-        app.MapGet("approval-workflows/search", async (
-            string? category,
-            Guid? organizationUnitTypeId,
+        app.MapPost("approval-workflows/search", async (ApprovalWorkflowSearchRequest request,
             ISender sender,
             CancellationToken cancellationToken) =>
         {
             var result = await sender.Send(
-                new SearchApprovalWorkflowQuery(category, organizationUnitTypeId),
+                new SearchApprovalWorkflowQuery(request),
                 cancellationToken);
             return result.ToHttpResult();
         }).RequireAuthorization()

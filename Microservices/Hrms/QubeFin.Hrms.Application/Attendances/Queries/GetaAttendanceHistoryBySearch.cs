@@ -7,7 +7,7 @@ using QubeFin.Persistence;
 namespace QubeFin.Hrms.Application.Attendances.Queries;
 
 #region --- QUERY ---
-public record GetAttendanceHistoryByQuery(Guid EmployeeId, AttendanceSearchRequest searchParam) : IRequest<GetAttendanceHistoryResponse>;
+public record GetAttendanceHistoryByQuery(AttendanceSearchRequest searchParam) : IRequest<GetAllAttendanceHistoryResponse>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -15,30 +15,36 @@ public class GetAttendanceHistoryByQueryValidator : AbstractValidator<GetAttenda
 {
     public GetAttendanceHistoryByQueryValidator()
     {
-        RuleFor(v => v.EmployeeId).NotNull().WithMessage("Employee Id is required.");
+        RuleFor(v => v.searchParam).NotNull().WithMessage("Search parameters are required.");
+        RuleFor(v => v.searchParam.PageIndex).GreaterThanOrEqualTo(0).WithMessage("PageIndex must be greater than or equal to 0.");
+        RuleFor(v => v.searchParam.PageSize).GreaterThan(0).WithMessage("PageSize must be greater than 0.");
     }
 }
 #endregion
 
 #region --- RESPONSE ---
-public record GetAttendanceHistoryResponse(IReadOnlyList<AttendanceSearchResult> results, int TotalRecords);
+public record GetAllAttendanceHistoryResponse(IReadOnlyList<AttendanceSearchResult> results, int TotalRecords);
 #endregion
 
 #region --- HANDLER ---
-internal sealed class GetAttendanceHistoryByEmployeeQueryHandler(QubeFinDataContext context) : IRequestHandler<GetAttendanceHistoryByQuery, GetAttendanceHistoryResponse>
+internal sealed class GetAttendanceHistoryByQueryHandler(QubeFinDataContext context) : IRequestHandler<GetAttendanceHistoryByQuery, GetAllAttendanceHistoryResponse>
 {
-    public async Task<GetAttendanceHistoryResponse> Handle(GetAttendanceHistoryByQuery request, CancellationToken cancellationToken)
+    public async Task<GetAllAttendanceHistoryResponse> Handle(GetAttendanceHistoryByQuery request, CancellationToken cancellationToken)
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
-        var query = context.TblAttendances.Where(x => x.EmployeeId == request.EmployeeId && x.AttendanceDate < today).AsNoTracking().AsQueryable();
+        var query = request.searchParam.FromDate == null && request.searchParam.ToDate == null ?
+            context.TblAttendances.Include(a => a.Employee).ThenInclude(e => e.OrganizationUnit).AsNoTracking().AsQueryable() :
+            request.searchParam.FromDate.HasValue && request.searchParam.ToDate.HasValue ?
+            context.TblAttendances.Include(a => a.Employee).ThenInclude(e => e.OrganizationUnit).Where(x => x.AttendanceDate >= request.searchParam.FromDate.Value && x.AttendanceDate <= request.searchParam.ToDate.Value).AsNoTracking().AsQueryable() :
+            request.searchParam.FromDate.HasValue ?
+            context.TblAttendances.Include(a => a.Employee).ThenInclude(e => e.OrganizationUnit).Where(x => x.AttendanceDate >= request.searchParam.FromDate.Value).AsNoTracking().AsQueryable() :
+            request.searchParam.ToDate.HasValue ?
+            context.TblAttendances.Include(a => a.Employee).ThenInclude(e => e.OrganizationUnit).Where(x => x.AttendanceDate <= request.searchParam.ToDate.Value).AsNoTracking().AsQueryable() :
+            context.TblAttendances.Include(a => a.Employee).ThenInclude(e => e.OrganizationUnit).AsNoTracking().AsQueryable();
 
-        if (request.searchParam.FromDate.HasValue)
+        if (!string.IsNullOrWhiteSpace(request.searchParam.SearchText))
         {
-            query = query.Where(m => m.AttendanceDate >= request.searchParam.FromDate.Value);
-        }
-        if (request.searchParam.ToDate.HasValue)
-        {
-            query = query.Where(m => m.AttendanceDate <= request.searchParam.ToDate.Value);
+            query = query.Where(m => m.Employee.FullName.Contains(request.searchParam.SearchText) || m.Employee.Code.Contains(request.searchParam.SearchText) || m.Employee.OrganizationUnit.Name.Contains(request.searchParam.SearchText));
         }
 
         if (!string.IsNullOrWhiteSpace(request.searchParam.Status))
@@ -73,14 +79,18 @@ internal sealed class GetAttendanceHistoryByEmployeeQueryHandler(QubeFinDataCont
         var attendances = data.Select(m => new AttendanceSearchResult
         {
             Id = m.Id,
+            OrganizationUnit = m.Employee.OrganizationUnit?.Name,
+            EmployeeName = m.Employee.FullName,
+            EmployeeCode = m.Employee.Code,
             AttendanceDate = m.AttendanceDate,
             ActualInTime = m.ActualInTime.ToString("h:mm tt"),
             ActualOutTime = m.ActualOutTime?.ToString("h:mm tt"),
             WorkingHours = GetWorkingHours(m.ActualInTime, m.ActualOutTime),
-            Status = GetAttendanceStatus(m.IsLateEntry, m.IsEarlyLeave)
+            Status = GetAttendanceStatus(m.IsLateEntry, m.IsEarlyLeave),
+            IsRegulerized = m.IsRegularization ? "Yes" : "-"
         }).ToList();
 
-        return new GetAttendanceHistoryResponse(attendances, total);
+        return new GetAllAttendanceHistoryResponse(attendances, total);
     }
 
     private static string? GetWorkingHours(TimeOnly? inTime, TimeOnly? outTime)

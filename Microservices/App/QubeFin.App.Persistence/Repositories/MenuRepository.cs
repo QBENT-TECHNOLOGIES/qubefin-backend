@@ -48,6 +48,7 @@ public class MenuRepository(QubeFinDataContext context) : IMenuRepository
         var menuTree = await context
            .TblMenus
            .AsNoTracking()
+           .Where(m => m.IsActive)
            .Select(m => new MenuTree
            {
                Id = m.Id,
