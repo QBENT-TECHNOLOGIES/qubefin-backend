@@ -47,9 +47,21 @@ public class AttendanceEndpoints : IEndpoint
             }
 
             var empId = principal.Identity.GetEmployeeId();
-            var result = await sender.Send(new GetAttendanceHistoryByQuery(empId, request));
+            var result = await sender.Send(new GetAttendanceHistoryByEmployee(empId, request));
             return Results.Ok(result);
         }).WithSummary("Get attendance history for logged-in employee with optional filters").WithTags("Attendance").RequireAuthorization();
+
+        app.MapPost("attendances/history-all", async (ClaimsPrincipal principal, ISender sender, AttendanceSearchRequest request) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+
+            var empId = principal.Identity.GetEmployeeId();
+            var result = await sender.Send(new GetAttendanceHistoryByEmployee(empId, request));
+            return Results.Ok(result);
+        }).WithSummary("Get all employees attendance history with optional filters").WithTags("Attendance").RequireAuthorization();
 
         app.MapPost("attendances/regularizations", async (ClaimsPrincipal principal, [FromForm] RegularizationRequest request, ISender sender) =>
         {
