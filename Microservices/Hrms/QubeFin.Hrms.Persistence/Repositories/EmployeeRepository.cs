@@ -13,6 +13,7 @@ public interface IEmployeeRepository
     Task UpdateAsync(Employee employee);
     //Task<Employee> GetById(Guid employeeId);
     Task<Employee?> GetEmloyeeOrganization(Guid id);
+    Task<bool> GetExsitingEmployeeByCode(Guid? id, string code);
 }
 public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepository
 {
@@ -70,6 +71,11 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
         var employeeEntity = await context.TblEmployees.Include(m => m.OrganizationUnit).FirstOrDefaultAsync(x => x.Id == id);
 
         return employeeEntity is null ? null : employeeEntity.ToDomain();
+    }
+
+    public async Task<bool> GetExsitingEmployeeByCode(Guid? id, string code)
+    {
+        return await context.TblEmployees.AsNoTracking().AnyAsync(x => x.Code.ToLower().Trim() == code.ToLower().Trim() && (id == null || id == Guid.Empty || x.Id != id));
     }
 }
 

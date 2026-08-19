@@ -1,6 +1,7 @@
 ﻿using FluentResults;
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
@@ -48,6 +49,12 @@ internal sealed class UpdateEmployeePersonalCommandHandler(IEmployeeRepository e
         if (employee == null)
         {
             return new ValidationError("Employee does not exist with the given id.");
+        }
+
+        var existingEmployee = await employeeRepository.GetExsitingEmployeeByCode(request.Id, request.Code);
+        if (existingEmployee)
+        {
+            return new ValidationError("Employee already exist with same code.");
         }
 
         employee.UpdatePersonalInfo(

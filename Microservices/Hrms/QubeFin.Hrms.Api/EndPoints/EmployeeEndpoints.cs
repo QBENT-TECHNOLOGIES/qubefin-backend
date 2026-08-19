@@ -117,7 +117,7 @@ public class EmployeeEndpoints : IEndpoint
 
         // ---------- END  GET BY ID -----------//
 
-        app.MapPatch("employees/update/personal/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] PersonalInfoRequest request, ISender sender) =>
+        app.MapPut("employees/update/personal/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] PersonalInfoRequest request, ISender sender) =>
         {
             if (principal.Identity is null)
             {
@@ -165,7 +165,7 @@ public class EmployeeEndpoints : IEndpoint
         .WithSummary("Update Employee Contact data")
         .RequireAuthorization();
 
-        app.MapPatch("employees/update/address/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] AddressInfoRequest request, ISender sender) =>
+        app.MapPut("employees/update/address/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] AddressInfoRequest request, ISender sender) =>
         {
             if (principal.Identity is null)
             {
