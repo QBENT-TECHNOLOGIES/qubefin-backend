@@ -67,6 +67,18 @@ public class AdministrativeUnitEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         .RequireAuthorization()
-        .WithSummary("Update Administrative Unit"); ;
+        .WithSummary("Update Administrative Unit");
+
+        app.MapGet("administrative-units/postoffices", async (ISender sender, CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(new GetAllPostofficeQuery(), cancellationToken);
+            return result.ToHttpResult();
+        }).WithSummary("Get All Post Offices.");
+
+        app.MapGet("administrative-units/police-stations/{id:guid}", async (Guid id, ISender sender, CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(new GetPoliceStationsByDistrictQuery(id), cancellationToken);
+            return result.ToHttpResult();
+        }).WithSummary("Get All Police Staions By District.");
     }
 }

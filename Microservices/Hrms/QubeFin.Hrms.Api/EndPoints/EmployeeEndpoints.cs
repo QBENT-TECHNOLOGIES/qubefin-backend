@@ -126,7 +126,7 @@ public class EmployeeEndpoints : IEndpoint
             var userId = principal.Identity.GetUserId();
 
             var command = new UpdateEmployeePersonalCommand(id,request.Code, request.Salutation, request.FirstName, request.MiddleName, request.LastName, request.FatherName, request.MotherName,
-                DateOnly.FromDateTime( request.DateOfBirth), request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisablityType, request.MaritalStatus, userId);
+                request.DateOfBirth, request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisablityType, request.MaritalStatus, userId);
             var result = await sender.Send(command);
             return result.ToHttpResult();
         })
@@ -180,17 +180,44 @@ public class EmployeeEndpoints : IEndpoint
         .WithSummary("Update Employee Address data")
         .RequireAuthorization();
 
-        app.MapPatch("employees/update/kyc/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] List<DocumentDetailRequest> Documents, ISender sender) =>
+        app.MapPut("employees/update/kyc/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, HttpRequest request, ISender sender) =>
         {
             if (principal.Identity is null)
             {
                 return Results.Forbid();
             }
             var userId = principal.Identity.GetUserId();
+            if (!request.HasFormContentType) return Results.BadRequest("Invalid content type");
 
-            var command = new UpdateEmployeeDocumentCommand(id, Documents, userId);
+            var form = await request.ReadFormAsync();
+            var documents = new List<DocumentDetailRequest>();
+            int index = 0;
+            while (form.ContainsKey($"documents[{index}].documentName"))
+            {
+                var doc = new DocumentDetailRequest
+                {
+                    DocumentName = form[$"documents[{index}].documentName"].ToString(),
+                    DocumentNo = form[$"documents[{index}].documentNo"].ToString(),
+                    FileName = form[$"documents[{index}].fileName"].ToString(),
+                    File = form.Files[$"documents[{index}].file"] 
+                };
+
+                if (DateTime.TryParse(form[$"documents[{index}].validFrom"], out var validFrom))
+                    doc.ValidFrom = validFrom;
+
+                if (DateTime.TryParse(form[$"documents[{index}].validTill"], out var validTill))
+                    doc.ValidTill = validTill;
+
+                documents.Add(doc);
+                index++;
+            }
+
+            var command = new UpdateEmployeeDocumentCommand(id, documents, userId);
             var result = await sender.Send(command);
             return result.ToHttpResult();
+            //var command = new UpdateEmployeeDocumentCommand(id, Documents, userId);
+            //var result = await sender.Send(command);
+            //return result.ToHttpResult();
         })
         .WithSummary("Update Employee Kyc data")
         .RequireAuthorization();
