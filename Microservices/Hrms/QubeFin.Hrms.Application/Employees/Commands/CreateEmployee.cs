@@ -35,20 +35,20 @@ public class CreateEmployeeCommandValidator : AbstractValidator<CreateEmployeeCo
             .WithMessage("Last name must contain only letters and be between 3 and 30 characters long.");
         RuleFor(x => x.Code)
             .NotEmpty()
-            .Matches("^[0-9]{6}$")
+            .Matches("^[A-Za-z0-9]+$")
             .WithMessage("Code must contain only numbers (0–9) and 6 digits long.");
     }
 }
 #endregion
 
 #region --- HANDLER ---
-internal sealed class CreateEmployeeCommandHandler(IEmployeeRepository employeeRepository, IUnitOfWork unitOfWork, QubeFinDataContext context)
+internal sealed class CreateEmployeeCommandHandler(IEmployeeRepository employeeRepository, IUnitOfWork unitOfWork)
     : IRequestHandler<CreateEmployeeCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(CreateEmployeeCommand request, CancellationToken cancellationToken)
     {
-        var existingEmployee = await context.TblEmployees.FirstOrDefaultAsync(m => m.Code == request.Code);
-        if (existingEmployee != null)
+        var existingEmployee = await employeeRepository.GetExsitingEmployeeByCode(null, request.Code);
+        if (existingEmployee)
         {
             return new ValidationError("Employee already exist with same code.");
         }

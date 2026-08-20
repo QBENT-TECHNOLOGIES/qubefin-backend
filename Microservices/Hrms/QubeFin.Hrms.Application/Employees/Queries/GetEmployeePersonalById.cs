@@ -59,7 +59,7 @@ internal sealed class GetEmployeePersonalByIdQueryHandler(QubeFinDataContext con
             employee.Nationality,
             employee.BloodGroup,
             employee.DisablityType,
-            employee.MaritalStatus
+            !string.IsNullOrWhiteSpace(employee.MaritalStatus) ? employee.MaritalStatus?.Trim() : null
         ));
     }
 }
