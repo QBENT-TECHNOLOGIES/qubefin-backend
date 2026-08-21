@@ -18,20 +18,20 @@ public class UpdateEmployeeOfficialCommandValidator : AbstractValidator<UpdateEm
 {
     public UpdateEmployeeOfficialCommandValidator()
     {
-        RuleFor(x => x.Id).NotEmpty();
-        RuleFor(x => x.OfficialInfo).NotNull();
+        RuleFor(x => x.Id).NotEmpty().WithMessage("Employee Id is required.");
+        RuleFor(x => x.OfficialInfo).NotNull().WithMessage("Official Info is required.");
         //RuleFor(x => x.OfficialInfo.CompanyId).NotEmpty();
-        RuleFor(x => x.OfficialInfo.OrganizationUnitId).NotEmpty();
-        //RuleFor(x => x.OfficialInfo.DepartmentId).NotEmpty();
-        RuleFor(x => x.OfficialInfo.EmployementType).NotEmpty();
+        RuleFor(x => x.OfficialInfo.OrganizationUnitId).NotEmpty().WithMessage("Organization Unit Id is required.");
+        RuleFor(x => x.OfficialInfo.DesignationId).NotEmpty().WithMessage("Designation Id is required.");
+        RuleFor(x => x.OfficialInfo.EmployementType).NotEmpty().WithMessage("Employment Type is required.");
         RuleFor(x => x.OfficialInfo.OfficialEmail)
             .NotEmpty().WithMessage("Official Email is required.")
            .Matches(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
            .When(x => !string.IsNullOrWhiteSpace(x.OfficialInfo.OfficialEmail))
            .WithMessage("Enter a valid email address.");
-        RuleFor(x => x.OfficialInfo.DateOfJoining).NotEmpty();
+        RuleFor(x => x.OfficialInfo.DateOfJoining).NotEmpty().WithMessage("Date of Joining is required.");
         //RuleFor(x => x.OfficialInfo.DateOfConfirmation).NotEmpty();
-        RuleFor(x => x.UserId).NotEmpty();
+        RuleFor(x => x.UserId).NotEmpty().WithMessage("Login User Id is required.");
     }
 }
 #endregion
@@ -49,14 +49,21 @@ internal sealed class UpdateEmployeeOfficialCommandHandler(IEmployeeRepository e
         }
 
         employee.UpdateOfficialInfo(
-            new OfficialInfo(request.OfficialInfo.CompanyId, request.OfficialInfo.OrganizationUnitId, request.OfficialInfo.DepartmentId, request.OfficialInfo.EmployementType, request.OfficialInfo.DateOfJoining, request.OfficialInfo.DateOfConfirmation,
-                request.OfficialInfo.SeparationDate, request.OfficialInfo.ReferedBy, request.OfficialInfo.HowYouKnow, request.OfficialInfo.OfficialEmail, request.OfficialInfo.IsActive),
-            request.UserId
+            new OfficialInfo(
+                request.OfficialInfo.CompanyId, request.OfficialInfo.OrganizationUnitId, request.OfficialInfo.DepartmentId, request.OfficialInfo.EmployementType,
+                request.OfficialInfo.DateOfJoining, request.OfficialInfo.DateOfConfirmation, request.OfficialInfo.SeparationDate, request.OfficialInfo.ReferedBy,
+                request.OfficialInfo.HowYouKnow, request.OfficialInfo.OfficialEmail, request.OfficialInfo.IsActive), request.UserId
             );
         await employeeRepository.UpdateAsync(employee);
 
-
-
+        if ((employee.Designations == null || !employee.Designations.Any()) && request.OfficialInfo.DesignationId != null)
+        {
+            await employeeRepository.AddDesignationAsync(employee.Id, request.OfficialInfo.DesignationId.Value);
+        }
+        if ((employee.GrossSalaries == null || !employee.GrossSalaries.Any()) && request.OfficialInfo.GrossSalary > 0)
+        {
+            await employeeRepository.AddGrossSalaryAsync(employee.Id, request.OfficialInfo.GrossSalary.Value);
+        }
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Ok($"Employee official information updated successfully for Name : {employee.PersonalInfo.FirstName} {employee.PersonalInfo.LastName}");
     }
