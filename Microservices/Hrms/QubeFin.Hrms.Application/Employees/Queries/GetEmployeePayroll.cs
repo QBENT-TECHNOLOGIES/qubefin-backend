@@ -2,9 +2,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
-using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
-using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.Employees.Queries;
 
@@ -12,10 +10,9 @@ namespace QubeFin.Hrms.Application.Employees.Queries;
 public record GetEmployeePayrollByIdQuery(Guid Id) : IRequest<Result<GetPayrollResponse>>;
 #endregion
 #region --- RESPONSE ---
-public record GetPayrollResponse(Guid Id,
-        Guid? BankId, long BankAccountNo, string BankHolderName, string BankBranch, string BankAccountType,
-        bool HasEsiEligible, string? EsiIpNumber, string? UniversalAccountNumber, bool IsPayrollActive
-    );
+public record GetPayrollResponse
+    (Guid Id, Guid? BankId, long? BankAccountNo, string? BankHolderName, string? BankBranch, string? BankAccountType,
+    bool HasEsiEligible, string? EsiIpNumber, string? UniversalAccountNumber, bool IsPayrollActive);
 
 #endregion
 #region --- HANDLER ---
@@ -25,7 +22,6 @@ internal sealed class GetEmployeePayrollByIdQueryHandler(QubeFinDataContext cont
     public async Task<Result<GetPayrollResponse>> Handle(GetEmployeePayrollByIdQuery request, CancellationToken cancellationToken)
     {
         var employee = await context.TblEmployees.Where(m => m.Id == request.Id).FirstOrDefaultAsync(cancellationToken: cancellationToken);
-
         if (employee is null)
         {
             return new RecordNotFoundError($"Employee not found for the given Id");
@@ -33,7 +29,7 @@ internal sealed class GetEmployeePayrollByIdQueryHandler(QubeFinDataContext cont
         return Result.Ok(new GetPayrollResponse(
             employee.Id,
             employee.BankId,
-            employee.BankAccountNo.Value,
+            employee.BankAccountNo,
             employee.BankHolderName,
             employee.BankBranch,
             employee.BankAccountType,
