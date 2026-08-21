@@ -55,22 +55,25 @@ internal sealed class GetEmployeeOfficialByIdQueryHandler(QubeFinDataContext con
             return new RecordNotFoundError($"Employee not found for the given Id");
         }
 
-        Guid designationId = employee.TblEmployeeDesignations.Any(ed => ed.EffectiveTo == null) ?
-            employee.TblEmployeeDesignations.Where(ed => ed.EffectiveTo == null).First().DesignationId :
-            employee.TblEmployeeDesignations.OrderByDescending(ed => ed.EffectiveFrom).First().DesignationId;
+        Guid? designationId = !employee.TblEmployeeDesignations.Any() ? null :   
+            employee.TblEmployeeDesignations.Any(ed => ed.EffectiveTo == null) ?
+            employee.TblEmployeeDesignations.Where(ed => ed.EffectiveTo == null).First()?.DesignationId :
+            employee.TblEmployeeDesignations.OrderByDescending(ed => ed.EffectiveFrom).First()?.DesignationId;
 
-        var employeeDesignationGrade = await context
+        var employeeDesignationGrade = designationId == null ? null : await context
             .TblDesignationGradeMappings.Include(e => e.Grade)
             .Where(m => m.DesignationId == designationId)
             .AsNoTracking()
             .ToListAsync(cancellationToken: cancellationToken);
 
-        string? salaryGrade = employeeDesignationGrade.Any(dg => dg.IsActive) ?
+        string? salaryGrade = employeeDesignationGrade == null ? null : 
+            employeeDesignationGrade.Any(dg => dg.IsActive) ?
             employeeDesignationGrade.First(dg => dg.IsActive).Grade?.Name :
             employeeDesignationGrade.FirstOrDefault()?.Grade?.Name;
 
-        decimal? grossSalary = employee.TblEmployeeGrossSalaries.Any(eg => eg.EffectiveTill == null) ?
-            employee.TblEmployeeGrossSalaries.Where(eg => eg.EffectiveTill == null).First().GrossSalary :
+        decimal? grossSalary = !employee.TblEmployeeGrossSalaries.Any() ? null :
+            employee.TblEmployeeGrossSalaries.Any(eg => eg.EffectiveTill == null) ?
+            employee.TblEmployeeGrossSalaries.Where(eg => eg.EffectiveTill == null).First()?.GrossSalary :
             employee.TblEmployeeGrossSalaries.OrderByDescending(g => g.EffectiveFrom).FirstOrDefault()?.GrossSalary;
 
         return Result.Ok(new GetOfficialResponse(

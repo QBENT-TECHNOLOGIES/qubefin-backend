@@ -58,11 +58,11 @@ internal sealed class UpdateEmployeeOfficialCommandHandler(IEmployeeRepository e
 
         if ((employee.Designations == null || !employee.Designations.Any()) && request.OfficialInfo.DesignationId != null)
         {
-            await employeeRepository.AddDesignationAsync(employee.Id, request.OfficialInfo.DesignationId.Value);
+            await employeeRepository.AddDesignationAsync(employee.Id, request.OfficialInfo.DesignationId.Value, request.OfficialInfo.DateOfJoining.Value);
         }
         if ((employee.GrossSalaries == null || !employee.GrossSalaries.Any()) && request.OfficialInfo.GrossSalary > 0)
         {
-            await employeeRepository.AddGrossSalaryAsync(employee.Id, request.OfficialInfo.GrossSalary.Value);
+            await employeeRepository.AddGrossSalaryAsync(employee.Id, request.OfficialInfo.GrossSalary.Value, request.OfficialInfo.DateOfJoining.Value);
         }
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Ok($"Employee official information updated successfully for Name : {employee.PersonalInfo.FirstName} {employee.PersonalInfo.LastName}");

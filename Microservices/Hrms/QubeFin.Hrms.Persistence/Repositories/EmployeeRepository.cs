@@ -14,8 +14,8 @@ public interface IEmployeeRepository
     Task UpdateAsync(Employee employee);
     Task<Employee?> GetEmloyeeOrganization(Guid id);
     Task<bool> GetExsitingEmployeeByCode(Guid? id, string code);
-    Task AddDesignationAsync(Guid employeeId, Guid designationId);
-    Task AddGrossSalaryAsync(Guid employeeId, decimal grossSalary);
+    Task AddDesignationAsync(Guid employeeId, Guid designationId, DateOnly joiningDate);
+    Task AddGrossSalaryAsync(Guid employeeId, decimal grossSalary, DateOnly joiningDate);
 }
 public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepository
 {
@@ -69,26 +69,26 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
     {
         return await context.TblEmployees.AsNoTracking().AnyAsync(x => x.Code.ToLower().Trim() == code.ToLower().Trim() && (id == null || id == Guid.Empty || x.Id != id));
     }
-    public async Task AddDesignationAsync(Guid employeeId, Guid designationId)
+    public async Task AddDesignationAsync(Guid employeeId, Guid designationId, DateOnly joiningDate)
     {
         var employeeDesignation = new TblEmployeeDesignation
         {
             Id = Guid.NewGuid(),
             EmployeeId = employeeId,
             DesignationId = designationId,
-            EffectiveFrom = DateTime.UtcNow,
+            EffectiveFrom = joiningDate.ToDateTime(TimeOnly.MinValue),
             EffectiveTo = null
         };
         await context.TblEmployeeDesignations.AddAsync(employeeDesignation);
     }
-    public async Task AddGrossSalaryAsync(Guid employeeId, decimal grossSalary)
+    public async Task AddGrossSalaryAsync(Guid employeeId, decimal grossSalary, DateOnly joiningDate)
     {
         var employeeGrossSalary = new TblEmployeeGrossSalary
         {
             Id = Guid.NewGuid(),
             EmployeeId = employeeId,
             GrossSalary = grossSalary,
-            EffectiveFrom = DateOnly.FromDateTime(DateTime.UtcNow),
+            EffectiveFrom = joiningDate,
             EffectiveTill = null
         };
         await context.TblEmployeeGrossSalaries.AddAsync(employeeGrossSalary);
