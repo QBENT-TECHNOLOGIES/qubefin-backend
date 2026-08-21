@@ -11,6 +11,7 @@ public static class ApprovalWorkflowStepMapper
             entity.Id,
             entity.ApprovalWorkflowId,
             entity.ReceiverPostId,
+            entity.OrganizationUnitTypeId,
             entity.IsRecommendEvent,
             entity.IsApprovalEvent,
             entity.EventStatus,
@@ -25,6 +26,7 @@ public static class ApprovalWorkflowStepMapper
         {
             Id = domain.Id,
             ApprovalWorkflowId = domain.ApprovalWorkflowId,
+            OrganizationUnitTypeId = domain.OrganizationUnitTypeId,
             ReceiverPostId = domain.ReceiverPostId,
             IsRecommendEvent = domain.IsRecommendEvent,
             IsApprovalEvent = domain.IsApprovalEvent,

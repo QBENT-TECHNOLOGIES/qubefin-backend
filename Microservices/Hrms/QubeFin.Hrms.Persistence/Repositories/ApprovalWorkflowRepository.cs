@@ -53,6 +53,7 @@ public class ApprovalWorkflowRepository(QubeFinDataContext context) : IApprovalW
             }
 
             existingStep.ReceiverPostId = step.ReceiverPostId;
+            existingStep.OrganizationUnitTypeId = step.OrganizationUnitTypeId;
             existingStep.IsRecommendEvent = step.IsRecommendEvent;
             existingStep.IsApprovalEvent = step.IsApprovalEvent;
             existingStep.EventStatus = step.EventStatus;
