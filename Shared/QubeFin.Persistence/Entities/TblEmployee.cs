@@ -163,6 +163,8 @@ public partial class TblEmployee
 
     public virtual ICollection<TblEmployeeEmployment> TblEmployeeEmployments { get; set; } = new List<TblEmployeeEmployment>();
 
+    public virtual ICollection<TblEmployeeGrossSalary> TblEmployeeGrossSalaries { get; set; } = new List<TblEmployeeGrossSalary>();
+
     public virtual ICollection<TblEmployeeQualification> TblEmployeeQualifications { get; set; } = new List<TblEmployeeQualification>();
 
     public virtual ICollection<TblEmployeeReference> TblEmployeeReferences { get; set; } = new List<TblEmployeeReference>();

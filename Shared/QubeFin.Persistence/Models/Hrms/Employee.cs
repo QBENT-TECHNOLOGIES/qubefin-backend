@@ -7,6 +7,7 @@
         private readonly List<EmployeeEmployment> _employments = [];
         private readonly List<EmployeeDocument> _documents = [];
         private readonly List<EmployeeReference> _references = [];
+        private readonly List<EmployeeGrossSalary> _grossSalaries = [];
 
         public Guid Id { get; private set; }
         public string Code { get; private set; } = null!;
@@ -26,14 +27,14 @@
         public IReadOnlyCollection<EmployeeEmployment> Employments => _employments;
         public IReadOnlyCollection<EmployeeDocument> Documents => _documents;
         public IReadOnlyCollection<EmployeeReference> References => _references;
+        public IReadOnlyCollection<EmployeeGrossSalary> GrossSalaries => _grossSalaries;
 
-        private Employee()
-        {
-        }
+        private Employee() { }
 
         public Employee(Guid id, string code, PersonalInfo personalInfo, OfficialInfo officialInfo, ContactInfo contactInfo,
             AddressInfo presentAddressInfo, AddressInfo permanentAddressInfo, PayrollInfo payrollInfo, EmployeeOrganization organizationInfo,
-            List<EmployeeQualification> qualifications, List<EmployeeReference> references, List<EmployeeDocument> documents, List<EmployeeEmployment> employments, Guid? createdBy, DateTime? createdOn, Guid? lastModifiedBy, DateTime? lastModifiedOn)
+            List<EmployeeDesignation> designations, List<EmployeeQualification> qualifications, List<EmployeeReference> references, List<EmployeeDocument> documents, 
+            List<EmployeeEmployment> employments, List<EmployeeGrossSalary> grossSalaries, Guid? createdBy, DateTime? createdOn, Guid? lastModifiedBy, DateTime? lastModifiedOn)
         {
             Id = id;
             Code = code;
@@ -48,6 +49,10 @@
             CreatedDate = createdOn;
             LastModifiedBy = lastModifiedBy;
             LastModifiedOn = lastModifiedOn;
+            if (designations != null)
+            {
+                _designations.AddRange(designations);
+            }
             if (qualifications != null)
             {
                 _qualifications.AddRange(qualifications);
@@ -63,6 +68,10 @@
             if (employments != null)
             {
                 _employments.AddRange(employments);
+            }
+            if (grossSalaries != null)
+            {
+                _grossSalaries.AddRange(grossSalaries);
             }
         }
 

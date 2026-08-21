@@ -2,6 +2,7 @@
 using FluentValidation;
 using MediatR;
 using QubeFin.Core.Results;
+using QubeFin.Hrms.Application.Employees.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Hrms;
@@ -9,11 +10,7 @@ using QubeFin.Persistence.Models.Hrms;
 namespace QubeFin.Hrms.Application.Employees.Commands;
 
 #region --- COMMAND ---
-public record UpdateEmployeeOfficialCommand(
-        Guid Id, Guid? CompanyId, Guid? OrganizationUnitId, Guid? DepartmentId, string? EmployementType, DateOnly? DateOfJoining, DateOnly? DateOfConfirmation,
-        DateOnly? SeparationDate, Guid? ReferedBy, string? HowYouKnow, string? OfficialEmail, bool IsActive,
-        Guid UserId
-    ) : IRequest<Result<string>>;
+public record UpdateEmployeeOfficialCommand(Guid Id, OfficialInfoRequest OfficialInfo, Guid UserId) : IRequest<Result<string>>;
 #endregion
 
 #region --- VALIDATION ---
@@ -21,18 +18,16 @@ public class UpdateEmployeeOfficialCommandValidator : AbstractValidator<UpdateEm
 {
     public UpdateEmployeeOfficialCommandValidator()
     {
-        //RuleFor(x => x.FirstName)
-        //    .Must(value => !string.IsNullOrWhiteSpace(value)
-        //        && Regex.IsMatch(value, @"^[A-Za-z]+$")
-        //        && !value.Equals("Select", StringComparison.OrdinalIgnoreCase))
-        //    .WithMessage("Please enter a valid First Name name.")
-        //    .MinimumLength(3).WithMessage("First Name must be more than 2 characters.")
-        //    .MaximumLength(30).WithMessage("First Name cannot exceed 30 characters.");
-        //RuleFor(x => x.LastName)
-        //    .NotEmpty()
-        //    .Matches("^[A-Za-z]{3,30}$")
-        //    .WithMessage("Last name must contain only letters and be between 3 and 30 characters long.");
-
+        RuleFor(x => x.Id).NotEmpty();
+        RuleFor(x => x.OfficialInfo).NotNull();
+        //RuleFor(x => x.OfficialInfo.CompanyId).NotEmpty();
+        RuleFor(x => x.OfficialInfo.OrganizationUnitId).NotEmpty();
+        //RuleFor(x => x.OfficialInfo.DepartmentId).NotEmpty();
+        RuleFor(x => x.OfficialInfo.EmployementType).NotEmpty();
+        RuleFor(x => x.OfficialInfo.OfficialEmail).NotEmpty();
+        RuleFor(x => x.OfficialInfo.DateOfJoining).NotEmpty();
+        //RuleFor(x => x.OfficialInfo.DateOfConfirmation).NotEmpty();
+        RuleFor(x => x.UserId).NotEmpty();
     }
 }
 #endregion
@@ -50,13 +45,14 @@ internal sealed class UpdateEmployeeOfficialCommandHandler(IEmployeeRepository e
         }
 
         employee.UpdateOfficialInfo(
-            new OfficialInfo(request.CompanyId, request.OrganizationUnitId, request.DepartmentId, request.EmployementType, request.DateOfJoining, request.DateOfConfirmation,
-                request.SeparationDate, request.ReferedBy, request.HowYouKnow, request.OfficialEmail, request.IsActive),
+            new OfficialInfo(request.OfficialInfo.CompanyId, request.OfficialInfo.OrganizationUnitId, request.OfficialInfo.DepartmentId, request.OfficialInfo.EmployementType, request.OfficialInfo.DateOfJoining, request.OfficialInfo.DateOfConfirmation,
+                request.OfficialInfo.SeparationDate, request.OfficialInfo.ReferedBy, request.OfficialInfo.HowYouKnow, request.OfficialInfo.OfficialEmail, request.OfficialInfo.IsActive),
             request.UserId
             );
-        //employeeRepository.UpdateEmployee(existingEmployee);
-
         await employeeRepository.UpdateAsync(employee);
+
+
+
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Ok($"Employee official information updated successfully for Name : {employee.PersonalInfo.FirstName} {employee.PersonalInfo.LastName}");
     }
