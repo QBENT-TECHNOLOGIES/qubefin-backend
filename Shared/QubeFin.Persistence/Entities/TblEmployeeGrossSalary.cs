@@ -14,4 +14,6 @@ public partial class TblEmployeeGrossSalary
     public DateOnly? EffectiveTill { get; set; }
 
     public decimal GrossSalary { get; set; }
+
+    public virtual TblEmployee Employee { get; set; } = null!;
 }
