@@ -86,7 +86,7 @@ internal sealed class GetAttendanceHistoryByQueryHandler(QubeFinDataContext cont
             ActualInTime = m.ActualInTime.ToString("h:mm tt"),
             ActualOutTime = m.ActualOutTime?.ToString("h:mm tt"),
             WorkingHours = GetWorkingHours(m.ActualInTime, m.ActualOutTime),
-            Status = GetAttendanceStatus(m.IsLateEntry, m.IsEarlyLeave),
+            Status = GetAttendanceStatus(m.AttendanceDate, m.ActualInTime, m.ActualOutTime, m.IsLateEntry, m.IsEarlyLeave),
             IsRegulerized = m.IsRegularization ? "Yes" : "-"
         }).ToList();
 
@@ -105,9 +105,13 @@ internal sealed class GetAttendanceHistoryByQueryHandler(QubeFinDataContext cont
 
         return $"{duration.Hours} hours {duration.Minutes} minutes";
     }
-    private static string GetAttendanceStatus(bool IsLateEntry, bool IsEarlyLeave)
+    private static string GetAttendanceStatus(DateOnly attendanceDate, TimeOnly? inTime, TimeOnly? outTime, bool isLateEntry, bool isEarlyLeave)
     {
-        return (IsLateEntry, IsEarlyLeave) switch
+        if (attendanceDate < DateOnly.FromDateTime(DateTime.Now.Date) && (inTime == null || outTime == null))
+        {
+            return "MSP";
+        }
+        return (isLateEntry, isEarlyLeave) switch
         {
             (false, false) => "On Time",
             (true, false) => "Late Entry",

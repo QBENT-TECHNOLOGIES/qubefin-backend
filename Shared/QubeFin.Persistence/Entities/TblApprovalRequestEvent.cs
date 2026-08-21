@@ -11,13 +11,13 @@ public partial class TblApprovalRequestEvent
 
     public Guid MappingId { get; set; }
 
-    public Guid ApprovalWorkflowEventId { get; set; }
+    public Guid ApprovalWorkflowStepId { get; set; }
 
     public Guid SenderDesignationId { get; set; }
 
     public Guid ReceiverDesignationId { get; set; }
 
-    public Guid? NextApprovalWorkflowEventId { get; set; }
+    public Guid? NextApprovalWorkflowStepId { get; set; }
 
     public DateTime EventDate { get; set; }
 
@@ -28,6 +28,10 @@ public partial class TblApprovalRequestEvent
     public DateTime? SubmittedOn { get; set; }
 
     public Guid? SubmittedBy { get; set; }
+
+    public virtual TblApprovalWorkflowStep ApprovalWorkflowStep { get; set; } = null!;
+
+    public virtual TblApprovalWorkflowStep? NextApprovalWorkflowStep { get; set; }
 
     public virtual TblDesignation ReceiverDesignation { get; set; } = null!;
 
