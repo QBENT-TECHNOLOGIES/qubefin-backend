@@ -885,6 +885,16 @@ public partial class QubeFinDataContext : DbContext
             entity.ToTable("Tbl_DesignationGradeMapping", "Hrms");
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())", "DF_Tbl_DesignationGradeMapping_Id");
+
+            entity.HasOne(d => d.Designation).WithMany(p => p.TblDesignationGradeMappings)
+                .HasForeignKey(d => d.DesignationId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_DesignationGradeMapping_Tbl_Designation");
+
+            entity.HasOne(d => d.Grade).WithMany(p => p.TblDesignationGradeMappings)
+                .HasForeignKey(d => d.GradeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_DesignationGradeMapping_Tbl_SalaryGrade");
         });
 
         modelBuilder.Entity<TblDesignationRole>(entity =>
@@ -932,7 +942,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.EmergencyContactName2).HasMaxLength(50);
             entity.Property(e => e.EmergencyContactRelation1).HasMaxLength(20);
             entity.Property(e => e.EmergencyContactRelation2).HasMaxLength(20);
-            entity.Property(e => e.EmployementType).HasMaxLength(10);
+            entity.Property(e => e.EmployementType).HasMaxLength(20);
             entity.Property(e => e.Esiipno)
                 .HasMaxLength(20)
                 .HasColumnName("ESIIPNo");

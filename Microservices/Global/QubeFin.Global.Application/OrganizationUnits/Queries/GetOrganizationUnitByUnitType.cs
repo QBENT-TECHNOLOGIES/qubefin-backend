@@ -10,7 +10,7 @@ public record GetOrganizationUnitByUnitTypeQuery(Guid UnitTypeId) : IRequest<Res
 #endregion
 
 #region --- RESPONSE ---
-public record GetOrganizationUnitByUnitTypeResponse(Guid Id, string Name);
+public record GetOrganizationUnitByUnitTypeResponse(Guid Id, string Name, Guid? CompanyId, string? CompanyName);
 #endregion
 
 #region --- HANDLER ---
@@ -20,12 +20,12 @@ internal sealed class GetOrganizationUnitByUnitTypeQueryHandler(QubeFinDataConte
     public async Task<Result<List<GetOrganizationUnitByUnitTypeResponse>>> Handle(GetOrganizationUnitByUnitTypeQuery request, CancellationToken cancellationToken)
     {
         var organizationUnitEntities = await context
-            .TblOrganizationUnits
+            .TblOrganizationUnits.Include(ou => ou.Company)
             .Where(m => m.OrganizationUnitTypeId == request.UnitTypeId)
             .OrderBy(m => m.Name)
             .ToListAsync(cancellationToken);
 
-        var organizationUnits = organizationUnitEntities.Select(m => new GetOrganizationUnitByUnitTypeResponse(m.Id, m.Name)).ToList();
+        var organizationUnits = organizationUnitEntities.Select(m => new GetOrganizationUnitByUnitTypeResponse(m.Id, m.Name, m.CompanyId, m.Company?.Name)).ToList();
         return Result.Ok(organizationUnits);
     }
 }

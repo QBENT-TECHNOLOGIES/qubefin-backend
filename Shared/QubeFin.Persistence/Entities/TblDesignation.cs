@@ -31,6 +31,8 @@ public partial class TblDesignation
 
     public virtual ICollection<TblApprovalRequestEvent> TblApprovalRequestEventSenderDesignations { get; set; } = new List<TblApprovalRequestEvent>();
 
+    public virtual ICollection<TblDesignationGradeMapping> TblDesignationGradeMappings { get; set; } = new List<TblDesignationGradeMapping>();
+
     public virtual ICollection<TblDesignationRole> TblDesignationRoles { get; set; } = new List<TblDesignationRole>();
 
     public virtual ICollection<TblEmployeeDesignation> TblEmployeeDesignations { get; set; } = new List<TblEmployeeDesignation>();
