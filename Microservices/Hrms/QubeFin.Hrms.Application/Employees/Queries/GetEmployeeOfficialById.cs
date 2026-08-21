@@ -16,6 +16,7 @@ public record GetOfficialResponse(
     Guid? OrganizationUnitTypeId,
     Guid? OrganizationUnitId,
     Guid? CompanyId,
+    string? CompanyName,
     Guid? DesignationId,
     string? SalaryGrade,
     decimal? GrossSalary,
@@ -42,7 +43,7 @@ internal sealed class GetEmployeeOfficialByIdQueryHandler(QubeFinDataContext con
         var employee = await context
             .TblEmployees
             .Include(e => e.OrganizationUnit)
-            //.Include(e => e.Company)
+            .Include(e => e.Company)
             //.Include(e => e.Department)
             .Include(e => e.TblEmployeeGrossSalaries)
             .Include(e => e.TblEmployeeDesignations)
@@ -73,9 +74,9 @@ internal sealed class GetEmployeeOfficialByIdQueryHandler(QubeFinDataContext con
             OrganizationUnitTypeId: employee.OrganizationUnit?.OrganizationUnitTypeId,
             OrganizationUnitId: employee.OrganizationUnitId,
             CompanyId: employee.CompanyId,
+            CompanyName: employee.Company?.Name,
             DesignationId: designationId,
             //OrganizationUnitName: employee.OrganizationUnit?.Name,
-            //CompanyName: employee.Company?.Name,
             SalaryGrade: employeeDesignationGrade?.Grade?.Name,
             GrossSalary: grossSalary,
             DepartmentId: employee.DepartmentId,
