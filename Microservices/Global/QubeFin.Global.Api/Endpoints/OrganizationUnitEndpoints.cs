@@ -15,6 +15,15 @@ public class OrganizationUnitEndpoints : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
+        app.MapGet("organization-units/{id:guid}/types", async (ISender sender, [FromRoute] Guid id) =>
+        {
+            var result = await sender.Send(new GetOrganizationUnitByUnitTypeQuery(id));
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get All Organization Units By Type Id")
+        .WithTags("OrganizationUnits")
+        .RequireAuthorization();
+
         app.MapGet("organization-units/{id:guid}", async (ISender sender, [FromRoute] Guid id) =>
         {
             var result = await sender.Send(new GetOrganizationUnitByIdQuery(id));
