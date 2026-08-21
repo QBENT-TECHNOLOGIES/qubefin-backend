@@ -16,6 +16,7 @@ public record GetOfficialResponse(
     Guid? OrganizationUnitTypeId,
     Guid? OrganizationUnitId,
     Guid? CompanyId,
+    string? CompanyName,
     Guid? DesignationId,
     string? SalaryGrade,
     decimal? GrossSalary,
@@ -42,7 +43,7 @@ internal sealed class GetEmployeeOfficialByIdQueryHandler(QubeFinDataContext con
         var employee = await context
             .TblEmployees
             .Include(e => e.OrganizationUnit)
-            //.Include(e => e.Company)
+            .Include(e => e.Company)
             //.Include(e => e.Department)
             .Include(e => e.TblEmployeeGrossSalaries)
             .Include(e => e.TblEmployeeDesignations)
@@ -61,7 +62,12 @@ internal sealed class GetEmployeeOfficialByIdQueryHandler(QubeFinDataContext con
         var employeeDesignationGrade = await context
             .TblDesignationGradeMappings.Include(e => e.Grade)
             .Where(m => m.DesignationId == designationId)
-            .FirstOrDefaultAsync(cancellationToken: cancellationToken);
+            .AsNoTracking()
+            .ToListAsync(cancellationToken: cancellationToken);
+
+        string? salaryGrade = employeeDesignationGrade.Any(dg => dg.IsActive) ?
+            employeeDesignationGrade.First(dg => dg.IsActive).Grade?.Name :
+            employeeDesignationGrade.FirstOrDefault()?.Grade?.Name;
 
         decimal? grossSalary = employee.TblEmployeeGrossSalaries.Any(eg => eg.EffectiveTill == null) ?
             employee.TblEmployeeGrossSalaries.Where(eg => eg.EffectiveTill == null).First().GrossSalary :
@@ -73,10 +79,10 @@ internal sealed class GetEmployeeOfficialByIdQueryHandler(QubeFinDataContext con
             OrganizationUnitTypeId: employee.OrganizationUnit?.OrganizationUnitTypeId,
             OrganizationUnitId: employee.OrganizationUnitId,
             CompanyId: employee.CompanyId,
+            CompanyName: employee.Company?.Name,
             DesignationId: designationId,
             //OrganizationUnitName: employee.OrganizationUnit?.Name,
-            //CompanyName: employee.Company?.Name,
-            SalaryGrade: employeeDesignationGrade?.Grade?.Name,
+            SalaryGrade: salaryGrade,
             GrossSalary: grossSalary,
             DepartmentId: employee.DepartmentId,
             DepartmentName: employee.Department?.Name,
