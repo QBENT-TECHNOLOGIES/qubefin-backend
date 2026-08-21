@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Mappers.App;
 using QubeFin.Persistence.Mappers.Hrms;
 using QubeFin.Persistence.Models.Hrms;
@@ -13,6 +14,8 @@ public interface IEmployeeRepository
     Task UpdateAsync(Employee employee);
     Task<Employee?> GetEmloyeeOrganization(Guid id);
     Task<bool> GetExsitingEmployeeByCode(Guid? id, string code);
+    Task AddDesignationAsync(Guid employeeId, Guid designationId);
+    Task AddGrossSalaryAsync(Guid employeeId, decimal grossSalary);
 }
 public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepository
 {
@@ -65,6 +68,30 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
     public async Task<bool> GetExsitingEmployeeByCode(Guid? id, string code)
     {
         return await context.TblEmployees.AsNoTracking().AnyAsync(x => x.Code.ToLower().Trim() == code.ToLower().Trim() && (id == null || id == Guid.Empty || x.Id != id));
+    }
+    public async Task AddDesignationAsync(Guid employeeId, Guid designationId)
+    {
+        var employeeDesignation = new TblEmployeeDesignation
+        {
+            Id = Guid.NewGuid(),
+            EmployeeId = employeeId,
+            DesignationId = designationId,
+            EffectiveFrom = DateTime.UtcNow,
+            EffectiveTo = null
+        };
+        await context.TblEmployeeDesignations.AddAsync(employeeDesignation);
+    }
+    public async Task AddGrossSalaryAsync(Guid employeeId, decimal grossSalary)
+    {
+        var employeeGrossSalary = new TblEmployeeGrossSalary
+        {
+            Id = Guid.NewGuid(),
+            EmployeeId = employeeId,
+            GrossSalary = grossSalary,
+            EffectiveFrom = DateOnly.FromDateTime(DateTime.UtcNow),
+            EffectiveTill = null
+        };
+        await context.TblEmployeeGrossSalaries.AddAsync(employeeGrossSalary);
     }
 }
 
