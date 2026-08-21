@@ -24,7 +24,11 @@ public class UpdateEmployeeOfficialCommandValidator : AbstractValidator<UpdateEm
         RuleFor(x => x.OfficialInfo.OrganizationUnitId).NotEmpty();
         //RuleFor(x => x.OfficialInfo.DepartmentId).NotEmpty();
         RuleFor(x => x.OfficialInfo.EmployementType).NotEmpty();
-        RuleFor(x => x.OfficialInfo.OfficialEmail).NotEmpty();
+        RuleFor(x => x.OfficialInfo.OfficialEmail)
+            .NotEmpty().WithMessage("Official Email is required.")
+           .Matches(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+           .When(x => !string.IsNullOrWhiteSpace(x.OfficialInfo.OfficialEmail))
+           .WithMessage("Enter a valid email address.");
         RuleFor(x => x.OfficialInfo.DateOfJoining).NotEmpty();
         //RuleFor(x => x.OfficialInfo.DateOfConfirmation).NotEmpty();
         RuleFor(x => x.UserId).NotEmpty();
