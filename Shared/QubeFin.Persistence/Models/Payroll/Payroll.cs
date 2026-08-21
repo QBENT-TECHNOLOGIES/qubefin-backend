@@ -172,9 +172,11 @@ namespace QubeFin.Persistence.Models.Payroll
         public int PayrollMonth { get; set; }
         public string? PayrollMonthYear { get; set; }
         public int EmployeeCount { get; set; }
+        public decimal EmployerContribution { get; set; }
         public decimal Earnings { get; set; }
         public decimal Deductions { get; set; }
         public decimal NetPay { get; set; }
         public int Locked { get; set; }
+        public string? CompanyName { get; set; }
     }
 }
