@@ -357,6 +357,15 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Remarks).HasMaxLength(500);
             entity.Property(e => e.SubmittedOn).HasColumnType("datetime");
 
+            entity.HasOne(d => d.ApprovalWorkflowStep).WithMany(p => p.TblApprovalRequestEventApprovalWorkflowSteps)
+                .HasForeignKey(d => d.ApprovalWorkflowStepId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_ApprovalRequestEvent_Tbl_ApprovalWorkflowStep");
+
+            entity.HasOne(d => d.NextApprovalWorkflowStep).WithMany(p => p.TblApprovalRequestEventNextApprovalWorkflowSteps)
+                .HasForeignKey(d => d.NextApprovalWorkflowStepId)
+                .HasConstraintName("FK_Tbl_ApprovalRequestEvent_Tbl_ApprovalWorkflowStep1");
+
             entity.HasOne(d => d.ReceiverDesignation).WithMany(p => p.TblApprovalRequestEventReceiverDesignations)
                 .HasForeignKey(d => d.ReceiverDesignationId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -448,6 +457,11 @@ public partial class QubeFinDataContext : DbContext
                 .HasForeignKey(d => d.ApprovalWorkflowId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_ApprovalWorkflowStep_Tbl_ApprovalWorkflow");
+
+            entity.HasOne(d => d.OrganizationUnitType).WithMany(p => p.TblApprovalWorkflowSteps)
+                .HasForeignKey(d => d.OrganizationUnitTypeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_ApprovalWorkflowStep_Tbl_OrganizationUnitType");
 
             entity.HasOne(d => d.ReceiverPost).WithMany(p => p.TblApprovalWorkflowSteps)
                 .HasForeignKey(d => d.ReceiverPostId)
@@ -625,6 +639,7 @@ public partial class QubeFinDataContext : DbContext
             entity.ToTable("Tbl_Company", "Global");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.LogoUrl).HasMaxLength(500);
             entity.Property(e => e.Name).HasMaxLength(200);
         });
 

@@ -77,7 +77,7 @@ internal sealed class GetAttendanceHistoryByEmployeeQueryHandler(QubeFinDataCont
             ActualInTime = m.ActualInTime.ToString("h:mm tt"),
             ActualOutTime = m.ActualOutTime?.ToString("h:mm tt"),
             WorkingHours = GetWorkingHours(m.ActualInTime, m.ActualOutTime),
-            Status = GetAttendanceStatus(m.IsLateEntry, m.IsEarlyLeave),
+            Status = m.ActualOutTime == null ? "MSP" : GetAttendanceStatus(m.IsLateEntry, m.IsEarlyLeave),
             IsRegulerized = m.IsRegularization ? "Yes" : "-"
         }).ToList();
 

@@ -9,6 +9,8 @@ public partial class TblApprovalWorkflowStep
 
     public Guid ApprovalWorkflowId { get; set; }
 
+    public Guid OrganizationUnitTypeId { get; set; }
+
     public Guid ReceiverPostId { get; set; }
 
     public bool IsRecommendEvent { get; set; }
@@ -23,5 +25,11 @@ public partial class TblApprovalWorkflowStep
 
     public virtual TblApprovalWorkflow ApprovalWorkflow { get; set; } = null!;
 
+    public virtual TblOrganizationUnitType OrganizationUnitType { get; set; } = null!;
+
     public virtual TblPost ReceiverPost { get; set; } = null!;
+
+    public virtual ICollection<TblApprovalRequestEvent> TblApprovalRequestEventApprovalWorkflowSteps { get; set; } = new List<TblApprovalRequestEvent>();
+
+    public virtual ICollection<TblApprovalRequestEvent> TblApprovalRequestEventNextApprovalWorkflowSteps { get; set; } = new List<TblApprovalRequestEvent>();
 }
