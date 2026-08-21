@@ -14,4 +14,5 @@ public class DocumentDetailRequest
     public string? FileNo { get;  set; }
     public Guid EmployeeId { get;  set; }
     public IFormFile? File { get; set; }
+    public string? FileUrl { get; set; }
 }

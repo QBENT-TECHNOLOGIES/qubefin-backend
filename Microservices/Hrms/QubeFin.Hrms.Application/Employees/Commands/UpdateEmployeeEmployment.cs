@@ -60,12 +60,12 @@ namespace QubeFin.Hrms.Application.Employees.Commands
 
                 var employmentEntity = new TblEmployeeEmployment()
                 {
-                    Id = req.Id,
+                    Id = Guid.NewGuid()  ,
                     EmployeeId = request.Id,
                     EmployerName = req.EmployerName,
                     Designation = req.Designation,
-                    FromDate = DateOnly.FromDateTime(req.FromDate),
-                    ToDate = DateOnly.FromDateTime(req.ToDate),
+                    FromDate = req.FromDate,
+                    ToDate = req.ToDate,
                     LastDrawnSalary = req.LastDrawnSalary,
                     JobTitle = req.JobTitle,
                     NocFileName = req.NocFileName,
