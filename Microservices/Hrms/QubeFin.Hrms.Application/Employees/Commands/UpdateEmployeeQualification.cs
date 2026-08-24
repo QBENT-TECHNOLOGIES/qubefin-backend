@@ -89,7 +89,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
 
                 var employmentEntity = new TblEmployeeQualification()
                 {
-                    Id = req.Id,
+                    Id = Guid.NewGuid(),
                     EmployeeId = request.Id,
                     AcademicStream = req.AcademicStream,
                     Specialization = req.Specialization,

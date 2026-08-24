@@ -7,8 +7,13 @@ public class EmployeeDesignation
     public DateTime EffectiveFrom { get; private set; }
     public DateTime? EffectiveTo { get; private set; }
 
-    public EmployeeDesignation()
+    public EmployeeDesignation() {}
+    public EmployeeDesignation(Guid id, Guid designationId, DateTime effectiveFrom, DateTime? effectiveTo)
     {
+        Id = id == Guid.Empty ? Guid.NewGuid() : id;
+        DesignationId = designationId;
+        EffectiveFrom = effectiveFrom;
+        EffectiveTo = effectiveTo;
     }
 
     public void Update(Guid designationId, DateTime effectiveFrom, DateTime? effectiveTo)

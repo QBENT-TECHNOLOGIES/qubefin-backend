@@ -12,4 +12,8 @@ public partial class TblDesignationGradeMapping
     public Guid GradeId { get; set; }
 
     public bool IsActive { get; set; }
+
+    public virtual TblDesignation Designation { get; set; } = null!;
+
+    public virtual TblSalaryGrade Grade { get; set; } = null!;
 }

@@ -17,10 +17,12 @@ public static class EmployeeMapper
             MapPermanentAddressInfo(entity),
             MapPayrollInfo(entity),
             MapOrganizationInfo(entity),
+            MapDesignationInfo(entity),
             MapQualificationInfo(entity),
             MapReferenceInfo(entity),
             MapDocumntInfo(entity),
             MapEmploymentInfo(entity),
+            MapGrossSalaryInfo(entity),
             entity.CreatedBy,
             entity.CreatedDate,
             entity.LastModifiedBy,
@@ -211,6 +213,16 @@ public static class EmployeeMapper
             entity.OrganizationUnit?.AttendanceOutTime
         );
     }
+    private static List<EmployeeDesignation> MapDesignationInfo(TblEmployee entity)
+    {
+        return [.. entity.TblEmployeeDesignations
+        .Select(d => new EmployeeDesignation(
+            d.Id,
+            d.DesignationId,
+            d.EffectiveFrom,
+            d.EffectiveTo
+        )).OrderBy(d => d.EffectiveFrom)];
+    }
     private static List<EmployeeQualification> MapQualificationInfo(TblEmployee entity)
     {
         return [.. entity.TblEmployeeQualifications
@@ -279,5 +291,14 @@ public static class EmployeeMapper
             q.CreatedBy
         ))];
     }
-
+    private static List<EmployeeGrossSalary> MapGrossSalaryInfo(TblEmployee entity)
+    {
+        return [.. entity.TblEmployeeGrossSalaries
+        .Select(d => new EmployeeGrossSalary(
+            d.Id,
+            d.EffectiveFrom,
+            d.EffectiveTill,
+            d.GrossSalary
+        )).OrderBy(d => d.EffectiveFrom)];
+    }
 }

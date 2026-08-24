@@ -38,7 +38,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
     #endregion
 
     #region --- HANDLER ---
-    internal sealed class UpdateEmployeeDocumentCommandHandler(IEmployeeRepository employeeRepository, IUnitOfWork unitOfWork, QubeFinDataContext context)
+    internal sealed class UpdateEmployeeDocumentCommandHandler(IEmployeeRepository employeeRepository, IUnitOfWork unitOfWork, QubeFinDataContext context, IFileStorageRepository fileStorageRepository)
         : IRequestHandler<UpdateEmployeeDocumentCommand, Result<string>>
     {
         public async Task<Result<string>> Handle(UpdateEmployeeDocumentCommand request, CancellationToken cancellationToken)
@@ -54,6 +54,16 @@ namespace QubeFin.Hrms.Application.Employees.Commands
             for (int i = 0; i < request.Documents.Count; i++)
             {
                 var req = request.Documents[i];
+                var fileNo = req.FileNo;
+                if (req.File != null && req.File.Length > 0)
+                {
+                    await using var stream = req.File.OpenReadStream();
+                    fileNo = await fileStorageRepository.UploadFileAsync(
+                        stream,
+                        req.File.FileName,
+                        req.File.ContentType ?? "application/octet-stream",
+                        cancellationToken).ConfigureAwait(false);
+                }
                 //int sequenceValue = i + 1;
 
                 var documentEntity = new TblEmployeeDocument()
@@ -65,7 +75,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
                     ValidFrom = req.ValidFrom != null ? DateOnly.FromDateTime(req.ValidFrom.Value) : null,
                     ValidTill = req.ValidTill != null ? DateOnly.FromDateTime(req.ValidTill.Value) : null,
                     FileName = req.FileName,
-                    FileNo = req.FileNo,
+                    FileNo = fileNo,
                     EmployeeId = request.Id,
                     UploadedBy = request.LastModifiedBy,
                     UploadedOn = DateTime.Now

@@ -1,4 +1,6 @@
-﻿namespace QubeFin.Hrms.Application.Employees.Models;
+﻿using Microsoft.AspNetCore.Http;
+
+namespace QubeFin.Hrms.Application.Employees.Models;
 
 public class DocumentDetailRequest
 {
@@ -11,4 +13,6 @@ public class DocumentDetailRequest
     public string? FileName { get;  set; }
     public string? FileNo { get;  set; }
     public Guid EmployeeId { get;  set; }
+    public IFormFile? File { get; set; }
+    public string? FileUrl { get; set; }
 }

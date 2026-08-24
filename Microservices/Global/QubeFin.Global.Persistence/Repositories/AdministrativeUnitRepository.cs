@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Mappers.Global;
 using QubeFin.Persistence.Models.Global;
 
@@ -11,6 +12,8 @@ public interface IAdministrativeUnitRepository
     Task<AdministrativeUnit?> GetByIdAsync(Guid id);
     Task AddAsync(AdministrativeUnit administrativeUnit);
     void Update(AdministrativeUnit administrativeUnit);
+    Task<List<TblPostOffice>> GetAllPostofficeAsync(string Pincode);
+    Task<List<TblPoliceStation>> GetPoliceStationsByDistrictAsync(Guid districtId);
 }
 
 public class AdministrativeUnitRepository(QubeFinDataContext context) : IAdministrativeUnitRepository
@@ -50,5 +53,13 @@ public class AdministrativeUnitRepository(QubeFinDataContext context) : IAdminis
     public void Update(AdministrativeUnit administrativeUnit)
     {
         context.TblAdministrativeUnits.Update(administrativeUnit.ToEntity());
+    }
+    public async Task<List<TblPostOffice>> GetAllPostofficeAsync(string Pincode)
+    {
+        return await context.TblPostOffices.Where(p => p.Pincode == Pincode).OrderBy(p => p.Name).AsNoTracking().ToListAsync();
+    }
+    public async Task<List<TblPoliceStation>> GetPoliceStationsByDistrictAsync(Guid districtId)
+    {
+        return await context.TblPoliceStations.Where(m => m.DistrictId == districtId).AsNoTracking().ToListAsync();
     }
 }

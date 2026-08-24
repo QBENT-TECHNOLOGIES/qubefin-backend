@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Mappers.App;
 using QubeFin.Persistence.Mappers.Hrms;
 using QubeFin.Persistence.Models.Hrms;
@@ -11,9 +12,10 @@ public interface IEmployeeRepository
     Task<Employee?> GetByIdAsync(Guid id);
     Task AddAsync(Employee employee);
     Task UpdateAsync(Employee employee);
-    //Task<Employee> GetById(Guid employeeId);
     Task<Employee?> GetEmloyeeOrganization(Guid id);
     Task<bool> GetExsitingEmployeeByCode(Guid? id, string code);
+    Task AddDesignationAsync(Guid employeeId, Guid designationId, DateOnly joiningDate);
+    Task AddGrossSalaryAsync(Guid employeeId, decimal grossSalary, DateOnly joiningDate);
 }
 public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepository
 {
@@ -41,17 +43,6 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
     //        OrganizationUnitId = employee.OrganizationUnitId
     //    };
     //}
-    //public async Task<Employee> GetById(Guid employeeId)
-    //{
-    //    var existingEmployee = await context.TblEmployees.FirstOrDefaultAsync(m => m.Id == employeeId);
-    //    if (existingEmployee == null)
-    //    {
-    //        return null;
-    //    }
-
-    //    return existingEmployee.ToDomain();
-
-    //}
     public async Task<Employee?> GetByIdAsync(Guid id)
     {
         var employeeEntity = await context.TblEmployees
@@ -60,6 +51,7 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
             .Include(x => x.TblEmployeeEmployments)
             .Include(x => x.TblEmployeeDocuments)
             .Include(x => x.TblEmployeeReferences)
+            .Include(x => x.TblEmployeeGrossSalaries)
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id);
 
@@ -76,6 +68,30 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
     public async Task<bool> GetExsitingEmployeeByCode(Guid? id, string code)
     {
         return await context.TblEmployees.AsNoTracking().AnyAsync(x => x.Code.ToLower().Trim() == code.ToLower().Trim() && (id == null || id == Guid.Empty || x.Id != id));
+    }
+    public async Task AddDesignationAsync(Guid employeeId, Guid designationId, DateOnly joiningDate)
+    {
+        var employeeDesignation = new TblEmployeeDesignation
+        {
+            Id = Guid.NewGuid(),
+            EmployeeId = employeeId,
+            DesignationId = designationId,
+            EffectiveFrom = joiningDate.ToDateTime(TimeOnly.MinValue),
+            EffectiveTo = null
+        };
+        await context.TblEmployeeDesignations.AddAsync(employeeDesignation);
+    }
+    public async Task AddGrossSalaryAsync(Guid employeeId, decimal grossSalary, DateOnly joiningDate)
+    {
+        var employeeGrossSalary = new TblEmployeeGrossSalary
+        {
+            Id = Guid.NewGuid(),
+            EmployeeId = employeeId,
+            GrossSalary = grossSalary,
+            EffectiveFrom = joiningDate,
+            EffectiveTill = null
+        };
+        await context.TblEmployeeGrossSalaries.AddAsync(employeeGrossSalary);
     }
 }
 

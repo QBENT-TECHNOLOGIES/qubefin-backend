@@ -21,7 +21,7 @@ public class AdministrativeUnitEndpoints : IEndpoint
         })
         .RequireAuthorization()
         //.RequireAuthorization("Permission:Users.View")
-        .WithSummary("Get Administrative Unit By Id");
+        .WithSummary("Get Administrative Unit By Id").WithTags("AdministrativeUnits");
 
         app.MapGet("administrative-units/children/", async (Guid? id, ISender sender) =>
         {
@@ -30,7 +30,7 @@ public class AdministrativeUnitEndpoints : IEndpoint
         })
         .RequireAuthorization()
         //.RequireAuthorization("Permission:Users.View")
-        .WithSummary("Get Administrative Units By Parent Id");
+        .WithSummary("Get Administrative Units By Parent Id").WithTags("AdministrativeUnits");
 
         app.MapGet("administrative-units/tree", async (ISender sender) =>
         {
@@ -38,7 +38,7 @@ public class AdministrativeUnitEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         .RequireAuthorization()
-        .WithSummary("Get Administrative Units Tree"); ;
+        .WithSummary("Get Administrative Units Tree").WithTags("AdministrativeUnits");
 
         app.MapPost("administrative-units", async (ISender sender, ClaimsPrincipal principal, [FromBody] AdministrativeUnitRequest request) =>
         {
@@ -53,7 +53,7 @@ public class AdministrativeUnitEndpoints : IEndpoint
         })
         .RequireAuthorization()
         //.RequireAuthorization("Permission:Users.Add")
-        .WithSummary("Create Administrative Unit");
+        .WithSummary("Create Administrative Unit").WithTags("AdministrativeUnits");
 
         app.MapPut("administrative-units/{id:guid}", async (ISender sender, ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] AdministrativeUnitRequest request) =>
         {
@@ -67,6 +67,18 @@ public class AdministrativeUnitEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         .RequireAuthorization()
-        .WithSummary("Update Administrative Unit"); ;
+        .WithSummary("Update Administrative Unit").WithTags("AdministrativeUnits");
+
+        app.MapGet("administrative-units/postoffices/{pincode:string}", async (string pincode, ISender sender, CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(new GetAllPostofficeQuery(pincode), cancellationToken);
+            return result.ToHttpResult();
+        }).WithSummary("Get Post Office by Pincode.").WithTags("AdministrativeUnits");
+
+        app.MapGet("administrative-units/police-stations/{id:guid}", async (Guid id, ISender sender, CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(new GetPoliceStationsByDistrictQuery(id), cancellationToken);
+            return result.ToHttpResult();
+        }).WithSummary("Get All Police Staions By District.").WithTags("AdministrativeUnits");
     }
 }
