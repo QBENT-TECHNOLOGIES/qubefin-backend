@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Azure.Core;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Mappers.App;
 using QubeFin.Persistence.Models.App;
 
@@ -13,6 +15,9 @@ public interface IUserRepository
     Task<string> HashPasswordAsync(string userName, string password);
     Task<bool> VerifyPasswordAsync(AppUser user, string password);
     Task<User?> GetUserBySessionTokenAsync(string sessionToken);
+    Task<bool> GetExsitingUserByUserName(Guid? id, string userName);
+    Task<User> GetExistingUser(Guid? id, CancellationToken cancellation);
+    Task<bool> GetExsitingEmployeeById(Guid? employeeId);
 }
 
 public class UserRepository(QubeFinDataContext context) : IUserRepository
@@ -67,5 +72,26 @@ public class UserRepository(QubeFinDataContext context) : IUserRepository
         var passwordHasher = new PasswordHasher<AppUser>();
         var result = passwordHasher.VerifyHashedPassword(user, user.Password, password);
         return result == PasswordVerificationResult.Failed ? Task.FromResult(false) : Task.FromResult(true);
+    }
+    public async Task<bool> GetExsitingUserByUserName(Guid? id, string userName)
+    {
+
+        var normalizedUserName = userName.Trim();
+
+        return await context.TblUsers
+            .AsNoTracking()
+            .AnyAsync(x =>
+                x.UserName.Trim() == normalizedUserName &&
+                (!id.HasValue || id.Value == Guid.Empty || x.Id != id.Value));
+    }
+    public async Task<bool> GetExsitingEmployeeById(Guid? employeeId)
+    {
+        return await context.TblUsers.AsNoTracking().AnyAsync(x => x.EmployeeId == employeeId);
+    }
+
+    public async Task<User> GetExistingUser(Guid? id, CancellationToken cancellation)
+    {
+        var entity = await context.TblUsers.AsNoTracking().Include(m => m.Employee).Where(m => m.Id == id).FirstOrDefaultAsync(cancellation) ?? throw new Exception($"User not found for the given Id");
+        return entity.ToDomain();
     }
 }
