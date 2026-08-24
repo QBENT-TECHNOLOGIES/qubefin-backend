@@ -17,6 +17,7 @@ public interface IUserRepository
     Task<User?> GetUserBySessionTokenAsync(string sessionToken);
     Task<bool> GetExsitingUserByUserName(Guid? id, string userName);
     Task<User> GetExistingUser(Guid? id, CancellationToken cancellation);
+    Task<bool> GetExsitingEmployeeById(Guid? employeeId);
 }
 
 public class UserRepository(QubeFinDataContext context) : IUserRepository
@@ -82,6 +83,10 @@ public class UserRepository(QubeFinDataContext context) : IUserRepository
             .AnyAsync(x =>
                 x.UserName.Trim() == normalizedUserName &&
                 (!id.HasValue || id.Value == Guid.Empty || x.Id != id.Value));
+    }
+    public async Task<bool> GetExsitingEmployeeById(Guid? employeeId)
+    {
+        return await context.TblUsers.AsNoTracking().AnyAsync(x => x.EmployeeId == employeeId);
     }
 
     public async Task<User> GetExistingUser(Guid? id, CancellationToken cancellation)
