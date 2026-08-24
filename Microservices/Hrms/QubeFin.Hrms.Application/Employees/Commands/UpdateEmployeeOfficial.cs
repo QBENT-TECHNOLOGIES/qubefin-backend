@@ -42,30 +42,37 @@ internal sealed class UpdateEmployeeOfficialCommandHandler(IEmployeeRepository e
 {
     public async Task<Result<string>> Handle(UpdateEmployeeOfficialCommand request, CancellationToken cancellationToken)
     {
-        var employee = await employeeRepository.GetByIdAsync(request.Id);
-        if (employee == null)
+        try
         {
-            return new ValidationError("Employee does not exist with the given id.");
-        }
+            var employee = await employeeRepository.GetByIdAsync(request.Id);
+            if (employee == null)
+            {
+                return new ValidationError("Employee does not exist with the given id.");
+            }
 
-        employee.UpdateOfficialInfo(
-            new OfficialInfo(
-                request.OfficialInfo.CompanyId, request.OfficialInfo.OrganizationUnitId, request.OfficialInfo.DepartmentId, request.OfficialInfo.EmployementType,
-                request.OfficialInfo.DateOfJoining, request.OfficialInfo.DateOfConfirmation, request.OfficialInfo.SeparationDate, request.OfficialInfo.ReferedBy,
-                request.OfficialInfo.HowYouKnow, request.OfficialInfo.OfficialEmail, request.OfficialInfo.IsActive), request.UserId
-            );
-        await employeeRepository.UpdateAsync(employee);
+            employee.UpdateOfficialInfo(
+                new OfficialInfo(
+                    request.OfficialInfo.CompanyId, request.OfficialInfo.OrganizationUnitId, request.OfficialInfo.DepartmentId, request.OfficialInfo.EmployementType,
+                    request.OfficialInfo.DateOfJoining, request.OfficialInfo.DateOfConfirmation, request.OfficialInfo.SeparationDate, request.OfficialInfo.ReferedBy,
+                    request.OfficialInfo.HowYouKnow, request.OfficialInfo.OfficialEmail, request.OfficialInfo.IsActive), request.UserId
+                );
+            await employeeRepository.UpdateAsync(employee);
 
-        if ((employee.Designations == null || !employee.Designations.Any()) && request.OfficialInfo.DesignationId != null)
-        {
-            await employeeRepository.AddDesignationAsync(employee.Id, request.OfficialInfo.DesignationId.Value, request.OfficialInfo.DateOfJoining.Value);
+            if ((employee.Designations == null || !employee.Designations.Any()) && request.OfficialInfo.DesignationId != null)
+            {
+                await employeeRepository.AddDesignationAsync(employee.Id, request.OfficialInfo.DesignationId.Value, request.OfficialInfo.DateOfJoining.Value);
+            }
+            if ((employee.GrossSalaries == null || !employee.GrossSalaries.Any()) && request.OfficialInfo.GrossSalary > 0)
+            {
+                await employeeRepository.AddGrossSalaryAsync(employee.Id, request.OfficialInfo.GrossSalary.Value, request.OfficialInfo.DateOfJoining.Value);
+            }
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+            return Result.Ok($"Employee official information updated successfully for Name : {employee.PersonalInfo.FirstName} {employee.PersonalInfo.LastName}");
         }
-        if ((employee.GrossSalaries == null || !employee.GrossSalaries.Any()) && request.OfficialInfo.GrossSalary > 0)
+        catch (Exception ex)
         {
-            await employeeRepository.AddGrossSalaryAsync(employee.Id, request.OfficialInfo.GrossSalary.Value, request.OfficialInfo.DateOfJoining.Value);
+            return Result.Fail(new Error($"{ex.Message}"));
         }
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result.Ok($"Employee official information updated successfully for Name : {employee.PersonalInfo.FirstName} {employee.PersonalInfo.LastName}");
     }
 }
 #endregion
