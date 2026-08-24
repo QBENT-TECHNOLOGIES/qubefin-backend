@@ -15,6 +15,6 @@ namespace QubeFin.Hrms.Application.Attendances.Models
         public string? ActualOutTime { get; set; }
         public string? WorkingHours { get; set; }
         public string? Status { get; set; }
-        public string? IsRegulerized { get; set; }
+        public string? IsRegularized { get; set; }
     }
 }

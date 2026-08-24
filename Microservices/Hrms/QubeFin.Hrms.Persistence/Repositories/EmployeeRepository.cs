@@ -57,7 +57,7 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
 
         return employeeEntity is null ? null : employeeEntity.ToDomain();
     }
-        
+
     public async Task<Employee?> GetEmloyeeOrganization(Guid id)
     {
         var employeeEntity = await context.TblEmployees.Include(m => m.OrganizationUnit).FirstOrDefaultAsync(x => x.Id == id);
@@ -71,6 +71,14 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
     }
     public async Task AddDesignationAsync(Guid employeeId, Guid designationId, DateOnly joiningDate)
     {
+        var existingDesignation = await context.TblEmployeeDesignations
+            .Where(ed => ed.EmployeeId != employeeId && ed.DesignationId == designationId && ed.EffectiveTo == null)
+            .FirstOrDefaultAsync();
+        if (existingDesignation != null)
+        {
+            throw new InvalidOperationException("The designation is already assigned to another employee.");
+        }
+
         var employeeDesignation = new TblEmployeeDesignation
         {
             Id = Guid.NewGuid(),

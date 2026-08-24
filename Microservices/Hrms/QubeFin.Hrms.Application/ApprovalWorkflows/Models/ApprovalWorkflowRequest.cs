@@ -13,6 +13,7 @@ public record ApprovalWorkflowRequest(
 public record ApprovalWorkflowStepRequest(
     Guid? Id,
     Guid ReceiverPostId,
+    Guid OrganizationUnitTypeId,
     bool IsRecommendEvent,
     bool IsApprovalEvent,
     string EventStatus,

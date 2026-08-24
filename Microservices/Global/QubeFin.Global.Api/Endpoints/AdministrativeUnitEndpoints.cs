@@ -69,7 +69,7 @@ public class AdministrativeUnitEndpoints : IEndpoint
         .RequireAuthorization()
         .WithSummary("Update Administrative Unit").WithTags("AdministrativeUnits");
 
-        app.MapGet("administrative-units/postoffices/{pincode:string}", async (string pincode, ISender sender, CancellationToken cancellationToken) =>
+        app.MapGet("administrative-units/postoffices/{pincode}", async (string pincode, ISender sender, CancellationToken cancellationToken) =>
         {
             var result = await sender.Send(new GetAllPostofficeQuery(pincode), cancellationToken);
             return result.ToHttpResult();
