@@ -54,6 +54,15 @@ public class User
         return user;
     }
 
+    public void Update(string username, bool isActive, bool hasMfaEnabled, Guid modifiedBy)
+    {
+        UserName = username;
+        IsActive = isActive;
+        HasMfaEnabled = hasMfaEnabled;
+        LastModifiedBy = modifiedBy;
+        LastModifiedOn = DateTime.Now;
+    }
+
     public void EnableMfa()
     {
         HasMfaEnabled = true;

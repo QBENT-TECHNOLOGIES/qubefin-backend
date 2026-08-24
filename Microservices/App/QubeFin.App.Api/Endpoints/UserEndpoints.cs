@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using QubeFin.App.Api.Requests;
 using QubeFin.App.Application.Users.Commands;
 using QubeFin.App.Application.Users.Queries;
 using QubeFin.Core.Endpoint;
@@ -54,19 +55,23 @@ public class UserEndpoints : IEndpoint
         //.RequireAuthorization("Permission:Users.View")
         .WithSummary("Get Logeedin User Info");
 
-        app.MapPost("users", async (ClaimsPrincipal principal, CreateUserCommand command, ISender sender) =>
+        app.MapPost("users", async (ClaimsPrincipal principal, UserCreateRequest request, ISender sender) =>
         {
-            command = command with
-            {
-                UserId = principal.Identity.GetUserId()
-            };
-
-            var result = await sender.Send(command);
+            var result = await sender.Send(new CreateUserCommand(request.UserName, request.Password, request.EmployeeId, principal.Identity.GetUserId()));
             return result.ToHttpResult();
         })
         .RequireAuthorization()
         //.RequireAuthorization("Permission:Users.Add")
         .WithSummary("Create User");
+
+        app.MapPut("users/{id:guid}", async (ClaimsPrincipal principal, UserUpdateRequest request, ISender sender,Guid id) =>
+        {
+            var result = await sender.Send(new UpdateUserCommand(id, request.UserName, request.IsActive, request.HasMfaEnabled, principal.Identity.GetUserId()));
+            return result.ToHttpResult();
+        })
+        .RequireAuthorization()
+        //.RequireAuthorization("Permission:Users.Add")
+        .WithSummary("Update User");
 
         app.MapPost("register-mfa", async (RegisterMfaCommand request, ISender sender, IPublisher publisher) =>
         {
