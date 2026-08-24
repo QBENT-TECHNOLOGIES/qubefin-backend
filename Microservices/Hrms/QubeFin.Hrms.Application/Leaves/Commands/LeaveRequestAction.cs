@@ -48,9 +48,13 @@ internal sealed class LeaveRequestActionCommandHandler(QubeFinDataContext contex
 
             return Result.Ok($"The leave request has been {(request.IsApproved ? "approved" : request.IsRejected ? "rejected" : "recommended")} successfully.");
         }
-        catch
+        catch (SqlException ex)
         {
-            return Result.Fail($"Failed to {(request.IsApproved ? "approve" : request.IsRejected ? "reject" : "recommend")} the leave request. Please try again later.");
+            return Result.Fail(
+                string.IsNullOrWhiteSpace(ex.Message)
+                    ? $"Failed to {(request.IsApproved ? "approve" : request.IsRejected ? "reject" : "recommend")}. Please try again later."
+                    : ex.Message
+            );
         }
     }
 }

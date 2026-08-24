@@ -52,9 +52,13 @@ internal sealed class LeavePrayerActionCommandHandler(QubeFinDataContext context
 
             return Result.Ok($"The leave prayer request has been {(request.IsApproved ? "approved" : request.IsRejected ? "rejected" : "recommended")} successfully.");
         }
-        catch(Exception ex)
+        catch (SqlException ex)
         {
-            return Result.Fail($"Faild to  {(request.IsApproved ? "approve" : request.IsRejected ? "reject" : "recommend")}. Please try again later.");
+            return Result.Fail(
+                string.IsNullOrWhiteSpace(ex.Message)
+                    ? $"Failed to {(request.IsApproved ? "approve" : request.IsRejected ? "reject" : "recommend")}. Please try again later."
+                    : ex.Message
+            );
         }
     }
 }
