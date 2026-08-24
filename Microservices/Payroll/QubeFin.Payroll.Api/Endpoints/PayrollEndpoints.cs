@@ -41,9 +41,9 @@ namespace QubeFin.Payroll.Api.Endpoints
               .WithTags("Payrolls")
             .RequireAuthorization();
 
-            app.MapGet("month-wise-payroll", async (ISender sender, CancellationToken cancellationToken) =>
+            app.MapGet("month-wise-payroll/{companyId?}/{payrollMonth?}/{payrollYear}", async (Guid? companyId, int? payrollMonth, int payrollYear, ISender sender, CancellationToken cancellationToken) =>
             {
-                var result = await sender.Send(new GetMonthwisePayrollSummaryQuery(), cancellationToken);
+                var result = await sender.Send(new GetMonthwisePayrollSummaryQuery(companyId, payrollMonth, payrollYear), cancellationToken);
                 return result.ToHttpResult();
             }).WithSummary("Get month wise payrolls")
               .WithDescription("Retrieves a list of month wise payrolls in the system.")

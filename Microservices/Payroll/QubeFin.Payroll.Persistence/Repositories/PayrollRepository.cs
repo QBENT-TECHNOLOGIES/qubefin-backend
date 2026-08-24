@@ -13,7 +13,7 @@ namespace QubeFin.Payroll.Persistence.Repositories
         Task<IEnumerable<PayrollModel>> GetAllPayrolls();
         Task<MonthlyPayroll> GetMonthlyPayrollAsync(int payrollMonth, int payrollYear);
         Task<List<TblPayRoll>> GetPayrollsForUpdateAsync(int month, int year, CancellationToken cancellationToken = default);
-        Task<IEnumerable<MonthwisePayrollData>> GetMonthwisePayrollSummaryAsync();
+        Task<IEnumerable<MonthwisePayrollData>> GetMonthwisePayrollSummaryAsync(Guid? companyId, int? payrollMonth, int payrollYear);
         Task<bool> HasOpenPayrollAsync(Guid companyId, CancellationToken cancellationToken);
         Task CreatePayrollAsync(Guid companyId, Guid? userId, CancellationToken cancellationToken);
         Task<bool> IsPayrollAvailableForUpdateAsync(Guid id, CancellationToken cancellationToken = default);
@@ -60,13 +60,10 @@ namespace QubeFin.Payroll.Persistence.Repositories
         {
             return await context.TblPayRolls .AnyAsync(p => p.CompanyId == companyId && p.IsLocked == false, cancellationToken);
         }
-        public async Task<IEnumerable<MonthwisePayrollData>> GetMonthwisePayrollSummaryAsync()
+        public async Task<IEnumerable<MonthwisePayrollData>> GetMonthwisePayrollSummaryAsync(Guid? companyId, int? payrollMonth, int payrollYear)
         {
-            var sql = "EXEC Payroll.USP_GetMonthlyPayroll";
-            var result = await context.Database
-                .SqlQueryRaw<MonthwisePayrollData>(sql)
-                .ToListAsync();
-
+            var sql = $"EXEC Payroll.USP_GetMonthlyPayroll @p_CompanyId = {companyId}, @p_Year = {payrollMonth}, @p_Month = {payrollYear}";
+            var result = await context.Database.SqlQueryRaw<MonthwisePayrollData>(sql).ToListAsync();
             return result;
         }
         public async Task<List<TblPayRoll>> GetPayrollsForUpdateAsync(int month, int year, CancellationToken cancellationToken = default)
