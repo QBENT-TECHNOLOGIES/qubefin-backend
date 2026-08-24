@@ -22,7 +22,7 @@ public static class ApprovalWorkflowMapper
             entity.LastModifiedOn,
             entity.LastModifiedBy,
             entity?.LastModifiedByNavigation?.UserName,
-            entity.TblApprovalWorkflowSteps.Select(x => x.ToDomain()),
+            entity.TblApprovalWorkflowSteps.Select(x => x.ToDomain()).OrderBy(m => m.SequenceNo),
             entity.LeaveType?.Title,
             entity.SalaryGrade?.Name,
             entity.OrganizationUnitType?.Name,

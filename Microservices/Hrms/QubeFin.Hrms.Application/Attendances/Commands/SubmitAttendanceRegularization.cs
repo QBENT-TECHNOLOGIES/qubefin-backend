@@ -30,6 +30,8 @@ internal sealed class SubmitAttendanceRegularizationCommandHandler(QubeFinDataCo
 {
     public async Task<Result<string>> Handle(SubmitAttendanceRegularizationCommand request, CancellationToken cancellationToken)
     {
+        bool isApproved = request.submit.Decision.ToLower().Trim() == "approve";
+        bool isRejected = request.submit.Decision.ToLower().Trim() == "reject";
         try
         {
             await context.Database.ExecuteSqlRawAsync(
@@ -46,9 +48,13 @@ internal sealed class SubmitAttendanceRegularizationCommandHandler(QubeFinDataCo
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Ok($"Regularization {request.submit.Decision} successfully");
         }
-        catch (Exception ex)
+        catch (SqlException ex)
         {
-            throw ex;
+            return Result.Fail(
+                string.IsNullOrWhiteSpace(ex.Message)
+                    ? $"Failed to {(isApproved ? "approve" : isRejected ? "reject" : "recommend")}. Please try again later."
+                    : ex.Message
+            );
         }
     }
 }

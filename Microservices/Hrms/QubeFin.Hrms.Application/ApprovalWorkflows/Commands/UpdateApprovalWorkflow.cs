@@ -48,6 +48,7 @@ internal sealed class UpdateApprovalWorkflowCommandHandler(IApprovalWorkflowRepo
             step.Id.GetValueOrDefault() == Guid.Empty ? Guid.NewGuid() : step.Id!.Value,
             workflow.Id,
             step.ReceiverPostId,
+            step.OrganizationUnitTypeId,
             step.IsRecommendEvent,
             step.IsApprovalEvent,
             step.EventStatus.Trim(),

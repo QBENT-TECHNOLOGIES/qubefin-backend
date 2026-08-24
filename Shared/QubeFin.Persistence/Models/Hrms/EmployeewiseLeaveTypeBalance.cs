@@ -8,4 +8,5 @@ public class EmployeewiseLeaveTypeBalance
     public decimal LeaveEntitled { get; set; }
     public decimal LeaveTaken { get; set; }
     public decimal LeaveBalance { get; set; }
+    public bool IsEligible { get; set; }
 }

@@ -89,7 +89,7 @@ namespace QubeFin.Hrms.Api.EndPoints
                 var result = await sender.Send(new LeavePrayerActionCommand(request.LeavePrayerId, request.IsApproved, request.IsRejected, userId));
                 return result.ToHttpResult();
             })
-            .WithSummary("Leave Request Action")
+            .WithSummary("Leave Prayer Action")
             .WithTags("Leave Prayer Approval")
             .RequireAuthorization();
             #endregion
