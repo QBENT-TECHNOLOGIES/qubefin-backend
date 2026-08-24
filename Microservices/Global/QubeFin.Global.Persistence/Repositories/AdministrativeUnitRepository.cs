@@ -12,7 +12,7 @@ public interface IAdministrativeUnitRepository
     Task<AdministrativeUnit?> GetByIdAsync(Guid id);
     Task AddAsync(AdministrativeUnit administrativeUnit);
     void Update(AdministrativeUnit administrativeUnit);
-    Task<List<TblPostOffice>> GetAllPostofficeAsync();
+    Task<List<TblPostOffice>> GetAllPostofficeAsync(string Pincode);
     Task<List<TblPoliceStation>> GetPoliceStationsByDistrictAsync(Guid districtId);
 }
 
@@ -54,9 +54,9 @@ public class AdministrativeUnitRepository(QubeFinDataContext context) : IAdminis
     {
         context.TblAdministrativeUnits.Update(administrativeUnit.ToEntity());
     }
-    public async Task<List<TblPostOffice>> GetAllPostofficeAsync()
+    public async Task<List<TblPostOffice>> GetAllPostofficeAsync(string Pincode)
     {
-        return await context.TblPostOffices.AsNoTracking().ToListAsync();
+        return await context.TblPostOffices.Where(p => p.Pincode == Pincode).OrderBy(p => p.Name).AsNoTracking().ToListAsync();
     }
     public async Task<List<TblPoliceStation>> GetPoliceStationsByDistrictAsync(Guid districtId)
     {
