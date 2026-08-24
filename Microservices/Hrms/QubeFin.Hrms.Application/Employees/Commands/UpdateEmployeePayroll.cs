@@ -5,6 +5,7 @@ using QubeFin.Core.Results;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Hrms;
+using System.Text.RegularExpressions;
 
 namespace QubeFin.Hrms.Application.Employees.Commands;
 
@@ -28,10 +29,13 @@ public class UpdateEmployeePayrollCommandValidator : AbstractValidator<UpdateEmp
         //    .WithMessage("Please enter a valid First Name name.")
         //    .MinimumLength(3).WithMessage("First Name must be more than 2 characters.")
         //    .MaximumLength(30).WithMessage("First Name cannot exceed 30 characters.");
-        //RuleFor(x => x.LastName)
-        //    .NotEmpty()
-        //    .Matches("^[A-Za-z]{3,30}$")
-        //    .WithMessage("Last name must contain only letters and be between 3 and 30 characters long.");
+        RuleFor(x => x.BankAccountNo)
+    .Must(accountNo => Regex.IsMatch(accountNo.ToString(), @"^\d{9,15}$"))
+    .WithMessage("Account number must be between 9 and 15 digits.");
+        RuleFor(x => x.UniversalAccountNumber)
+     .Matches(@"^\d{12}$")
+     .When(x => !string.IsNullOrWhiteSpace(x.UniversalAccountNumber))
+     .WithMessage("Universal Account Number must contain exactly 12 digits.");
 
     }
 }

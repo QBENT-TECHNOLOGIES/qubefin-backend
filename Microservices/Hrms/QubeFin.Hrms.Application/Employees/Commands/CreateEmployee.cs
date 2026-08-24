@@ -12,7 +12,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands;
 
 #region --- COMMAND ---
 public record CreateEmployeeCommand(string Code, string? Salutation, string FirstName, string? MiddleName, string LastName, string? FatherName, string? MotherName, 
-    DateTime DateOfBirth, string Gender, string Religion, string? Caste, string Nationality, string BloodGroup, string? DisabilityType, string? MaritalStatus,
+    DateTime DateOfBirth, string Gender, string Religion, string? Caste, string Nationality, string BloodGroup, string? DisablityType, string? MaritalStatus,
     Guid CreatedBy
 ) : IRequest<Result<string>>;
 #endregion
@@ -37,6 +37,9 @@ public class CreateEmployeeCommandValidator : AbstractValidator<CreateEmployeeCo
             .NotEmpty()
             .Matches("^[A-Za-z0-9]+$")
             .WithMessage("Code must contain only numbers (0–9) and 6 digits long.");
+        RuleFor(x => x.BloodGroup).NotEmpty().WithMessage("Blood Group is Mandatory.");
+        RuleFor(x => x.Nationality).NotEmpty().WithMessage("Nationality is Mandatory.");
+        RuleFor(x => x.Religion).NotEmpty().WithMessage("Religion is Mandatory.");
     }
 }
 #endregion
@@ -57,7 +60,7 @@ internal sealed class CreateEmployeeCommandHandler(IEmployeeRepository employeeR
             Guid.NewGuid(),
             request.Code,
             new PersonalInfo(request.Code, request.Salutation, request.FirstName, request.MiddleName, request.LastName, request.FatherName, request.MotherName,
-                DateOnly.FromDateTime( request.DateOfBirth), request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisabilityType, request.MaritalStatus),
+                DateOnly.FromDateTime( request.DateOfBirth), request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisablityType, request.MaritalStatus),
             new OfficialInfo(),
             new ContactInfo(),
             new AddressInfo(),

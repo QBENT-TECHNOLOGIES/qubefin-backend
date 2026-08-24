@@ -13,7 +13,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands;
 #region --- COMMAND ---
 public record UpdateEmployeePersonalCommand(
     Guid Id, string Code, string? Salutation, string FirstName, string? MiddleName, string LastName, string? FatherName, string? MotherName,
-    DateOnly DateOfBirth, string Gender, string Religion, string? Caste, string Nationality, string BloodGroup, string? DisabilityType, string? MaritalStatus,
+    DateOnly DateOfBirth, string Gender, string Religion, string? Caste, string Nationality, string BloodGroup, string? DisablityType, string? MaritalStatus,
     Guid UserId
     ) : IRequest<Result<string>>;
 #endregion
@@ -34,6 +34,9 @@ public class UpdateEmployeePersonalCommandValidator : AbstractValidator<UpdateEm
             .NotEmpty()
             .Matches("^[A-Za-z]{3,30}$")
             .WithMessage("Last name must contain only letters and be between 3 and 30 characters long.");
+        RuleFor(x => x.BloodGroup).NotEmpty().WithMessage("Blood Group is required.");
+        RuleFor(x => x.Nationality).NotEmpty().WithMessage("Nationality is required.");
+        RuleFor(x => x.Religion).NotEmpty().WithMessage("Religion is required.");
 
     }
 }
@@ -59,7 +62,7 @@ internal sealed class UpdateEmployeePersonalCommandHandler(IEmployeeRepository e
 
         employee.UpdatePersonalInfo(
             new PersonalInfo(request.Code, request.Salutation, request.FirstName, request.MiddleName, request.LastName, request.FatherName, request.MotherName,
-                request.DateOfBirth, request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisabilityType, request.MaritalStatus),
+                request.DateOfBirth, request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisablityType, request.MaritalStatus),
             request.UserId
             );
 
