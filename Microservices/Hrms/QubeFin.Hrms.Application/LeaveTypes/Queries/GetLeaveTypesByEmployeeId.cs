@@ -11,7 +11,7 @@ public record GetLeaveTypesByEmployeeIdQuery(Guid EmployeeId) : IRequest<Result<
 #endregion
 
 #region --- RESPONSE ---
-public record GetLeaveTypesByEmployeeIdResponse(Guid LeaveTypeId, string Title, string Alias, decimal LeaveEntitled, decimal LeaveTaken, decimal LeaveBalance);
+public record GetLeaveTypesByEmployeeIdResponse(Guid LeaveTypeId, string Title, string Alias, decimal LeaveEntitled, decimal LeaveTaken, decimal LeaveBalance, bool IsEligible);
 #endregion
 
 #region --- HANDLER ---
@@ -25,7 +25,7 @@ internal sealed class GetLeaveTypesByEmployeeIdQueryHandler(QubeFinDataContext c
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
-        return Result.Ok(leaveBalances.Select(m => new GetLeaveTypesByEmployeeIdResponse(m.LeaveTypeId, m.Title, m.Alias, m.LeaveEntitled, m.LeaveTaken, m.LeaveBalance)).ToList());
+        return Result.Ok(leaveBalances.Select(m => new GetLeaveTypesByEmployeeIdResponse(m.LeaveTypeId, m.Title, m.Alias, m.LeaveEntitled, m.LeaveTaken, m.LeaveBalance, m.IsEligible)).ToList());
     }
 }
 #endregion

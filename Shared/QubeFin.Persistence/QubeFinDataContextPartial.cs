@@ -28,6 +28,7 @@ public partial class QubeFinDataContext : DbContext, IUnitOfWork
         modelBuilder.Entity<LeavePrayerResponse>().HasNoKey().ToView(null);
         modelBuilder.Entity<LeavePrayerApprovalSearchResult>().HasNoKey().ToView(null);
         modelBuilder.Entity<Payslip>().HasNoKey().ToView(null);
+        modelBuilder.Entity<LeaveTypeWiseBalanceResponse>().HasNoKey().ToView(null);
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

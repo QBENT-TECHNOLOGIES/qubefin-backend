@@ -1,6 +1,7 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Mappers.Hrms;
 using QubeFin.Persistence.Models.Hrms;
 
@@ -67,16 +68,49 @@ public class LeaveRepository(QubeFinDataContext context) : ILeaveRepository
 
     public async Task<bool> SubmitAsync(Guid id, Guid userId)
     {
-        var leaveRequestEntity = await context.TblLeaveRequests.SingleOrDefaultAsync(m => m.Id == id) ?? throw new Exception("Leave Request not found for the given Id");
-        //if (leaveRequestEntity == null)
-        //{
-        //    return new RecordNotFoundError($"Leave Request not found for the given Id");
-        //}
+        var leaveRequestEntity = await context.TblLeaveRequests.SingleOrDefaultAsync(x => x.Id == id)?? throw new Exception("Leave Request not found for the given Id");
+
+        if (leaveRequestEntity.IsSubmitted)
+        {
+            throw new Exception("Leave Request has already been submitted.");
+        }
+
+        var approvalEvent = await context.TblApprovalRequestEvents.AsNoTracking().SingleOrDefaultAsync(x =>x.MappingId == id && x.Category == "LEAVE" && !x.IsSubmitted);
+
+        if (approvalEvent == null)
+        {
+            throw new Exception("Approver or recommender has not been configured for this leave request.");
+        }
+
+        if (approvalEvent.ReceiverDesignationId == null)
+        {
+            throw new Exception("Receiver designation has not been configured for this leave request.");
+        }
+
+        var employeeName = await context.TblEmployees.Where(x => x.Id == leaveRequestEntity.EmployeeId).Select(x => x.FullName).SingleOrDefaultAsync();
 
         leaveRequestEntity.IsSubmitted = true;
         leaveRequestEntity.SubmittedOn = DateTime.Now;
         leaveRequestEntity.SubmittedBy = userId;
         leaveRequestEntity.CurrentStatus = "Pending";
+
+        var notification = new TblNotification
+        {
+            Id = Guid.NewGuid(),
+            DesignationId = approvalEvent.ReceiverDesignationId,
+            Title = "Leave Request",
+            Icon = "triangle-alert",
+            Message = $"{employeeName}'s leave request has been forwarded for your approval.",
+            NotificationType = "info",
+            ReferenceId = id,
+            ReferenceType = "LEAVE",
+            ActionUrl = "/secure/hrms/leave-approvals",
+            IsRead = false,
+            CreatedBy = userId,
+            CreatedOn = DateTime.Now
+        };
+
+        await context.TblNotifications.AddAsync(notification);
 
         return true;
     }
