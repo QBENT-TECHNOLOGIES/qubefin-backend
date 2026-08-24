@@ -62,7 +62,7 @@ namespace QubeFin.Payroll.Persistence.Repositories
         }
         public async Task<IEnumerable<MonthwisePayrollData>> GetMonthwisePayrollSummaryAsync(Guid? companyId, int? payrollMonth, int payrollYear)
         {
-            var sql = $"EXEC Payroll.USP_GetMonthlyPayroll @p_CompanyId = {companyId}, @p_Year = {payrollMonth}, @p_Month = {payrollYear}";
+            var sql = $"EXEC Payroll.USP_GetMonthlyPayroll @p_CompanyId = {(object?)DBNull.Value ?? companyId}, @p_Year = {(object?)DBNull.Value ?? payrollMonth}, @p_Month = {payrollYear}";
             var result = await context.Database.SqlQueryRaw<MonthwisePayrollData>(sql).ToListAsync();
             return result;
         }
