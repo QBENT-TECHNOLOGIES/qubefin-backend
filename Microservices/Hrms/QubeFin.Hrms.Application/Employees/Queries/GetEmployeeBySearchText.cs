@@ -10,7 +10,7 @@ public record GetEmployeeBySearchTextQuery(string SearchText) : IRequest<Result<
 #endregion
 
 #region --- RESPONSE ---
-public record GetEmployeeBySearchTextResponse(Guid Id, string? EmployeeName, bool HasSignaturePhoto);
+public record GetEmployeeBySearchTextResponse(Guid Id, string? EmployeeName, string EmployeeCode, bool HasSignaturePhoto);
 #endregion
 
 #region --- HANDLER ---
@@ -21,7 +21,7 @@ internal sealed class GetEmployeeBySearchTextQueryHandler(QubeFinDataContext con
 
         var employeEntities = await context.TblEmployees.Include(m => m.TblEmployeeDocuments).Where(m => m.IsActive && (m.FullName.StartsWith(request.SearchText) || m.Code.StartsWith(request.SearchText))).OrderBy(m => m.FirstName).ToListAsync();
         var searchResult = employeEntities == null ? new List<GetEmployeeBySearchTextResponse>() :
-               employeEntities.Select(m => new GetEmployeeBySearchTextResponse(m.Id, m.FullName + "(" + m.Code + ")", HasSignaturePhoto(m))).ToList();
+               employeEntities.Select(m => new GetEmployeeBySearchTextResponse(m.Id, m.FullName + "(" + m.Code + ")", m.Code, HasSignaturePhoto(m))).ToList();
 
         return Result.Ok(searchResult);
     }
