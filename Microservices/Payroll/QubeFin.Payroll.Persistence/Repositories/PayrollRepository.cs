@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Mappers.Payrolls;
@@ -13,7 +14,7 @@ namespace QubeFin.Payroll.Persistence.Repositories
         Task<IEnumerable<PayrollModel>> GetAllPayrolls();
         Task<MonthlyPayroll> GetMonthlyPayrollAsync(int payrollMonth, int payrollYear);
         Task<List<TblPayRoll>> GetPayrollsForUpdateAsync(int month, int year, CancellationToken cancellationToken = default);
-        Task<IEnumerable<MonthwisePayrollData>> GetMonthwisePayrollSummaryAsync();
+        Task<IEnumerable<MonthwisePayrollData>> GetMonthwisePayrollSummaryAsync(Guid? companyId, int? payrollMonth, int payrollYear);
         Task<bool> HasOpenPayrollAsync(Guid companyId, CancellationToken cancellationToken);
         Task CreatePayrollAsync(Guid companyId, Guid? userId, CancellationToken cancellationToken);
         Task<bool> IsPayrollAvailableForUpdateAsync(Guid id, CancellationToken cancellationToken = default);
@@ -60,14 +61,28 @@ namespace QubeFin.Payroll.Persistence.Repositories
         {
             return await context.TblPayRolls .AnyAsync(p => p.CompanyId == companyId && p.IsLocked == false, cancellationToken);
         }
-        public async Task<IEnumerable<MonthwisePayrollData>> GetMonthwisePayrollSummaryAsync()
+        public async Task<IEnumerable<MonthwisePayrollData>> GetMonthwisePayrollSummaryAsync(Guid? companyId, int? payrollMonth, int payrollYear)
         {
-            var sql = "EXEC Payroll.USP_GetMonthlyPayroll";
-            var result = await context.Database
-                .SqlQueryRaw<MonthwisePayrollData>(sql)
-                .ToListAsync();
+            var companyParameter = new SqlParameter("@p_CompanyId",  companyId ?? (object?)DBNull.Value);
+            var yearParameter = new SqlParameter("@p_Year", payrollYear);
+            var monthParameter = new SqlParameter("@p_Month", payrollMonth ?? (object?)DBNull.Value);
 
-            return result;
+            var sql = """
+                EXEC Payroll.USP_GetMonthlyPayroll
+                    @p_CompanyId = @p_CompanyId,
+                    @p_Year = @p_Year,
+                    @p_Month = @p_Month
+                """;
+
+                var result = await context.Database
+                    .SqlQueryRaw<MonthwisePayrollData>(
+                        sql,
+                        companyParameter,
+                        yearParameter,
+                        monthParameter)
+                    .ToListAsync();
+
+                return result;
         }
         public async Task<List<TblPayRoll>> GetPayrollsForUpdateAsync(int month, int year, CancellationToken cancellationToken = default)
         {
