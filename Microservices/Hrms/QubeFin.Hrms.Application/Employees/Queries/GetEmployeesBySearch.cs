@@ -1,17 +1,16 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
+using QubeFin.Hrms.Application.Employees.Models;
 using QubeFin.Persistence;
 
 namespace QubeFin.Hrms.Application.Employees.Queries;
 
 #region --- QUERY ---
-public record GetEmployeesBySearchQuery(string SearchType, string? SearchText, DateOnly? srchJoiningDate, Guid? SearchOrganizationUnitId,
-    string? SortOn, string? SortDirection, int PageIndex, int PageSize) : IRequest<GetEmployeesBySearchResponse>;
+public record GetEmployeesBySearchQuery(EmployeeSearchParam SearchParam) : IRequest<GetEmployeesBySearchResponse>;
 #endregion
 
 #region --- RESPONSE ---
-public record EmployeesBySearchResult(Guid Id, string? Code, string FullName, string Office, string? Email, string? Mobile, DateOnly? JoiningDate, DateOnly? SeperationDate, bool IsActive);
-public record GetEmployeesBySearchResponse(IReadOnlyList<EmployeesBySearchResult> Employees, int TotalRecords);
+public record GetEmployeesBySearchResponse(IReadOnlyList<EmployeeSearchResult> Employees, int TotalRecords);
 #endregion
 
 #region --- HANDLER ---
@@ -20,48 +19,59 @@ internal sealed class GetEmployeesBySearchQueryHandler(QubeFinDataContext contex
 {
     public async Task<GetEmployeesBySearchResponse> Handle(GetEmployeesBySearchQuery request, CancellationToken cancellationToken)
     {
-        var skipRecordCount = request.PageIndex * request.PageSize;
-        var filterEntitiesQuery = context.TblEmployees.AsNoTracking().AsQueryable();
+        var skipRecordCount = request.SearchParam.PageIndex * request.SearchParam.PageSize;
+        var filterEntitiesQuery = context.TblEmployees.Include(e => e.Company).Include(e => e.OrganizationUnit).AsNoTracking().AsQueryable();
 
-        if (request.SearchType.Equals("C"))
+        if (request.SearchParam.CompanyId != null && request.SearchParam.CompanyId != Guid.Empty)
         {
-            filterEntitiesQuery = filterEntitiesQuery.Where(m => m.IsActive);
+            filterEntitiesQuery = filterEntitiesQuery.Where(m => m.CompanyId == request.SearchParam.CompanyId);
         }
-        if (request.SearchType.Equals("L"))
+        if (request.SearchParam.SearchOrganizationUnitId != null && request.SearchParam.SearchOrganizationUnitId != Guid.Empty)
         {
-            filterEntitiesQuery = filterEntitiesQuery.Where(m => !m.IsActive);
+            filterEntitiesQuery = filterEntitiesQuery.Where(m => m.OrganizationUnitId == request.SearchParam.SearchOrganizationUnitId);
         }
-        if (request.SearchOrganizationUnitId != null && request.SearchOrganizationUnitId != Guid.Empty)
+        if (!string.IsNullOrEmpty(request.SearchParam.SearchType))
         {
-            filterEntitiesQuery = filterEntitiesQuery.Where(m => m.OrganizationUnitId == request.SearchOrganizationUnitId);
+            filterEntitiesQuery = request.SearchParam.SearchType.Equals("C") ? filterEntitiesQuery.Where(m => m.IsActive) :
+                request.SearchParam.SearchType.Equals("L") ? filterEntitiesQuery.Where(m => !m.IsActive) : filterEntitiesQuery;
         }
-        if (!string.IsNullOrEmpty(request.SearchText))
+        if (!string.IsNullOrEmpty(request.SearchParam.SearchText))
         {
-            filterEntitiesQuery = filterEntitiesQuery.Where(m => m.Code!.Contains(request.SearchText.Trim()) || m.FullName.Contains(request.SearchText.Trim())
-                || m.MobileNo!.Contains(request.SearchText.Trim()) || m.PersonalEmail!.Contains(request.SearchText.Trim()) || m.OfficialEmail!.Contains(request.SearchText.Trim()));
+            filterEntitiesQuery = filterEntitiesQuery.Where(m => m.Code!.Contains(request.SearchParam.SearchText.Trim()) || m.FullName.Contains(request.SearchParam.SearchText.Trim())
+                || m.MobileNo!.Contains(request.SearchParam.SearchText.Trim()) || m.PersonalEmail!.Contains(request.SearchParam.SearchText.Trim()) || m.OfficialEmail!.Contains(request.SearchParam.SearchText.Trim()));
         }
-        if (request.srchJoiningDate != null)
+        if (request.SearchParam.SrchJoiningDate != null)
         {
-            filterEntitiesQuery = filterEntitiesQuery.Where(m => m.JoiningDate == request.srchJoiningDate);
+            filterEntitiesQuery = filterEntitiesQuery.Where(m => m.JoiningDate == request.SearchParam.SrchJoiningDate);
         }
 
-        if (request.SortOn is not null && request.SortDirection is not null)
+        if (request.SearchParam.SortOn is not null && request.SearchParam.SortDirection is not null)
         {
-            filterEntitiesQuery = request.SortOn switch
+            filterEntitiesQuery = request.SearchParam.SortOn switch
             {
-                "code" => request.SortDirection.Equals("DESC", StringComparison.CurrentCultureIgnoreCase) ? filterEntitiesQuery.OrderByDescending(m => m.Code) : filterEntitiesQuery.OrderBy(m => m.Code),
-                "name" => request.SortDirection.Equals("DESC", StringComparison.CurrentCultureIgnoreCase) ? filterEntitiesQuery.OrderByDescending(m => m.FirstName) : filterEntitiesQuery.OrderBy(m => m.FirstName),
-                "joiningDt" => request.SortDirection.Equals("DESC", StringComparison.CurrentCultureIgnoreCase) ? filterEntitiesQuery.OrderByDescending(m => m.JoiningDate) : filterEntitiesQuery.OrderBy(m => m.JoiningDate),
-                _ => request.SortDirection == "DESC" ? filterEntitiesQuery.OrderByDescending(m => m.Code) : filterEntitiesQuery.OrderBy(m => m.Code),
+                "code" => request.SearchParam.SortDirection.Equals("DESC", StringComparison.CurrentCultureIgnoreCase) ? filterEntitiesQuery.OrderByDescending(m => m.Code) : filterEntitiesQuery.OrderBy(m => m.Code),
+                "name" => request.SearchParam.SortDirection.Equals("DESC", StringComparison.CurrentCultureIgnoreCase) ? filterEntitiesQuery.OrderByDescending(m => m.FirstName) : filterEntitiesQuery.OrderBy(m => m.FirstName),
+                "joiningDt" => request.SearchParam.SortDirection.Equals("DESC", StringComparison.CurrentCultureIgnoreCase) ? filterEntitiesQuery.OrderByDescending(m => m.JoiningDate) : filterEntitiesQuery.OrderBy(m => m.JoiningDate),
+                _ => request.SearchParam.SortDirection == "DESC" ? filterEntitiesQuery.OrderByDescending(m => m.Code) : filterEntitiesQuery.OrderBy(m => m.Code),
             };
         }
 
         var totalCount = await filterEntitiesQuery.CountAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-        var employees = await filterEntitiesQuery.Skip(skipRecordCount).Take(request.PageSize)
-            .Select(m => new EmployeesBySearchResult(m.Id, m.Code, m.FullName, string.Empty,
-                m.OfficialEmail, m.MobileNo, m.JoiningDate, m.SeparationDate, m.IsActive))
-            .ToListAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-
+        var employees = await filterEntitiesQuery.Skip(skipRecordCount).Take(request.SearchParam.PageSize)
+            .Select(m => new EmployeeSearchResult
+            {
+                Id = m.Id,
+                Code = m.Code,
+                FullName = m.FullName,
+                CompanyName = m.CompanyId != null ? m.Company.Name : null,
+                OrganizationUnitName = m.OrganizationUnitId != null ? m.OrganizationUnit.Name : null,
+                Email = m.OfficialEmail,
+                Mobile = m.MobileNo,
+                Gender = m.Gender,
+                JoiningDate = m.JoiningDate,
+                SeperationDate = m.SeparationDate,
+                IsActive = m.IsActive
+            }).ToListAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
         return new GetEmployeesBySearchResponse(employees, totalCount);
     }
 }

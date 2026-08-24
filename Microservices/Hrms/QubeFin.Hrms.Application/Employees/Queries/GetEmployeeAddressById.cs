@@ -2,7 +2,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
-using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Hrms;
 
@@ -15,6 +14,7 @@ public record GetEmployeeAddressByIdQuery(Guid Id) : IRequest<Result<GetAddressR
 public record GetAddressResponse(
     Guid Id,
     string Code,
+    bool SameAsPresentAddress,
     AddressInfo PresentAddressInfo,
     AddressInfo PermanentAddressInfo
     );
@@ -35,6 +35,7 @@ internal sealed class GetEmployeeAddressByIdQueryHandler(QubeFinDataContext cont
         return Result.Ok(new GetAddressResponse(
             Id: employee.Id,
             Code: employee.Code,
+            SameAsPresentAddress: employee.PresentAdministrativeUnitId == employee.PermanentAdministrativeUnitId,
             PresentAddressInfo: new AddressInfo(
                 employee.PresentHouseNo,
                 employee.PresentRoadName,
