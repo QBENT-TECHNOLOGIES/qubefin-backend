@@ -11,8 +11,8 @@ public record GetUserLoginInfoQuery(Guid Id, Guid EmployeeId) : IRequest<Result<
 #endregion
 
 #region --- RESPONSE ---
-public record GetUserLoginInfoResponse(Guid Id, string UserName, Guid? EmployeeId, string Employee, string Branch, decimal? Latitude, decimal? Longitude, 
-    TimeOnly? AttendanceInTime, TimeOnly? AttendanceOutTime, int CheckRadiusInMeter, string Designation, int NotificationCount);
+public record GetUserLoginInfoResponse(Guid Id, string UserName, Guid? EmployeeId, string Employee, string Branch, decimal? Latitude, decimal? Longitude,
+    TimeOnly? AttendanceInTime, TimeOnly? AttendanceOutTime, int CheckRadiusInMeter, string Designation, string? CompanyLogoUrl);
 #endregion
 
 #region --- HANDLER ---
@@ -24,6 +24,7 @@ internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context) :
             .TblUsers
             .Include(m => m.Employee)
             .ThenInclude(m => m.OrganizationUnit)
+            .ThenInclude(m => m.Company)
             .Where(m => m.Id == request.Id)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -37,10 +38,6 @@ internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context) :
             .OrderByDescending(m => m.EffectiveFrom)
             .FirstOrDefaultAsync(cancellationToken);
 
-        int notificationCount = employeeDesignation != null ? await context.TblNotifications
-            .Where(m => m.DesignationId == employeeDesignation.DesignationId && !m.IsRead)
-            .CountAsync(cancellationToken) : 0;
-
         var response = new GetUserLoginInfoResponse(
             user.Id,
             user.UserName,
@@ -53,7 +50,7 @@ internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context) :
             user.Employee?.OrganizationUnit?.AttendanceOutTime,
             user.Employee?.OrganizationUnit?.CheckRadiusInMeter ?? 100,
             employeeDesignation?.Designation?.Name ?? string.Empty,
-            notificationCount
+            user.Employee?.OrganizationUnit?.Company?.LogoUrl
         );
         return Result.Ok(response);
     }

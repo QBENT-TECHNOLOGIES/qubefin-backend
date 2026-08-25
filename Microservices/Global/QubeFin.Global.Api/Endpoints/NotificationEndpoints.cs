@@ -25,6 +25,19 @@ namespace QubeFin.Global.Api.Endpoints
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .RequireAuthorization();
 
+            app.MapGet("notifications/count", async (ISender sender, ClaimsPrincipal principal, CancellationToken cancellationToken) =>
+            {
+                var employeeId = principal.Identity.GetEmployeeId();
+                var result = await sender.Send(new GetNotificationCountQuery(employeeId), cancellationToken);
+                return result.ToHttpResult();
+            }).WithName("GetNotificationCount")
+            .WithSummary("Get Notification Count")
+            .WithDescription("Returns the count of notifications for the authenticated user.")
+            .WithTags("Notifications")
+            .Produces(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status500InternalServerError)
+            .RequireAuthorization();
+
             app.MapGet("notifications/{notificationId:guid}/read", async (ISender sender, ClaimsPrincipal principal, Guid notificationId, CancellationToken cancellationToken) =>
             {
                 var employeeId = principal.Identity.GetEmployeeId();

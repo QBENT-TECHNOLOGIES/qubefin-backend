@@ -10,6 +10,7 @@ namespace QubeFin.Global.Persistence.Repositories
         Task<IEnumerable<Notification>> GetAllAsync(Guid employeeId);
         Task<bool> MarkAsReadAsync(Guid id);
         Task<bool> MarkAllReadAsync(Guid employeeId);
+        Task<int> GetCountAsync(Guid employeeId);
     }
     public class NotificationRepository(QubeFinDataContext context) : INotificationRepository
     {
@@ -61,6 +62,21 @@ namespace QubeFin.Global.Persistence.Repositories
             }
             await context.SaveChangesAsync();
             return true;
+        }
+        public async Task<int> GetCountAsync(Guid employeeId)
+        {
+            var employeeDesignationId = context.TblEmployeeDesignations
+                .Where(ed => ed.EmployeeId == employeeId)
+                .OrderByDescending(ed => ed.EffectiveFrom)
+                .FirstOrDefault()?.DesignationId;
+            if (employeeDesignationId == null || employeeDesignationId == Guid.Empty)
+            {
+                return 0;
+            }
+            var count = await context.TblNotifications.AsNoTracking()
+                .Where(n => n.DesignationId == employeeDesignationId && !n.IsRead)
+                .CountAsync();
+            return count;
         }
     }
 }
