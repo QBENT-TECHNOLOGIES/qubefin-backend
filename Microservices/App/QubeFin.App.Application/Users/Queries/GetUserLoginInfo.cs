@@ -11,7 +11,8 @@ public record GetUserLoginInfoQuery(Guid Id, Guid EmployeeId) : IRequest<Result<
 #endregion
 
 #region --- RESPONSE ---
-public record GetUserLoginInfoResponse(Guid Id, string UserName, Guid? EmployeeId, string Employee, string Branch, decimal? Latitude, decimal? Longitude,
+public record GetUserLoginInfoResponse(Guid Id, string UserName, Guid? EmployeeId, string Employee, string Gender, string EmployeeCode, 
+    string Branch, decimal? Latitude, decimal? Longitude,
     TimeOnly? AttendanceInTime, TimeOnly? AttendanceOutTime, int CheckRadiusInMeter, string Designation, string? CompanyLogoUrl);
 #endregion
 
@@ -43,6 +44,8 @@ internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context) :
             user.UserName,
             user.EmployeeId,
             user.Employee?.FullName ?? string.Empty,
+            user.Employee?.Gender ?? string.Empty,
+            user.Employee?.Code ?? string.Empty,
             user.Employee?.OrganizationUnit?.Name ?? string.Empty,
             user.Employee?.OrganizationUnit?.Latitude,
             user.Employee?.OrganizationUnit?.Longitude,

@@ -44,7 +44,6 @@ internal class VerifyMfaCommandHandler(IAuthRepository authRepository, IUnitOfWo
         if (user.EmployeeId != null) {
             claims.Add(new Claim("EmployeeId", user.EmployeeId.Value.ToString()));
             claims.Add(new Claim("EmployeeName", user.EmployeeName ?? string.Empty));
-            claims.Add(new Claim("Gender", user.Gender ?? string.Empty));
             //claims.Add(new Claim("Role", user.Role.Name.ToString()));
         }
         
