@@ -25,6 +25,8 @@ public partial class TblEmployee
 
     public Guid? OrganizationUnitId { get; set; }
 
+    public Guid? CompanyId { get; set; }
+
     public Guid? DepartmentId { get; set; }
 
     public string? EmployementType { get; set; }
@@ -103,33 +105,35 @@ public partial class TblEmployee
 
     public int? PresentDurationOfStayInMonths { get; set; }
 
-    public Guid? BankId { get; set; }
-
-    public long? BankAccountNo { get; set; }
-
-    public string? BankHolderName { get; set; }
-
-    public string? BankBranch { get; set; }
-
-    public string? BankAccountType { get; set; }
-
     public string? OfficialEmail { get; set; }
 
-    public bool IsActive { get; set; }
+    public string? UniversalAccountNo { get; set; }
 
-    public bool IsPayrollActive { get; set; }
+    public string? PfaccountNo { get; set; }
 
-    public Guid? CompanyId { get; set; }
+    public bool HasEsiEligible { get; set; }
+
+    public string? Esiipno { get; set; }
 
     public Guid? ReferedBy { get; set; }
 
     public string? HowYouKnow { get; set; }
 
-    public string? UniversalAccountNo { get; set; }
+    public Guid? BankId { get; set; }
 
-    public string? Esiipno { get; set; }
+    public string? BankHolderName { get; set; }
 
-    public bool HasEsiEligible { get; set; }
+    public long? BankAccountNo { get; set; }
+
+    public string? IfscCode { get; set; }
+
+    public string? BankBranch { get; set; }
+
+    public string? BankAccountType { get; set; }
+
+    public bool IsActive { get; set; }
+
+    public bool IsPayrollActive { get; set; }
 
     public Guid? CreatedBy { get; set; }
 
@@ -139,9 +143,9 @@ public partial class TblEmployee
 
     public Guid? LastModifiedBy { get; set; }
 
-    public string? PfaccountNo { get; set; }
+    public virtual TblBank? Bank { get; set; }
 
-    public virtual TblFinancialInstitute? Bank { get; set; }
+    public virtual TblFinancialInstitute? BankNavigation { get; set; }
 
     public virtual TblCompany? Company { get; set; }
 

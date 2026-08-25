@@ -12,14 +12,13 @@ public class OfficialInfo
     public Guid? ReferedBy { get; private set; }
     public string? HowYouKnow { get; private set; }
     public string? OfficialEmail { get; private set; }
-    public bool IsActive { get; private set; }
 
     public OfficialInfo()
     {
     }
 
     public OfficialInfo(Guid? companyId, Guid? organizationUnitId, Guid? departmentId, string? employementType, DateOnly? joiningDate, DateOnly? confirmationDate,
-        DateOnly? separationDate, Guid? referedBy, string? howYouKnow, string? officialEmail, bool isActive)
+        DateOnly? separationDate, Guid? referedBy, string? howYouKnow, string? officialEmail)
     {
         CompanyId = companyId;
         OrganizationUnitId = organizationUnitId;
@@ -31,6 +30,5 @@ public class OfficialInfo
         ReferedBy = referedBy;
         HowYouKnow = howYouKnow;
         OfficialEmail = officialEmail;
-        IsActive = isActive;
     }
 }

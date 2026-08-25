@@ -54,7 +54,7 @@ internal sealed class UpdateEmployeeOfficialCommandHandler(IEmployeeRepository e
                 new OfficialInfo(
                     request.OfficialInfo.CompanyId, request.OfficialInfo.OrganizationUnitId, request.OfficialInfo.DepartmentId, request.OfficialInfo.EmployementType,
                     request.OfficialInfo.DateOfJoining, request.OfficialInfo.DateOfConfirmation, request.OfficialInfo.SeparationDate, request.OfficialInfo.ReferedBy,
-                    request.OfficialInfo.HowYouKnow, request.OfficialInfo.OfficialEmail, request.OfficialInfo.IsActive), request.UserId
+                    request.OfficialInfo.HowYouKnow, request.OfficialInfo.OfficialEmail), request.UserId
                 );
             await employeeRepository.UpdateAsync(employee);
 

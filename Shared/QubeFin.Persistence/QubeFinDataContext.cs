@@ -46,6 +46,8 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblAttendanceRegularization> TblAttendanceRegularizations { get; set; }
 
+    public virtual DbSet<TblBank> TblBanks { get; set; }
+
     public virtual DbSet<TblBranchSurvey> TblBranchSurveys { get; set; }
 
     public virtual DbSet<TblCalenderYear> TblCalenderYears { get; set; }
@@ -91,6 +93,8 @@ public partial class QubeFinDataContext : DbContext
     public virtual DbSet<TblEmployeeEmployment> TblEmployeeEmployments { get; set; }
 
     public virtual DbSet<TblEmployeeGrossSalary> TblEmployeeGrossSalaries { get; set; }
+
+    public virtual DbSet<TblEmployeeLop> TblEmployeeLops { get; set; }
 
     public virtual DbSet<TblEmployeeQualification> TblEmployeeQualifications { get; set; }
 
@@ -207,6 +211,7 @@ public partial class QubeFinDataContext : DbContext
     public virtual DbSet<TblUserSession> TblUserSessions { get; set; }
 
     public virtual DbSet<WegrowConsolidateEmployee> WegrowConsolidateEmployees { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -505,6 +510,17 @@ public partial class QubeFinDataContext : DbContext
                 .HasForeignKey(d => d.EmployeeId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_AttendanceRegularization_Tbl_Employee");
+        });
+
+        modelBuilder.Entity<TblBank>(entity =>
+        {
+            entity.ToTable("Tbl_Bank", "Global");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Alias).HasMaxLength(10);
+            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
+            entity.Property(e => e.Name).HasMaxLength(50);
         });
 
         modelBuilder.Entity<TblBranchSurvey>(entity =>
@@ -952,6 +968,9 @@ public partial class QubeFinDataContext : DbContext
                 .HasComputedColumnSql("((([FirstName]+' ')+isnull([MiddleName]+' ',''))+[LastName])", false);
             entity.Property(e => e.Gender).HasMaxLength(10);
             entity.Property(e => e.HowYouKnow).HasMaxLength(200);
+            entity.Property(e => e.IfscCode)
+                .HasMaxLength(11)
+                .IsUnicode(false);
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
             entity.Property(e => e.LastName).HasMaxLength(30);
             entity.Property(e => e.MaritalStatus)
@@ -986,6 +1005,10 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.UniversalAccountNo).HasMaxLength(50);
 
             entity.HasOne(d => d.Bank).WithMany(p => p.TblEmployees)
+                .HasForeignKey(d => d.BankId)
+                .HasConstraintName("FK_Tbl_Employee_Tbl_Bank");
+
+            entity.HasOne(d => d.BankNavigation).WithMany(p => p.TblEmployees)
                 .HasForeignKey(d => d.BankId)
                 .HasConstraintName("FK_Tbl_Employee_Tbl_FinancialInstitute");
 
@@ -1089,6 +1112,14 @@ public partial class QubeFinDataContext : DbContext
                 .HasForeignKey(d => d.EmployeeId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_EmployeeGrossSalary_Tbl_Employee");
+        });
+
+        modelBuilder.Entity<TblEmployeeLop>(entity =>
+        {
+            entity.ToTable("Tbl_EmployeeLop", "Hrms");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.PayrollStatus).HasMaxLength(20);
         });
 
         modelBuilder.Entity<TblEmployeeQualification>(entity =>

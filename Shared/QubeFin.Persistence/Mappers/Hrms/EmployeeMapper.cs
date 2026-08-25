@@ -62,7 +62,7 @@ public static class EmployeeMapper
             ReferedBy = employee.OfficialInfo.ReferedBy,
             HowYouKnow = employee.OfficialInfo.HowYouKnow,
             OfficialEmail = employee.OfficialInfo.OfficialEmail,
-            IsActive = employee.OfficialInfo.IsActive,
+            IsActive = true,
 
             MobileNo = employee.ContactInfo.MobileNo,
             PersonalEmail = employee.ContactInfo.PersonalEmail,
@@ -140,8 +140,7 @@ public static class EmployeeMapper
             entity.SeparationDate,
             entity.ReferedBy,
             entity.HowYouKnow,
-            entity.OfficialEmail,
-            entity.IsActive
+            entity.OfficialEmail
         );
     }
 
@@ -193,13 +192,16 @@ public static class EmployeeMapper
     {
         return new PayrollInfo(
             entity.BankId,
-            entity.BankAccountNo,
             entity.BankHolderName,
+            entity.BankAccountNo,
+            entity.IfscCode,
             entity.BankBranch,
             entity.BankAccountType,
+
+            entity.UniversalAccountNo,
+            entity.PfaccountNo,
             entity.HasEsiEligible,
             entity.Esiipno,
-            entity.UniversalAccountNo,
             entity.IsPayrollActive
         );
     }
