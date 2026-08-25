@@ -8,7 +8,7 @@ namespace QubeFin.Persistence.Models.Global
 
         public string Name { get; private set; } = null!;
 
-        public string Alias { get; private set; } = null!;
+        public bool IsBank { get; private set; }
 
         public Guid CreatedBy { get; private set; }
 
@@ -20,11 +20,11 @@ namespace QubeFin.Persistence.Models.Global
 
         protected Bank() { }
 
-        public Bank(Guid id, string name, string alias, Guid createdBy, DateTime createdOn, Guid? lastModifiedBy, DateTime? lastModifiedOn)
+        public Bank(Guid id, string name, bool isBank, Guid createdBy, DateTime createdOn, Guid? lastModifiedBy, DateTime? lastModifiedOn)
         {
             Id = id;
             Name = name;
-            Alias = alias;
+            IsBank = isBank;
             CreatedBy = createdBy;
             CreatedOn = createdOn;
             LastModifiedBy = lastModifiedBy;

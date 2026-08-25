@@ -1,5 +1,5 @@
 using QubeFin.Persistence.Models.Global;
-using Entity = QubeFin.Persistence.Entities.TblBank;
+using Entity = QubeFin.Persistence.Entities.TblFinancialInstitute;
 
 namespace QubeFin.Persistence.Mappers.Global;
 
@@ -10,7 +10,7 @@ public static class BankMapper
         return new Bank(
             entity.Id,
             entity.Name,
-            entity.Alias,
+            entity.IsBank,
             entity.CreatedBy,
             entity.CreatedOn,
             entity.LastModifiedBy,
@@ -24,7 +24,7 @@ public static class BankMapper
         {
             Id = domain.Id,
             Name = domain.Name,
-            Alias = domain.Alias,
+            IsBank = domain.IsBank,
             CreatedBy = domain.CreatedBy,
             CreatedOn = domain.CreatedOn,
             LastModifiedBy = domain.LastModifiedBy,

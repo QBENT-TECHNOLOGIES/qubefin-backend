@@ -46,8 +46,6 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblAttendanceRegularization> TblAttendanceRegularizations { get; set; }
 
-    public virtual DbSet<TblBank> TblBanks { get; set; }
-
     public virtual DbSet<TblBranchSurvey> TblBranchSurveys { get; set; }
 
     public virtual DbSet<TblCalenderYear> TblCalenderYears { get; set; }
@@ -512,17 +510,6 @@ public partial class QubeFinDataContext : DbContext
                 .HasConstraintName("FK_Tbl_AttendanceRegularization_Tbl_Employee");
         });
 
-        modelBuilder.Entity<TblBank>(entity =>
-        {
-            entity.ToTable("Tbl_Bank", "Global");
-
-            entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.Alias).HasMaxLength(10);
-            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
-            entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
-            entity.Property(e => e.Name).HasMaxLength(50);
-        });
-
         modelBuilder.Entity<TblBranchSurvey>(entity =>
         {
             entity.ToTable("Tbl_BranchSurvey", "Global");
@@ -670,6 +657,11 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.IfscCode).HasMaxLength(20);
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
+
+            entity.HasOne(d => d.Company).WithMany(p => p.TblCompanyBankAccounts)
+                .HasForeignKey(d => d.CompanyId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_CompanyBankAccount_Tbl_Company");
 
             entity.HasOne(d => d.FinancialInstitute).WithMany(p => p.TblCompanyBankAccounts)
                 .HasForeignKey(d => d.FinancialInstituteId)
@@ -1005,10 +997,6 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.UniversalAccountNo).HasMaxLength(50);
 
             entity.HasOne(d => d.Bank).WithMany(p => p.TblEmployees)
-                .HasForeignKey(d => d.BankId)
-                .HasConstraintName("FK_Tbl_Employee_Tbl_Bank");
-
-            entity.HasOne(d => d.BankNavigation).WithMany(p => p.TblEmployees)
                 .HasForeignKey(d => d.BankId)
                 .HasConstraintName("FK_Tbl_Employee_Tbl_FinancialInstitute");
 

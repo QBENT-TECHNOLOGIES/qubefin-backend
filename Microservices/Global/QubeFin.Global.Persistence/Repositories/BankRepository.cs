@@ -14,7 +14,7 @@ namespace QubeFin.Global.Persistence.Repositories
     {
         public async Task<IEnumerable<Bank>> GetAllBanks()
         {
-            var entities = await context.TblBanks.AsNoTracking().OrderBy(b => b.Name).ToListAsync();
+            var entities = await context.TblFinancialInstitutes.AsNoTracking().OrderBy(b => b.Name).ToListAsync();
             return entities.Select(m => m.ToDomain());
         }
     }

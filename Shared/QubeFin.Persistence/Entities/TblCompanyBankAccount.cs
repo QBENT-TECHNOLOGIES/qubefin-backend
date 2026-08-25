@@ -7,6 +7,8 @@ public partial class TblCompanyBankAccount
 {
     public Guid Id { get; set; }
 
+    public Guid CompanyId { get; set; }
+
     public Guid FinancialInstituteId { get; set; }
 
     public string AccountNo { get; set; } = null!;
@@ -17,6 +19,8 @@ public partial class TblCompanyBankAccount
 
     public Guid LedgerId { get; set; }
 
+    public bool IsSalaryDisburseAccount { get; set; }
+
     public Guid? CreatedBy { get; set; }
 
     public DateTime? CreatedOn { get; set; }
@@ -24,6 +28,8 @@ public partial class TblCompanyBankAccount
     public Guid? LastModifiedBy { get; set; }
 
     public DateTime? LastModifiedOn { get; set; }
+
+    public virtual TblCompany Company { get; set; } = null!;
 
     public virtual TblFinancialInstitute FinancialInstitute { get; set; } = null!;
 

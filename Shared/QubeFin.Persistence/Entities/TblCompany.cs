@@ -11,6 +11,8 @@ public partial class TblCompany
 
     public string? LogoUrl { get; set; }
 
+    public virtual ICollection<TblCompanyBankAccount> TblCompanyBankAccounts { get; set; } = new List<TblCompanyBankAccount>();
+
     public virtual ICollection<TblEmployee> TblEmployees { get; set; } = new List<TblEmployee>();
 
     public virtual ICollection<TblOrganizationUnit> TblOrganizationUnits { get; set; } = new List<TblOrganizationUnit>();

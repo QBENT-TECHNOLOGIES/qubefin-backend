@@ -143,9 +143,7 @@ public partial class TblEmployee
 
     public Guid? LastModifiedBy { get; set; }
 
-    public virtual TblBank? Bank { get; set; }
-
-    public virtual TblFinancialInstitute? BankNavigation { get; set; }
+    public virtual TblFinancialInstitute? Bank { get; set; }
 
     public virtual TblCompany? Company { get; set; }
 
