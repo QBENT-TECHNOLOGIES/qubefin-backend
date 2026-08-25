@@ -11,8 +11,8 @@ public record GetEmployeePayrollByIdQuery(Guid Id) : IRequest<Result<GetPayrollR
 #endregion
 #region --- RESPONSE ---
 public record GetPayrollResponse
-    (Guid Id, Guid? BankId, long? BankAccountNo, string? BankHolderName, string? BankBranch, string? BankAccountType,
-    bool HasEsiEligible, string? EsiIpNumber, string? UniversalAccountNumber, bool IsPayrollActive);
+    (Guid Id, Guid? BankId, string? BankHolderName, long? BankAccountNo, string? IfscCode, string? BankBranch, string? BankAccountType,
+    string? UniversalAccountNumber, string? PFAccountNo, bool HasEsiEligible, string? EsiIpNumber, bool IsPayrollActive);
 
 #endregion
 #region --- HANDLER ---
@@ -29,13 +29,15 @@ internal sealed class GetEmployeePayrollByIdQueryHandler(QubeFinDataContext cont
         return Result.Ok(new GetPayrollResponse(
             employee.Id,
             employee.BankId,
-            employee.BankAccountNo,
             employee.BankHolderName,
+            employee.BankAccountNo,
+            employee.IfscCode,
             employee.BankBranch,
             employee.BankAccountType,
+            employee.UniversalAccountNo,
+            employee.PfaccountNo,
             employee.HasEsiEligible,
             employee.Esiipno,
-            employee.UniversalAccountNo,
             employee.IsPayrollActive
         ));
     }

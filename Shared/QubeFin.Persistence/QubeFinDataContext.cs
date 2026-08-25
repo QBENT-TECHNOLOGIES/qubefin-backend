@@ -1254,6 +1254,9 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.CurrentStatus).HasMaxLength(30);
             entity.Property(e => e.EnclosedDocName).HasMaxLength(200);
             entity.Property(e => e.EnclosedDocNo).HasMaxLength(200);
+            entity.Property(e => e.FitnessReportApprovedOn).HasColumnType("datetime");
+            entity.Property(e => e.FitnessReportAttachment).HasMaxLength(300);
+            entity.Property(e => e.FitnessReportUploadOn).HasColumnType("datetime");
             entity.Property(e => e.Reason).HasMaxLength(500);
             entity.Property(e => e.RejectedReason).HasMaxLength(50);
             entity.Property(e => e.RequestDate).HasColumnType("datetime");

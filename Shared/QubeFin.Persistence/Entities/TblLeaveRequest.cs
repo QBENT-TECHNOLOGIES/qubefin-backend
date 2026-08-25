@@ -44,4 +44,14 @@ public partial class TblLeaveRequest
     public Guid? ApprovedOrRejectedBy { get; set; }
 
     public string? RejectedReason { get; set; }
+
+    public string? FitnessReportAttachment { get; set; }
+
+    public DateTime? FitnessReportUploadOn { get; set; }
+
+    public bool IsFitnessReportApproved { get; set; }
+
+    public Guid? FitnessReportApprovedBy { get; set; }
+
+    public DateTime? FitnessReportApprovedOn { get; set; }
 }

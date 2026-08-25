@@ -96,13 +96,16 @@ public static class EmployeeMapper
             PermanentDurationOfStayInMonths = employee.PermanentAddressInfo.DurationOfStayInMonths,
 
             BankId = employee.PayrollInfo.BankId,
-            BankAccountNo = employee.PayrollInfo.BankAccountNo,
             BankHolderName = employee.PayrollInfo.BankHolderName,
+            BankAccountNo = employee.PayrollInfo.BankAccountNo,
+            IfscCode = employee.PayrollInfo.IfscCode,
             BankBranch = employee.PayrollInfo.BankBranch,
             BankAccountType = employee.PayrollInfo.BankAccountType,
+
+            UniversalAccountNo = employee.PayrollInfo.UniversalAccountNumber,
+            PfaccountNo = employee.PayrollInfo.PFAccountNo,
             HasEsiEligible = employee.PayrollInfo.HasEsiEligible,
             Esiipno = employee.PayrollInfo.EsiIpNumber,
-            UniversalAccountNo = employee.PayrollInfo.UniversalAccountNumber,
             IsPayrollActive = employee.PayrollInfo.IsPayrollActive,
         };
     }
