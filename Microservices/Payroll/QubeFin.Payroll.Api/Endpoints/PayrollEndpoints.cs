@@ -124,7 +124,7 @@ namespace QubeFin.Payroll.Api.Endpoints
             #endregion
 
             #region NPOI REPORTS
-            app.MapGet("/generate-pf-report/{month:int}/{year:int}", [Authorize] async (int month, int year, ISender sender) =>
+            app.MapGet("/generate-pf-report/{month:int}/{year:int}/{companyId:Guid}", [Authorize] async (int month, int year, Guid companyId, ISender sender) =>
             {
                 var command = new GenerateNPOIReportsCommand("Payroll.USP_GetPFReport",
                     new Dictionary<string, object?>
@@ -134,7 +134,8 @@ namespace QubeFin.Payroll.Api.Endpoints
                     },
                     "PF Report",
                     $"Month: {month}, Year: {year}",
-                    true
+                    true,
+                    companyId
                 );
 
                 var result = await sender.Send(command);
@@ -147,7 +148,7 @@ namespace QubeFin.Payroll.Api.Endpoints
                 return Results.File(file.FileStream, file.ContentType, $"PF_Report_{month}_{year}.xlsx");
             }).WithSummary("Generate PF Report.");
 
-            app.MapGet("/generate-esi-report/{month:int}/{year:int}", [Authorize] async (int month, int year, ISender sender) =>
+            app.MapGet("/generate-esi-report/{month:int}/{year:int}/{companyId:Guid}", [Authorize] async (int month, int year, Guid companyId, ISender sender) =>
             {
                 var command = new GenerateNPOIReportsCommand("Payroll.USP_GetESIReport",
                     new Dictionary<string, object?>
@@ -157,7 +158,8 @@ namespace QubeFin.Payroll.Api.Endpoints
                     },
                     "ESI Report",
                     $"Month: {month}, Year: {year}",
-                    true
+                    true,
+                    companyId
                 );
 
                 var result = await sender.Send(command);
@@ -170,7 +172,7 @@ namespace QubeFin.Payroll.Api.Endpoints
                 return Results.File(file.FileStream, file.ContentType, $"ESI_Report_{month}_{year}.xlsx");
             }).WithSummary("Generate ESI Report.");
 
-            app.MapGet("/generate-ptax-report/{month:int}/{year:int}", [Authorize] async (int month, int year, ISender sender) =>
+            app.MapGet("/generate-ptax-report/{month:int}/{year:int}/{companyId:Guid}", [Authorize] async (int month, int year, Guid companyId, ISender sender) =>
             {
                 var command = new GenerateNPOIReportsCommand("Payroll.USP_GetProfTaxReport",
                     new Dictionary<string, object?>
@@ -180,7 +182,8 @@ namespace QubeFin.Payroll.Api.Endpoints
                     },
                     "Professional Tax Report",
                     $"Month: {month}, Year: {year}",
-                    true
+                    true,
+                    companyId
                 );
 
                 var result = await sender.Send(command);
@@ -192,6 +195,28 @@ namespace QubeFin.Payroll.Api.Endpoints
 
                 return Results.File(file.FileStream, file.ContentType, $"Professional_Tax_Report_{month}_{year}.xlsx");
             }).WithSummary("Generate Professional Tax Report.");
+
+            app.MapGet("/generate-salary-disbursement-report/{month:int}/{year:int}/{companyId:Guid}", [Authorize] async (int month, int year, Guid companyId,ISender sender) =>
+            {
+                var command = new GenerateSalaryDisbursementSheetCommand("Payroll.USP_SalaryDisbursementSheet",
+                    new Dictionary<string, object?>
+                    {
+                        ["@p_month"] = month,
+                        ["@p_year"] = year,
+                        ["@p_companyId"] = companyId
+                    },
+                    companyId
+                );
+
+                var result = await sender.Send(command);
+
+                if (result.IsFailed)
+                    return result.ToHttpResult();
+
+                var file = result.Value;
+
+                return Results.File(file.FileStream, file.ContentType, $"Professional_Tax_Report_{month}_{year}.xlsx");
+            }).WithSummary("Generate Salary Disbursement Sheet Report.");
             #endregion
         }
     }

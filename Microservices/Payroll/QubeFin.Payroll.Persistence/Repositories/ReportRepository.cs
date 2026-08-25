@@ -1,6 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using NPOI.SS.Formula.Functions;
 using NPOI.XSSF.UserModel;
 using QubeFin.Payroll.Persistence.Repositories.ExcelHelpers;
+using QubeFin.Persistence;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -13,11 +16,12 @@ namespace QubeFin.Payroll.Persistence.Repositories
     public interface IReportRepository
     {
         Task<ReportFile> GenerateSSRSAsync(string reportName, string format, Dictionary<string, string> parameters, CancellationToken cancellationToken);
-        Task<ReportFile> GenerateExcelAsync(string storedProcedure, Dictionary<string, object?> parameters, ExcelReportOptions options, CancellationToken cancellationToken);
+        Task<ReportFile> GenerateExcelAsync(string storedProcedure, Dictionary<string, object?> parameters, Guid companyId, ExcelReportOptions options, CancellationToken cancellationToken);
+        Task<ReportFile> GenerateBankSalaryDisbursementExcelAsync(string storedProcedure, Dictionary<string, object?> parameters, Guid companyId, CancellationToken cancellationToken);
     }
 
     public record ReportFile(Stream FileStream, string ContentType, string FileName);
-    public class ReportRepository(IConfiguration configuration, IHttpClientFactory httpClientFactory) : IReportRepository
+    public class ReportRepository(IConfiguration configuration, IHttpClientFactory httpClientFactory, QubeFinDataContext context) : IReportRepository
     {
         public async Task<ReportFile> GenerateSSRSAsync(string reportName, string format, Dictionary<string, string> parameters, CancellationToken cancellationToken)
         {
@@ -77,17 +81,23 @@ namespace QubeFin.Payroll.Persistence.Repositories
             var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
             return new ReportFile(stream, contentType, $"{reportName}.{extension}");
         }
-        public async Task<ReportFile> GenerateExcelAsync(string storedProcedure, Dictionary<string, object?> parameters, ExcelReportOptions options, CancellationToken cancellationToken)
+        public async Task<ReportFile> GenerateExcelAsync(string storedProcedure, Dictionary<string, object?> parameters, Guid companyId, ExcelReportOptions options, CancellationToken cancellationToken)
         {
             var dataTable = await ReportDataHelper.ExecuteStoredProcedureAsync(configuration.GetConnectionString("DataConnection"), storedProcedure, parameters, cancellationToken);
-            var logoBytes = await GetLogoAsync(cancellationToken);
+            var logoBytes = await GetLogoAsync(companyId, cancellationToken);
             var stream = ExcelReportHelper.CreateExcel(dataTable, options, logoBytes);
             return new ReportFile(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"{storedProcedure}.xlsx");
         }
 
-        private async Task<byte[]?> GetLogoAsync(CancellationToken cancellationToken)
+        private async Task<byte[]?> GetLogoAsync(Guid companyId, CancellationToken cancellationToken)
         {
-            var logoUrl = configuration["ReportSettings:LogoUrl"];
+            var companyEntity = await context.TblCompanies.AsNoTracking().FirstOrDefaultAsync(m => m.Id == companyId) ?? throw new Exception("Company not found.");
+            
+            if (string.IsNullOrEmpty(companyEntity.LogoUrl))
+            {
+                throw new Exception("Please upload the logo for this company.");
+            }
+            string logoUrl = companyEntity.LogoUrl;
 
             if (string.IsNullOrWhiteSpace(logoUrl))
                 return null;
@@ -95,6 +105,16 @@ namespace QubeFin.Payroll.Persistence.Repositories
             var client = httpClientFactory.CreateClient();
 
             return await client.GetByteArrayAsync(logoUrl, cancellationToken);
+        }
+
+        public async Task<ReportFile> GenerateBankSalaryDisbursementExcelAsync(string storedProcedure,Dictionary<string, object?> parameters,Guid companyId, CancellationToken cancellationToken)
+        {
+            var dataTable = await ReportDataHelper.ExecuteStoredProcedureAsync(configuration.GetConnectionString("DataConnection"),storedProcedure,parameters,cancellationToken);
+
+            var logoBytes = await GetLogoAsync(companyId, cancellationToken);
+            var stream = ExcelReportHelper.CreateBankSalaryDisbursementExcel(dataTable,logoBytes);
+
+            return new ReportFile(stream,"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",$"{storedProcedure}.xlsx");
         }
     }
 }

@@ -22,6 +22,10 @@
         public string? EventButtonText { get; set; }
         public bool? IsRecommendEvent { get; set; }
         public bool? IsApprovalEvent { get; set; }
+        public string? FitnessReportAttachment { get; set; }
+        public string? FitnessReportUrl { get; set; }
+        public bool? IsFitnessReportApproved { get; set; }
+        public string? FitnessReportApprovedBy { get; set; }  
         public List<LeaveRequestEvent> Events { get; set;  } = new List<LeaveRequestEvent>();
 
     }

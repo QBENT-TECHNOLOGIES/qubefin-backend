@@ -8,7 +8,7 @@ namespace QubeFin.Payroll.Application.Payrolls.Report;
 
 #region --- COMMAND ---
 
-public record GenerateNPOIReportsCommand(string StoredProcedure, Dictionary<string, object?> Parameters, string? Header, string? SubHeader, bool ShowCompanyHeader) : IRequest<Result<GenerateNPOIReportsResponse>>;
+public record GenerateNPOIReportsCommand(string StoredProcedure, Dictionary<string, object?> Parameters, string? Header, string? SubHeader, bool ShowCompanyHeader, Guid companyId) : IRequest<Result<GenerateNPOIReportsResponse>>;
 
 #endregion
 
@@ -38,7 +38,7 @@ internal sealed class GenerateNPOIReportsCommandHandler(IReportRepository report
     public async Task<Result<GenerateNPOIReportsResponse>> Handle(GenerateNPOIReportsCommand request, CancellationToken cancellationToken)
     {
         var options = new ExcelReportOptions(ShowCompanyHeader: request.ShowCompanyHeader, ReportTitle: request.Header, SubHeader: request.SubHeader);
-        var result = await reportRepository.GenerateExcelAsync(request.StoredProcedure, request.Parameters, options, cancellationToken);
+        var result = await reportRepository.GenerateExcelAsync(request.StoredProcedure, request.Parameters, request.companyId, options, cancellationToken);
         return Result.Ok(new GenerateNPOIReportsResponse(result.FileStream, result.ContentType, result.FileName));
     }
 }

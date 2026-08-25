@@ -64,6 +64,11 @@ internal sealed class GetRequestByIdQueryHandler(QubeFinDataContext context, IFi
             IsApprovalEvent = first.IsApprovalEvent,
             IsCancellable = first.IsCancellable,
             RejectedReason = first.RejectedReason,
+            FitnessReportAttachment = first.FitnessReportAttachment,
+            FitnessReportUrl = !string.IsNullOrEmpty(first.FitnessReportAttachment) ? await fileStorageRepository.GetFileUrlAsync(first.FitnessReportAttachment, cancellationToken) : null,
+            FitnessReportApprovedBy = first.FitnessReportApprovedBy,
+            IsFitnessReportApproved = first.IsFitnessReportApproved,
+            
 
             Events = leaveRequestResponse.Select(x => new LeaveRequestEvent
             {

@@ -66,6 +66,380 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
             }
         }
 
+
+        public static MemoryStream CreateBankSalaryDisbursementExcel(DataTable dataTable, byte[]? logoBytes)
+        {
+            var workbook = new XSSFWorkbook();
+
+            try
+            {
+                var sheet = workbook.CreateSheet("Report");
+
+                // Same existing column width logic
+                ApplyColumnWidths(sheet, dataTable);
+
+                var currentRow = 0;
+
+                // =========================================================
+                // COMPANY HEADER - SAME AS EXISTING
+                // =========================================================
+
+                currentRow = ExcelCompanyHeaderHelper.AddCompanyHeader(
+                    workbook,
+                    sheet,
+                    currentRow,
+                    dataTable.Columns.Count,
+                    logoBytes);
+
+                // =========================================================
+                // REPORT TITLE - SAME AS EXISTING
+                // =========================================================
+
+                AddHeader(
+                    workbook,
+                    sheet,
+                    ref currentRow,
+                    "Bank Salary Disbursement Sheet",
+                    dataTable.Columns.Count);
+
+                // =========================================================
+                // SUB HEADER - SAME AS EXISTING
+                // =========================================================
+
+                var month = GetPaymentMonth(dataTable);
+
+                AddSubHeader(
+                    workbook,
+                    sheet,
+                    ref currentRow,
+                    $"For the month of {month}",
+                    dataTable.Columns.Count);
+
+                // =========================================================
+                // COLUMN HEADERS - SAME AS EXISTING
+                // =========================================================
+
+                AddColumnHeaders(
+                    workbook,
+                    sheet,
+                    ref currentRow,
+                    dataTable);
+
+                // =========================================================
+                // DATA - SAME AS EXISTING
+                // =========================================================
+
+                if (dataTable.Rows.Count == 0)
+                {
+                    AddNoDataRow(
+                        workbook,
+                        sheet,
+                        ref currentRow,
+                        dataTable.Columns.Count);
+                }
+                else
+                {
+                    AddData(
+                        workbook,
+                        sheet,
+                        ref currentRow,
+                        dataTable);
+
+                    AddBankSalaryTotal(
+                        workbook,
+                        sheet,
+                        ref currentRow,
+                        dataTable);
+                }
+
+                // Footer should always be shown
+                AddBankSalaryFooter(
+                    workbook,
+                    sheet,
+                    ref currentRow,
+                    dataTable.Columns.Count);
+
+                var stream = new MemoryStream();
+
+                workbook.Write(stream, leaveOpen: true);
+
+                stream.Position = 0;
+
+                return stream;
+            }
+            finally
+            {
+                workbook.Close();
+            }
+        }
+
+        private static string GetPaymentMonth(DataTable dataTable)
+        {
+            if (!dataTable.Columns.Contains("PaymentDate"))
+                return string.Empty;
+
+            if (dataTable.Rows.Count == 0)
+                return string.Empty;
+
+            var value = dataTable.Rows[0]["PaymentDate"];
+
+            if (value == DBNull.Value || value == null)
+                return string.Empty;
+
+            if (DateTime.TryParse(value.ToString(), out var date))
+                return date.ToString("MMMM yyyy");
+
+            return string.Empty;
+        }
+
+        private static void AddBankSalaryTotal(
+    IWorkbook workbook,
+    ISheet sheet,
+    ref int currentRow,
+    DataTable dataTable)
+        {
+            if (!dataTable.Columns.Contains("Amount"))
+                return;
+
+            var amountColumnIndex =
+                dataTable.Columns.IndexOf("Amount");
+
+            decimal totalAmount = 0;
+
+            foreach (DataRow row in dataTable.Rows)
+            {
+                if (row["Amount"] == DBNull.Value)
+                    continue;
+
+                if (decimal.TryParse(
+                        row["Amount"]?.ToString(),
+                        out var amount))
+                {
+                    totalAmount += amount;
+                }
+            }
+
+            var totalRow = sheet.CreateRow(currentRow++);
+
+            // Total label
+            var totalCell = totalRow.CreateCell(0);
+
+            totalCell.SetCellValue("Total");
+
+            totalCell.CellStyle =
+                CreateBankSalaryTotalStyle(workbook);
+
+            // Merge all columns before Amount
+            if (amountColumnIndex > 0)
+            {
+                sheet.AddMergedRegion(
+                    new CellRangeAddress(
+                        totalRow.RowNum,
+                        totalRow.RowNum,
+                        0,
+                        amountColumnIndex - 1));
+            }
+
+            // Amount
+            var amountCell =
+                totalRow.CreateCell(amountColumnIndex);
+
+            amountCell.SetCellValue(
+                (double)totalAmount);
+
+            amountCell.CellStyle =
+                CreateBankSalaryTotalAmountStyle(workbook);
+
+            // Remaining cells
+            for (var i = amountColumnIndex + 1;
+                 i < dataTable.Columns.Count;
+                 i++)
+            {
+                var cell = totalRow.CreateCell(i);
+
+                cell.CellStyle =
+                    CreateBankSalaryTotalStyle(workbook);
+            }
+        }
+
+        private static ICellStyle CreateBankSalaryTotalStyle(
+    IWorkbook workbook)
+        {
+            var style = workbook.CreateCellStyle();
+
+            style.Alignment = HorizontalAlignment.Center;
+            style.VerticalAlignment = VerticalAlignment.Center;
+
+            style.BorderTop = BorderStyle.Thin;
+            style.BorderBottom = BorderStyle.Thin;
+
+            var font = workbook.CreateFont();
+            font.IsBold = true;
+
+            style.SetFont(font);
+
+            return style;
+        }
+
+        private static ICellStyle CreateBankSalaryTotalAmountStyle(
+    IWorkbook workbook)
+        {
+            var style =
+                CreateBankSalaryTotalStyle(workbook);
+
+            style.Alignment = HorizontalAlignment.Right;
+
+            style.DataFormat =
+                workbook
+                    .CreateDataFormat()
+                    .GetFormat("0.00");
+
+            return style;
+        }
+
+        private static void AddBankSalaryFooter(
+    IWorkbook workbook,
+    ISheet sheet,
+    ref int currentRow,
+    int columnCount)
+        {
+            // Space between total/no-data row and footer
+            currentRow += 2;
+
+            var style = CreateBankSalaryFooterStyle(workbook);
+
+            // =========================================================
+            // Prepared By
+            // =========================================================
+
+            var preparedRow = sheet.CreateRow(currentRow);
+
+            var preparedCell = preparedRow.CreateCell(1);
+            preparedCell.SetCellValue("Prepared By");
+            preparedCell.CellStyle = style;
+
+            // Top line above Prepared By
+            for (var i = 1; i <= 3; i++)
+            {
+                preparedRow.CreateCell(i).CellStyle =
+                    CreateFooterBorderStyle(workbook);
+            }
+
+            // =========================================================
+            // Checked By
+            // =========================================================
+
+            var checkedColumn = columnCount - 2;
+
+            var checkedCell = preparedRow.CreateCell(checkedColumn);
+            checkedCell.SetCellValue("Checked By");
+            checkedCell.CellStyle = style;
+
+            // Top line above Checked By
+            for (var i = checkedColumn;
+                 i < columnCount;
+                 i++)
+            {
+                preparedRow.CreateCell(i).CellStyle =
+                    CreateFooterBorderStyle(workbook);
+            }
+
+            currentRow += 2;
+
+            // =========================================================
+            // Prepared By fields
+            // =========================================================
+
+            AddBankSalaryFooterField(
+                sheet,
+                currentRow,
+                1,
+                "Name",
+                style);
+
+            AddBankSalaryFooterField(
+                sheet,
+                currentRow + 1,
+                1,
+                "Designation",
+                style);
+
+            AddBankSalaryFooterField(
+                sheet,
+                currentRow + 2,
+                1,
+                "Employee Code",
+                style);
+
+            // =========================================================
+            // Checked By fields
+            // =========================================================
+
+            AddBankSalaryFooterField(
+                sheet,
+                currentRow,
+                checkedColumn,
+                "Name",
+                style);
+
+            AddBankSalaryFooterField(
+                sheet,
+                currentRow + 1,
+                checkedColumn,
+                "Designation",
+                style);
+
+            AddBankSalaryFooterField(
+                sheet,
+                currentRow + 2,
+                checkedColumn,
+                "Employee Code",
+                style);
+        }
+
+        private static ICellStyle CreateFooterBorderStyle(
+    IWorkbook workbook)
+        {
+            var style = workbook.CreateCellStyle();
+
+            style.BorderTop = BorderStyle.Thin;
+
+            return style;
+        }
+
+        private static void AddBankSalaryFooterField(
+    ISheet sheet,
+    int rowIndex,
+    int columnIndex,
+    string value,
+    ICellStyle style)
+        {
+            var row = sheet.GetRow(rowIndex)
+                      ?? sheet.CreateRow(rowIndex);
+
+            var cell = row.CreateCell(columnIndex);
+
+            cell.SetCellValue(value);
+
+            cell.CellStyle = style;
+        }
+
+        private static ICellStyle CreateBankSalaryFooterStyle(
+    IWorkbook workbook)
+        {
+            var style = workbook.CreateCellStyle();
+
+            style.Alignment = HorizontalAlignment.Left;
+            style.VerticalAlignment = VerticalAlignment.Center;
+
+            var font = workbook.CreateFont();
+            font.IsBold = true;
+
+            style.SetFont(font);
+
+            return style;
+        }
+
         // =============================================================
         // COLUMN WIDTHS (now computed up front, not auto-sized at the end)
         // =============================================================

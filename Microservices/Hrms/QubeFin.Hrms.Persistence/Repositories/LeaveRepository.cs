@@ -13,6 +13,7 @@ public interface ILeaveRepository
     Task<string> AddAsync(Guid Id, Guid employeeId, Guid leaveTypeId, DateOnly fromDate, DateOnly toDate, string address, string reason, string enclosedFileName, string enclosedFileNo);
     Task<bool> SubmitAsync(Guid id, Guid userId);
     Task<bool> CancelAsync(Guid id, string? reason, Guid userId);
+    Task<List<GetAllPendingFitnessApprovalResposne>> GetPendingFitnessApprovalList(CancellationToken cancellationToken);
 }
 
 public class LeaveRepository(QubeFinDataContext context) : ILeaveRepository
@@ -122,5 +123,19 @@ public class LeaveRepository(QubeFinDataContext context) : ILeaveRepository
         leaveRequestEntity.RejectedReason = reason;
 
         return true;
+    }
+
+    public async Task<List<GetAllPendingFitnessApprovalResposne>> GetPendingFitnessApprovalList(CancellationToken cancellationToken)
+    {
+        var leaveEntities = await context.TblLeaveRequests.AsNoTracking().Where(m => m.CurrentStatus.Trim() == "Approved" && !m.IsFitnessReportApproved).ToListAsync(cancellationToken);
+        return leaveEntities.Select(m => new GetAllPendingFitnessApprovalResposne
+        {
+            //EmployeeName = m.EmployeeId,
+            LeaveRequestId = m.Id,
+            //LeaveType = m.LeaveTypeId,
+            FromDate = m.FromDate, 
+            EndDate = m.ToDate,
+            TotalDays = m.TotalDays != null ? m.TotalDays.Value : 0,
+        }).ToList();
     }
 }

@@ -88,4 +88,7 @@ public class LeaveRequestResponse
     public string? EventButtonText { get; set; }
     public bool? IsRecommendEvent { get; set; }
     public bool? IsApprovalEvent { get; set; }
+    public string? FitnessReportAttachment { get; set; }
+    public bool? IsFitnessReportApproved { get; set; }
+    public string? FitnessReportApprovedBy { get; set; }
 }
