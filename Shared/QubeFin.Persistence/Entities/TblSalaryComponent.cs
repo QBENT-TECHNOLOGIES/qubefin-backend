@@ -21,6 +21,8 @@ public partial class TblSalaryComponent
 
     public bool IsCtccomponent { get; set; }
 
+    public bool IsEditable { get; set; }
+
     public bool IsActive { get; set; }
 
     public int DisplayOrder { get; set; }

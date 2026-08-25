@@ -54,4 +54,10 @@ public partial class TblLeaveRequest
     public Guid? FitnessReportApprovedBy { get; set; }
 
     public DateTime? FitnessReportApprovedOn { get; set; }
+
+    public virtual TblEmployee Employee { get; set; } = null!;
+
+    public virtual TblLeavePrayer? LeavePrayer { get; set; }
+
+    public virtual TblLeaveType LeaveType { get; set; } = null!;
 }
