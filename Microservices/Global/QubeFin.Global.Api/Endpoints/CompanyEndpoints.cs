@@ -18,6 +18,7 @@ namespace QubeFin.Global.Api.Endpoints
             .WithName("GetAllCompanies")
             .WithSummary("Get All Companies")
             .WithDescription("Returns the all company name.")
+            .WithTags("Company")
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
         }

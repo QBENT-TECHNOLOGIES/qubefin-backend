@@ -264,7 +264,7 @@ public class EmployeeEndpoints : IEndpoint
         .WithSummary("Update Employee Qualification data")
         .RequireAuthorization();
 
-        app.MapPatch("employees/update/banking-info/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] BankDetail request, ISender sender) =>
+        app.MapPatch("employees/update/banking-info/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] BankDetail bankDetail, ISender sender) =>
         {
             if (principal.Identity is null)
             {
@@ -272,8 +272,7 @@ public class EmployeeEndpoints : IEndpoint
             }
             var userId = principal.Identity.GetUserId();
 
-            var command = new UpdateEmployeePayrollCommand(id, request.BankId, request.BankAccountNo, request.BankHolderName, request.BankBranch, request.BankAccountType, request.HasEsiEligible,
-                request.EsiIpNumber, request.UniversalAccountNumber, request.IsPayrollActive, userId);
+            var command = new UpdateEmployeePayrollCommand(id, bankDetail, userId);
             var result = await sender.Send(command);
             return result.ToHttpResult();
         })

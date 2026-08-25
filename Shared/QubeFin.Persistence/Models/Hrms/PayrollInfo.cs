@@ -5,7 +5,7 @@ public class PayrollInfo
     public Guid? BankId { get; private set; }
     public string? BankHolderName { get; private set; }
     public long? BankAccountNo { get; private set; }
-    public string? IfscCode { get; set; }
+    public string? IfscCode { get; private set; }
     public string? BankBranch { get; private set; }
     public string? BankAccountType { get; private set; }
 
