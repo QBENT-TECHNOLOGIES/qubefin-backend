@@ -52,7 +52,6 @@ internal class ValidateRefreshTokenQueryHandler(QubeFinDataContext context, IAut
         {
             claims.Add(new Claim("EmployeeId", user.EmployeeId.Value.ToString()));
             claims.Add(new Claim("EmployeeName", user.EmployeeName ?? ""));
-            claims.Add(new Claim("Gender", user.Gender ?? ""));
             //claims.Add(new Claim("Role", user.Role.Name.ToString()));
         }
 

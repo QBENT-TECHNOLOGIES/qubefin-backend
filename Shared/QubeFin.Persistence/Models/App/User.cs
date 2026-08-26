@@ -15,12 +15,11 @@ public class User
     public DateTime? LastModifiedOn { get; private set; }
     public Guid? LastModifiedBy { get; private set; }
     public string? EmployeeName { get; set; }
-    public string? Gender { get; set; }
 
     private User() { }
 
     public User(Guid id, string username, string password, Guid? employeeId, bool isActive, bool isSuperAdmin, bool hasMfaEnabled, string mfaSecret,
-        Guid createdBy, DateTime createdOn, Guid? lastModifiedBy, DateTime? lastModifiedOn, string? employeeName, string? gender)
+        Guid createdBy, DateTime createdOn, Guid? lastModifiedBy, DateTime? lastModifiedOn, string? employeeName)
     {
         Id = id;
         UserName = username;
@@ -35,7 +34,6 @@ public class User
         LastModifiedBy = lastModifiedBy;
         LastModifiedOn = lastModifiedOn;
         EmployeeName = employeeName;
-        Gender = gender;
     }
 
     public static User Create(Guid id, string username, string password, Guid? employeeId, string mfaSecret, Guid createdBy)

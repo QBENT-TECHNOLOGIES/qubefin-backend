@@ -94,6 +94,8 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblEmployeeLop> TblEmployeeLops { get; set; }
 
+    public virtual DbSet<TblEmployeeLopDetail> TblEmployeeLopDetails { get; set; }
+
     public virtual DbSet<TblEmployeeQualification> TblEmployeeQualifications { get; set; }
 
     public virtual DbSet<TblEmployeeReference> TblEmployeeReferences { get; set; }
@@ -953,13 +955,14 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Esiipno)
                 .HasMaxLength(20)
                 .HasColumnName("ESIIPNo");
-            entity.Property(e => e.FatherName).HasMaxLength(50);
+            entity.Property(e => e.FatherName).HasMaxLength(100);
             entity.Property(e => e.FirstName).HasMaxLength(30);
             entity.Property(e => e.FullName)
                 .HasMaxLength(92)
                 .HasComputedColumnSql("((([FirstName]+' ')+isnull([MiddleName]+' ',''))+[LastName])", false);
             entity.Property(e => e.Gender).HasMaxLength(10);
             entity.Property(e => e.HowYouKnow).HasMaxLength(200);
+            entity.Property(e => e.HusbandName).HasMaxLength(100);
             entity.Property(e => e.IfscCode)
                 .HasMaxLength(11)
                 .IsUnicode(false);
@@ -970,7 +973,7 @@ public partial class QubeFinDataContext : DbContext
                 .IsFixedLength();
             entity.Property(e => e.MiddleName).HasMaxLength(30);
             entity.Property(e => e.MobileNo).HasMaxLength(10);
-            entity.Property(e => e.MotherName).HasMaxLength(50);
+            entity.Property(e => e.MotherName).HasMaxLength(100);
             entity.Property(e => e.Nationality).HasMaxLength(25);
             entity.Property(e => e.OfficialEmail).HasMaxLength(100);
             entity.Property(e => e.PermanentHouseNo).HasMaxLength(20);
@@ -1107,7 +1110,34 @@ public partial class QubeFinDataContext : DbContext
             entity.ToTable("Tbl_EmployeeLop", "Hrms");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.PayrollStatus).HasMaxLength(20);
+            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.ModifiedOn).HasColumnType("datetime");
+            entity.Property(e => e.Remarks).HasMaxLength(100);
+
+            entity.HasOne(d => d.Employee).WithMany(p => p.TblEmployeeLops)
+                .HasForeignKey(d => d.EmployeeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_EmployeeLop_Tbl_Employee");
+
+            entity.HasOne(d => d.OrganizationUnit).WithMany(p => p.TblEmployeeLops)
+                .HasForeignKey(d => d.OrganizationUnitId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_EmployeeLop_Tbl_OrganizationUnit");
+        });
+
+        modelBuilder.Entity<TblEmployeeLopDetail>(entity =>
+        {
+            entity.ToTable("Tbl_EmployeeLopDetails", "Hrms");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.PayrollStatus)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+
+            entity.HasOne(d => d.EmployeeLop).WithMany(p => p.TblEmployeeLopDetails)
+                .HasForeignKey(d => d.EmployeeLopId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_EmployeeLopDetails_Tbl_EmployeeLop");
         });
 
         modelBuilder.Entity<TblEmployeeQualification>(entity =>
@@ -1262,6 +1292,20 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.RequestDate).HasColumnType("datetime");
             entity.Property(e => e.SubmittedOn).HasColumnType("datetime");
             entity.Property(e => e.TotalDays).HasComputedColumnSql("(datediff(day,[FromDate],[ToDate])+(1))", false);
+
+            entity.HasOne(d => d.Employee).WithMany(p => p.TblLeaveRequests)
+                .HasForeignKey(d => d.EmployeeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_LeaveRequest_Tbl_Employee");
+
+            entity.HasOne(d => d.LeavePrayer).WithMany(p => p.TblLeaveRequests)
+                .HasForeignKey(d => d.LeavePrayerId)
+                .HasConstraintName("FK_Tbl_LeaveRequest_Tbl_LeavePrayer");
+
+            entity.HasOne(d => d.LeaveType).WithMany(p => p.TblLeaveRequests)
+                .HasForeignKey(d => d.LeaveTypeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_LeaveRequest_Tbl_LeaveType");
         });
 
         modelBuilder.Entity<TblLeaveRequestDocument>(entity =>

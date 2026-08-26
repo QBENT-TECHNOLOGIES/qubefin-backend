@@ -1,7 +1,6 @@
 ﻿using FluentResults;
 using FluentValidation;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
@@ -11,8 +10,8 @@ using System.Text.RegularExpressions;
 namespace QubeFin.Hrms.Application.Employees.Commands;
 
 #region --- COMMAND ---
-public record CreateEmployeeCommand(string Code, string? Salutation, string FirstName, string? MiddleName, string LastName, string? FatherName, string? MotherName, 
-    DateTime DateOfBirth, string Gender, string Religion, string? Caste, string Nationality, string BloodGroup, string? DisablityType, string? MaritalStatus,
+public record CreateEmployeeCommand(string Code, string? Salutation, string FirstName, string? MiddleName, string LastName, string? FatherName, string? MotherName,
+    string? HusbandName, DateTime DateOfBirth, string Gender, string Religion, string? Caste, string Nationality, string BloodGroup, string? DisablityType, string? MaritalStatus,
     Guid CreatedBy
 ) : IRequest<Result<string>>;
 #endregion
@@ -59,8 +58,8 @@ internal sealed class CreateEmployeeCommandHandler(IEmployeeRepository employeeR
         var employee = Employee.Create(
             Guid.NewGuid(),
             request.Code,
-            new PersonalInfo(request.Code, request.Salutation, request.FirstName, request.MiddleName, request.LastName, request.FatherName, request.MotherName,
-                DateOnly.FromDateTime( request.DateOfBirth), request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisablityType, request.MaritalStatus),
+            new PersonalInfo(request.Code, request.Salutation, request.FirstName, request.MiddleName, request.LastName, request.FatherName, request.MotherName, request.HusbandName,
+                DateOnly.FromDateTime(request.DateOfBirth), request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisablityType, request.MaritalStatus),
             new OfficialInfo(),
             new ContactInfo(),
             new AddressInfo(),

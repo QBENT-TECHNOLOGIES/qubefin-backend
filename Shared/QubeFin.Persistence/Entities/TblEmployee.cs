@@ -23,6 +23,8 @@ public partial class TblEmployee
 
     public string? MotherName { get; set; }
 
+    public string? HusbandName { get; set; }
+
     public Guid? OrganizationUnitId { get; set; }
 
     public Guid? CompanyId { get; set; }
@@ -167,11 +169,15 @@ public partial class TblEmployee
 
     public virtual ICollection<TblEmployeeGrossSalary> TblEmployeeGrossSalaries { get; set; } = new List<TblEmployeeGrossSalary>();
 
+    public virtual ICollection<TblEmployeeLop> TblEmployeeLops { get; set; } = new List<TblEmployeeLop>();
+
     public virtual ICollection<TblEmployeeQualification> TblEmployeeQualifications { get; set; } = new List<TblEmployeeQualification>();
 
     public virtual ICollection<TblEmployeeReference> TblEmployeeReferences { get; set; } = new List<TblEmployeeReference>();
 
     public virtual ICollection<TblLeavePrayer> TblLeavePrayers { get; set; } = new List<TblLeavePrayer>();
+
+    public virtual ICollection<TblLeaveRequest> TblLeaveRequests { get; set; } = new List<TblLeaveRequest>();
 
     public virtual ICollection<TblLeaveTransaction> TblLeaveTransactions { get; set; } = new List<TblLeaveTransaction>();
 

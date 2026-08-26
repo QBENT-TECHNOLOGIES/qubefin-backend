@@ -115,16 +115,18 @@ namespace QubeFin.Persistence.Models.Payroll
         public int DisplayOrder { get; private set; }
         public decimal Percentage { get; private set; }
         public decimal Amount { get; private set; }
+        public bool IsEditable { get; private set; } = true;
 
         private PayrollComponentModel() { }
 
-        public PayrollComponentModel(Guid id, Guid payrollId, Guid salaryComponentId, decimal percentage, decimal amount)
+        public PayrollComponentModel(Guid id, Guid payrollId, Guid salaryComponentId, decimal percentage, decimal amount, bool isEditable)
         {
             Id = id;
             PayRollId = payrollId;
             SalaryComponentId = salaryComponentId;
             Percentage = percentage;
             Amount = amount;
+            IsEditable = isEditable;
         }
         public void SetNames(string salaryComponentName, string categoryName, int displayOrder)
         {

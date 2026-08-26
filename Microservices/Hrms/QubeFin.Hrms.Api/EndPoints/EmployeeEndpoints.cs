@@ -123,7 +123,7 @@ public class EmployeeEndpoints : IEndpoint
             }
             var userId = principal.Identity.GetUserId();
 
-            var command = new UpdateEmployeePersonalCommand(id,request.Code, request.Salutation, request.FirstName, request.MiddleName, request.LastName, request.FatherName, request.MotherName,
+            var command = new UpdateEmployeePersonalCommand(id, request.Code, request.Salutation, request.FirstName, request.MiddleName, request.LastName, request.FatherName, request.MotherName, request.HusbandName,
                 request.DateOfBirth, request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisablityType, request.MaritalStatus, userId);
             var result = await sender.Send(command);
             return result.ToHttpResult();
@@ -196,7 +196,7 @@ public class EmployeeEndpoints : IEndpoint
                     DocumentName = form[$"documents[{index}].documentName"].ToString(),
                     DocumentNo = form[$"documents[{index}].documentNo"].ToString(),
                     FileName = form[$"documents[{index}].fileName"].ToString(),
-                    File = form.Files[$"documents[{index}].file"] 
+                    File = form.Files[$"documents[{index}].file"]
                 };
 
                 if (DateTime.TryParse(form[$"documents[{index}].validFrom"], out var validFrom))
