@@ -28,6 +28,21 @@ public class MenuEndpoints : IEndpoint
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
 
+        app.MapGet("menus/tree-by-user", async (ISender sender, ClaimsPrincipal principal, CancellationToken cancellationToken) =>
+        {
+            var employeeId = principal.Identity.GetEmployeeId();
+
+            var result = await sender.Send(new GetMenuTreeByUserQuery(employeeId), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .RequireAuthorization()
+        .WithName("GetMenuTreeByUser")
+        .WithSummary("Get menu hierarchy by user")
+        .WithDescription("Returns the complete hierarchical tree of all application menus for the authenticated user.")
+        .WithTags("Menus")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
+
         app.MapGet("menus/parent-only", async (ISender sender, CancellationToken cancellationToken) =>
         {
             var result = await sender.Send(new GetParentMenusQuery(), cancellationToken);
@@ -37,6 +52,22 @@ public class MenuEndpoints : IEndpoint
         .WithName("GetParentMenus")
         .WithSummary("Get parent menus")
         .WithDescription("Returns the parent menus only.")
+        .WithTags("Menus")
+        .Produces(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
+
+
+        app.MapGet("menus/parent-only-by-user", async (ISender sender, ClaimsPrincipal principal, CancellationToken cancellationToken) =>
+        {
+            var employeeId = principal.Identity.GetEmployeeId();
+
+            var result = await sender.Send(new GetParentMenusByUserQuery(employeeId), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .RequireAuthorization()
+        .WithName("GetParentMenusByUser")
+        .WithSummary("Get parent menus by user")
+        .WithDescription("Returns the parent menus only for the authenticated user.")
         .WithTags("Menus")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status500InternalServerError);

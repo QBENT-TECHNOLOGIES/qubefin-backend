@@ -6,6 +6,7 @@ using QubeFin.Core.Results;
 using QubeFin.Global.Api.Requests;
 using QubeFin.Global.Application.OrganizationUnis.Commands;
 using QubeFin.Global.Application.OrganizationUnits.Commands;
+using QubeFin.Global.Application.OrganizationUnits.Models;
 using QubeFin.Global.Application.OrganizationUnits.Queries;
 using System.Security.Claims;
 
@@ -92,6 +93,16 @@ public class OrganizationUnitEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         .WithSummary("Update Organization Unit")
+        .WithTags("OrganizationUnits")
+        .RequireAuthorization();
+
+        app.MapPost("organization-units/designation-create", async (ISender sender, ClaimsPrincipal principal, [FromBody] DesignationRequest request) =>
+        {
+            Guid userId = principal.Identity?.GetUserId() ?? Guid.Empty;
+            var result = await sender.Send(new CreateDesignationCommand(request, userId));
+            return result.ToHttpResult();
+        })
+        .WithSummary("Create Designation")
         .WithTags("OrganizationUnits")
         .RequireAuthorization();
     }

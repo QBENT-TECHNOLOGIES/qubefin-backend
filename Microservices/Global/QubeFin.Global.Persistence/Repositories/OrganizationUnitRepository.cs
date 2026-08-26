@@ -13,6 +13,7 @@ public interface IOrganizationUnitRepository
     Task AddAsync(OrganizationUnit organizationUnit);
     void Update(OrganizationUnit organizationUnit);
     Task<List<OrganizationUnit>> GetAllOrganisationUnit(CancellationToken cancellationToken);
+    Task AddDesignationAsync(string name, Guid organizationUnitId, Guid postId, Guid roleId, Guid salaryGradeId, Guid userId);
 }
 
 internal class OrganizationUnitRepository(QubeFinDataContext context) : IOrganizationUnitRepository
@@ -56,5 +57,46 @@ internal class OrganizationUnitRepository(QubeFinDataContext context) : IOrganiz
     {
         var organizationUnitEntity = await context.TblOrganizationUnits.AsNoTracking().OrderBy(m => m.CodeVal).ToListAsync(cancellationToken) ?? throw new Exception("No organization found.");
         return organizationUnitEntity?.ToDomain().ToList();
+    }
+    public async Task AddDesignationAsync(string name, Guid organizationUnitId, Guid postId, Guid roleId, Guid salaryGradeId, Guid userId)
+    {
+        var existingDesignation = await context.TblDesignations
+            .AsNoTracking()
+            .FirstOrDefaultAsync(d => d.Name.Trim().ToLower() == name.Trim().ToLower() && d.OrganizationUnitId == organizationUnitId);
+        if (existingDesignation != null)
+        {
+            throw new InvalidOperationException($"Designation {name} already exists under the specified organization unit.");
+        }
+
+        var designation = new TblDesignation
+        {
+            Id = Guid.NewGuid(),
+            Name = name,
+            OrganizationUnitId = organizationUnitId,
+            PostId = postId,
+            IsActive = true,
+            CreatedBy = userId,
+            CreatedOn = DateTime.UtcNow,
+            TblDesignationRoles = new List<TblDesignationRole>
+            {
+                new TblDesignationRole
+                {
+                    Id = Guid.NewGuid(),
+                    RoleId = roleId,
+                    CreatedBy = userId,
+                    CreatedOn = DateTime.UtcNow
+                }
+            },
+            TblDesignationGradeMappings = new List<TblDesignationGradeMapping>
+            {
+                new TblDesignationGradeMapping
+                {
+                    Id = Guid.NewGuid(),
+                    GradeId = salaryGradeId,
+                    IsActive = true
+                }
+            }
+        };
+        await context.TblDesignations.AddAsync(designation);
     }
 }

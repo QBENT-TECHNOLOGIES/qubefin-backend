@@ -1,4 +1,7 @@
-﻿using QubeFin.Persistence.Models.App;
+﻿using Microsoft.EntityFrameworkCore;
+using QubeFin.Persistence;
+using QubeFin.Persistence.Mappers.App;
+using QubeFin.Persistence.Models.App;
 
 namespace QubeFin.App.Persistence.Repositories;
 
@@ -6,26 +9,28 @@ public interface IRoleRepository
 {
     Task<List<Role>> GetRolesAsync();
     Task<Role?> GetByIdAsync(Guid id);
-    Task AddAsync(Role role);
+    void AddAsync(Role role);
     void Update(Role role);
     void Remove(Role role);
 }
 
-public class RoleRepository : IRoleRepository
+public class RoleRepository(QubeFinDataContext context) : IRoleRepository
 {
-    public Task AddAsync(Role role)
+    public void AddAsync(Role role)
     {
-        throw new NotImplementedException();
+        context.TblRoles.Add(role.ToEntity());
     }
 
-    public Task<Role?> GetByIdAsync(Guid id)
+    public async Task<Role?> GetByIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        var role = await context.TblRoles.AsNoTracking().FirstOrDefaultAsync(r => r.Id == id);
+        return role?.ToDomain();
     }
 
-    public Task<List<Role>> GetRolesAsync()
+    public async Task<List<Role>> GetRolesAsync()
     {
-        throw new NotImplementedException();
+        var roles = await context.TblRoles.AsNoTracking().OrderBy(r => r.Name).Select(r => r.ToDomain()).ToListAsync();
+        return roles;
     }
 
     public void Remove(Role role)
@@ -35,6 +40,6 @@ public class RoleRepository : IRoleRepository
 
     public void Update(Role role)
     {
-        throw new NotImplementedException();
+        context.TblRoles.Update(role.ToEntity());
     }
 }
