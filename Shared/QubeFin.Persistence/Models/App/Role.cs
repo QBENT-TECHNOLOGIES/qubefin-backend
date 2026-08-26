@@ -50,6 +50,16 @@ public class Role
 
         return role;
     }
+    public void Update(string name, bool isActive, Guid modifiedBy)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Role name is required.", nameof(name));
+        name = name.Trim();
+        Name = name;
+        IsActive = isActive;
+        LastModifiedBy = modifiedBy;
+        LastModifiedOn = DateTime.UtcNow;
+    }
 
     public void UpdateMenus(IEnumerable<Guid> menuIds, Guid modifiedBy)
     {
