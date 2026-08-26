@@ -23,6 +23,8 @@ public partial class TblEmployee
 
     public string? MotherName { get; set; }
 
+    public string? HusbandName { get; set; }
+
     public Guid? OrganizationUnitId { get; set; }
 
     public Guid? CompanyId { get; set; }

@@ -955,13 +955,14 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Esiipno)
                 .HasMaxLength(20)
                 .HasColumnName("ESIIPNo");
-            entity.Property(e => e.FatherName).HasMaxLength(50);
+            entity.Property(e => e.FatherName).HasMaxLength(100);
             entity.Property(e => e.FirstName).HasMaxLength(30);
             entity.Property(e => e.FullName)
                 .HasMaxLength(92)
                 .HasComputedColumnSql("((([FirstName]+' ')+isnull([MiddleName]+' ',''))+[LastName])", false);
             entity.Property(e => e.Gender).HasMaxLength(10);
             entity.Property(e => e.HowYouKnow).HasMaxLength(200);
+            entity.Property(e => e.HusbandName).HasMaxLength(100);
             entity.Property(e => e.IfscCode)
                 .HasMaxLength(11)
                 .IsUnicode(false);
@@ -972,7 +973,7 @@ public partial class QubeFinDataContext : DbContext
                 .IsFixedLength();
             entity.Property(e => e.MiddleName).HasMaxLength(30);
             entity.Property(e => e.MobileNo).HasMaxLength(10);
-            entity.Property(e => e.MotherName).HasMaxLength(50);
+            entity.Property(e => e.MotherName).HasMaxLength(100);
             entity.Property(e => e.Nationality).HasMaxLength(25);
             entity.Property(e => e.OfficialEmail).HasMaxLength(100);
             entity.Property(e => e.PermanentHouseNo).HasMaxLength(20);
