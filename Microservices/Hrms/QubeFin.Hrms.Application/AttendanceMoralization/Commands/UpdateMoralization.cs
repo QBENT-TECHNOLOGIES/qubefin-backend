@@ -52,7 +52,7 @@ internal sealed class UpdateMoralizationCommandHandler(QubeFinDataContext contex
                 existingDetail.PayrollStatus = update.PayrollStatus;
             }
             await unitOfWork.SaveChangesAsync(cancellationToken);
-            return Result.Ok($"Moralization updated successfully for {request.Id}");
+            return Result.Ok($"Moralization updated successfully.");
         }
         catch (Exception ex)
         {
