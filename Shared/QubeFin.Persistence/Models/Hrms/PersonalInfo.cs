@@ -11,6 +11,7 @@ public class PersonalInfo
     public string LastName { get; private set; } = null!;
     public string? FatherName { get; private set; }
     public string? MotherName { get; private set; }
+    public string? HusbandName { get; private set; }
     public DateOnly DateOfBirth { get; private set; }
     public string Gender { get; private set; } = null!;
     public string Religion { get; private set; } = null!;
@@ -24,7 +25,7 @@ public class PersonalInfo
     {
     }
 
-    public PersonalInfo(string code, string? salutation, string firstName, string? middleName, string lastName, string? fatherName, string? motherName,
+    public PersonalInfo(string code, string? salutation, string firstName, string? middleName, string lastName, string? fatherName, string? motherName, string? husbandName,
         DateOnly dateOfBirth, string gender, string religion, string? caste, string nationality, string bloodGroup, string? disablityType, string? maritalStatus)
     {
         Code = code;
@@ -34,6 +35,7 @@ public class PersonalInfo
         LastName = lastName;
         FatherName = fatherName;
         MotherName = motherName;
+        HusbandName = husbandName;
         DateOfBirth = dateOfBirth;
         Gender = gender;
         Religion = religion;
