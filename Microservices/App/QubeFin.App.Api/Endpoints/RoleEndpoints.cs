@@ -52,7 +52,7 @@ public class RoleEndpoints : IEndpoint
         .WithTags("Roles")
         .RequireAuthorization();
 
-        app.MapPost("roles/update/{id}", async (ISender sender, ClaimsPrincipal principal, Guid id, UpdateRoleCommand command) =>
+        app.MapPost("roles/update", async (ISender sender, ClaimsPrincipal principal, UpdateRoleCommand command) =>
         {
             Guid userId = principal.Identity.GetUserId();
             command = command with { UserId = userId };

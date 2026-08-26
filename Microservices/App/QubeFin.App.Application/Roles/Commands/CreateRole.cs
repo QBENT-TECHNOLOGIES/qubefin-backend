@@ -17,7 +17,7 @@ internal sealed class CreateRoleCommandHandler(IRoleRepository roleRepository, I
     public async Task<Result<string>> Handle(CreateRoleCommand request, CancellationToken cancellationToken)
     {
         var role = Role.Create(Guid.NewGuid(), request.Name, request.UserId);
-        await roleRepository.AddAsync(role);
+        roleRepository.AddAsync(role);
         await unitOfWork.SaveChangesAsync();
         return Result.Ok($"Role {request.Name} created successfully");
     }

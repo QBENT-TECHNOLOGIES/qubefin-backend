@@ -20,7 +20,7 @@ public static class DependencyInjection
 
         services.AddScoped<ITokenGenerator, TokenGenerator>();
         services.AddScoped<IMenuRepository, MenuRepository>();
-        //services.AddScoped<IRoleRe>
+        services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
 
         return services;
