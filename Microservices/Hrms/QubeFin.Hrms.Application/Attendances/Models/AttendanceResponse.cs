@@ -13,6 +13,7 @@
         public bool? IsEarlyLeave { get; set; }
         public bool? IsLateEntry { get; set; }
         public bool? IsFitnessReportRequired { get; set; }
+        public bool? IsFitnessReportUploaded { get; set; }
         public decimal? InTimeLatitude { get; set; }
         public decimal? InTimeLongitude { get; set; }
         public decimal? OutTimeLatitude { get; set; }

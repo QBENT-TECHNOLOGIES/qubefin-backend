@@ -7,6 +7,7 @@ using QubeFin.Payroll.Application.Payrolls.Commands;
 using QubeFin.Payroll.Application.Payrolls.Queries;
 using QubeFin.Payroll.Application.Payrolls.Report;
 using System.Security.Claims;
+using System.Security.Principal;
 
 namespace QubeFin.Payroll.Api.Endpoints
 {
@@ -196,8 +197,9 @@ namespace QubeFin.Payroll.Api.Endpoints
                 return Results.File(file.FileStream, file.ContentType, $"Professional_Tax_Report_{month}_{year}.xlsx");
             }).WithSummary("Generate Professional Tax Report.");
 
-            app.MapGet("/generate-salary-disbursement-report/{month:int}/{year:int}/{companyId:Guid}", [Authorize] async (int month, int year, Guid companyId,ISender sender) =>
+            app.MapGet("/generate-salary-disbursement-report/{month:int}/{year:int}/{companyId:Guid}", [Authorize] async (ClaimsPrincipal principal,int month, int year, Guid companyId,ISender sender) =>
             {
+                var employeeId = principal.Identity.GetEmployeeId();
                 var command = new GenerateSalaryDisbursementSheetCommand("Payroll.USP_SalaryDisbursementSheet",
                     new Dictionary<string, object?>
                     {
@@ -205,7 +207,10 @@ namespace QubeFin.Payroll.Api.Endpoints
                         ["@p_year"] = year,
                         ["@p_companyId"] = companyId
                     },
-                    companyId
+                    month,
+                    year,
+                    companyId,
+                    employeeId
                 );
 
                 var result = await sender.Send(command);
@@ -215,7 +220,7 @@ namespace QubeFin.Payroll.Api.Endpoints
 
                 var file = result.Value;
 
-                return Results.File(file.FileStream, file.ContentType, $"Professional_Tax_Report_{month}_{year}.xlsx");
+                return Results.File(file.FileStream, file.ContentType, $"Salary_Disbursement_Sheet_{month}_{year}.xlsx");
             }).WithSummary("Generate Salary Disbursement Sheet Report.");
             #endregion
         }

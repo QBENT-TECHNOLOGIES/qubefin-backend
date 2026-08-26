@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Hrms.Application.Attendances.Models;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Entities;
 
 namespace QubeFin.Hrms.Application.Attendances.Queries;
 
@@ -26,56 +27,58 @@ internal sealed class GetAttendanceByEmployeeQueryHandler(QubeFinDataContext con
 {
     public async Task<Result<AttendanceResponse>> Handle(GetAttendanceByEmployeeQuery request,CancellationToken cancellationToken)
     {
-        var result = new AttendanceResponse();
-        bool isFitnessReportRequired = false;
         var today = DateOnly.FromDateTime(DateTime.Today);
-        var leaveTypes = new List<string> { "ML", "MML" };
 
-        var attendanceEntity = await context.TblAttendances.AsNoTracking().FirstOrDefaultAsync(m => m.EmployeeId == request.EmployeeId && m.AttendanceDate == today,cancellationToken);
+        var attendanceEntity = await context.TblAttendances.AsNoTracking().FirstOrDefaultAsync(m => m.EmployeeId == request.EmployeeId && m.AttendanceDate == today, cancellationToken);
 
         var lastAttendance = await context.TblAttendances.AsNoTracking().Where(m => m.EmployeeId == request.EmployeeId && m.AttendanceDate < today).OrderByDescending(m => m.AttendanceDate).FirstOrDefaultAsync(cancellationToken);
-        
-        var leaveTypeList = await context.TblLeaveTypes.AsNoTracking().Where(m => leaveTypes.Contains(m.Alias)).Select(m => m.Id).ToListAsync();
+
+        var leaveTypes = new[] { "ML", "MML" };
+
+        var leaveTypeList = await context.TblLeaveTypes.AsNoTracking().Where(m => leaveTypes.Contains(m.Alias)).Select(m => m.Id).ToListAsync(cancellationToken);
+
+        TblLeaveRequest? leaveEntity = null;
+
         if (lastAttendance != null)
         {
-            isFitnessReportRequired = await context.TblLeaveRequests.AnyAsync(l => l.EmployeeId == request.EmployeeId && l.CurrentStatus == "Approved" && leaveTypeList.Contains(l.LeaveTypeId) && l.ToDate > lastAttendance.AttendanceDate && !l.IsFitnessReportApproved, cancellationToken);
+            leaveEntity = await context.TblLeaveRequests.AsNoTracking()
+                .Where(l =>
+                    l.EmployeeId == request.EmployeeId &&
+                    l.CurrentStatus == "Approved" &&
+                    leaveTypeList.Contains(l.LeaveTypeId) &&
+                    l.FromDate <= today &&
+                    l.ToDate >= lastAttendance.AttendanceDate)
+                .OrderByDescending(l => l.ToDate).FirstOrDefaultAsync(cancellationToken);
         }
 
-        if(attendanceEntity == null)
+        var result = new AttendanceResponse
         {
-            result = new AttendanceResponse
-            {
-                IsFitnessReportRequired = isFitnessReportRequired,
-            };
-        }
-        else
+            IsFitnessReportRequired = leaveEntity != null && !leaveEntity.IsFitnessReportApproved,
+            IsFitnessReportUploaded = leaveEntity != null && !string.IsNullOrWhiteSpace(leaveEntity.FitnessReportAttachment)
+        };
+
+        if (attendanceEntity != null)
         {
-            result = new AttendanceResponse
-            {
-                Id = attendanceEntity.Id,
-                EmployeeId = attendanceEntity.EmployeeId,
-                OrganizationUnitId = attendanceEntity.OrganizationUnitId,
+            result.Id = attendanceEntity.Id;
+            result.EmployeeId = attendanceEntity.EmployeeId;
+            result.OrganizationUnitId = attendanceEntity.OrganizationUnitId;
 
-                AttendanceDate = attendanceEntity.AttendanceDate,
+            result.AttendanceDate = attendanceEntity.AttendanceDate;
 
-                ExpectedInTime = attendanceEntity.ExpectedInTime,
-                ExpectedOutTime = attendanceEntity.ExpectedOutTime,
+            result.ExpectedInTime = attendanceEntity.ExpectedInTime;
+            result.ExpectedOutTime = attendanceEntity.ExpectedOutTime;
 
-                ActualInTime = attendanceEntity.ActualInTime,
-                ActualOutTime = attendanceEntity.ActualOutTime,
+            result.ActualInTime = attendanceEntity.ActualInTime;
+            result.ActualOutTime = attendanceEntity.ActualOutTime;
 
-                IsFitnessReportRequired = isFitnessReportRequired,
+            result.IsEarlyLeave = attendanceEntity.IsEarlyLeave;
+            result.IsLateEntry = attendanceEntity.IsLateEntry;
 
-                IsEarlyLeave = attendanceEntity.IsEarlyLeave,
-                IsLateEntry = attendanceEntity.IsLateEntry,
+            result.InTimeLatitude = attendanceEntity.InTimeLatitude;
+            result.InTimeLongitude = attendanceEntity.InTimeLongitude;
 
-                InTimeLatitude = attendanceEntity.InTimeLatitude,
-                InTimeLongitude = attendanceEntity.InTimeLongitude,
-
-                OutTimeLatitude = attendanceEntity.OutTimeLatitude,
-                OutTimeLongitude = attendanceEntity.OutTimeLongitude
-            };
-
+            result.OutTimeLatitude = attendanceEntity.OutTimeLatitude;
+            result.OutTimeLongitude = attendanceEntity.OutTimeLongitude;
         }
 
         return Result.Ok(result);

@@ -17,7 +17,7 @@ namespace QubeFin.Payroll.Persistence.Repositories
     {
         Task<ReportFile> GenerateSSRSAsync(string reportName, string format, Dictionary<string, string> parameters, CancellationToken cancellationToken);
         Task<ReportFile> GenerateExcelAsync(string storedProcedure, Dictionary<string, object?> parameters, Guid companyId, ExcelReportOptions options, CancellationToken cancellationToken);
-        Task<ReportFile> GenerateBankSalaryDisbursementExcelAsync(string storedProcedure, Dictionary<string, object?> parameters, Guid companyId, CancellationToken cancellationToken);
+        Task<ReportFile> GenerateBankSalaryDisbursementExcelAsync(string storedProcedure, Dictionary<string, object?> parameters, Guid companyId, int month, int year, Guid employeeId, CancellationToken cancellationToken);
     }
 
     public record ReportFile(Stream FileStream, string ContentType, string FileName);
@@ -107,12 +107,18 @@ namespace QubeFin.Payroll.Persistence.Repositories
             return await client.GetByteArrayAsync(logoUrl, cancellationToken);
         }
 
-        public async Task<ReportFile> GenerateBankSalaryDisbursementExcelAsync(string storedProcedure,Dictionary<string, object?> parameters,Guid companyId, CancellationToken cancellationToken)
+        public async Task<ReportFile> GenerateBankSalaryDisbursementExcelAsync(string storedProcedure,Dictionary<string, object?> parameters,Guid companyId, int month, int year, Guid employeeId, CancellationToken cancellationToken)
         {
+
+            var getLoginInfo = await context.TblEmployeeDesignations.Include(m => m.Designation).Include(e => e.Employee).Where(m => m.EmployeeId == employeeId && m.EffectiveTo == null).OrderByDescending(m => m.EffectiveFrom).FirstOrDefaultAsync(cancellationToken);
+            string employeeName = getLoginInfo == null ? string.Empty : getLoginInfo.Employee.FullName;
+            string designation = getLoginInfo == null ? string.Empty : getLoginInfo.Designation.Name;
+            string employeeCode = getLoginInfo == null ? string.Empty : getLoginInfo.Employee.Code;
+
             var dataTable = await ReportDataHelper.ExecuteStoredProcedureAsync(configuration.GetConnectionString("DataConnection"),storedProcedure,parameters,cancellationToken);
 
             var logoBytes = await GetLogoAsync(companyId, cancellationToken);
-            var stream = ExcelReportHelper.CreateBankSalaryDisbursementExcel(dataTable,logoBytes);
+            var stream = ExcelReportHelper.CreateBankSalaryDisbursementExcel(dataTable,logoBytes, month, year, employeeName, designation, employeeCode);
 
             return new ReportFile(stream,"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",$"{storedProcedure}.xlsx");
         }

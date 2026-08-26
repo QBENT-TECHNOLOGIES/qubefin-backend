@@ -66,8 +66,14 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
             }
         }
 
-
-        public static MemoryStream CreateBankSalaryDisbursementExcel(DataTable dataTable, byte[]? logoBytes)
+        public static MemoryStream CreateBankSalaryDisbursementExcel(
+            DataTable dataTable,
+            byte[]? logoBytes,
+            int month,
+            int year,
+            string name,
+            string designation,
+            string code)
         {
             var workbook = new XSSFWorkbook();
 
@@ -84,7 +90,7 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
                 // COMPANY HEADER - SAME AS EXISTING
                 // =========================================================
 
-                currentRow = ExcelCompanyHeaderHelper.AddCompanyHeader(
+                currentRow = ExcelCompanyHeaderHelper.AddCompanyLogo(
                     workbook,
                     sheet,
                     currentRow,
@@ -106,13 +112,13 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
                 // SUB HEADER - SAME AS EXISTING
                 // =========================================================
 
-                var month = GetPaymentMonth(dataTable);
+                var monthName = GetPaymentMonth(month, year);
 
                 AddSubHeader(
                     workbook,
                     sheet,
                     ref currentRow,
-                    $"For the month of {month}",
+                    $"For the month of {monthName}",
                     dataTable.Columns.Count);
 
                 // =========================================================
@@ -124,6 +130,12 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
                     sheet,
                     ref currentRow,
                     dataTable);
+
+                // =========================================================
+                // EXAMPLE ROW - bank salary sheet only
+                // =========================================================
+
+                //AddExampleRow(workbook, sheet, ref currentRow);
 
                 // =========================================================
                 // DATA - SAME AS EXISTING
@@ -157,7 +169,10 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
                     workbook,
                     sheet,
                     ref currentRow,
-                    dataTable.Columns.Count);
+                    dataTable.Columns.Count,
+                    name,
+                    designation,
+                    code);
 
                 var stream = new MemoryStream();
 
@@ -173,36 +188,59 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
             }
         }
 
-        private static string GetPaymentMonth(DataTable dataTable)
+        private static string GetPaymentMonth(int month, int year)
         {
-            if (!dataTable.Columns.Contains("PaymentDate"))
+            if (month < 1 || month > 12)
                 return string.Empty;
 
-            if (dataTable.Rows.Count == 0)
+            if (year < 1)
                 return string.Empty;
 
-            var value = dataTable.Rows[0]["PaymentDate"];
-
-            if (value == DBNull.Value || value == null)
-                return string.Empty;
-
-            if (DateTime.TryParse(value.ToString(), out var date))
-                return date.ToString("MMMM yyyy");
-
-            return string.Empty;
+            return new DateTime(year, month, 1).ToString("MMMM yyyy");
         }
 
+        // =============================================================
+        // EXAMPLE ROW
+        // =============================================================
+
+        private static void AddExampleRow(IWorkbook workbook, ISheet sheet, ref int currentRow)
+        {
+            var row = sheet.CreateRow(currentRow++);
+
+            var cell = row.CreateCell(0);
+            cell.SetCellValue("Example");
+            cell.CellStyle = CreateExampleRowStyle(workbook);
+        }
+
+        private static ICellStyle CreateExampleRowStyle(IWorkbook workbook)
+        {
+            var style = workbook.CreateCellStyle();
+
+            style.Alignment = HorizontalAlignment.Left;
+            style.VerticalAlignment = VerticalAlignment.Center;
+
+            var font = workbook.CreateFont();
+            font.Color = IndexedColors.Blue.Index;
+
+            style.SetFont(font);
+
+            return style;
+        }
+
+        // =============================================================
+        // TOTAL ROW
+        // =============================================================
+
         private static void AddBankSalaryTotal(
-    IWorkbook workbook,
-    ISheet sheet,
-    ref int currentRow,
-    DataTable dataTable)
+            IWorkbook workbook,
+            ISheet sheet,
+            ref int currentRow,
+            DataTable dataTable)
         {
             if (!dataTable.Columns.Contains("Amount"))
                 return;
 
-            var amountColumnIndex =
-                dataTable.Columns.IndexOf("Amount");
+            var amountColumnIndex = dataTable.Columns.IndexOf("Amount");
 
             decimal totalAmount = 0;
 
@@ -211,23 +249,27 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
                 if (row["Amount"] == DBNull.Value)
                     continue;
 
-                if (decimal.TryParse(
-                        row["Amount"]?.ToString(),
-                        out var amount))
+                if (decimal.TryParse(row["Amount"]?.ToString(), out var amount))
                 {
                     totalAmount += amount;
                 }
             }
 
             var totalRow = sheet.CreateRow(currentRow++);
+            var labelStyle = CreateBankSalaryTotalStyle(workbook);
 
             // Total label
             var totalCell = totalRow.CreateCell(0);
-
             totalCell.SetCellValue("Total");
+            totalCell.CellStyle = labelStyle;
 
-            totalCell.CellStyle =
-                CreateBankSalaryTotalStyle(workbook);
+            // Every cell in the merged range needs the border style applied
+            // directly — a merge only carries the top-left cell's value,
+            // it does not extend that cell's border to the rest of the range.
+            for (var i = 1; i < amountColumnIndex; i++)
+            {
+                totalRow.CreateCell(i).CellStyle = labelStyle;
+            }
 
             // Merge all columns before Amount
             if (amountColumnIndex > 0)
@@ -241,29 +283,18 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
             }
 
             // Amount
-            var amountCell =
-                totalRow.CreateCell(amountColumnIndex);
-
-            amountCell.SetCellValue(
-                (double)totalAmount);
-
-            amountCell.CellStyle =
-                CreateBankSalaryTotalAmountStyle(workbook);
+            var amountCell = totalRow.CreateCell(amountColumnIndex);
+            amountCell.SetCellValue((double)totalAmount);
+            amountCell.CellStyle = CreateBankSalaryTotalAmountStyle(workbook);
 
             // Remaining cells
-            for (var i = amountColumnIndex + 1;
-                 i < dataTable.Columns.Count;
-                 i++)
+            for (var i = amountColumnIndex + 1; i < dataTable.Columns.Count; i++)
             {
-                var cell = totalRow.CreateCell(i);
-
-                cell.CellStyle =
-                    CreateBankSalaryTotalStyle(workbook);
+                totalRow.CreateCell(i).CellStyle = labelStyle;
             }
         }
 
-        private static ICellStyle CreateBankSalaryTotalStyle(
-    IWorkbook workbook)
+        private static ICellStyle CreateBankSalaryTotalStyle(IWorkbook workbook)
         {
             var style = workbook.CreateCellStyle();
 
@@ -281,124 +312,100 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
             return style;
         }
 
-        private static ICellStyle CreateBankSalaryTotalAmountStyle(
-    IWorkbook workbook)
+        private static ICellStyle CreateBankSalaryTotalAmountStyle(IWorkbook workbook)
         {
-            var style =
-                CreateBankSalaryTotalStyle(workbook);
+            var style = CreateBankSalaryTotalStyle(workbook);
 
             style.Alignment = HorizontalAlignment.Right;
 
-            style.DataFormat =
-                workbook
-                    .CreateDataFormat()
-                    .GetFormat("0.00");
+            style.DataFormat = workbook
+                .CreateDataFormat()
+                .GetFormat("0.00");
 
             return style;
         }
 
+        // =============================================================
+        // FOOTER (Prepared By / Checked By)
+        // =============================================================
+
         private static void AddBankSalaryFooter(
-    IWorkbook workbook,
-    ISheet sheet,
-    ref int currentRow,
-    int columnCount)
+            IWorkbook workbook,
+            ISheet sheet,
+            ref int currentRow,
+            int columnCount,
+            string preparedByName,
+            string preparedByDesignation,
+            string preparedByCode)
         {
-            // Space between total/no-data row and footer
+            // Space between total/no-data row and the signature block
             currentRow += 2;
 
-            var style = CreateBankSalaryFooterStyle(workbook);
+            var preparedStart = 1; // Date of Payment
+            var preparedEnd = 2;   // Company Code    (2 cols wide)
+            var checkedEnd = columnCount - 1;    // Mode of Payment
+            var checkedStart = columnCount - 2;  // SBI/Non-SBI     (2 cols wide)
+
+            var lineStyle = CreateFooterBorderStyle(workbook);
+
+            var centerLabelStyle = CreateBankSalaryFooterStyle(workbook);
+            centerLabelStyle.Alignment = HorizontalAlignment.Center;
 
             // =========================================================
-            // Prepared By
+            // Signature line — its own row, so it can never collide with
+            // (and overwrite) the label text below it
             // =========================================================
 
-            var preparedRow = sheet.CreateRow(currentRow);
+            var lineRow = sheet.CreateRow(currentRow++);
 
-            var preparedCell = preparedRow.CreateCell(1);
+            for (var i = preparedStart; i <= preparedEnd; i++)
+                lineRow.CreateCell(i).CellStyle = lineStyle;
+
+            for (var i = checkedStart; i <= checkedEnd; i++)
+                lineRow.CreateCell(i).CellStyle = lineStyle;
+
+            // =========================================================
+            // "Prepared By" / "Checked By" — merged + centered across
+            // the same two columns as the line above them
+            // =========================================================
+
+            var labelRow = sheet.CreateRow(currentRow++);
+
+            var preparedCell = labelRow.CreateCell(preparedStart);
             preparedCell.SetCellValue("Prepared By");
-            preparedCell.CellStyle = style;
+            preparedCell.CellStyle = centerLabelStyle;
+            for (var i = preparedStart + 1; i <= preparedEnd; i++)
+                labelRow.CreateCell(i).CellStyle = centerLabelStyle;
+            sheet.AddMergedRegion(new CellRangeAddress(labelRow.RowNum, labelRow.RowNum, preparedStart, preparedEnd));
 
-            // Top line above Prepared By
-            for (var i = 1; i <= 3; i++)
-            {
-                preparedRow.CreateCell(i).CellStyle =
-                    CreateFooterBorderStyle(workbook);
-            }
-
-            // =========================================================
-            // Checked By
-            // =========================================================
-
-            var checkedColumn = columnCount - 2;
-
-            var checkedCell = preparedRow.CreateCell(checkedColumn);
+            var checkedCell = labelRow.CreateCell(checkedStart);
             checkedCell.SetCellValue("Checked By");
-            checkedCell.CellStyle = style;
-
-            // Top line above Checked By
-            for (var i = checkedColumn;
-                 i < columnCount;
-                 i++)
-            {
-                preparedRow.CreateCell(i).CellStyle =
-                    CreateFooterBorderStyle(workbook);
-            }
+            checkedCell.CellStyle = centerLabelStyle;
+            for (var i = checkedStart + 1; i <= checkedEnd; i++)
+                labelRow.CreateCell(i).CellStyle = centerLabelStyle;
+            sheet.AddMergedRegion(new CellRangeAddress(labelRow.RowNum, labelRow.RowNum, checkedStart, checkedEnd));
 
             currentRow += 2;
 
             // =========================================================
-            // Prepared By fields
+            // Name / Designation / Employee Code
+            // Prepared By side gets the actual values; Checked By side
+            // gets labels only, to be filled in later by the checker.
             // =========================================================
 
-            AddBankSalaryFooterField(
-                sheet,
-                currentRow,
-                1,
-                "Name",
-                style);
+            var fieldLabelStyle = CreateBankSalaryFooterStyle(workbook);
+            var fieldValueStyle = CreateBankSalaryFooterValueStyle(workbook);
 
-            AddBankSalaryFooterField(
-                sheet,
-                currentRow + 1,
-                1,
-                "Designation",
-                style);
+            AddBankSalaryFooterField(sheet, currentRow, preparedStart, "Name", preparedByName, fieldLabelStyle, fieldValueStyle);
+            AddBankSalaryFooterField(sheet, currentRow + 1, preparedStart, "Designation", preparedByDesignation, fieldLabelStyle, fieldValueStyle);
+            AddBankSalaryFooterField(sheet, currentRow + 2, preparedStart, "Employee Code", preparedByCode, fieldLabelStyle, fieldValueStyle);
 
-            AddBankSalaryFooterField(
-                sheet,
-                currentRow + 2,
-                1,
-                "Employee Code",
-                style);
-
-            // =========================================================
-            // Checked By fields
-            // =========================================================
-
-            AddBankSalaryFooterField(
-                sheet,
-                currentRow,
-                checkedColumn,
-                "Name",
-                style);
-
-            AddBankSalaryFooterField(
-                sheet,
-                currentRow + 1,
-                checkedColumn,
-                "Designation",
-                style);
-
-            AddBankSalaryFooterField(
-                sheet,
-                currentRow + 2,
-                checkedColumn,
-                "Employee Code",
-                style);
+            AddBankSalaryFooterField(sheet, currentRow, checkedStart, "Name", null, fieldLabelStyle, fieldValueStyle);
+            AddBankSalaryFooterField(sheet, currentRow + 1, checkedStart, "Designation", null, fieldLabelStyle, fieldValueStyle);
+            AddBankSalaryFooterField(sheet, currentRow + 2, checkedStart, "Employee Code", null, fieldLabelStyle, fieldValueStyle);
         }
 
-        private static ICellStyle CreateFooterBorderStyle(
-    IWorkbook workbook)
+        private static ICellStyle CreateFooterBorderStyle(IWorkbook workbook)
         {
             var style = workbook.CreateCellStyle();
 
@@ -408,24 +415,29 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
         }
 
         private static void AddBankSalaryFooterField(
-    ISheet sheet,
-    int rowIndex,
-    int columnIndex,
-    string value,
-    ICellStyle style)
+            ISheet sheet,
+            int rowIndex,
+            int columnIndex,
+            string label,
+            string? value,
+            ICellStyle labelStyle,
+            ICellStyle valueStyle)
         {
-            var row = sheet.GetRow(rowIndex)
-                      ?? sheet.CreateRow(rowIndex);
+            var row = sheet.GetRow(rowIndex) ?? sheet.CreateRow(rowIndex);
 
-            var cell = row.CreateCell(columnIndex);
+            var labelCell = row.CreateCell(columnIndex);
+            labelCell.SetCellValue(label);
+            labelCell.CellStyle = labelStyle;
 
-            cell.SetCellValue(value);
-
-            cell.CellStyle = style;
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                var valueCell = row.CreateCell(columnIndex + 1);
+                valueCell.SetCellValue(value);
+                valueCell.CellStyle = valueStyle;
+            }
         }
 
-        private static ICellStyle CreateBankSalaryFooterStyle(
-    IWorkbook workbook)
+        private static ICellStyle CreateBankSalaryFooterStyle(IWorkbook workbook)
         {
             var style = workbook.CreateCellStyle();
 
@@ -440,8 +452,23 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
             return style;
         }
 
+        private static ICellStyle CreateBankSalaryFooterValueStyle(IWorkbook workbook)
+        {
+            var style = workbook.CreateCellStyle();
+
+            style.Alignment = HorizontalAlignment.Left;
+            style.VerticalAlignment = VerticalAlignment.Center;
+
+            var font = workbook.CreateFont();
+            font.IsBold = false;
+
+            style.SetFont(font);
+
+            return style;
+        }
+
         // =============================================================
-        // COLUMN WIDTHS (now computed up front, not auto-sized at the end)
+        // COLUMN WIDTHS (computed up front, not auto-sized at the end)
         // =============================================================
 
         private static void ApplyColumnWidths(ISheet sheet, DataTable dataTable)
