@@ -84,6 +84,7 @@ internal sealed class GetOrganizationUnitByIdQueryHandler(QubeFinDataContext con
                 GradeId = d.TblDesignationGradeMappings.Select(g => (Guid?)g.GradeId).FirstOrDefault(),
                 GradeName = d.TblDesignationGradeMappings.Select(g => g.Grade.Name).FirstOrDefault(),
             })
+            .OrderBy(d => d.Name)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
