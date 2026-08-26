@@ -25,7 +25,7 @@ internal sealed class GetOrganizationUnitByIdQueryHandler(QubeFinDataContext con
     {
         var organizationUnit = await context
          .TblOrganizationUnits
-         .Include(m => m.OrganizationUnitType)
+         .Include(m => m.OrganizationUnitType).Include(m => m.CreatedByNavigation).Include(m => m.LastModifiedByNavigation)
          .Where(m => m.Id == request.Id).FirstOrDefaultAsync(cancellationToken);
         if (organizationUnit is null)
         {
