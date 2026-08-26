@@ -127,12 +127,14 @@ public class LeaveRepository(QubeFinDataContext context) : ILeaveRepository
 
     public async Task<List<GetAllPendingFitnessApprovalResposne>> GetPendingFitnessApprovalList(CancellationToken cancellationToken)
     {
-        var leaveEntities = await context.TblLeaveRequests.AsNoTracking().Where(m => m.CurrentStatus.Trim() == "Approved" && !m.IsFitnessReportApproved).ToListAsync(cancellationToken);
+
+        var leaveTypes = new[] { "ML", "MML" };
+        var leaveEntities = await context.TblLeaveRequests.Include(m => m.Employee).Include(m => m.LeaveType).AsNoTracking().Where(m => m.CurrentStatus.Trim() == "Approved" && leaveTypes.Contains(m.LeaveType.Alias) && !m.IsFitnessReportApproved).ToListAsync(cancellationToken);
         return leaveEntities.Select(m => new GetAllPendingFitnessApprovalResposne
         {
-            //EmployeeName = m.EmployeeId,
+            EmployeeName = m.Employee.FullName + "( " + m.Employee.Code + " )",
             LeaveRequestId = m.Id,
-            //LeaveType = m.LeaveTypeId,
+            LeaveType = m.LeaveType.Title + "( " + m.LeaveType.Alias + " )",
             FromDate = m.FromDate, 
             EndDate = m.ToDate,
             TotalDays = m.TotalDays != null ? m.TotalDays.Value : 0,

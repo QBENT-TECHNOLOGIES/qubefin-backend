@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Mappers.Global;
 using QubeFin.Persistence.Models.Global;
 
@@ -11,6 +12,7 @@ public interface IOrganizationUnitRepository
     Task<OrganizationUnit?> GetByIdAsync(Guid id);
     Task AddAsync(OrganizationUnit organizationUnit);
     void Update(OrganizationUnit organizationUnit);
+    Task<List<OrganizationUnit>> GetAllOrganisationUnit(CancellationToken cancellationToken);
 }
 
 internal class OrganizationUnitRepository(QubeFinDataContext context) : IOrganizationUnitRepository
@@ -48,5 +50,11 @@ internal class OrganizationUnitRepository(QubeFinDataContext context) : IOrganiz
     public void Update(OrganizationUnit organizationUnit)
     {
         context.TblOrganizationUnits.Update(organizationUnit.ToEntity());
+    }
+
+    public async Task<List<OrganizationUnit>> GetAllOrganisationUnit(CancellationToken cancellationToken)
+    {
+        var organizationUnitEntity = await context.TblOrganizationUnits.AsNoTracking().OrderBy(m => m.CodeVal).ToListAsync(cancellationToken) ?? throw new Exception("No organization found.");
+        return organizationUnitEntity?.ToDomain().ToList();
     }
 }

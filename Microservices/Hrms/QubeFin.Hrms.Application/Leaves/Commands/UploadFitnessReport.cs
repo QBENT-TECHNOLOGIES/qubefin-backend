@@ -25,8 +25,11 @@ internal sealed class UploadFitnessReportCommandHandler(IFileStorageRepository f
             return Result.Fail("Previous attendance not found.");
         }
 
-        var leaveRequestEntity = await context.TblLeaveRequests.FirstOrDefaultAsync(m => m.EmployeeId == request.employeeId &&
-                m.CurrentStatus.Trim() == "Approved" && m.ToDate > lastAttendance.AttendanceDate && string.IsNullOrEmpty(m.FitnessReportAttachment) && !m.IsFitnessReportApproved, cancellationToken);
+        var leaveTypes = new[] { "ML", "MML" };
+
+        var leaveRequestEntity = await context.TblLeaveRequests.FirstOrDefaultAsync(m => m.EmployeeId == request.employeeId && leaveTypes.Contains(m.LeaveType.Alias) &&  
+                m.CurrentStatus.Trim() == "Approved" && m.FromDate <= today &&
+                    m.ToDate >= lastAttendance.AttendanceDate && string.IsNullOrEmpty(m.FitnessReportAttachment) && !m.IsFitnessReportApproved, cancellationToken);
 
         if (leaveRequestEntity == null)
         {

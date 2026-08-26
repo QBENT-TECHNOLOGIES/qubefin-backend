@@ -20,7 +20,6 @@
   <ItemGroup>
 	  <Folder Include="Notifications\Models\" />
 	  <Folder Include="OrganizationUnits\Commands\" />
-    <Folder Include="OrganizationUnits\Queries\" />
   </ItemGroup>
 
 </Project>

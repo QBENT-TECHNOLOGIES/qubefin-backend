@@ -21,6 +21,16 @@ public class LeaveTypeEndpoints : IEndpoint
         .WithTags("Leave Types")
         .RequireAuthorization();
 
+        app.MapGet("leave-types/balances/{employeeId:guid}", async (ClaimsPrincipal principal, ISender sender,Guid employeeId, CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(new GetLeaveTypesByEmployeeIdQuery(employeeId));
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get all Leave balances by leave Types for specific employee")
+        .WithDescription("Retrieves a list of all leave balances of an employee for all leave types in the system.")
+        .WithTags("Leave Types")
+        .RequireAuthorization();
+
         app.MapGet("leave-types/balances", async (ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             var employeeId = principal.Identity.GetEmployeeId();

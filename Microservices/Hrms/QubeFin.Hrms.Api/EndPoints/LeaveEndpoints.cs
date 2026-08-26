@@ -198,7 +198,7 @@ public class LeaveEndpoints : IEndpoint
         .WithTags("Fitness Approval")
         .RequireAuthorization();
 
-        app.MapPost("leaves/fitnes-upload/approve", async (ClaimsPrincipal principal, ISender sender, LeaveRequestActionRequest request) =>
+        app.MapPost("leaves/fitnes-upload/action/{leaveRequestId:guid}", async (ClaimsPrincipal principal, ISender sender, Guid leaveRequestId) =>
         {
             if (principal.Identity is null)
             {
@@ -206,7 +206,7 @@ public class LeaveEndpoints : IEndpoint
             }
 
             var userId = principal.Identity.GetUserId();
-            var result = await sender.Send(new FitnessReportActionCommand(request.LeaveRequestId, userId));
+            var result = await sender.Send(new FitnessReportActionCommand(leaveRequestId, userId));
             return result.ToHttpResult();
         })
         .WithSummary("Action Fitness Report For Specific Leave.")

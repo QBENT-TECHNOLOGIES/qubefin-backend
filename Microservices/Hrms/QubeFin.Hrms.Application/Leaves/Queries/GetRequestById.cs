@@ -47,6 +47,7 @@ internal sealed class GetRequestByIdQueryHandler(QubeFinDataContext context, IFi
             Id = first.Id,
             EmployeeName = first.EmployeeName,
             LeaveType = first.LeaveType,
+            Alias = first.Alias,
             LeaveTypeId = first.LeaveTypeId,
             FromDate = first.FromDate,
             ToDate = first.ToDate,

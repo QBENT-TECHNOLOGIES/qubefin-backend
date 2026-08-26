@@ -67,6 +67,7 @@ public class LeaveRequestResponse
     public Guid? LeaveTypeId { get; set; }
     public string? EmployeeName { get; set; }
     public string? LeaveType { get; set; }
+    public string? Alias { get; set; }
     public DateOnly? FromDate { get; set; }
     public DateOnly? ToDate { get; set; }
     public int? TotalDays { get; set; }

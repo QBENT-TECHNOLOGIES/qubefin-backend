@@ -35,17 +35,15 @@ internal sealed class GetAttendanceByEmployeeQueryHandler(QubeFinDataContext con
 
         var leaveTypes = new[] { "ML", "MML" };
 
-        var leaveTypeList = await context.TblLeaveTypes.AsNoTracking().Where(m => leaveTypes.Contains(m.Alias)).Select(m => m.Id).ToListAsync(cancellationToken);
-
         TblLeaveRequest? leaveEntity = null;
 
         if (lastAttendance != null)
         {
-            leaveEntity = await context.TblLeaveRequests.AsNoTracking()
+            leaveEntity = await context.TblLeaveRequests.Include(m => m.LeaveType).AsNoTracking()
                 .Where(l =>
                     l.EmployeeId == request.EmployeeId &&
                     l.CurrentStatus == "Approved" &&
-                    leaveTypeList.Contains(l.LeaveTypeId) &&
+                    leaveTypes.Contains(l.LeaveType.Alias) &&
                     l.FromDate <= today &&
                     l.ToDate >= lastAttendance.AttendanceDate)
                 .OrderByDescending(l => l.ToDate).FirstOrDefaultAsync(cancellationToken);

@@ -5,6 +5,7 @@
         public Guid? Id { get; set; }
         public string? EmployeeName { get; set; }
         public string? LeaveType { get; set; }
+        public string? Alias { get; set; }
         public Guid? LeaveTypeId { get; set; }
         public DateOnly? FromDate { get; set; }
         public DateOnly? ToDate { get; set; }
