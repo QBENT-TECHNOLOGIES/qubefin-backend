@@ -26,4 +26,6 @@ public partial class TblLeavePrayer
     public virtual TblEmployee Employee { get; set; } = null!;
 
     public virtual TblLeaveType LeaveType { get; set; } = null!;
+
+    public virtual ICollection<TblLeaveRequest> TblLeaveRequests { get; set; } = new List<TblLeaveRequest>();
 }

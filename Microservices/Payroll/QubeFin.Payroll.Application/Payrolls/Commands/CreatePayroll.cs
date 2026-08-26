@@ -1,6 +1,5 @@
 ﻿using FluentResults;
 using MediatR;
-using QubeFin.Core.Results;
 using QubeFin.Payroll.Persistence.Repositories;
 
 namespace QubeFin.Payroll.Application.Payrolls.Commands
@@ -13,15 +12,14 @@ namespace QubeFin.Payroll.Application.Payrolls.Commands
             try
             {
                 bool hasOpenPayroll = await payrollRepository.HasOpenPayrollAsync(request.companyId, cancellationToken);
-                if (hasOpenPayroll) return new ValidationError("An unlocked payroll already exists. Please lock the previous payroll before generating a new one.");
+                if (hasOpenPayroll) return Result.Fail("An unlocked payroll already exists. Please lock the previous payroll before generating a new one.");
                 await payrollRepository.CreatePayrollAsync(request.companyId, request.userId, cancellationToken);
                 return Result.Ok("Payroll created successfully.");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                throw ex;
+                return Result.Fail(ex.Message);
             }
-
         }
     }
 }

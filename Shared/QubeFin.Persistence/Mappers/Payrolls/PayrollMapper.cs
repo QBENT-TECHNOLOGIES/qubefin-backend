@@ -1,8 +1,5 @@
 ﻿using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Models.Payroll;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Entity = QubeFin.Persistence.Entities.TblPayRoll;
 
 namespace QubeFin.Persistence.Mappers.Payrolls
@@ -42,7 +39,7 @@ namespace QubeFin.Persistence.Mappers.Payrolls
 
             domain.SetComponents(entity.TblPayRollComponents.Select(c =>
             {
-                var componentModel = new PayrollComponentModel(c.Id, c.PayRollId, c.SalaryComponentId, c.Percentage, c.Amount);
+                var componentModel = new PayrollComponentModel(c.Id, c.PayRollId, c.SalaryComponentId, c.Percentage, c.Amount, c.SalaryComponent.IsEditable);
                 componentModel.SetNames(c.SalaryComponent.Name, c.SalaryComponent.Category.Name, c.SalaryComponent.DisplayOrder);
                 return componentModel;
             }));
