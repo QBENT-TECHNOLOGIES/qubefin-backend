@@ -129,7 +129,7 @@ public class LeaveRepository(QubeFinDataContext context) : ILeaveRepository
     {
 
         var leaveTypes = new[] { "ML", "MML" };
-        var leaveEntities = await context.TblLeaveRequests.Include(m => m.Employee).Include(m => m.LeaveType).AsNoTracking().Where(m => m.CurrentStatus.Trim() == "Approved" && leaveTypes.Contains(m.LeaveType.Alias) && !m.IsFitnessReportApproved).ToListAsync(cancellationToken);
+        var leaveEntities = await context.TblLeaveRequests.Include(m => m.Employee).Include(m => m.LeaveType).AsNoTracking().Where(m => m.CurrentStatus.Trim() == "Approved" && leaveTypes.Contains(m.LeaveType.Alias) && !m.IsFitnessReportApproved && !string.IsNullOrWhiteSpace(m.FitnessReportAttachment)).ToListAsync(cancellationToken);
         return leaveEntities.Select(m => new GetAllPendingFitnessApprovalResposne
         {
             EmployeeName = m.Employee.FullName + "( " + m.Employee.Code + " )",

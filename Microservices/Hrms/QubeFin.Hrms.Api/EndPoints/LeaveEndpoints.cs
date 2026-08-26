@@ -164,14 +164,14 @@ public class LeaveEndpoints : IEndpoint
 
         #region --- LEAVE FITNESS ---
 
-        app.MapPost("leaves/fitness-approval", async (ClaimsPrincipal principal, ISender sender, LeaveApprovalSearchRequest request) =>
+        app.MapGet("leaves/fitness-approval", async (ClaimsPrincipal principal, ISender sender) =>
         {
             if (principal.Identity is null)
             {
                 return Results.Forbid();
             }
             var result = await sender.Send(new GetAllPendingFitnessApprovalQuery());
-            return Results.Ok(result);
+            return result.ToHttpResult();
         })
         .WithSummary("Get All Pending Fitness Approval list for employees")
         .WithTags("Fitness Approval")
@@ -198,7 +198,7 @@ public class LeaveEndpoints : IEndpoint
         .WithTags("Fitness Approval")
         .RequireAuthorization();
 
-        app.MapPost("leaves/fitnes-upload/action/{leaveRequestId:guid}", async (ClaimsPrincipal principal, ISender sender, Guid leaveRequestId) =>
+        app.MapGet("leaves/fitnes-upload/action/{leaveRequestId:guid}", async (ClaimsPrincipal principal, ISender sender, Guid leaveRequestId) =>
         {
             if (principal.Identity is null)
             {
