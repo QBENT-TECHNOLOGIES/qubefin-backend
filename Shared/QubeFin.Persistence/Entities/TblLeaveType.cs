@@ -47,6 +47,8 @@ public partial class TblLeaveType
 
     public virtual ICollection<TblApprovalWorkflow> TblApprovalWorkflows { get; set; } = new List<TblApprovalWorkflow>();
 
+    public virtual ICollection<TblEmployeeLopDetail> TblEmployeeLopDetails { get; set; } = new List<TblEmployeeLopDetail>();
+
     public virtual ICollection<TblLeavePrayer> TblLeavePrayers { get; set; } = new List<TblLeavePrayer>();
 
     public virtual ICollection<TblLeaveRequest> TblLeaveRequests { get; set; } = new List<TblLeaveRequest>();

@@ -35,7 +35,7 @@ internal sealed class GetAllByMonthAndYearQueryHandler(QubeFinDataContext contex
     {
         var skipRecordCount = request.SearchParam.PageIndex * request.SearchParam.PageSize;
         var filterEntitiesQuery = context.TblEmployeeLops
-            .Include(e => e.TblEmployeeLopDetails)
+            .Include(e => e.TblEmployeeLopDetails).ThenInclude(e => e.LeaveType)
             .Include(e => e.OrganizationUnit)
             .ThenInclude(e => e.Company)
             .Include(e => e.Employee)
@@ -64,7 +64,7 @@ internal sealed class GetAllByMonthAndYearQueryHandler(QubeFinDataContext contex
             filterEntitiesQuery = request.SearchParam.Status switch
             {
                 1 => filterEntitiesQuery.Where(m => m.AttendanceIrregularDays > 0),
-                2 => filterEntitiesQuery.Where(m => (m.IrregularLopDays + (m.TblEmployeeLopDetails.Where(l => l.PayrollStatus == "LOP").Count())) > 0),
+                2 => filterEntitiesQuery.Where(m => (m.IrregularLopDays + (m.TblEmployeeLopDetails.Where(l => l.LeaveType.Alias == "LOP").Count())) > 0),
                 _ => filterEntitiesQuery
             };
         }
@@ -98,7 +98,7 @@ internal sealed class GetAllByMonthAndYearQueryHandler(QubeFinDataContext contex
                 AttendanceDays = m.AttendanceDays,
                 AbsentDays = m.AbsentDays,
                 AttendanceIrregularDays = m.AttendanceIrregularDays,
-                IrregularLopDays = m.IrregularLopDays + (m.TblEmployeeLopDetails.Where(l => l.PayrollStatus == "LOP").Count()),
+                IrregularLopDays = m.IrregularLopDays + (m.TblEmployeeLopDetails.Where(l => l.LeaveType.Alias == "LOP").Count()),
                 IsLocked = m.IsLocked,
                 Remarks = m.Remarks
             }).ToListAsync(cancellationToken: cancellationToken).ConfigureAwait(false);

@@ -34,7 +34,7 @@ internal sealed class GetMoralizationByIdQueryHandler(QubeFinDataContext context
                 Id = m.Id,
                 EmployeeLopId = m.EmployeeLopId,
                 AbsentDate = m.AbsentDate,
-                PayrollStatus = m.PayrollStatus
+                LeaveTypeId = m.LeaveTypeId
             })
             .ToListAsync(cancellationToken);
         return Result.Ok(employeeLosDetails);
