@@ -52,6 +52,7 @@ internal sealed class GetParentMenusByUserHandler(QubeFinDataContext context)
                 rmp.MenuPermission.Menu.Id,
                 rmp.MenuPermission.Menu.Name,
                 rmp.MenuPermission.Menu.Icon))
+            .Distinct()
             .ToListAsync(cancellationToken);
 
         return Result.Ok(menus);

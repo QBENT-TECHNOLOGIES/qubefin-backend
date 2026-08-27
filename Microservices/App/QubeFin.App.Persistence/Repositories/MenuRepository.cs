@@ -108,6 +108,7 @@ public class MenuRepository(QubeFinDataContext context) : IMenuRepository
              IsActive = rmp.MenuPermission.Menu.IsActive,
              Children = new List<MenuTree>()
          })
+         .Distinct()
          .ToListAsync();
         return menuTree;
     }
