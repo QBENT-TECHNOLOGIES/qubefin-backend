@@ -181,6 +181,7 @@ namespace QubeFin.Persistence.Models.Payroll
         public decimal Deductions { get; set; }
         public decimal NetPay { get; set; }
         public int Locked { get; set; }
+        public Guid? CompanyId { get; set; }
         public string? CompanyName { get; set; }
     }
 }

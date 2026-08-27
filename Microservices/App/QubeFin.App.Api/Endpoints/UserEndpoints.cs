@@ -84,5 +84,11 @@ public class UserEndpoints : IEndpoint
             var result = await sender.Send(request);
             return result.ToHttpResult();
         });
+
+        app.MapGet("un-bind-user/{userName}", async (ISender sender, string userName) =>
+        {
+            var result = await sender.Send(new UnbindUserDeviceCommand(userName));
+            return result.ToHttpResult();
+        });
     }
 }
