@@ -49,7 +49,7 @@ internal sealed class UpdateMoralizationCommandHandler(QubeFinDataContext contex
                     return Result.Fail($"Detail with Id {update.Id} not found in the record.");
                 }
 
-                existingDetail.PayrollStatus = update.PayrollStatus;
+                existingDetail.LeaveTypeId = update.LeaveTypeId;
             }
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Ok($"Moralization updated successfully for {request.Id}");

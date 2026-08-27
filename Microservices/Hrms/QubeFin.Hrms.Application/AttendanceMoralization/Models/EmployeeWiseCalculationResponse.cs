@@ -28,6 +28,6 @@ namespace QubeFin.Hrms.Application.AttendanceMoralization.Models
         public Guid Id { get; set; }
         public Guid EmployeeLopId { get; set; }
         public DateOnly AbsentDate { get; set; }
-        public string? PayrollStatus { get; set; }
+        public Guid LeaveTypeId { get; set; }
     }
 }

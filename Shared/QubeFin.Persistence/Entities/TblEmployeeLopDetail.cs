@@ -11,7 +11,9 @@ public partial class TblEmployeeLopDetail
 
     public DateOnly AbsentDate { get; set; }
 
-    public string? PayrollStatus { get; set; }
+    public Guid LeaveTypeId { get; set; }
 
     public virtual TblEmployeeLop EmployeeLop { get; set; } = null!;
+
+    public virtual TblLeaveType LeaveType { get; set; } = null!;
 }

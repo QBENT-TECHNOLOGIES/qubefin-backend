@@ -212,6 +212,9 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<WegrowConsolidateEmployee> WegrowConsolidateEmployees { get; set; }
 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=65.2.146.91;Database=QubeFinData;User Id=sa;Password=KuPH8Bt97ipg;TrustServerCertificate=Yes;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -1130,14 +1133,16 @@ public partial class QubeFinDataContext : DbContext
             entity.ToTable("Tbl_EmployeeLopDetails", "Hrms");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.PayrollStatus)
-                .HasMaxLength(50)
-                .IsUnicode(false);
 
             entity.HasOne(d => d.EmployeeLop).WithMany(p => p.TblEmployeeLopDetails)
                 .HasForeignKey(d => d.EmployeeLopId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_EmployeeLopDetails_Tbl_EmployeeLop");
+
+            entity.HasOne(d => d.LeaveType).WithMany(p => p.TblEmployeeLopDetails)
+                .HasForeignKey(d => d.LeaveTypeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_EmployeeLopDetails_Tbl_LeaveType");
         });
 
         modelBuilder.Entity<TblEmployeeQualification>(entity =>
@@ -2373,7 +2378,6 @@ public partial class QubeFinDataContext : DbContext
             entity.ToTable("Tbl_UserSession", "Auth");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.AccessToken).HasMaxLength(4000);
             entity.Property(e => e.DeviceId).HasMaxLength(100);
             entity.Property(e => e.RefreshToken).HasMaxLength(50);
             entity.Property(e => e.SessionToken).HasMaxLength(50);
