@@ -5,6 +5,7 @@
         public Guid? Id { get; set; }
         public string? EmployeeName { get; set; }
         public string? LeaveType { get; set; }
+        public string? Alias { get; set; }
         public Guid? LeaveTypeId { get; set; }
         public DateOnly? FromDate { get; set; }
         public DateOnly? ToDate { get; set; }
@@ -22,6 +23,10 @@
         public string? EventButtonText { get; set; }
         public bool? IsRecommendEvent { get; set; }
         public bool? IsApprovalEvent { get; set; }
+        public string? FitnessReportAttachment { get; set; }
+        public string? FitnessReportUrl { get; set; }
+        public bool? IsFitnessReportApproved { get; set; }
+        public string? FitnessReportApprovedBy { get; set; }  
         public List<LeaveRequestEvent> Events { get; set;  } = new List<LeaveRequestEvent>();
 
     }

@@ -154,6 +154,7 @@ namespace QubeFin.Persistence.Models.Payroll
         public int? CodeVal { get; set; }
         public decimal TotalEarnings { get; set; }
         public decimal TotalDeductions { get; set; }
+        public decimal EmployerContribution { get; set; }
         public List<MonthlyPayrollLineItem> Details { get; set; } = new List<MonthlyPayrollLineItem>();
     }
     public class MonthlyPayrollLineItem
@@ -167,6 +168,7 @@ namespace QubeFin.Persistence.Models.Payroll
         public string? CompanyName { get; set; }
         public decimal TotalEarnings { get; set; }
         public decimal TotalDeductions { get; set; }
+        public decimal EmployerContribution { get; set; }
     }
     public class MonthwisePayrollData
     {
@@ -179,6 +181,7 @@ namespace QubeFin.Persistence.Models.Payroll
         public decimal Deductions { get; set; }
         public decimal NetPay { get; set; }
         public int Locked { get; set; }
+        public Guid? CompanyId { get; set; }
         public string? CompanyName { get; set; }
     }
 }

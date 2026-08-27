@@ -8,6 +8,7 @@ namespace QubeFin.Persistence.Mappers.Payrolls
     {
         private const string EarningCategory = "Earning";
         private const string DeductionCategory = "Deduction";
+        private const string EmployerContributionCategory = "Employer Contribution";
 
         public static PayrollModel ToDomain(this Entity entity)
         {
@@ -95,6 +96,9 @@ namespace QubeFin.Persistence.Mappers.Payrolls
                                 .Sum(c => c.Amount),
                             TotalDeductions = item.Components
                                 .Where(c => string.Equals(c.CategoryName, DeductionCategory, StringComparison.OrdinalIgnoreCase))
+                                .Sum(c => c.Amount),
+                            EmployerContribution = item.Components
+                                .Where(c => string.Equals(c.CategoryName, EmployerContributionCategory, StringComparison.OrdinalIgnoreCase))
                                 .Sum(c => c.Amount)
                         }).ToList();
 
@@ -105,6 +109,7 @@ namespace QubeFin.Persistence.Mappers.Payrolls
                             CodeVal = group.First().OrganizationCode,
                             TotalEarnings = details.Sum(d => d.TotalEarnings),
                             TotalDeductions = details.Sum(d => d.TotalDeductions),
+                            EmployerContribution = details.Sum(d => d.EmployerContribution),
                             Details = details
                         };
                     }).ToList()

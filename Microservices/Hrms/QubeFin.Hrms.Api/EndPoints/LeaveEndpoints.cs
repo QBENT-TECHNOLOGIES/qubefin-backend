@@ -160,5 +160,58 @@ public class LeaveEndpoints : IEndpoint
         .WithTags("Leave Approval")
         .RequireAuthorization();
         #endregion
+
+
+        #region --- LEAVE FITNESS ---
+
+        app.MapGet("leaves/fitness-approval", async (ClaimsPrincipal principal, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+            var result = await sender.Send(new GetAllPendingFitnessApprovalQuery());
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get All Pending Fitness Approval list for employees")
+        .WithTags("Fitness Approval")
+        .RequireAuthorization();
+
+        app.MapPost("leaves/fitnes-upload", async (ClaimsPrincipal principal, HttpRequest request, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+            var employeeId = principal.Identity.GetEmployeeId();
+
+            if (!request.HasFormContentType)
+                return Results.BadRequest("Invalid content type");
+
+            var form = await request.ReadFormAsync();
+            var fitnessReportAttachment = form.Files["fitnessReportAttachment"];
+
+            var result = await sender.Send(new UploadFitnessReportCommand(employeeId, fitnessReportAttachment));
+            return result.ToHttpResult();
+        })
+        .WithSummary("Upload Fitness Report For Specific Leave.")
+        .WithTags("Fitness Approval")
+        .RequireAuthorization();
+
+        app.MapGet("leaves/fitnes-upload/action/{leaveRequestId:guid}", async (ClaimsPrincipal principal, ISender sender, Guid leaveRequestId) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+
+            var userId = principal.Identity.GetUserId();
+            var result = await sender.Send(new FitnessReportActionCommand(leaveRequestId, userId));
+            return result.ToHttpResult();
+        })
+        .WithSummary("Action Fitness Report For Specific Leave.")
+        .WithTags("Fitness Approval")
+        .RequireAuthorization();
+        #endregion
     }
 }

@@ -67,6 +67,7 @@ public class LeaveRequestResponse
     public Guid? LeaveTypeId { get; set; }
     public string? EmployeeName { get; set; }
     public string? LeaveType { get; set; }
+    public string? Alias { get; set; }
     public DateOnly? FromDate { get; set; }
     public DateOnly? ToDate { get; set; }
     public int? TotalDays { get; set; }
@@ -88,4 +89,7 @@ public class LeaveRequestResponse
     public string? EventButtonText { get; set; }
     public bool? IsRecommendEvent { get; set; }
     public bool? IsApprovalEvent { get; set; }
+    public string? FitnessReportAttachment { get; set; }
+    public bool? IsFitnessReportApproved { get; set; }
+    public string? FitnessReportApprovedBy { get; set; }
 }

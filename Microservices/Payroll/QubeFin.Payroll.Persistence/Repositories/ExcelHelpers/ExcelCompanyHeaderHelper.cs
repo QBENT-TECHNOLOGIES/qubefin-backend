@@ -95,6 +95,58 @@ public static class ExcelCompanyHeaderHelper
 
         return currentRow;
     }
+
+    public static int AddCompanyLogo(IWorkbook workbook, ISheet sheet, int currentRow, int columnCount, byte[]? logoBytes)
+    {
+        if (columnCount <= 0) columnCount = 1;
+
+        var companyStyle = CreateCompanyStyle(workbook);
+        var companyNameStyle = CreateCompanyNameStyle(workbook);
+        var contactStyle = CreateContactStyle(workbook);
+        var separatorStyle = CreateSeparatorStyle(workbook);
+
+        // =========================================================
+        // LOGO
+        // =========================================================
+
+        if (logoBytes is not null && logoBytes.Length > 0)
+        {
+            AddLogo(workbook, sheet, currentRow, columnCount, logoBytes);
+
+            // Make sure the rows exist, then merge the whole 4x(columnCount)
+            // block the logo sits on into one region — merges both across
+            // rows and across columns, matching the rest of the header.
+            for (var i = 0; i < 4; i++)
+            {
+                if (sheet.GetRow(currentRow + i) is null)
+                {
+                    sheet.CreateRow(currentRow + i);
+                }
+            }
+
+            MergeBlock(sheet, currentRow, currentRow + 3, columnCount);
+
+            currentRow += 4;
+        }
+        else
+        {
+            currentRow++;
+        }
+
+
+        // =========================================================
+        // SEPARATOR
+        // =========================================================
+
+        var separatorRow = sheet.CreateRow(currentRow++);
+        separatorRow.HeightInPoints = 20; // was 8 — now matches the other header rows
+        var separatorCell = separatorRow.CreateCell(0);
+        separatorCell.SetCellValue("");
+        separatorCell.CellStyle = separatorStyle;
+        Merge(sheet, separatorRow.RowNum, columnCount);
+
+        return currentRow;
+    }
     private const double EmuPerPixel = 9525.0;      // 914400 EMU/inch ÷ 96 DPI
     private const double DefaultCharWidthPx = 7.0;  // ~digit width for Calibri 11 / Arial 10
 

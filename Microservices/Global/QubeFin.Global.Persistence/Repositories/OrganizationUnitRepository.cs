@@ -12,6 +12,7 @@ public interface IOrganizationUnitRepository
     Task<OrganizationUnit?> GetByIdAsync(Guid id);
     Task AddAsync(OrganizationUnit organizationUnit);
     void Update(OrganizationUnit organizationUnit);
+    Task<List<OrganizationUnit>> GetAllOrganisationUnit(CancellationToken cancellationToken);
     Task AddDesignationAsync(string name, Guid organizationUnitId, Guid postId, Guid roleId, Guid salaryGradeId, Guid userId);
 }
 
@@ -50,6 +51,12 @@ internal class OrganizationUnitRepository(QubeFinDataContext context) : IOrganiz
     public void Update(OrganizationUnit organizationUnit)
     {
         context.TblOrganizationUnits.Update(organizationUnit.ToEntity());
+    }
+
+    public async Task<List<OrganizationUnit>> GetAllOrganisationUnit(CancellationToken cancellationToken)
+    {
+        var organizationUnitEntity = await context.TblOrganizationUnits.AsNoTracking().OrderBy(m => m.CodeVal).ToListAsync(cancellationToken) ?? throw new Exception("No organization found.");
+        return organizationUnitEntity?.ToDomain().ToList();
     }
     public async Task AddDesignationAsync(string name, Guid organizationUnitId, Guid postId, Guid roleId, Guid salaryGradeId, Guid userId)
     {
