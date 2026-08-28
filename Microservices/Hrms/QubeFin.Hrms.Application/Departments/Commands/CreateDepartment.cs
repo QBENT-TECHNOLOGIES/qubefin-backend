@@ -30,7 +30,12 @@ namespace QubeFin.Hrms.Application.Departments.Commands
             {
                 return new ValidationError("A department with the same name already exists.");
             }
-           var department = Department.Create(Guid.NewGuid(), request.Name, request.IsActive, request.CreatedBy);
+           var department = Department.Create(
+               id:Guid.NewGuid(),
+               name:request.Name,
+               isActive:request.IsActive,
+               createdBy:request.CreatedBy);
+            await departmentRepository.AddAsync(department);
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Ok($"Department '{request.Name}' created successfully.");
         }
