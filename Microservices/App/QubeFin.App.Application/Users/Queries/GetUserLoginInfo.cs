@@ -25,6 +25,7 @@ internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context) :
             .TblUsers
             .Include(m => m.Employee)
             .ThenInclude(m => m.OrganizationUnit)
+            .Include(m => m.Employee)
             .ThenInclude(m => m.Company)
             .Where(m => m.Id == request.Id)
             .FirstOrDefaultAsync(cancellationToken);
@@ -53,7 +54,7 @@ internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context) :
             user.Employee?.OrganizationUnit?.AttendanceOutTime,
             user.Employee?.OrganizationUnit?.CheckRadiusInMeter ?? 100,
             employeeDesignation?.Designation?.Name ?? string.Empty,
-            user.Employee?.OrganizationUnit?.Company?.LogoUrl
+            user.Employee?.Company?.LogoUrl
         );
         return Result.Ok(response);
     }
