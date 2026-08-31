@@ -18,6 +18,7 @@ namespace QubeFin.Payroll.Persistence.Repositories
         Task<ReportFile> GenerateSSRSAsync(string reportName, string format, Dictionary<string, string> parameters, CancellationToken cancellationToken);
         Task<ReportFile> GenerateExcelAsync(string storedProcedure, Dictionary<string, object?> parameters, Guid companyId, ExcelReportOptions options, CancellationToken cancellationToken);
         Task<ReportFile> GenerateBankSalaryDisbursementExcelAsync(string storedProcedure, Dictionary<string, object?> parameters, Guid companyId, int month, int year, Guid employeeId, CancellationToken cancellationToken);
+        Task<ReportFile> GenerateEmployeeSalaryExcelAsync(string storedProcedure, Dictionary<string, object?> parameters, Guid companyId, int month, int year, CancellationToken cancellationToken);
     }
 
     public record ReportFile(Stream FileStream, string ContentType, string FileName);
@@ -121,6 +122,14 @@ namespace QubeFin.Payroll.Persistence.Repositories
             var stream = ExcelReportHelper.CreateBankSalaryDisbursementExcel(dataTable,logoBytes, month, year, employeeName, designation, employeeCode);
 
             return new ReportFile(stream,"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",$"{storedProcedure}.xlsx");
+        }
+
+        public async Task<ReportFile> GenerateEmployeeSalaryExcelAsync(string storedProcedure, Dictionary<string, object?> parameters, Guid companyId, int month, int year, CancellationToken cancellationToken)
+        {
+            var dataTable = await ReportDataHelper.ExecuteStoredProcedureAsync(configuration.GetConnectionString("DataConnection"), storedProcedure, parameters, cancellationToken);
+            var logoBytes = await GetLogoAsync(companyId, cancellationToken);
+            var stream = EmployeeSalaryExcelHelper.CreateEmployeeSalaryExcel(dataTable, logoBytes, month, year);
+            return new ReportFile(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "EmployeeSalary.xlsx");
         }
     }
 }
