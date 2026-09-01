@@ -1,35 +1,28 @@
 ﻿using FluentResults;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using QubeFin.App.Application.Users.Models;
 using QubeFin.Core.Results;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Entities;
 
 namespace QubeFin.App.Application.Users.Queries;
 
 #region --- QUERY ---
-public record GetUserLoginInfoQuery(Guid Id, Guid EmployeeId) : IRequest<Result<GetUserLoginInfoResponse>>;
-#endregion
-
-#region --- RESPONSE ---
-public record GetUserLoginInfoResponse(Guid Id, string UserName, Guid? EmployeeId, string Employee, string Gender, string EmployeeCode, 
-    string Branch, decimal? Latitude, decimal? Longitude,
-    TimeOnly? AttendanceInTime, TimeOnly? AttendanceOutTime, int CheckRadiusInMeter, string Designation, string? CompanyLogoUrl);
+public record GetUserLoginInfoQuery(Guid Id, Guid EmployeeId) : IRequest<Result<UserLoginInfoResponse>>;
 #endregion
 
 #region --- HANDLER ---
-internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context) : IRequestHandler<GetUserLoginInfoQuery, Result<GetUserLoginInfoResponse>>
+internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context) : IRequestHandler<GetUserLoginInfoQuery, Result<UserLoginInfoResponse>>
 {
-    public async Task<Result<GetUserLoginInfoResponse>> Handle(GetUserLoginInfoQuery request, CancellationToken cancellationToken)
+    public async Task<Result<UserLoginInfoResponse>> Handle(GetUserLoginInfoQuery request, CancellationToken cancellationToken)
     {
         var user = await context
             .TblUsers
-            .Include(m => m.Employee)
-            .ThenInclude(m => m.OrganizationUnit)
-            .Include(m => m.Employee)
-            .ThenInclude(m => m.Company)
+            .Include(m => m.Employee.Company)
+            .Include(m => m.Employee.OrganizationUnit.OrganizationUnitType)
             .Where(m => m.Id == request.Id)
             .FirstOrDefaultAsync(cancellationToken);
-
         if (user is null)
         {
             return new RecordNotFoundError($"User not found for the given Id");
@@ -40,23 +33,47 @@ internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context) :
             .OrderByDescending(m => m.EffectiveFrom)
             .FirstOrDefaultAsync(cancellationToken);
 
-        var response = new GetUserLoginInfoResponse(
-            user.Id,
-            user.UserName,
-            user.EmployeeId,
-            user.Employee?.FullName ?? string.Empty,
-            user.Employee?.Gender ?? string.Empty,
-            user.Employee?.Code ?? string.Empty,
-            user.Employee?.OrganizationUnit?.Name ?? string.Empty,
-            user.Employee?.OrganizationUnit?.Latitude,
-            user.Employee?.OrganizationUnit?.Longitude,
-            user.Employee?.OrganizationUnit?.AttendanceInTime,
-            user.Employee?.OrganizationUnit?.AttendanceOutTime,
-            user.Employee?.OrganizationUnit?.CheckRadiusInMeter ?? 100,
-            employeeDesignation?.Designation?.Name ?? string.Empty,
-            user.Employee?.Company?.LogoUrl
-        );
+        var response = new UserLoginInfoResponse
+        {
+            Id = user.Id,
+            UserName = user.UserName,
+            EmployeeId = user.EmployeeId,
+            Employee = user.Employee?.FullName ?? string.Empty,
+            Gender = user.Employee?.Gender ?? string.Empty,
+            EmployeeCode = user.Employee?.Code ?? string.Empty,
+            Designation = employeeDesignation?.Designation?.Name ?? string.Empty,
+            CompanyLogoUrl = user.Employee?.Company?.LogoUrl,
+            AccessOrganizationUnits = await GetUserOrganizationUnits(user.Employee?.OrganizationUnitId ?? Guid.Empty, cancellationToken)
+        };
         return Result.Ok(response);
+    }
+    private async Task<List<UserAccessOrganizationUnit>> GetUserOrganizationUnits(Guid orgUnitId, CancellationToken cancellationToken)
+    {
+        var units = await context.TblOrganizationUnits.Include(u => u.OrganizationUnitType).ToListAsync(cancellationToken);
+        IEnumerable<TblOrganizationUnit> Traverse(Guid id)
+        {
+            var current = units.FirstOrDefault(u => u.Id == id);
+            if (current == null) yield break;
+
+            if (current.OrganizationUnitType.Name == "Branch")
+                yield return current;
+
+            foreach (var child in units.Where(u => u.ParentId == id))
+                foreach (var descendant in Traverse(child.Id))
+                    yield return descendant;
+        }
+        return Traverse(orgUnitId)
+        .Distinct()
+        .Select(b => new UserAccessOrganizationUnit
+        {
+            Id = b.Id,
+            Name = b.Name,
+            Latitude = b.Latitude,
+            Longitude = b.Longitude,
+            AttendanceInTime = b.AttendanceInTime,
+            AttendanceOutTime = b.AttendanceOutTime,
+            CheckRadiusInMeter = b.CheckRadiusInMeter ?? 100
+        }).ToList();
     }
 }
 #endregion

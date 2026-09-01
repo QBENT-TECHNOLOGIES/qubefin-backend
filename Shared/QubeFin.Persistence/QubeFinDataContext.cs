@@ -482,14 +482,18 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.OutTimeLatitude).HasColumnType("numeric(9, 6)");
             entity.Property(e => e.OutTimeLongitude).HasColumnType("numeric(9, 6)");
 
+            entity.HasOne(d => d.CheckinOrganizationUnit).WithMany(p => p.TblAttendanceCheckinOrganizationUnits)
+                .HasForeignKey(d => d.CheckinOrganizationUnitId)
+                .HasConstraintName("FK_Tbl_Attendance_Tbl_OrganizationUnit");
+
+            entity.HasOne(d => d.CheckoutOrganizationUnit).WithMany(p => p.TblAttendanceCheckoutOrganizationUnits)
+                .HasForeignKey(d => d.CheckoutOrganizationUnitId)
+                .HasConstraintName("FK_Tbl_Attendance_Tbl_OrganizationUnit1");
+
             entity.HasOne(d => d.Employee).WithMany(p => p.TblAttendances)
                 .HasForeignKey(d => d.EmployeeId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_Attendance_Tbl_Employee");
-
-            entity.HasOne(d => d.OrganizationUnit).WithMany(p => p.TblAttendances)
-                .HasForeignKey(d => d.OrganizationUnitId)
-                .HasConstraintName("FK_Tbl_Attendance_Tbl_OrganizationUnit");
         });
 
         modelBuilder.Entity<TblAttendanceRegularization>(entity =>
@@ -666,12 +670,10 @@ public partial class QubeFinDataContext : DbContext
 
             entity.HasOne(d => d.FinancialInstitute).WithMany(p => p.TblCompanyBankAccounts)
                 .HasForeignKey(d => d.FinancialInstituteId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_CompanyBankAccount_Tbl_FinancialInstitute");
 
             entity.HasOne(d => d.Ledger).WithMany(p => p.TblCompanyBankAccounts)
                 .HasForeignKey(d => d.LedgerId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_CompanyBankAccount_Tbl_AccountLedger");
         });
 

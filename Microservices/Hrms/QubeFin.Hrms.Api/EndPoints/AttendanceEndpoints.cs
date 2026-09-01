@@ -21,7 +21,7 @@ public class AttendanceEndpoints : IEndpoint
                 return Results.Forbid();
             }
             var empId = principal.Identity.GetEmployeeId();
-            var result = await sender.Send(new CreateAttendanceCommand(empId, command.time, command.Lat, command.Long));
+            var result = await sender.Send(new CreateAttendanceCommand(empId, command.OrganizationUnitId, command.time, command.Lat, command.Long));
             return result.ToHttpResult();
         })
         .WithSummary("Attendance Check in and Check out Saved")
