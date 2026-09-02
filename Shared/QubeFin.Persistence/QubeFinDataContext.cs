@@ -999,7 +999,6 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.PresentRoadName).HasMaxLength(50);
             entity.Property(e => e.Religion).HasMaxLength(25);
             entity.Property(e => e.Salutation).HasMaxLength(20);
-            entity.Property(e => e.SeparationDate).HasComputedColumnSql("(dateadd(year,(60),[DateOfBirth]))", false);
             entity.Property(e => e.UniversalAccountNo).HasMaxLength(50);
 
             entity.HasOne(d => d.Bank).WithMany(p => p.TblEmployees)
@@ -1917,7 +1916,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.ActionUrl).HasMaxLength(200);
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.Icon).HasMaxLength(50);
-            entity.Property(e => e.Message).HasMaxLength(100);
+            entity.Property(e => e.Message).HasMaxLength(200);
             entity.Property(e => e.NotificationType)
                 .HasMaxLength(50)
                 .IsUnicode(false);
