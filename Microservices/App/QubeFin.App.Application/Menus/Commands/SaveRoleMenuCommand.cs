@@ -16,7 +16,7 @@ public sealed record SaveRoleMenuCommand(SaveRoleMenuRequest Menu, Guid userId) 
 
 #region --- HANDLER ---
 
-internal sealed class SaveRoleMenuCommandHandler(QubeFinDataContext context) : IRequestHandler<SaveRoleMenuCommand, Result<string>>
+internal sealed class SaveRoleMenuCommandHandler(QubeFinDataContext context, IUnitOfWork unitOfWork) : IRequestHandler<SaveRoleMenuCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(SaveRoleMenuCommand request, CancellationToken cancellationToken)
     {
@@ -28,15 +28,10 @@ internal sealed class SaveRoleMenuCommandHandler(QubeFinDataContext context) : I
             return Result.Fail("Menu not found.");
         }
 
-
-
         var menuPermissionIds = await context.TblMenuPermissions.Where(x => x.MenuId == request.Menu.MenuId).Select(x => x.Id).ToListAsync(cancellationToken);
         var menuPermissionIdSet = menuPermissionIds.ToHashSet();
 
-
-
         var roleIds = request.Menu.Roles.Select(x => x.RoleId).Distinct().ToList();
-
         var validRoleIds = await context.TblRoles.Where(x => roleIds.Contains(x.Id) && x.IsActive).Select(x => x.Id).ToListAsync(cancellationToken);
 
         if (validRoleIds.Count != roleIds.Count)
@@ -51,8 +46,6 @@ internal sealed class SaveRoleMenuCommandHandler(QubeFinDataContext context) : I
         {
             return Result.Fail("One or more selected users are invalid, inactive, or not linked to an employee.");
         }
-
-
 
         var submittedRolePermissionIds = request.Menu.Roles.SelectMany(x => x.MenuPermissionIds).Distinct().ToList();
         var invalidRolePermissionIds = submittedRolePermissionIds.Where(x => !menuPermissionIdSet.Contains(x)).ToList();
@@ -85,15 +78,14 @@ internal sealed class SaveRoleMenuCommandHandler(QubeFinDataContext context) : I
 
 
             var newRolePermissions = request.Menu.Roles.SelectMany(role => role.MenuPermissionIds.Distinct()
-                        .Select(menuPermissionId =>
-                            new TblRoleMenuPermission
-                            {
-                                RoleId = role.RoleId,
-                                MenuPermissionId = menuPermissionId,
-                                AccessClaimToken = string.Empty,
-                                CreatedOn = DateTime.UtcNow,
-                                CreatedBy = request.userId
-                            })).ToList();
+            .Select(menuPermissionId => new TblRoleMenuPermission
+            {
+                RoleId = role.RoleId,
+                MenuPermissionId = menuPermissionId,
+                AccessClaimToken = string.Empty,
+                CreatedOn = DateTime.UtcNow,
+                CreatedBy = request.userId
+            })).ToList();
 
             if (newRolePermissions.Count > 0)
             {
@@ -107,28 +99,22 @@ internal sealed class SaveRoleMenuCommandHandler(QubeFinDataContext context) : I
                 context.TblUserMenuPermissions.RemoveRange(existingUserPermissions);
             }
 
-            var newUserPermissions = request.Menu.Users
-                .SelectMany(user =>
-                    user.MenuPermissionIds
-                        .Distinct()
-                        .Select(menuPermissionId =>
-                            new TblUserMenuPermission
-                            {
-                                UserId = user.UserId,
-                                MenuPermissionId = menuPermissionId,
-                                AccessClaimToken = string.Empty,
-                                CreatedOn = DateTime.UtcNow,
-                                CreatedBy = request.userId
-                            }))
-                .ToList();
+            var newUserPermissions = request.Menu.Users.SelectMany(user => user.MenuPermissionIds.Distinct()
+            .Select(menuPermissionId => new TblUserMenuPermission
+            {
+                UserId = user.UserId,
+                MenuPermissionId = menuPermissionId,
+                AccessClaimToken = string.Empty,
+                CreatedOn = DateTime.UtcNow,
+                CreatedBy = request.userId
+            })).ToList();
 
             if (newUserPermissions.Count > 0)
             {
                 await context.TblUserMenuPermissions.AddRangeAsync(newUserPermissions, cancellationToken);
             }
 
-            await context.SaveChangesAsync(cancellationToken);
-
+            await unitOfWork.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
 
 

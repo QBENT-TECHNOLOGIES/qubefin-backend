@@ -145,7 +145,7 @@ public class MenuEndpoints : IEndpoint
             }
             var userId = principal.Identity.GetUserId();
 
-            var result = await sender.Send(new SaveRoleMenuCommand(menu));
+            var result = await sender.Send(new SaveRoleMenuCommand(menu, userId));
             return result.ToHttpResult();
         })
         .RequireAuthorization()
