@@ -94,7 +94,7 @@ internal sealed class GetAttendanceHistoryByEmployeeQueryHandler(QubeFinDataCont
         if (duration < TimeSpan.Zero)
             duration += TimeSpan.FromDays(1); // Night shift support
 
-        return $"{duration.Hours} hours {duration.Minutes} minutes";
+        return $"{duration.Hours} h {duration.Minutes} m";
     }
     private static string GetAttendanceStatus(bool IsLateEntry, bool IsEarlyLeave)
     {
