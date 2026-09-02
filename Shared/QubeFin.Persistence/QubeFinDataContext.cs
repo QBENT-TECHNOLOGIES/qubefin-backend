@@ -212,6 +212,7 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<WegrowConsolidateEmployee> WegrowConsolidateEmployees { get; set; }
 
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<DboTempEmpBranch>(entity =>
@@ -506,6 +507,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.CurrentStatus).HasMaxLength(30);
             entity.Property(e => e.Reason).HasMaxLength(50);
             entity.Property(e => e.RegularizationDates).HasMaxLength(200);
+            entity.Property(e => e.RegularizationFor).HasMaxLength(50);
             entity.Property(e => e.RegularizationType).HasMaxLength(50);
             entity.Property(e => e.Remarks).HasMaxLength(200);
 
