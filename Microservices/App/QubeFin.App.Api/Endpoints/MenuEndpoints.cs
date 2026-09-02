@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using QubeFin.App.Api.Requests;
 using QubeFin.App.Application.Menus.Commands;
+using QubeFin.App.Application.Menus.Models;
 using QubeFin.App.Application.Menus.Queries;
 using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
@@ -134,6 +135,21 @@ public class MenuEndpoints : IEndpoint
         })
         .RequireAuthorization()
         .WithSummary("Update Menu")
+        .WithTags("Menus");
+
+        app.MapPut("menus/role", async (ClaimsPrincipal principal, ISender sender,[FromBody] SaveRoleMenuRequest menu) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+            var userId = principal.Identity.GetUserId();
+
+            var result = await sender.Send(new SaveRoleMenuCommand(menu, userId));
+            return result.ToHttpResult();
+        })
+        .RequireAuthorization()
+        .WithSummary("Save Role Wise Menus")
         .WithTags("Menus");
     }
 }
