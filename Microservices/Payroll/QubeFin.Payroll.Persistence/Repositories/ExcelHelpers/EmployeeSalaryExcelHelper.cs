@@ -257,7 +257,7 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
                 columns,
                 "Employee Detail",
                 "CompanyName",
-                "Grade");
+                "BankAccountNo");
 
             // ---------------------------------------------------------
             // Earning
@@ -300,6 +300,15 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
                 "Employer Contribution",
                 "EPF",
                 "GRATUITY");
+
+            MergeGroup(
+                sheet,
+                row,
+                style,
+                columns,
+                "NETPAY",
+                "NETPAY",
+                "NETPAY");
         }
 
         // =============================================================
@@ -307,21 +316,16 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
         // =============================================================
 
         private static void MergeGroup(
-            ISheet sheet,
-            IRow row,
-            ICellStyle style,
-            List<DataColumn> columns,
-            string title,
-            string startColumn,
-            string endColumn)
+        ISheet sheet,
+        IRow row,
+        ICellStyle style,
+        List<DataColumn> columns,
+        string title,
+        string startColumn,
+        string endColumn)
         {
-            var startIndex = FindColumnIndex(
-                columns,
-                startColumn);
-
-            var endIndex = FindColumnIndex(
-                columns,
-                endColumn);
+            var startIndex = FindColumnIndex(columns, startColumn);
+            var endIndex = FindColumnIndex(columns, endColumn);
 
             if (startIndex < 0 || endIndex < 0)
             {
@@ -330,21 +334,18 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
 
             for (var i = startIndex; i <= endIndex; i++)
             {
-                var cell = row.GetCell(i)
-                           ?? row.CreateCell(i);
-
+                var cell = row.GetCell(i) ?? row.CreateCell(i);
                 cell.CellStyle = style;
             }
 
-            row.GetCell(startIndex)
-                .SetCellValue(title);
+            row.GetCell(startIndex).SetCellValue(title);
 
-            sheet.AddMergedRegion(
-                new CellRangeAddress(
-                    row.RowNum,
-                    row.RowNum,
-                    startIndex,
-                    endIndex));
+            // Only merge when the group actually spans more than one column
+            if (endIndex > startIndex)
+            {
+                sheet.AddMergedRegion(
+                    new CellRangeAddress(row.RowNum, row.RowNum, startIndex, endIndex));
+            }
         }
 
         // =============================================================
