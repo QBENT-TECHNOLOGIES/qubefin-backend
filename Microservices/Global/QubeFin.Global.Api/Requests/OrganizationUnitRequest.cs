@@ -8,7 +8,8 @@ public class OrganizationUnitRequest
     public Guid ParentId { get; set; }
     public decimal? Latitude { get; set; }
     public decimal? Longitude { get; set; }
-    public TimeOnly AttendanceInTime { get; set; }
-    public TimeOnly AttendanceOutTime { get; set; }
+    public TimeOnly? AttendanceInTime { get; set; }
+    public TimeOnly? AttendanceOutTime { get; set; }
     public int? CheckRadiusInMeter { get; set; }
+    public Guid? CompanyId { get; set; }
 }
