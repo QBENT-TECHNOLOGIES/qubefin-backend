@@ -17,28 +17,23 @@ internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context) :
 {
     public async Task<Result<UserLoginInfoResponse>> Handle(GetUserLoginInfoQuery request, CancellationToken cancellationToken)
     {
-        var userTask = context.TblUsers
+        var user = await context.TblUsers
           .AsNoTracking()
           .Include(m => m.Employee!.Company)
           .Include(m => m.Employee!.OrganizationUnit!.OrganizationUnitType)
           .FirstOrDefaultAsync(m => m.Id == request.Id, cancellationToken);
 
-        var designationTask = context.TblEmployeeDesignations
+        if (user is null)
+        {
+            return new RecordNotFoundError($"User not found");
+        }
+
+        var designationName = await context.TblEmployeeDesignations
             .AsNoTracking()
             .Where(m => m.EmployeeId == request.EmployeeId)
             .OrderByDescending(m => m.EffectiveFrom)
             .Select(m => m.Designation!.Name)
             .FirstOrDefaultAsync(cancellationToken);
-
-        await Task.WhenAll(userTask, designationTask);
-
-        var user = await userTask;
-        var designationName = await designationTask;
-
-        if (user is null)
-        {
-            return new RecordNotFoundError($"User not found for the given Id: {request.Id}");
-        }
 
         var accessOrganizationUnits = user.Employee?.OrganizationUnit?.Latitude != null ?
              new List<UserAccessOrganizationUnit>
