@@ -75,7 +75,7 @@ public class HolidayEndpoints : IEndpoint
         app.MapGet("holidays/my-holidays", async (ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             var result = await sender.Send(new GetMyHolidaysQuery(principal.Identity.GetEmployeeId()), cancellationToken);
-            return Results.Ok(result);
+            return result.ToHttpResult();
         })
         .WithSummary("Get my holidays")
         .WithTags("Holidays")
