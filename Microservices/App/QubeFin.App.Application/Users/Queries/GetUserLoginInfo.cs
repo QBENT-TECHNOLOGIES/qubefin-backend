@@ -18,10 +18,10 @@ internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context) :
     public async Task<Result<UserLoginInfoResponse>> Handle(GetUserLoginInfoQuery request, CancellationToken cancellationToken)
     {
         var userTask = context.TblUsers
-      .AsNoTracking()
-      .Include(m => m.Employee!.Company)
-      .Include(m => m.Employee!.OrganizationUnit!.OrganizationUnitType)
-      .FirstOrDefaultAsync(m => m.Id == request.Id, cancellationToken);
+          .AsNoTracking()
+          .Include(m => m.Employee!.Company)
+          .Include(m => m.Employee!.OrganizationUnit!.OrganizationUnitType)
+          .FirstOrDefaultAsync(m => m.Id == request.Id, cancellationToken);
 
         var designationTask = context.TblEmployeeDesignations
             .AsNoTracking()
