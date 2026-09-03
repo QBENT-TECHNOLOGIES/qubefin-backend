@@ -13,6 +13,7 @@ public interface IHolidayRepository
     Task<IEnumerable<Holiday>> GetAllAsync();
     Task<IEnumerable<Holiday>> GetByOrgUnitIdAsync(Guid orgUnitId);
     Task<bool> ExistsAsync(Guid orgUnitId, DateOnly holidayDate, Guid? excludeId = null);
+    Task<IEnumerable<Holiday>> GetAllByEmployeeIdAsync(Guid employeeId);
 }
 
 public class HolidayRepository(QubeFinDataContext context) : IHolidayRepository
@@ -65,5 +66,22 @@ public class HolidayRepository(QubeFinDataContext context) : IHolidayRepository
             .AnyAsync(x => x.OrgUnitId == orgUnitId
                 && x.HolidayDate == holidayDate
                 && (!excludeId.HasValue || x.Id != excludeId.Value));
+    }
+
+    public async Task<IEnumerable<Holiday>> GetAllByEmployeeIdAsync(Guid employeeId)
+    {
+        var employee = await context.TblEmployees
+            .AsNoTracking()
+            .FirstOrDefaultAsync(e => e.Id == employeeId);
+        if (employee == null)
+        {
+            return Enumerable.Empty<Holiday>();
+        }
+
+        var entities = await context.TblHolidays.Where(x => x.OrgUnitId == employee.OrganizationUnitId)
+            .AsNoTracking()
+            .OrderBy(x => x.HolidayDate)
+            .ToListAsync();
+        return entities.Select(x => x.ToDomain());
     }
 }
