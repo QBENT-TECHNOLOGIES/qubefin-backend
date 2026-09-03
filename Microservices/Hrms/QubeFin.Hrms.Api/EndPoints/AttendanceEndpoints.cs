@@ -132,5 +132,20 @@ public class AttendanceEndpoints : IEndpoint
         .WithSummary("Decision regularization (Approved/Reject/Recommend)")
         .WithTags("Regularization")
         .RequireAuthorization();
+
+        app.MapGet("attendances/last-working-days", async (ClaimsPrincipal principal, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+
+            var empId = principal.Identity.GetEmployeeId();
+            var result = await sender.Send(new GetLastWorkingDaysQuery(empId));
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get Last Working Days")
+        .WithTags("Attendance")
+        .RequireAuthorization();
     }
 }
