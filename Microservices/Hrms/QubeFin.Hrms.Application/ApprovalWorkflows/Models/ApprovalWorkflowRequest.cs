@@ -3,8 +3,8 @@ namespace QubeFin.Hrms.Application.ApprovalWorkflows.Models;
 public record ApprovalWorkflowRequest(
     string Category,
     Guid? LeaveTypeId,
-    Guid? OrganizationUnitTypeId,
-    Guid? SalaryGradeId,
+    Guid? OrganizationUnitTypeId, 
+    IReadOnlyList<Guid>? SalaryGradeIds,
     Guid? PostId,
     int MinimumDays,
     int MaximumDays,

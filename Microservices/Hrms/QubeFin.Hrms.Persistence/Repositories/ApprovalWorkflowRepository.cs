@@ -12,7 +12,9 @@ public interface IApprovalWorkflowRepository
     Task<ApprovalWorkflow?> GetByIdAsync(Guid id);
     Task<IEnumerable<ApprovalWorkflow>> GetAllAsync();
     Task<IEnumerable<ApprovalWorkflow>> GetByCategoryAsync(string category);
-    Task<IEnumerable<ApprovalWorkflow>> SearchAsync(string? category, Guid? organizationUnitTypeId, string sortDirection, string sortOn, int pageIndex, int pageSize);
+    Task<IReadOnlyList<ApprovalWorkflow>> SearchAsync(string? category, Guid? organizationUnitTypeId, Guid? salaryGradeId);
+    Task<IReadOnlyList<ApprovalWorkflow>> GetSiblingsAsync(string category, Guid? organizationUnitTypeId, Guid? leaveTypeId, int minimumDays, int maximumDays);
+    Task DeleteAsync(Guid id);
 }
 
 public class ApprovalWorkflowRepository(QubeFinDataContext context) : IApprovalWorkflowRepository
@@ -71,6 +73,8 @@ public class ApprovalWorkflowRepository(QubeFinDataContext context) : IApprovalW
             .Include(m => m.Post)
             .Include(x => x.TblApprovalWorkflowSteps)
             .ThenInclude(x => x.ReceiverPost)
+            .Include(x => x.TblApprovalWorkflowSteps)
+            .ThenInclude(x => x.OrganizationUnitType)
             .Include(u => u.CreatedByNavigation)
             .Include(u => u.LastModifiedByNavigation)
             .AsNoTracking()
@@ -113,57 +117,61 @@ public class ApprovalWorkflowRepository(QubeFinDataContext context) : IApprovalW
         return entities.Select(x => x.ToDomain());
     }
 
-    public async Task<IEnumerable<ApprovalWorkflow>> SearchAsync(string? category, Guid? organizationUnitTypeId, string sortDirection, string sortOn, int pageIndex, int pageSize)
+    public async Task<IReadOnlyList<ApprovalWorkflow>> SearchAsync(string? category, Guid? organizationUnitTypeId, Guid? salaryGradeId)
     {
         var query = context.TblApprovalWorkflows
             .Include(x => x.LeaveType)
             .Include(x => x.OrganizationUnitType)
             .Include(x => x.SalaryGrade)
             .Include(x => x.Post)
+            .Include(x => x.CreatedByNavigation)
+            .Include(x => x.LastModifiedByNavigation)
             .Include(x => x.TblApprovalWorkflowSteps)
                 .ThenInclude(x => x.ReceiverPost)
+            .Include(x => x.TblApprovalWorkflowSteps)
+                .ThenInclude(x => x.OrganizationUnitType)
             .AsNoTracking()
             .AsQueryable();
 
-        // Category filter
         if (!string.IsNullOrWhiteSpace(category))
         {
             query = query.Where(x => x.Category == category);
         }
 
-        // Organization Unit Type filter
-        if (organizationUnitTypeId.HasValue &&
-            organizationUnitTypeId != Guid.Empty)
+        if (organizationUnitTypeId.HasValue && organizationUnitTypeId != Guid.Empty)
         {
-            query = query.Where(x =>
-                x.OrganizationUnitTypeId == organizationUnitTypeId.Value);
+            query = query.Where(x => x.OrganizationUnitTypeId == organizationUnitTypeId.Value);
         }
 
-        // Sorting
-        query = sortOn?.ToLower() switch
+        if (salaryGradeId.HasValue && salaryGradeId != Guid.Empty)
         {
-            "category" => sortDirection?.ToLower() == "asc"
-                ? query.OrderBy(x => x.Category)
-                : query.OrderByDescending(x => x.Category),
-
-            "minimumdays" => sortDirection?.ToLower() == "asc"
-                ? query.OrderBy(x => x.MinimumDays)
-                : query.OrderByDescending(x => x.MinimumDays),
-
-            _ => query.OrderBy(x => x.Category)
-                      .ThenBy(x => x.MinimumDays)
-        };
-
-        // Pagination
-        if (pageSize > 0)
-        {
-            query = query
-                .Skip(pageIndex * pageSize)
-                .Take(pageSize);
+            query = query.Where(x => x.SalaryGradeId == salaryGradeId.Value);
         }
 
         var entities = await query.ToListAsync();
+        return entities.Select(x => x.ToDomain()).ToList();
+    }
+    public async Task<IReadOnlyList<ApprovalWorkflow>> GetSiblingsAsync(string category, Guid? organizationUnitTypeId, Guid? leaveTypeId, int minimumDays, int maximumDays)
+    {
+        var entities = await context.TblApprovalWorkflows
+            .Include(x => x.TblApprovalWorkflowSteps).ThenInclude(x => x.ReceiverPost)
+            .Include(x => x.TblApprovalWorkflowSteps).ThenInclude(x => x.OrganizationUnitType)
+            .Include(x => x.SalaryGrade)
+            .Where(x => x.Category == category
+                && x.OrganizationUnitTypeId == organizationUnitTypeId
+                && x.LeaveTypeId == leaveTypeId
+                && x.MinimumDays == minimumDays
+                && x.MaximumDays == maximumDays)
+            .ToListAsync();
 
-        return entities.Select(x => x.ToDomain());
+        return entities.Select(x => x.ToDomain()).ToList();
+    }
+    public async Task DeleteAsync(Guid id)
+    {
+        var entity = await context.TblApprovalWorkflows.FindAsync(id);
+        if (entity is not null)
+        {
+            context.TblApprovalWorkflows.Remove(entity);
+        }
     }
 }

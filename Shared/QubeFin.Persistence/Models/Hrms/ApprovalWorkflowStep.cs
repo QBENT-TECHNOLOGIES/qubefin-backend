@@ -13,7 +13,7 @@ public class ApprovalWorkflowStep
     public int SequenceNo { get; private set; }
 
     public string? ReceiverPostName { get; private set; }
-
+    public string? OrganizationUnitTypeName { get; private set; } = null!;
     private ApprovalWorkflowStep()
     {
     }
@@ -28,6 +28,7 @@ public class ApprovalWorkflowStep
         string eventStatus,
         string eventButtonText,
         int sequenceNo,
+        string? organizationUnitTypeName = null,
         string? receiverPostName = null)
     {
         Id = id;
@@ -39,6 +40,7 @@ public class ApprovalWorkflowStep
         EventStatus = eventStatus;
         EventButtonText = eventButtonText;
         SequenceNo = sequenceNo;
+        OrganizationUnitTypeName = organizationUnitTypeName;
         ReceiverPostName = receiverPostName;
     }
 

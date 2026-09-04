@@ -17,6 +17,7 @@ public static class ApprovalWorkflowStepMapper
             entity.EventStatus,
             entity.EventButtonText,
             entity.SequenceNo,
+            entity.OrganizationUnitType.Name,
             entity.ReceiverPost.Name);
     }
 
