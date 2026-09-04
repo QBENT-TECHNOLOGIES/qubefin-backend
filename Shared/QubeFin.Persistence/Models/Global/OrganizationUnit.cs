@@ -7,6 +7,7 @@ public class OrganizationUnit
     public string Name { get; set; } = null!;
     public int CodeVal { get; set; }
     public Guid? ParentId { get; set; }
+    public Guid? CompanyId { get; set; }
     public decimal? Latitude { get; set; }
     public decimal? Longitude { get; set; }
     public TimeOnly? AttendanceInTime { get; set; }
@@ -20,13 +21,14 @@ public class OrganizationUnit
     private OrganizationUnit() { }
 
     public OrganizationUnit(Guid id, Guid organizationUnitTypeId, string name, int codeVal, decimal? latitude, decimal? longitude, TimeOnly? attendanceInTime, TimeOnly? attendanceOutTime, 
-        int? checkRadiusInMeter, Guid? parentId, Guid createdBy, DateTime createdOn, Guid? lastModifiedBy, DateTime? lastModifiedOn)
+        int? checkRadiusInMeter, Guid? parentId, Guid? companyId, Guid createdBy, DateTime createdOn, Guid? lastModifiedBy, DateTime? lastModifiedOn)
     {
         Id = id;
         OrganizationUnitTypeId = organizationUnitTypeId;
         Name = name;
         CodeVal = codeVal;
         ParentId = parentId;
+        CompanyId= companyId;
         Latitude = latitude; 
         Longitude = longitude;
         AttendanceInTime = attendanceInTime;
@@ -38,7 +40,7 @@ public class OrganizationUnit
         LastModifiedBy = lastModifiedBy;
     }
 
-    public static OrganizationUnit Create(Guid id, Guid organizationUnitTypeId, string name, int codeVal, Guid? parentId, decimal? latitude, decimal? longitude,
+    public static OrganizationUnit Create(Guid id, Guid organizationUnitTypeId, string name, int codeVal, Guid? parentId, Guid? companyId, decimal? latitude, decimal? longitude,
         TimeOnly? attendanceInTime, TimeOnly? attendanceOutTime, int? checkRadiusInMeter, Guid createdBy)
     {
         var organizationUnit = new OrganizationUnit
@@ -48,6 +50,7 @@ public class OrganizationUnit
             Name = name,
             CodeVal = codeVal,
             ParentId = parentId,
+            CompanyId = companyId,
             Latitude = latitude, 
             Longitude = longitude,
             AttendanceInTime = attendanceInTime,
@@ -68,12 +71,14 @@ public class OrganizationUnit
         TimeOnly? attendanceOutTime,
         int? checkRadiusInMeter,
         Guid? parentId,
+        Guid? companyId,
         Guid lastModifiedBy)
     {
         Name = name;
         OrganizationUnitTypeId = organizationUnitTypeId;
         CodeVal = codeVal;
         ParentId = parentId;
+        CompanyId = companyId;
         Latitude = latitude;
         Longitude = longitude;
         AttendanceInTime = attendanceInTime;
