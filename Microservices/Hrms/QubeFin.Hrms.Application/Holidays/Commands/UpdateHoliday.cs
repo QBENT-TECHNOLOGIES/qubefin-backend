@@ -3,15 +3,11 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
-using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Entities;
-using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.Holidays.Commands;
-
 public record UpdateHolidayCommand(
-    Guid Id,
     List<Guid> OrgUnitIds,
     DateOnly HolidayDate,
     string Description,
@@ -21,9 +17,9 @@ public class UpdateHolidayCommandValidator : AbstractValidator<UpdateHolidayComm
 {
     public UpdateHolidayCommandValidator()
     {
-        RuleFor(x => x.Id).NotEmpty();
+        RuleFor(x => x.HolidayDate).NotEmpty().WithMessage("Holiday date is required.");
         RuleFor(x => x.OrgUnitIds).NotEmpty().WithMessage("Please select at least one organization unit.");
-        RuleFor(x => x.Description).NotEmpty().MaximumLength(50);
+        RuleFor(x => x.Description).NotEmpty().WithMessage("Description is required.").MaximumLength(50).WithMessage("Description cannot exceed 50 characters.");
         RuleFor(x => x.ModifiedBy).NotEmpty();
     }
 }
@@ -32,28 +28,24 @@ internal sealed class UpdateHolidayCommandHandler(QubeFinDataContext context)
 {
     public async Task<Result<string>> Handle(UpdateHolidayCommand request, CancellationToken cancellationToken)
     {
-        var baseHoliday = await context.TblHolidays
+        var holidays = await context.TblHolidays
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+            .Where(x => x.HolidayDate == request.HolidayDate).ToListAsync(cancellationToken);
 
-        if (baseHoliday == null)
+        if (holidays == null || !holidays.Any())
         {
-            return new RecordNotFoundError("Holiday not found.");
+            return new RecordNotFoundError($"Holiday not found for date {request.HolidayDate}.");
         }
 
-        var existingGroup = await context.TblHolidays
-            .Where(x => x.HolidayDate == baseHoliday.HolidayDate && x.Description == baseHoliday.Description)
-            .ToListAsync(cancellationToken);
+        var existingOrgUnitIds = holidays.Select(x => x.OrgUnitId).ToList();
 
-        var existingOrgUnitIds = existingGroup.Select(x => x.OrgUnitId).ToList();
-
-        var toDelete = existingGroup.Where(x => !request.OrgUnitIds.Contains(x.OrgUnitId)).ToList();
+        var toDelete = holidays.Where(x => !request.OrgUnitIds.Contains(x.OrgUnitId)).ToList();
         if (toDelete.Any())
         {
             context.TblHolidays.RemoveRange(toDelete);
         }
 
-        var toUpdate = existingGroup.Where(x => request.OrgUnitIds.Contains(x.OrgUnitId)).ToList();
+        var toUpdate = holidays.Where(x => request.OrgUnitIds.Contains(x.OrgUnitId)).ToList();
         foreach (var item in toUpdate)
         {
             item.HolidayDate = request.HolidayDate;
@@ -73,16 +65,13 @@ internal sealed class UpdateHolidayCommandHandler(QubeFinDataContext context)
                 OrgUnitId = orgUnitId,
                 HolidayDate = request.HolidayDate,
                 Description = request.Description.Trim(),
-                CreatedBy = baseHoliday.CreatedBy,
-                CreatedOn = baseHoliday.CreatedOn,
-                LastModifiedBy = request.ModifiedBy,
-                LastModifiedOn = DateTime.Now
+                CreatedBy = request.ModifiedBy,
+                CreatedOn = DateTime.Now
             };
             await context.TblHolidays.AddAsync(newEntity, cancellationToken);
         }
 
         await context.SaveChangesAsync(cancellationToken);
-
         return Result.Ok($"{request.HolidayDate.ToString("dd-MM-yyyy")} Holiday updated successfully.");
     }
 }

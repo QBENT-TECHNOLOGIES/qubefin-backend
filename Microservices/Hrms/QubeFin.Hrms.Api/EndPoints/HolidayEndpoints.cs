@@ -21,13 +21,13 @@ public class HolidayEndpoints : IEndpoint
             var result = await sender.Send(new SearchHolidaysQuery(year), cancellationToken);
             return result.ToHttpResult();
         })
-    .WithSummary("Search holidays by year")
-    .WithTags("Holidays")
-    .RequireAuthorization();
+        .WithSummary("Search holidays by year")
+        .WithTags("Holidays")
+        .RequireAuthorization();
 
-        app.MapGet("holidays/{id:guid}", async (Guid id, ISender sender, CancellationToken cancellationToken) =>
+        app.MapGet("holidays/get", async (DateOnly holidayDate, ISender sender, CancellationToken cancellationToken) =>
         {
-            var result = await sender.Send(new GetHolidayByIdQuery(id), cancellationToken);
+            var result = await sender.Send(new GetHolidayByIdQuery(holidayDate), cancellationToken);
             return result.ToHttpResult();
         })
         .WithSummary("Get a holiday by ID")
