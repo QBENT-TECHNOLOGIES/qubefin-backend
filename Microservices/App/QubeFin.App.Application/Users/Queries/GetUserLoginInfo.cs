@@ -17,21 +17,39 @@ internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context) :
 {
     public async Task<Result<UserLoginInfoResponse>> Handle(GetUserLoginInfoQuery request, CancellationToken cancellationToken)
     {
-        var user = await context
-            .TblUsers
-            .Include(m => m.Employee.Company)
-            .Include(m => m.Employee.OrganizationUnit.OrganizationUnitType)
-            .Where(m => m.Id == request.Id)
-            .FirstOrDefaultAsync(cancellationToken);
+        var user = await context.TblUsers
+          .AsNoTracking()
+          .Include(m => m.Employee!.Company)
+          .Include(m => m.Employee!.OrganizationUnit!.OrganizationUnitType)
+          .FirstOrDefaultAsync(m => m.Id == request.Id, cancellationToken);
+
         if (user is null)
         {
-            return new RecordNotFoundError($"User not found for the given Id");
+            return new RecordNotFoundError($"User not found");
         }
-        var employeeDesignation = await context.TblEmployeeDesignations
-            .Include(m => m.Designation)
+
+        var designationName = await context.TblEmployeeDesignations
+            .AsNoTracking()
             .Where(m => m.EmployeeId == request.EmployeeId)
             .OrderByDescending(m => m.EffectiveFrom)
+            .Select(m => m.Designation!.Name)
             .FirstOrDefaultAsync(cancellationToken);
+
+        var accessOrganizationUnits = user.Employee?.OrganizationUnit?.Latitude != null ?
+             new List<UserAccessOrganizationUnit>
+           {
+              new UserAccessOrganizationUnit
+              {
+                  Id = user.Employee.OrganizationUnit.Id,
+                  Name = user.Employee.OrganizationUnit.Name,
+                  Latitude = user.Employee.OrganizationUnit.Latitude,
+                  Longitude = user.Employee.OrganizationUnit.Longitude,
+                  AttendanceInTime = user.Employee.OrganizationUnit.AttendanceInTime,
+                  AttendanceOutTime = user.Employee.OrganizationUnit.AttendanceOutTime,
+                  CheckRadiusInMeter = user.Employee.OrganizationUnit.CheckRadiusInMeter ?? 100
+              }
+           }
+         : await GetUserOrganizationUnits(user.Employee?.OrganizationUnitId ?? Guid.Empty, cancellationToken);
 
         var response = new UserLoginInfoResponse
         {
@@ -41,9 +59,9 @@ internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context) :
             Employee = user.Employee?.FullName ?? string.Empty,
             Gender = user.Employee?.Gender ?? string.Empty,
             EmployeeCode = user.Employee?.Code ?? string.Empty,
-            Designation = employeeDesignation?.Designation?.Name ?? string.Empty,
+            Designation = designationName ?? string.Empty,
             CompanyLogoUrl = user.Employee?.Company?.LogoUrl,
-            AccessOrganizationUnits = await GetUserOrganizationUnits(user.Employee?.OrganizationUnitId ?? Guid.Empty, cancellationToken)
+            AccessOrganizationUnits = accessOrganizationUnits
         };
         return Result.Ok(response);
     }

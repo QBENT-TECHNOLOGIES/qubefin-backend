@@ -29,7 +29,8 @@ public class HolidayEndpoints : IEndpoint
         })
         .WithSummary("Search holidays")
         .WithDescription("Searches holidays by organization unit, date range, and description.")
-        .WithTags("Holidays");
+        .WithTags("Holidays")
+        .RequireAuthorization();
 
         app.MapGet("holidays/{id:guid}", async (Guid id, ISender sender, CancellationToken cancellationToken) =>
         {
@@ -37,7 +38,8 @@ public class HolidayEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         .WithSummary("Get a holiday by ID")
-        .WithTags("Holidays");
+        .WithTags("Holidays")
+        .RequireAuthorization();
 
         app.MapPost("holidays", async (CreateHolidayCommand command, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
@@ -50,7 +52,8 @@ public class HolidayEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         .WithSummary("Create a holiday")
-        .WithTags("Holidays");
+        .WithTags("Holidays")
+        .RequireAuthorization();
 
         app.MapPatch("holidays/{id:guid}", async (Guid id, UpdateHolidayCommand command, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
@@ -58,7 +61,6 @@ public class HolidayEndpoints : IEndpoint
             {
                 return Results.Forbid();
             }
-
             var result = await sender.Send(command with
             {
                 Id = id,
@@ -67,6 +69,16 @@ public class HolidayEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         .WithSummary("Update a holiday")
-        .WithTags("Holidays");
+        .WithTags("Holidays")
+        .RequireAuthorization();
+
+        app.MapGet("holidays/my-holidays", async (ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(new GetMyHolidaysQuery(principal.Identity.GetEmployeeId()), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get my holidays")
+        .WithTags("Holidays")
+        .RequireAuthorization();
     }
 }
