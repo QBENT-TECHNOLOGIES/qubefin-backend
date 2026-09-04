@@ -15,6 +15,7 @@ public interface IApprovalWorkflowRepository
     Task<IReadOnlyList<ApprovalWorkflow>> SearchAsync(string? category, Guid? organizationUnitTypeId, Guid? salaryGradeId);
     Task<IReadOnlyList<ApprovalWorkflow>> GetSiblingsAsync(string category, Guid? organizationUnitTypeId, Guid? leaveTypeId, int minimumDays, int maximumDays);
     Task DeleteAsync(Guid id);
+    Task<bool> HasConflictingWorkflowAsync(Guid currentWorkflowId, string category, Guid? organizationUnitTypeId, Guid? leaveTypeId, int minimumDays, int maximumDays, IReadOnlyCollection<Guid> salaryGradeIds);
 }
 
 public class ApprovalWorkflowRepository(QubeFinDataContext context) : IApprovalWorkflowRepository
@@ -30,6 +31,7 @@ public class ApprovalWorkflowRepository(QubeFinDataContext context) : IApprovalW
             .Include(x => x.TblApprovalWorkflowSteps)
             .FirstAsync(x => x.Id == approvalWorkflow.Id);
 
+        // Update workflow fields
         entity.Category = approvalWorkflow.Category;
         entity.LeaveTypeId = approvalWorkflow.LeaveTypeId;
         entity.OrganizationUnitTypeId = approvalWorkflow.OrganizationUnitTypeId;
@@ -40,27 +42,49 @@ public class ApprovalWorkflowRepository(QubeFinDataContext context) : IApprovalW
         entity.LastModifiedOn = approvalWorkflow.LastModifiedOn;
         entity.LastModifiedBy = approvalWorkflow.LastModifiedBy;
 
-        var existingSteps = entity.TblApprovalWorkflowSteps.ToDictionary(x => x.Id);
-        var requestedStepIds = approvalWorkflow.Steps.Select(x => x.Id).ToHashSet();
+        // Existing steps currently in database
+        var existingSteps = entity.TblApprovalWorkflowSteps
+            .ToDictionary(x => x.Id);
 
-        context.TblApprovalWorkflowSteps.RemoveRange(
-            entity.TblApprovalWorkflowSteps.Where(x => !requestedStepIds.Contains(x.Id)));
+        // Steps coming from the request
+        var requestedSteps = approvalWorkflow.Steps.ToList();
 
-        foreach (var step in approvalWorkflow.Steps)
+        var requestedStepIds = requestedSteps
+            .Where(x => x.Id != Guid.Empty)
+            .Select(x => x.Id)
+            .ToHashSet();
+
+        // Remove steps which are no longer present
+        var stepsToRemove = entity.TblApprovalWorkflowSteps
+            .Where(x => !requestedStepIds.Contains(x.Id))
+            .ToList();
+
+        context.TblApprovalWorkflowSteps.RemoveRange(stepsToRemove);
+
+        // Add/update requested steps
+        foreach (var step in requestedSteps)
         {
-            if (!existingSteps.TryGetValue(step.Id, out var existingStep))
+            // Existing step
+            if (step.Id != Guid.Empty &&
+                existingSteps.TryGetValue(step.Id, out var existingStep))
             {
-                await context.TblApprovalWorkflowSteps.AddAsync(step.ToEntity());
+                existingStep.ReceiverPostId = step.ReceiverPostId;
+                existingStep.OrganizationUnitTypeId = step.OrganizationUnitTypeId;
+                existingStep.IsRecommendEvent = step.IsRecommendEvent;
+                existingStep.IsApprovalEvent = step.IsApprovalEvent;
+                existingStep.EventStatus = step.EventStatus;
+                existingStep.EventButtonText = step.EventButtonText;
+                existingStep.SequenceNo = step.SequenceNo;
+
                 continue;
             }
 
-            existingStep.ReceiverPostId = step.ReceiverPostId;
-            existingStep.OrganizationUnitTypeId = step.OrganizationUnitTypeId;
-            existingStep.IsRecommendEvent = step.IsRecommendEvent;
-            existingStep.IsApprovalEvent = step.IsApprovalEvent;
-            existingStep.EventStatus = step.EventStatus;
-            existingStep.EventButtonText = step.EventButtonText;
-            existingStep.SequenceNo = step.SequenceNo;
+            // New step
+            var newStep = step.ToEntity();
+
+            newStep.ApprovalWorkflowId = entity.Id;
+
+            await context.TblApprovalWorkflowSteps.AddAsync(newStep);
         }
     }
 
@@ -173,5 +197,19 @@ public class ApprovalWorkflowRepository(QubeFinDataContext context) : IApprovalW
         {
             context.TblApprovalWorkflows.Remove(entity);
         }
+    }
+
+    public async Task<bool> HasConflictingWorkflowAsync(Guid currentWorkflowId, string category, Guid? organizationUnitTypeId, Guid? leaveTypeId, int minimumDays, int maximumDays, IReadOnlyCollection<Guid> salaryGradeIds)
+    {
+        return await context.TblApprovalWorkflows.AsNoTracking()
+            .AnyAsync(x =>
+                x.Id != currentWorkflowId &&
+                x.Category == category &&
+                x.OrganizationUnitTypeId == organizationUnitTypeId &&
+                x.LeaveTypeId == leaveTypeId &&
+                x.MinimumDays == minimumDays &&
+                x.MaximumDays == maximumDays &&
+                x.SalaryGradeId.HasValue &&
+                salaryGradeIds.Contains(x.SalaryGradeId.Value));
     }
 }
