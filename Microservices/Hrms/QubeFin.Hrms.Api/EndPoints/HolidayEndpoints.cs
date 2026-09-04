@@ -4,6 +4,7 @@ using QubeFin.Core.Identity;
 using QubeFin.Core.Results;
 using QubeFin.Hrms.Application.Holidays.Commands;
 using QubeFin.Hrms.Application.Holidays.Queries;
+using QubeFin.Hrms.Application.Holidays.Models;
 using System.Security.Claims;
 
 namespace QubeFin.Hrms.Api.Endpoints;
@@ -12,25 +13,17 @@ public class HolidayEndpoints : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("holidays/search", async (
-            ISender sender,
-            CancellationToken cancellationToken,
-            Guid? orgUnitId,
-            DateOnly? fromDate,
-            DateOnly? toDate,
-            string? searchText,
-            int pageIndex = 1,
-            int pageSize = 10) =>
+        app.MapGet("holidays/search/{year}", async (
+        ISender sender,
+        CancellationToken cancellationToken,
+        int year) =>
         {
-            var result = await sender.Send(
-                new SearchHolidaysQuery(orgUnitId, fromDate, toDate, searchText, pageIndex, pageSize),
-                cancellationToken);
-            return Results.Ok(result);
+            var result = await sender.Send(new SearchHolidaysQuery(year), cancellationToken);
+            return result.ToHttpResult();
         })
-        .WithSummary("Search holidays")
-        .WithDescription("Searches holidays by organization unit, date range, and description.")
-        .WithTags("Holidays")
-        .RequireAuthorization();
+    .WithSummary("Search holidays by year")
+    .WithTags("Holidays")
+    .RequireAuthorization();
 
         app.MapGet("holidays/{id:guid}", async (Guid id, ISender sender, CancellationToken cancellationToken) =>
         {
@@ -41,21 +34,22 @@ public class HolidayEndpoints : IEndpoint
         .WithTags("Holidays")
         .RequireAuthorization();
 
-        app.MapPost("holidays", async (CreateHolidayCommand command, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        app.MapPost("holidays", async (HolidayRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)
             {
                 return Results.Forbid();
             }
-
-            var result = await sender.Send(command with { CreatedBy = principal.Identity.GetUserId() }, cancellationToken);
+            var userId = principal.Identity.GetUserId();
+            var command = new CreateHolidayCommand(request, userId);
+            var result = await sender.Send(command, cancellationToken);
             return result.ToHttpResult();
         })
         .WithSummary("Create a holiday")
         .WithTags("Holidays")
         .RequireAuthorization();
 
-        app.MapPatch("holidays/{id:guid}", async (Guid id, UpdateHolidayCommand command, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        app.MapPut("holidays/{id:guid}", async (Guid id, UpdateHolidayCommand command, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)
             {

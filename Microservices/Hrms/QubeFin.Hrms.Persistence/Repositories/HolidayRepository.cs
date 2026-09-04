@@ -84,4 +84,5 @@ public class HolidayRepository(QubeFinDataContext context) : IHolidayRepository
             .ToListAsync();
         return entities.Select(x => x.ToDomain());
     }
+  
 }
