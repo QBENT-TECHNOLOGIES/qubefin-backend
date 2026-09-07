@@ -4,7 +4,8 @@ namespace QubeFin.Hrms.Application.ApprovalWorkflows.Models
 {
     public class ApprovalWorkflowSearchRequest : SearchParam
     {
-        public string? category { get; set; }
-        public Guid? organizationUnitTypeId { get; set; }
+        public string? Category { get; set; }
+        public Guid? OrganizationUnitTypeId { get; set; }
+        public Guid? SalaryGradeId { get; set; }
     }
 }

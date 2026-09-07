@@ -8,8 +8,7 @@ using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.ApprovalWorkflows.Commands;
 
-public record CreateApprovalWorkflowCommand(ApprovalWorkflowRequest Workflow, Guid CreatedBy)
-    : IRequest<Result<string>>;
+public record CreateApprovalWorkflowCommand(ApprovalWorkflowRequest Workflow, Guid CreatedBy) : IRequest<Result<string>>;
 
 public class CreateApprovalWorkflowCommandValidator : AbstractValidator<CreateApprovalWorkflowCommand>
 {
@@ -20,19 +19,31 @@ public class CreateApprovalWorkflowCommandValidator : AbstractValidator<CreateAp
     }
 }
 
-internal sealed class CreateApprovalWorkflowCommandHandler(IApprovalWorkflowRepository approvalWorkflowRepository, IUnitOfWork unitOfWork)
-    : IRequestHandler<CreateApprovalWorkflowCommand, Result<string>>
+internal sealed class CreateApprovalWorkflowCommandHandler(IApprovalWorkflowRepository approvalWorkflowRepository, IUnitOfWork unitOfWork) : IRequestHandler<CreateApprovalWorkflowCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(CreateApprovalWorkflowCommand request, CancellationToken cancellationToken)
     {
-        var workflow = CreateWorkflow(request.Workflow, Guid.NewGuid(), request.CreatedBy);
-        await approvalWorkflowRepository.AddAsync(workflow);
+
+        if (request.Workflow.SalaryGradeIds != null && request.Workflow.SalaryGradeIds.Any())
+        {
+            foreach (var gradeId in request.Workflow.SalaryGradeIds)
+            {
+                var workflow = CreateWorkflow(request.Workflow, gradeId, Guid.NewGuid(), request.CreatedBy);
+                await approvalWorkflowRepository.AddAsync(workflow);
+            }
+        }
+        else
+        {
+            var workflow = CreateWorkflow(request.Workflow, null, Guid.NewGuid(), request.CreatedBy);
+            await approvalWorkflowRepository.AddAsync(workflow);
+        }
+
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Ok("Approval workflow created successfully.");
+        return Result.Ok($"Approval workflow created successfully.");
     }
 
-    internal static ApprovalWorkflow CreateWorkflow(ApprovalWorkflowRequest request, Guid workflowId, Guid createdBy)
+    internal static ApprovalWorkflow CreateWorkflow(ApprovalWorkflowRequest request, Guid? salaryGradeId, Guid workflowId, Guid createdBy)
     {
         var steps = request.Steps.Select(step => ApprovalWorkflowStep.Create(
             step.Id.GetValueOrDefault() == Guid.Empty ? Guid.NewGuid() : step.Id!.Value,
@@ -50,7 +61,7 @@ internal sealed class CreateApprovalWorkflowCommandHandler(IApprovalWorkflowRepo
             request.Category.Trim(),
             request.LeaveTypeId,
             request.OrganizationUnitTypeId,
-            request.SalaryGradeId,
+            salaryGradeId,
             request.PostId,
             request.MinimumDays,
             request.MaximumDays,
@@ -68,9 +79,10 @@ internal sealed class ApprovalWorkflowRequestValidator : AbstractValidator<Appro
         RuleFor(x => x.MaximumDays).GreaterThanOrEqualTo(x => x.MinimumDays);
         RuleFor(x => x.Steps).NotEmpty();
         RuleForEach(x => x.Steps).SetValidator(new ApprovalWorkflowStepRequestValidator());
-        RuleFor(x => x.Steps)
-            .Must(steps => steps.Select(x => x.SequenceNo).Distinct().Count() == steps.Count)
-            .WithMessage("Each workflow step must have a unique sequence number.");
+        RuleFor(x => x.Steps).Must(steps => steps.Select(x => x.SequenceNo).Distinct().Count() == steps.Count).WithMessage("Each workflow step must have a unique sequence number.");
+
+        RuleFor(x => x.SalaryGradeIds).Must(ids => ids == null || ids.Distinct().Count() == ids.Count).WithMessage("Duplicate Salary Grades are not allowed.");
+        RuleFor(x => x.SalaryGradeIds).NotEmpty().When(x => x.Category == "LEAVE" || x.Category == "LEAVE_PRAYER").WithMessage("At least one Salary Grade is required for this category.");
     }
 }
 
