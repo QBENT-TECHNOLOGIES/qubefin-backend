@@ -29,7 +29,7 @@ internal sealed class GetEmployeePayrollByIdQueryHandler(QubeFinDataContext cont
         return Result.Ok(new GetPayrollResponse(
             employee.Id,
             employee.BankId,
-            employee.Bank.Name,
+            employee.Bank?.Name,
             employee.BankHolderName,
             employee.BankAccountNo,
             employee.IfscCode,
