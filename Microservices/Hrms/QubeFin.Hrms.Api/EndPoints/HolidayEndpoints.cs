@@ -49,7 +49,7 @@ public class HolidayEndpoints : IEndpoint
         .WithTags("Holidays")
         .RequireAuthorization();
 
-        app.MapPut("holidays/{id:guid}", async (Guid id, UpdateHolidayCommand command, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        app.MapPut("holidays", async ( UpdateHolidayCommand command, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)
             {
@@ -57,7 +57,7 @@ public class HolidayEndpoints : IEndpoint
             }
             var result = await sender.Send(command with
             {
-                Id = id,
+                //Id = id,
                 ModifiedBy = principal.Identity.GetUserId()
             }, cancellationToken);
             return result.ToHttpResult();
