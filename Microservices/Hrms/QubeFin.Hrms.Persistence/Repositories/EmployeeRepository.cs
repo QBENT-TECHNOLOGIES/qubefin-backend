@@ -1,8 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Connections;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Mappers.App;
 using QubeFin.Persistence.Mappers.Hrms;
+using QubeFin.Persistence.Models.Global;
 using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Persistence.Repositories;
@@ -16,6 +19,7 @@ public interface IEmployeeRepository
     Task<bool> GetExsitingEmployeeByCode(Guid? id, string code);
     Task AddDesignationAsync(Guid employeeId, Guid designationId, DateOnly joiningDate);
     Task AddGrossSalaryAsync(Guid employeeId, decimal grossSalary, DateOnly joiningDate);
+    Task<AddressUnit?> GetAdressUnit(Guid administrativeUnitId);
 }
 public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepository
 {
@@ -100,6 +104,75 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
             EffectiveTill = null
         };
         await context.TblEmployeeGrossSalaries.AddAsync(employeeGrossSalary);
+    }
+
+    public async Task<AddressUnit?> GetAdressUnit(Guid administrativeUnitId)
+    {
+        var administrativeTypes = await context.Set<TblAdministrativeUnitType>().AsNoTracking().ToDictionaryAsync(x => x.Id, x => x.Name);
+        var current = await context.Set<TblAdministrativeUnit>().AsNoTracking().FirstOrDefaultAsync(x => x.Id == administrativeUnitId);
+
+        if (current == null)
+            return null;
+
+        var result = new AddressUnit();
+
+        while (current != null)
+        {
+            if (!administrativeTypes.TryGetValue(current.AdministrativeUnitTypeId, out var typeName))
+            {
+                break;
+            }
+
+            switch (typeName)
+            {
+                case "Country":
+                    result.CountryId = current.Id;
+                    result.CountryName = current.Name;
+                    break;
+
+                case "State":
+                    result.StateId = current.Id;
+                    result.StateName = current.Name;
+                    break;
+
+                case "District":
+                    result.DistrictId = current.Id;
+                    result.DistrictName = current.Name;
+                    break;
+
+                case "Block":
+                    result.BlockId = current.Id;
+                    result.BlockName = current.Name;
+                    break;
+
+                case "Gram Panchayat":
+                    result.GramPanchayatId = current.Id;
+                    result.GramPanchayatName = current.Name;
+                    break;
+
+                case "Village":
+                    result.VillageId = current.Id;
+                    result.VillageName = current.Name;
+                    break;
+
+                case "Municipality":
+                    result.MunicipalityId = current.Id;
+                    result.MunicipalityName = current.Name;
+                    break;
+
+                case "Ward":
+                    result.WardId = current.Id;
+                    result.WardName = current.Name;
+                    break;
+            }
+
+            if (current.ParentId == null)
+                break;
+
+            current = await context.Set<TblAdministrativeUnit>().AsNoTracking().FirstOrDefaultAsync(x => x.Id == current.ParentId);
+        }
+
+        return result;
     }
 }
 
