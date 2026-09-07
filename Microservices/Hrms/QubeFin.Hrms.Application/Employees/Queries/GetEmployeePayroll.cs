@@ -11,7 +11,7 @@ public record GetEmployeePayrollByIdQuery(Guid Id) : IRequest<Result<GetPayrollR
 #endregion
 #region --- RESPONSE ---
 public record GetPayrollResponse
-    (Guid Id, Guid? BankId, string? BankHolderName, long? BankAccountNo, string? IfscCode, string? BankBranch, string? BankAccountType,
+    (Guid Id, Guid? BankId, string? BankName, string? BankHolderName, long? BankAccountNo, string? IfscCode, string? BankBranch, string? BankAccountType,
     string? UniversalAccountNumber, string? PFAccountNo, bool HasEsiEligible, string? EsiIpNumber, bool IsPayrollActive);
 
 #endregion
@@ -21,7 +21,7 @@ internal sealed class GetEmployeePayrollByIdQueryHandler(QubeFinDataContext cont
 {
     public async Task<Result<GetPayrollResponse>> Handle(GetEmployeePayrollByIdQuery request, CancellationToken cancellationToken)
     {
-        var employee = await context.TblEmployees.Where(m => m.Id == request.Id).FirstOrDefaultAsync(cancellationToken: cancellationToken);
+        var employee = await context.TblEmployees.Include(m=>m.Bank).Where(m => m.Id == request.Id).FirstOrDefaultAsync(cancellationToken: cancellationToken);
         if (employee is null)
         {
             return new RecordNotFoundError($"Employee not found for the given Id");
@@ -29,6 +29,7 @@ internal sealed class GetEmployeePayrollByIdQueryHandler(QubeFinDataContext cont
         return Result.Ok(new GetPayrollResponse(
             employee.Id,
             employee.BankId,
+            employee.Bank.Name,
             employee.BankHolderName,
             employee.BankAccountNo,
             employee.IfscCode,

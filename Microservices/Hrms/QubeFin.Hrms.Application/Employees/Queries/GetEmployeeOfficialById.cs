@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Models.Global;
 
 namespace QubeFin.Hrms.Application.Employees.Queries;
 
@@ -14,7 +15,9 @@ public record GetOfficialResponse(
     Guid Id,
     string Code,
     Guid? OrganizationUnitTypeId,
+    string?OrganizationUnitTypeName,
     Guid? OrganizationUnitId,
+    string? OrganizationUnitName,
     Guid? CompanyId,
     string? CompanyName,
     Guid? DesignationId,
@@ -42,7 +45,7 @@ internal sealed class GetEmployeeOfficialByIdQueryHandler(QubeFinDataContext con
     {
         var employee = await context
             .TblEmployees
-            .Include(e => e.OrganizationUnit)
+            .Include(e => e.OrganizationUnit).ThenInclude(e=>e.OrganizationUnitType)
             .Include(e => e.Company)
             //.Include(e => e.Department)
             .Include(e => e.TblEmployeeGrossSalaries)
@@ -80,11 +83,12 @@ internal sealed class GetEmployeeOfficialByIdQueryHandler(QubeFinDataContext con
             Id: employee.Id,
             Code: employee.Code,
             OrganizationUnitTypeId: employee.OrganizationUnit?.OrganizationUnitTypeId,
+            OrganizationUnitTypeName: employee.OrganizationUnit?.OrganizationUnitType?.Name,
             OrganizationUnitId: employee.OrganizationUnitId,
+            OrganizationUnitName: employee.OrganizationUnit?.Name,
             CompanyId: employee.CompanyId,
             CompanyName: employee.Company?.Name,
             DesignationId: designationId,
-            //OrganizationUnitName: employee.OrganizationUnit?.Name,
             SalaryGrade: salaryGrade,
             GrossSalary: grossSalary,
             DepartmentId: employee.DepartmentId,
