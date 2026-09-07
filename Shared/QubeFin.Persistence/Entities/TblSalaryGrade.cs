@@ -27,8 +27,6 @@ public partial class TblSalaryGrade
 
     public virtual ICollection<TblDesignationGradeMapping> TblDesignationGradeMappings { get; set; } = new List<TblDesignationGradeMapping>();
 
-    public virtual ICollection<TblEmployeeTransfer> TblEmployeeTransfers { get; set; } = new List<TblEmployeeTransfer>();
-
     public virtual ICollection<TblPayRoll> TblPayRolls { get; set; } = new List<TblPayRoll>();
 
     public virtual ICollection<TblSalaryStructure> TblSalaryStructures { get; set; } = new List<TblSalaryStructure>();
