@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Connections;
+﻿using FluentResults;
+using Microsoft.AspNetCore.Connections;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using QubeFin.Core.Results;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Mappers.App;
@@ -20,6 +22,7 @@ public interface IEmployeeRepository
     Task AddDesignationAsync(Guid employeeId, Guid designationId, DateOnly joiningDate);
     Task AddGrossSalaryAsync(Guid employeeId, decimal grossSalary, DateOnly joiningDate);
     Task<AddressUnit?> GetAdressUnit(Guid administrativeUnitId);
+    Task TransferEmployee(Guid EmployeeId, Guid OrganisationUnitId, Guid DesignationId, decimal GrossSalary, CancellationToken cancellationToken);
 }
 public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepository
 {
@@ -174,5 +177,44 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
 
         return result;
     }
+    public async Task TransferEmployee(Guid EmployeeId, Guid OrganisationUnitId, Guid DesignationId, decimal GrossSalary, CancellationToken cancellationToken)
+    {
+        var employee = await context.TblEmployees.FirstOrDefaultAsync(e => e.Id == EmployeeId, cancellationToken);
+
+        if (employee is null)
+        {
+            throw new Exception($"Employee not found.");
+        }
+
+        DateOnly currentDate = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        var currentTransfer = await context.TblEmployeeTransfers.FirstOrDefaultAsync(t => t.EmployeeId == EmployeeId && t.ToDate == null, cancellationToken);
+
+        if (currentTransfer is not null)
+        {
+            currentTransfer.ToDate = currentDate;
+        }
+        else
+        {
+            throw new Exception($"Employee transfer history not found.");
+        }
+
+        var newTransfer = new TblEmployeeTransfer
+        {
+            Id = Guid.NewGuid(),
+            EmployeeId = EmployeeId,
+            OrganisationUnitId = OrganisationUnitId,
+            DesignationId = DesignationId,
+            GrossSalary = GrossSalary,
+            FromDate = currentDate,
+            ToDate = null,
+            IsApprove = false,
+        };
+
+        await context.TblEmployeeTransfers.AddAsync(newTransfer, cancellationToken);
+
+        employee.OrganizationUnitId = OrganisationUnitId;
+    }
+
 }
 
