@@ -187,6 +187,12 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
         if (employee is null)
             throw new Exception("Employee not found.");
 
+        var existingDesignation = await context.TblEmployeeDesignations.Where(ed => ed.EmployeeId != employeeId && ed.DesignationId == designationId && ed.EffectiveTo == null).AsNoTracking().FirstOrDefaultAsync();
+        if (existingDesignation != null)
+        {
+            throw new InvalidOperationException("The designation is already assigned to another employee.");
+        }
+
         var currentEmployeeDesignation = await context.TblEmployeeDesignations.FirstOrDefaultAsync(d => d.EmployeeId == employeeId && d.EffectiveTo == null, cancellationToken);
 
         if (currentEmployeeDesignation is null)
@@ -227,10 +233,10 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
                     cancellationToken);
             }
 
-            if(currentEmployeeDesignation.DesignationId != designationId || designationSalaryGrade.GradeId != salaryGradeId)
+            if (currentEmployeeDesignation.DesignationId != designationId || designationSalaryGrade.GradeId != salaryGradeId)
             {
-                designationSalaryGrade.IsActive = false; 
-                
+                designationSalaryGrade.IsActive = false;
+
                 await context.TblDesignationGradeMappings.AddAsync(
                     new TblDesignationGradeMapping
                     {
