@@ -22,39 +22,45 @@ internal class ValidtateLoginCommandHandler(IAuthRepository authRepository, IUni
 {
     public async Task<Result<ValidtateLoginResponse>> Handle(ValidateLoginCommand request, CancellationToken cancellationToken)
     {
-        var user = await authRepository.ValidateLoginAsync(request.UserName, request.Password);
-        if (user is null)
+        try
         {
-            return new RecordNotFoundError($"User with email {request.UserName} not found");
-        }
-
-        if (!user.IsActive)
-        {
-            return new ValidationError("User is inactive. Please ask administrator to activate the user.");
-        }
-
-        var sessionToken = SecureTokenGenerator.Generate(32);
-
-        var userSession = UserSession.Create(Guid.NewGuid(), user.Id, sessionToken, request.DeviceId, request.UserAgent);
-        await authRepository.CreateUserSessionAsync(userSession);
-       
-        if (request.DeviceId is not null)
-        {
-            var deviceStatus = await authRepository.ValidateDevice(user.Id, request.DeviceId);
-            if (deviceStatus is null) 
+            var user = await authRepository.ValidateLoginAsync(request.UserName, request.Password);
+            if (user is null)
             {
-                var newDevice = UserDevice.Create(Guid.NewGuid(), user.Id, request.DeviceId);
-                authRepository.RegisterDevice(newDevice);        
+                return new RecordNotFoundError($"User with email {request.UserName} not found");
             }
-            else if (!deviceStatus.Value)
+
+            if (!user.IsActive)
             {
-                return new ValidationError("Device is allocated to another user, please contact admin !");
+                return new ValidationError("User is inactive. Please ask administrator to activate the user.");
             }
+
+            var sessionToken = SecureTokenGenerator.Generate(32);
+
+            var userSession = UserSession.Create(Guid.NewGuid(), user.Id, sessionToken, request.DeviceId, request.UserAgent);
+            await authRepository.CreateUserSessionAsync(userSession);
+
+            if (request.DeviceId is not null)
+            {
+                var deviceStatus = await authRepository.ValidateDevice(user.Id, request.DeviceId);
+                if (deviceStatus is null)
+                {
+                    var newDevice = UserDevice.Create(Guid.NewGuid(), user.Id, request.DeviceId);
+                    authRepository.RegisterDevice(newDevice);
+                }
+                else if (!deviceStatus.Value)
+                {
+                    return new ValidationError("Device is allocated to another user, please contact admin !");
+                }
+            }
+
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+            return Result.Ok(new ValidtateLoginResponse(sessionToken));
         }
-
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        return Result.Ok(new ValidtateLoginResponse(sessionToken));
+        catch (Exception ex)
+        {
+            return Result.Fail(new ValidationError($"{ex.Message}"));
+        }
     }
 }
 #endregion

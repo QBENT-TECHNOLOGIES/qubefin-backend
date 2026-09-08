@@ -124,7 +124,7 @@ public class AuthRepository(QubeFinDataContext context) : IAuthRepository
 
         if (userEntity is null)
         {
-            return null;
+            throw new Exception($"User not found for username: {userName}");
         }
 
         var appUser = new AppUser(userName, password);
@@ -133,10 +133,8 @@ public class AuthRepository(QubeFinDataContext context) : IAuthRepository
 
         if (result == PasswordVerificationResult.Failed)
         {
-            return null;
+           throw new Exception($"Invalid password for username: {userName}");
         }
-
-
         return userEntity.ToDomain();
     }
 
