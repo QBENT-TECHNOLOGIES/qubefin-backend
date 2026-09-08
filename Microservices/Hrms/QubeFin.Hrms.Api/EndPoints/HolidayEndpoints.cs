@@ -3,8 +3,8 @@ using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
 using QubeFin.Core.Results;
 using QubeFin.Hrms.Application.Holidays.Commands;
-using QubeFin.Hrms.Application.Holidays.Queries;
 using QubeFin.Hrms.Application.Holidays.Models;
+using QubeFin.Hrms.Application.Holidays.Queries;
 using System.Security.Claims;
 
 namespace QubeFin.Hrms.Api.Endpoints;
@@ -72,6 +72,21 @@ public class HolidayEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         .WithSummary("Get my holidays")
+        .WithTags("Holidays")
+        .RequireAuthorization();
+
+        app.MapGet("holidays/calendar", async (ClaimsPrincipal principal, ISender sender, int year, int month, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Forbid();
+            }
+            Guid employeeId = principal.Identity.GetEmployeeId();
+
+            var result = await sender.Send(new GetCalendarDaysByEmployeeQuery(employeeId, year, month), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get calendar days for an employee")
         .WithTags("Holidays")
         .RequireAuthorization();
     }
