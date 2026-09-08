@@ -21,6 +21,7 @@ namespace QubeFin.Hrms.Application.Employees.Models
         public Guid? OrganisationUnitTypeId { get; set; }
         public Guid? OrganisationUnitId { get; set; }
         public Guid? DesignationId { get; set; }
+        public Guid? SalaryGradeId { get; set; }
         public decimal? GrossSalary { get; set; } = 0;
     }
 
@@ -29,6 +30,7 @@ namespace QubeFin.Hrms.Application.Employees.Models
         public Guid EmployeeId { get; set; }
         public Guid OrganisationUnitId { get; set; }
         public Guid DesignationId { get; set; }
+        public Guid SalaryGradeId { get; set; }
         public decimal GrossSalary { get; set; } = 0;
     }
 }

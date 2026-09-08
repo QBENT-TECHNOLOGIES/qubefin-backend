@@ -27,8 +27,7 @@ public record GetEmployeeTransferHistoryResponse(List<EmployeeTransferHistoryRes
 
 #endregion
 #region --- HANDLER ---
-internal sealed class GetEmployeeTransferHistoryQueryHandler(QubeFinDataContext context)
-    : IRequestHandler<GetEmployeeTransferHistoryQuery, Result<GetEmployeeTransferHistoryResponse>>
+internal sealed class GetEmployeeTransferHistoryQueryHandler(QubeFinDataContext context)    : IRequestHandler<GetEmployeeTransferHistoryQuery, Result<GetEmployeeTransferHistoryResponse>>
 {
     public async Task<Result<GetEmployeeTransferHistoryResponse>> Handle(GetEmployeeTransferHistoryQuery request, CancellationToken cancellationToken)
     {
@@ -51,6 +50,17 @@ internal sealed class GetEmployeeTransferHistoryQueryHandler(QubeFinDataContext 
             employee.TblEmployeeDesignations.Where(ed => ed.EffectiveTo == null).First()?.DesignationId :
             employee.TblEmployeeDesignations.OrderByDescending(ed => ed.EffectiveFrom).First()?.DesignationId;
 
+        var employeeDesignationGrade = designationId == null ? null : await context
+            .TblDesignationGradeMappings.Include(e => e.Grade)
+            .Where(m => m.DesignationId == designationId)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken: cancellationToken);
+
+        Guid? salaryGradeId = employeeDesignationGrade == null ? null :
+            employeeDesignationGrade.Any(dg => dg.IsActive) ?
+            employeeDesignationGrade.First(dg => dg.IsActive).Grade?.Id :
+            employeeDesignationGrade.FirstOrDefault()?.Grade?.Id;
+
         decimal? grossSalary = !employee.TblEmployeeGrossSalaries.Any() ? null :
             employee.TblEmployeeGrossSalaries.Any(eg => eg.EffectiveTill == null) ?
             employee.TblEmployeeGrossSalaries.Where(eg => eg.EffectiveTill == null).First()?.GrossSalary :
@@ -62,6 +72,7 @@ internal sealed class GetEmployeeTransferHistoryQueryHandler(QubeFinDataContext 
             OrganisationUnitTypeId = employee.OrganizationUnit?.OrganizationUnitTypeId,
             OrganisationUnitId = employee.OrganizationUnitId,
             DesignationId = designationId,
+            SalaryGradeId = salaryGradeId,
             GrossSalary = grossSalary
         };
 
@@ -76,7 +87,7 @@ internal sealed class GetEmployeeTransferHistoryQueryHandler(QubeFinDataContext 
             OrganisationUnit = m.OrganisationUnit.Name,
             OrganisationUnitType = m.OrganisationUnit.OrganizationUnitType.Name,
             Designation = m.Designation.Name,
-            SalaryGrade = m.Designation.TblDesignationGradeMappings.FirstOrDefault()?.Grade.Name,
+            SalaryGrade = m.Designation != null && m.Designation.TblDesignationGradeMappings.Any() ? m.Designation?.TblDesignationGradeMappings?.FirstOrDefault()?.Grade.Name : null,
             GrossSalary = m.GrossSalary,
         }).ToList();
         

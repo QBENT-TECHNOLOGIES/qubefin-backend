@@ -14,13 +14,14 @@ public record TransferEmployeeCommand(EmployeeCurrentOfficialInfoRequest employe
 #endregion
 
 #region --- VALIDATION ---
-public class TransferEmployeeCommandValidator    : AbstractValidator<TransferEmployeeCommand>
+public class TransferEmployeeCommandValidator : AbstractValidator<TransferEmployeeCommand>
 {
     public TransferEmployeeCommandValidator()
     {
         RuleFor(x => x.employee.EmployeeId).NotEmpty().WithMessage("Employee is required.");
         RuleFor(x => x.employee.OrganisationUnitId).NotEmpty().WithMessage("Organisation Unit is required.");
         RuleFor(x => x.employee.DesignationId).NotEmpty().WithMessage("Designation is required.");
+        RuleFor(x => x.employee.SalaryGradeId).NotEmpty().WithMessage("Salary Grade is required.");
         RuleFor(x => x.employee.GrossSalary).GreaterThanOrEqualTo(0).WithMessage("Gross Salary cannot be negative.");
     }
 }
@@ -34,12 +35,12 @@ internal sealed class TransferEmployeeCommandHandler(IEmployeeRepository employe
     {
         try
         {
-            await employeeRepository.TransferEmployee(request.employee.EmployeeId, request.employee.OrganisationUnitId, request.employee.DesignationId, request.employee.GrossSalary, cancellationToken);
+            await employeeRepository.TransferEmployee(request.employee.EmployeeId, request.employee.OrganisationUnitId, request.employee.DesignationId, request.employee.SalaryGradeId, request.employee.GrossSalary, cancellationToken);
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
             return Result.Ok($"Employee transferred successfully.");
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             throw new Exception(ex.ToString());
         }

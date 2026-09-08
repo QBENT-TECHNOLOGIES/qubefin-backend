@@ -13,6 +13,8 @@ public partial class TblEmployeeTransfer
 
     public Guid DesignationId { get; set; }
 
+    public Guid SalaryGradeId { get; set; }
+
     public decimal GrossSalary { get; set; }
 
     public DateOnly FromDate { get; set; }
@@ -26,4 +28,6 @@ public partial class TblEmployeeTransfer
     public virtual TblEmployee Employee { get; set; } = null!;
 
     public virtual TblOrganizationUnit OrganisationUnit { get; set; } = null!;
+
+    public virtual TblSalaryGrade SalaryGrade { get; set; } = null!;
 }

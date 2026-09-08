@@ -1205,6 +1205,11 @@ public partial class QubeFinDataContext : DbContext
                 .HasForeignKey(d => d.OrganisationUnitId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_EmployeeTransfer_Tbl_OrganizationUnit");
+
+            entity.HasOne(d => d.SalaryGrade).WithMany(p => p.TblEmployeeTransfers)
+                .HasForeignKey(d => d.SalaryGradeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_EmployeeTransfer_Tbl_SalaryGrade");
         });
 
         modelBuilder.Entity<TblFinancialInstitute>(entity =>
