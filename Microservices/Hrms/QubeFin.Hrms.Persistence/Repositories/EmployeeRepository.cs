@@ -203,7 +203,7 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
         if (currentTransfer is null)
             throw new Exception("Employee transfer history not found.");
 
-        var designationSalaryGrade = await context.TblDesignationGradeMappings.FirstOrDefaultAsync(d => d.DesignationId == designationId && d.GradeId == salaryGradeId && d.IsActive, cancellationToken);
+        var designationSalaryGrade = await context.TblDesignationGradeMappings.FirstOrDefaultAsync(d => d.DesignationId == designationId && d.IsActive, cancellationToken);
 
         if (designationSalaryGrade is null)
             throw new Exception("Employee designation is not mapped with salary grade.");

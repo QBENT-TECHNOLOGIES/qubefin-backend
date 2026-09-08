@@ -77,7 +77,7 @@ internal sealed class GetEmployeeTransferHistoryQueryHandler(QubeFinDataContext 
         };
 
         var transferHistory = await context.TblEmployeeTransfers.Include(m => m.OrganisationUnit).ThenInclude(m => m.OrganizationUnitType)
-                            .Include(m => m.Designation).ThenInclude(d => d.TblDesignationGradeMappings).ThenInclude(m => m.Grade).AsNoTracking().Where(m => m.EmployeeId == request.Id).ToListAsync(cancellationToken);
+                            .Include(m => m.Designation).Include(m => m.SalaryGrade).AsNoTracking().Where(m => m.EmployeeId == request.Id).ToListAsync(cancellationToken);
 
 
 
@@ -87,9 +87,11 @@ internal sealed class GetEmployeeTransferHistoryQueryHandler(QubeFinDataContext 
             OrganisationUnit = m.OrganisationUnit.Name,
             OrganisationUnitType = m.OrganisationUnit.OrganizationUnitType.Name,
             Designation = m.Designation.Name,
-            SalaryGrade = m.Designation != null && m.Designation.TblDesignationGradeMappings.Any() ? m.Designation?.TblDesignationGradeMappings?.FirstOrDefault()?.Grade.Name : null,
+            SalaryGrade = m.SalaryGrade.Name,
             GrossSalary = m.GrossSalary,
-        }).ToList();
+            FromDate= m.FromDate,
+            ToDate=m.ToDate
+        }).OrderByDescending(m =>m.FromDate).ToList();
         
         return Result.Ok(new GetEmployeeTransferHistoryResponse(EmployeeTransferHistory, CurrentOfficialInfo));
     }

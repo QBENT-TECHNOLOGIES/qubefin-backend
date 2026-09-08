@@ -42,7 +42,7 @@ internal sealed class TransferEmployeeCommandHandler(IEmployeeRepository employe
         }
         catch (Exception ex)
         {
-            throw new Exception(ex.ToString());
+            return Result.Fail(ex.Message);
         }
     }
 }
