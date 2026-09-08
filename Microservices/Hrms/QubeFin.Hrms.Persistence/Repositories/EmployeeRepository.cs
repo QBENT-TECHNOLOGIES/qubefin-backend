@@ -213,6 +213,9 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
         if (currentGrossSalary is null)
             throw new Exception("Employee gross salary is not mapped.");
 
+        if (employee.OrganizationUnitId == organisationUnitId && currentEmployeeDesignation.DesignationId == designationId && designationSalaryGrade.GradeId == salaryGradeId && currentGrossSalary.GrossSalary == grossSalary)
+            throw new Exception("No changes found. The employee is already assigned to the selected organisation unit, designation, salary grade, and gross salary.");
+
         await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
 
         try
