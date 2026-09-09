@@ -1,6 +1,7 @@
 ﻿using FluentResults;
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
 using QubeFin.Hrms.Application.Employees.Models;
 using QubeFin.Hrms.Persistence.Repositories;
@@ -23,6 +24,7 @@ public class UpdateEmployeeOfficialCommandValidator : AbstractValidator<UpdateEm
         //RuleFor(x => x.OfficialInfo.CompanyId).NotEmpty();
         RuleFor(x => x.OfficialInfo.OrganizationUnitId).NotEmpty().WithMessage("Organization Unit Id is required.");
         RuleFor(x => x.OfficialInfo.DesignationId).NotEmpty().WithMessage("Designation Id is required.");
+        RuleFor(x => x.OfficialInfo.SalaryGradeId).NotEmpty().WithMessage("Salary Grade Id is required.");
         RuleFor(x => x.OfficialInfo.EmployementType).NotEmpty().WithMessage("Employment Type is required.");
         RuleFor(x => x.OfficialInfo.OfficialEmail)
             .NotEmpty().WithMessage("Official Email is required.")
@@ -66,6 +68,11 @@ internal sealed class UpdateEmployeeOfficialCommandHandler(IEmployeeRepository e
             {
                 await employeeRepository.AddGrossSalaryAsync(employee.Id, request.OfficialInfo.GrossSalary.Value, request.OfficialInfo.DateOfJoining.Value);
             }
+            if ((employee.GrossSalaries == null || !employee.GrossSalaries.Any()) && request.OfficialInfo.GrossSalary > 0 && (employee.Designations == null || !employee.Designations.Any()) && request.OfficialInfo.DesignationId != null)
+            {
+                await employeeRepository.TransferEntry(employee.Id, request.OfficialInfo.OrganizationUnitId.Value, request.OfficialInfo.DesignationId.Value, request.OfficialInfo.SalaryGradeId.Value, request.OfficialInfo.GrossSalary.Value, cancellationToken);
+            }
+
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Ok($"Employee official information updated successfully for Name : {employee.PersonalInfo.FirstName} {employee.PersonalInfo.LastName}");
         }

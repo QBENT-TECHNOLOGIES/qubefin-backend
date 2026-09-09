@@ -55,6 +55,8 @@ public partial class TblOrganizationUnit
 
     public virtual ICollection<TblEmployeeLop> TblEmployeeLops { get; set; } = new List<TblEmployeeLop>();
 
+    public virtual ICollection<TblEmployeeTransfer> TblEmployeeTransfers { get; set; } = new List<TblEmployeeTransfer>();
+
     public virtual ICollection<TblEmployee> TblEmployees { get; set; } = new List<TblEmployee>();
 
     public virtual ICollection<TblLoanApplication> TblLoanApplications { get; set; } = new List<TblLoanApplication>();
