@@ -38,7 +38,7 @@ internal sealed class ForgotPasswordCommandHandler(IAuthRepository authRepositor
         var user = await authRepository.GetUserByUserNameAsync(request.user.UserName);
         if (user is null)
         {
-            return new RecordNotFoundError($"User with email {request.user.UserName} not found");
+            return new RecordNotFoundError($"User with username {request.user.UserName} not found");
         }
 
         if (string.IsNullOrWhiteSpace(user.MfaSecret))

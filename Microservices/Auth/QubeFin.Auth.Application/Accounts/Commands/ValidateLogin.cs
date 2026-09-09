@@ -27,7 +27,7 @@ internal class ValidtateLoginCommandHandler(IAuthRepository authRepository, IUni
             var user = await authRepository.ValidateLoginAsync(request.UserName, request.Password);
             if (user is null)
             {
-                return new RecordNotFoundError($"User with email {request.UserName} not found");
+                return new RecordNotFoundError($"User with username {request.UserName} not found");
             }
 
             if (!user.IsActive)
