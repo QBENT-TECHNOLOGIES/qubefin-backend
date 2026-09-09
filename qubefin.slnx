@@ -37,6 +37,12 @@
     <Project Path="Microservices/Payroll/QubeFin.Payroll.Infrastructure/QubeFin.Payroll.Infrastructure.csproj" />
     <Project Path="Microservices/Payroll/QubeFin.Payroll.Persistence/QubeFin.Payroll.Persistence.csproj" />
   </Folder>
+  <Folder Name="/Microservices/Report/">
+    <Project Path="Microservices/Report/QubeFin.Report.Api/QubeFin.Report.Api.csproj" />
+    <Project Path="Microservices/Report/QubeFin.Report.Application/QubeFin.Report.Application.csproj" Id="7df56ef1-6208-4ade-8342-4909e133b2f1" />
+    <Project Path="Microservices/Report/QubeFin.Report.Infrastructure/QubeFin.Report.Infrastructure.csproj" Id="ab98ec8b-e86c-4842-9bcb-33e171cb6d88" />
+    <Project Path="Microservices/Report/QubeFin.Report.Persistence/QubeFin.Report.Persistence.csproj" Id="a1d8c826-fb74-4645-8f86-380bf796e37c" />
+  </Folder>
   <Folder Name="/Shared/">
     <Project Path="Shared/QubeFin.Core/QubeFin.Core.csproj" Id="62c1de18-e482-453c-9a21-7026846522c6" />
     <Project Path="Shared/QubeFin.Persistence/QubeFin.Persistence.csproj" Id="85068673-5466-4a06-8539-f22197f39896" />
