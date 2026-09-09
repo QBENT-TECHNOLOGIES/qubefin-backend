@@ -5,7 +5,10 @@
         public Guid Id { get; set; }
         public string Category { get; set; } = string.Empty;
         public string? OrganizationUnitTypeName { get; set; }
+        public Guid? OrganizationUnitTypeId { get; set; }
         public string? LeaveTypeName { get; set; }
+        public Guid? LeaveTypeId { get; set; }
+        public Guid? PostId { get; set; }
         public string? PostName { get; set; }
         public string? SalaryGradesName { get; set; }
         public int? MinimumDays { get; set; }
