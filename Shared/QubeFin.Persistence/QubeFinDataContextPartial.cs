@@ -30,6 +30,7 @@ public partial class QubeFinDataContext : DbContext, IUnitOfWork
         modelBuilder.Entity<Payslip>().HasNoKey().ToView(null);
         modelBuilder.Entity<LeaveTypeWiseBalanceResponse>().HasNoKey().ToView(null);
         modelBuilder.Entity<LastWorkingDateResult>().HasNoKey().ToView(null);
+        modelBuilder.Entity<EmployeeMonthlyCalendarResponse>().HasNoKey().ToView(null);
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

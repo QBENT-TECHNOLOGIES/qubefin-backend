@@ -286,5 +286,34 @@ public class EmployeeEndpoints : IEndpoint
         })
         .WithSummary("Search Employees by Text")
         .RequireAuthorization();
+        #region Employee Transfer
+
+        app.MapGet("employees/transfer/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+            var command = new GetEmployeeTransferHistoryQuery(id);
+            var result = await sender.Send(command);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get Employee Transfer History")
+        .RequireAuthorization();
+
+        app.MapPost("employees/transfer", async (ClaimsPrincipal principal, [FromBody] EmployeeCurrentOfficialInfoRequest request, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+
+            var command = new TransferEmployeeCommand(request);
+            var result = await sender.Send(command);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Transfer Employee")
+        .RequireAuthorization();
+        #endregion
     }
 }

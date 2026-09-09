@@ -10,6 +10,7 @@ public class OfficialInfoRequest
     public Guid? OrganizationUnitId { get; set; }
     public Guid? DepartmentId { get; set; }
     public Guid? DesignationId { get; set; }
+    public Guid? SalaryGradeId { get; set; }
     public string? EmployementType { get; set; }
     public DateOnly? DateOfJoining { get; set; }
     public DateOnly? DateOfConfirmation { get; set; }
