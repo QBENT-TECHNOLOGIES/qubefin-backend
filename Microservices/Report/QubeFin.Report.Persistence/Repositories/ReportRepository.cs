@@ -1,29 +1,32 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using NPOI.SS.Formula.Functions;
-using NPOI.XSSF.UserModel;
-using QubeFin.Payroll.Persistence.Repositories.ExcelHelpers;
 using QubeFin.Persistence;
-using System;
-using System.Collections.Generic;
+using QubeFin.Report.Persistence.Repositories.ExcelHelpers;
+using QubeFin.Report.Persistence.Repositories.ExcelHelpers.CustomHelper;
 using System.Data;
 using System.Net;
-using System.Text;
-using static QubeFin.Payroll.Persistence.Repositories.ExcelHelpers.ExcelReportHelper;
+using static QubeFin.Report.Persistence.Repositories.ExcelHelpers.ExcelReportHelper;
 
-namespace QubeFin.Payroll.Persistence.Repositories
+namespace QubeFin.Report.Persistence.Repositories
 {
     public interface IReportRepository
     {
+        #region GENERIC (SSRS, NPOI, LINQ) EXCEL REPORT
         Task<ReportFile> GenerateSSRSAsync(string reportName, string format, Dictionary<string, string> parameters, CancellationToken cancellationToken);
         Task<ReportFile> GenerateExcelAsync(string storedProcedure, Dictionary<string, object?> parameters, Guid companyId, ExcelReportOptions options, CancellationToken cancellationToken);
+        Task<ReportFile> GenerateExcelFromLINQAsync<T>(IEnumerable<T> data, Guid companyId, ExcelReportOptions options, string fileName, CancellationToken cancellationToken);
+        #endregion
+
+        #region CUSTOM
         Task<ReportFile> GenerateBankSalaryDisbursementExcelAsync(string storedProcedure, Dictionary<string, object?> parameters, Guid companyId, int month, int year, Guid employeeId, CancellationToken cancellationToken);
         Task<ReportFile> GenerateEmployeeSalaryExcelAsync(string storedProcedure, Dictionary<string, object?> parameters, Guid companyId, int month, int year, CancellationToken cancellationToken);
+        #endregion
     }
 
     public record ReportFile(Stream FileStream, string ContentType, string FileName);
     public class ReportRepository(IConfiguration configuration, IHttpClientFactory httpClientFactory, QubeFinDataContext context) : IReportRepository
     {
+        #region SSRS
         public async Task<ReportFile> GenerateSSRSAsync(string reportName, string format, Dictionary<string, string> parameters, CancellationToken cancellationToken)
         {
             var reportServerHost = configuration["ReportServer:Host"] ?? throw new InvalidOperationException("Report server host is not configured.");
@@ -82,6 +85,9 @@ namespace QubeFin.Payroll.Persistence.Repositories
             var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
             return new ReportFile(stream, contentType, $"{reportName}.{extension}");
         }
+        #endregion
+
+        #region NPOI
         public async Task<ReportFile> GenerateExcelAsync(string storedProcedure, Dictionary<string, object?> parameters, Guid companyId, ExcelReportOptions options, CancellationToken cancellationToken)
         {
             var dataTable = await ReportDataHelper.ExecuteStoredProcedureAsync(configuration.GetConnectionString("DataConnection"), storedProcedure, parameters, cancellationToken);
@@ -89,11 +95,47 @@ namespace QubeFin.Payroll.Persistence.Repositories
             var stream = ExcelReportHelper.CreateExcel(dataTable, options, logoBytes);
             return new ReportFile(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"{storedProcedure}.xlsx");
         }
+        #endregion
 
+        #region LINQ-NPOI
+        public async Task<ReportFile> GenerateExcelFromLINQAsync<T>(IEnumerable<T> data, Guid companyId, ExcelReportOptions options, string fileName, CancellationToken cancellationToken)
+        {
+            var logoBytes = await GetLogoAsync(companyId, cancellationToken);
+            var stream = ExcelReportHelper.CreateExcel(data, options, logoBytes);
+            return new ReportFile(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"{fileName}.xlsx");
+        }
+        #endregion
+
+        #region CUSTOM REPORTS
+        public async Task<ReportFile> GenerateBankSalaryDisbursementExcelAsync(string storedProcedure, Dictionary<string, object?> parameters, Guid companyId, int month, int year, Guid employeeId, CancellationToken cancellationToken)
+        {
+
+            var getLoginInfo = await context.TblEmployeeDesignations.Include(m => m.Designation).Include(e => e.Employee).Where(m => m.EmployeeId == employeeId && m.EffectiveTo == null).OrderByDescending(m => m.EffectiveFrom).FirstOrDefaultAsync(cancellationToken);
+            string employeeName = getLoginInfo == null ? string.Empty : getLoginInfo.Employee.FullName;
+            string designation = getLoginInfo == null ? string.Empty : getLoginInfo.Designation.Name;
+            string employeeCode = getLoginInfo == null ? string.Empty : getLoginInfo.Employee.Code;
+
+            var dataTable = await ReportDataHelper.ExecuteStoredProcedureAsync(configuration.GetConnectionString("DataConnection"), storedProcedure, parameters, cancellationToken);
+
+            var logoBytes = await GetLogoAsync(companyId, cancellationToken);
+            var stream = BankSalaryDisbursementExcelHelper.CreateBankSalaryDisbursementExcel(dataTable, logoBytes, month, year, employeeName, designation, employeeCode);
+
+            return new ReportFile(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"{storedProcedure}.xlsx");
+        }
+        public async Task<ReportFile> GenerateEmployeeSalaryExcelAsync(string storedProcedure, Dictionary<string, object?> parameters, Guid companyId, int month, int year, CancellationToken cancellationToken)
+        {
+            var dataTable = await ReportDataHelper.ExecuteStoredProcedureAsync(configuration.GetConnectionString("DataConnection"), storedProcedure, parameters, cancellationToken);
+            var logoBytes = await GetLogoAsync(companyId, cancellationToken);
+            var stream = EmployeeSalaryExcelHelper.CreateEmployeeSalaryExcel(dataTable, logoBytes, month, year);
+            return new ReportFile(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "EmployeeSalary.xlsx");
+        }
+        #endregion
+
+        #region HELPERS
         private async Task<byte[]?> GetLogoAsync(Guid companyId, CancellationToken cancellationToken)
         {
             var companyEntity = await context.TblCompanies.AsNoTracking().FirstOrDefaultAsync(m => m.Id == companyId) ?? throw new Exception("Company not found.");
-            
+
             if (string.IsNullOrEmpty(companyEntity.LogoUrl))
             {
                 throw new Exception("Please upload the logo for this company.");
@@ -107,29 +149,6 @@ namespace QubeFin.Payroll.Persistence.Repositories
 
             return await client.GetByteArrayAsync(logoUrl, cancellationToken);
         }
-
-        public async Task<ReportFile> GenerateBankSalaryDisbursementExcelAsync(string storedProcedure,Dictionary<string, object?> parameters,Guid companyId, int month, int year, Guid employeeId, CancellationToken cancellationToken)
-        {
-
-            var getLoginInfo = await context.TblEmployeeDesignations.Include(m => m.Designation).Include(e => e.Employee).Where(m => m.EmployeeId == employeeId && m.EffectiveTo == null).OrderByDescending(m => m.EffectiveFrom).FirstOrDefaultAsync(cancellationToken);
-            string employeeName = getLoginInfo == null ? string.Empty : getLoginInfo.Employee.FullName;
-            string designation = getLoginInfo == null ? string.Empty : getLoginInfo.Designation.Name;
-            string employeeCode = getLoginInfo == null ? string.Empty : getLoginInfo.Employee.Code;
-
-            var dataTable = await ReportDataHelper.ExecuteStoredProcedureAsync(configuration.GetConnectionString("DataConnection"),storedProcedure,parameters,cancellationToken);
-
-            var logoBytes = await GetLogoAsync(companyId, cancellationToken);
-            var stream = ExcelReportHelper.CreateBankSalaryDisbursementExcel(dataTable,logoBytes, month, year, employeeName, designation, employeeCode);
-
-            return new ReportFile(stream,"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",$"{storedProcedure}.xlsx");
-        }
-
-        public async Task<ReportFile> GenerateEmployeeSalaryExcelAsync(string storedProcedure, Dictionary<string, object?> parameters, Guid companyId, int month, int year, CancellationToken cancellationToken)
-        {
-            var dataTable = await ReportDataHelper.ExecuteStoredProcedureAsync(configuration.GetConnectionString("DataConnection"), storedProcedure, parameters, cancellationToken);
-            var logoBytes = await GetLogoAsync(companyId, cancellationToken);
-            var stream = EmployeeSalaryExcelHelper.CreateEmployeeSalaryExcel(dataTable, logoBytes, month, year);
-            return new ReportFile(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "EmployeeSalary.xlsx");
-        }
+        #endregion
     }
 }

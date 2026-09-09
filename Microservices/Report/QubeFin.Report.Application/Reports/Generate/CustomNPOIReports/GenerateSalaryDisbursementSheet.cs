@@ -1,18 +1,9 @@
 ﻿using FluentResults;
 using FluentValidation;
 using MediatR;
-using QubeFin.Payroll.Persistence.Repositories;
-using QubeFin.Persistence.Models.App;
-using QubeFin.Persistence.Models.Hrms;
-using System.Reflection;
+using QubeFin.Report.Persistence.Repositories;
 
-namespace QubeFin.Payroll.Application.Payrolls.Report;
-
-internal class GenerateSalaryDisbursementSheet
-{
-}
-
-
+namespace QubeFin.Report.Application.Reports.Generate.CustomNPOIReports;
 
 #region --- COMMAND ---
 

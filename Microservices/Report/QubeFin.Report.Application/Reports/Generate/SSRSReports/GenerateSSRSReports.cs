@@ -1,9 +1,10 @@
-﻿using FluentResults;
+﻿
+using FluentResults;
 using FluentValidation;
 using MediatR;
-using QubeFin.Payroll.Persistence.Repositories;
+using QubeFin.Report.Persistence.Repositories;
 
-namespace QubeFin.Payroll.Application.Payrolls.Report;
+namespace QubeFin.Report.Application.Reports.Generate.SSRSReports;
 #region --- COMMAND ---
 public record GenerateSSRSReportsCommand(string ReportName, string Format, Dictionary<string, string> Parameters) : IRequest<Result<GenerateSSRSReportsResponse>>;
 

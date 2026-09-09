@@ -1,15 +1,17 @@
+﻿using FluentResults;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using QubeFin.Hrms.Application.Attendances.Models;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Entities;
+using QubeFin.Report.Application.Reports.Models;
 
-namespace QubeFin.Hrms.Application.Attendances.Queries;
+namespace QubeFin.Report.Application.Reports.Queries;
+
 
 #region --- QUERY ---
-public record GetAttendanceHistoryByQuery(AttendanceSearchRequest searchParam, Guid employeeId) : IRequest<GetAllAttendanceHistoryResponse>;
+public record GetAttendanceHistoryByQuery(AttendanceSearchRequest searchParam, Guid employeeId) : IRequest<Result<List<AttendanceSearchResult>>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -25,35 +27,36 @@ public class GetAttendanceHistoryByQueryValidator : AbstractValidator<GetAttenda
 }
 #endregion
 
-#region --- RESPONSE ---
-public record GetAllAttendanceHistoryResponse(IReadOnlyList<AttendanceSearchResult> results, int TotalRecords);
-#endregion
-
 #region --- HANDLER ---
-internal sealed class GetAttendanceHistoryByQueryHandler(QubeFinDataContext context, IMemoryCache cache) : IRequestHandler<GetAttendanceHistoryByQuery, GetAllAttendanceHistoryResponse>
+internal sealed class GetAttendanceHistoryByQueryHandler(QubeFinDataContext context, IMemoryCache cache) : IRequestHandler<GetAttendanceHistoryByQuery, Result<List<AttendanceSearchResult>>>
 {
     private const string OrgUnitCacheKey = "org-units-flat";
     private static readonly TimeSpan OrgUnitCacheTtl = TimeSpan.FromMinutes(10);
-    public async Task<GetAllAttendanceHistoryResponse> Handle(GetAttendanceHistoryByQuery request, CancellationToken cancellationToken)
+    public async Task<Result<List<AttendanceSearchResult>>> Handle(GetAttendanceHistoryByQuery request, CancellationToken cancellationToken)
     {
-        var organizationUnitIds = await ResolveOrganizationUnitIdsAsync(request.employeeId, cancellationToken);
+        try
+        {
+            var organizationUnitIds = await ResolveOrganizationUnitIdsAsync(request.employeeId, cancellationToken);
 
-        var query = BuildAttendanceQuery(request.searchParam, organizationUnitIds);
-        query = ApplySearch(query, request.searchParam.SearchText);
-        query = ApplyStatusFilter(query, request.searchParam.Status);
-        query = ApplySort(query, request.searchParam.SortOn, request.searchParam.SortDirection);
+            var query = BuildAttendanceQuery(request.searchParam,organizationUnitIds);
+            query = ApplySearch(query, request.searchParam.SearchText);
+            query = ApplyStatusFilter(query, request.searchParam.Status);
+            query = ApplySort(query, request.searchParam.SortOn, request.searchParam.SortDirection);
 
-        var total = await query.CountAsync(cancellationToken);
+            var skip = request.searchParam.PageIndex * request.searchParam.PageSize;
+            var data = await query
+                .Skip(skip)
+                .Take(request.searchParam.PageSize)
+                .ToListAsync(cancellationToken);
 
-        var skip = request.searchParam.PageIndex * request.searchParam.PageSize;
-        var data = await query
-            .Skip(skip)
-            .Take(request.searchParam.PageSize)
-            .ToListAsync(cancellationToken);
+            var attendances = data.Select(MapToResult).ToList();
 
-        var attendances = data.Select(MapToResult).ToList();
-
-        return new GetAllAttendanceHistoryResponse(attendances, total);
+            return Result.Ok(attendances);
+        }
+        catch
+        {
+            return Result.Fail<List<AttendanceSearchResult>>("Something went wrong. Please try again later");
+        }
     }
 
     // ---- Query building -------------------------------------------------
@@ -111,10 +114,7 @@ internal sealed class GetAttendanceHistoryByQueryHandler(QubeFinDataContext cont
         };
     }
 
-    private static IQueryable<TblAttendance> ApplySort(
-        IQueryable<TblAttendance> query,
-        string? sortOn,
-        string? sortDirection)
+    private static IQueryable<TblAttendance> ApplySort(IQueryable<TblAttendance> query, string? sortOn, string? sortDirection)
     {
         if (string.IsNullOrWhiteSpace(sortOn) || string.IsNullOrWhiteSpace(sortDirection))
             return query.OrderByDescending(m => m.AttendanceDate); // sensible default

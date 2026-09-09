@@ -1,7 +1,7 @@
 ﻿using NPOI.SS.UserModel;
 using NPOI.SS.Util;
 
-namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers;
+namespace QubeFin.Report.Persistence.Repositories.ExcelHelpers;
 
 public static class ExcelCompanyHeaderHelper
 {

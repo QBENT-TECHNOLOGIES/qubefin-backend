@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Text;
 
-namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
+namespace QubeFin.Report.Persistence.Repositories.ExcelHelpers
 {
     public static class ReportDataHelper
     {
