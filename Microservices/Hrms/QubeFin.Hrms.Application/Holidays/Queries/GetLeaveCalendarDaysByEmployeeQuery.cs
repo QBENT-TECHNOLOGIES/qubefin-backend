@@ -14,7 +14,7 @@ internal sealed class GetLeaveCalendarDaysByEmployeeQueryHandler(QubeFinDataCont
 {
     public async Task<Result<List<GetLeaveCalendarDaysByEmployeeResponse>>> Handle(GetLeaveCalendarDaysByEmployeeQuery request, CancellationToken cancellationToken)
     {
-        var employeeMonthlyCalendarResponse = await context.Set<EmployeeMonthlyCalendarResponse>().FromSqlRaw("EXEC [Hrms].[USP_GetEmployeeLeaveMonthlyCalendar] @EmployeeId, @Year, @Month",
+        var employeeMonthlyCalendarResponse = await context.Set<EmployeeLeaveMonthlyCalendarResponse>().FromSqlRaw("EXEC [Hrms].[USP_GetEmployeeLeaveMonthlyCalendar] @EmployeeId, @Year, @Month",
          new SqlParameter("@EmployeeId", request.employeeId),
          new SqlParameter("@Year", request.year),
          new SqlParameter("@Month", request.month)
