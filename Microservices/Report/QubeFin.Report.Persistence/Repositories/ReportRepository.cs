@@ -14,7 +14,7 @@ namespace QubeFin.Report.Persistence.Repositories
         #region GENERIC (SSRS, NPOI, LINQ) EXCEL REPORT
         Task<ReportFile> GenerateSSRSAsync(string reportName, string format, Dictionary<string, string> parameters, CancellationToken cancellationToken);
         Task<ReportFile> GenerateExcelAsync(string storedProcedure, Dictionary<string, object?> parameters, Guid companyId, ExcelReportOptions options, CancellationToken cancellationToken);
-        Task<ReportFile> GenerateExcelFromLINQAsync<T>(IEnumerable<T> data, Guid companyId, ExcelReportOptions options, string fileName, CancellationToken cancellationToken);
+        Task<ReportFile> GenerateExcelFromLINQAsync(IEnumerable<object> data, Guid companyId, ExcelReportOptions options, string fileName, CancellationToken cancellationToken);
         #endregion
 
         #region CUSTOM
@@ -98,7 +98,7 @@ namespace QubeFin.Report.Persistence.Repositories
         #endregion
 
         #region LINQ-NPOI
-        public async Task<ReportFile> GenerateExcelFromLINQAsync<T>(IEnumerable<T> data, Guid companyId, ExcelReportOptions options, string fileName, CancellationToken cancellationToken)
+        public async Task<ReportFile> GenerateExcelFromLINQAsync(IEnumerable<object> data, Guid companyId, ExcelReportOptions options, string fileName, CancellationToken cancellationToken)
         {
             var logoBytes = await GetLogoAsync(companyId, cancellationToken);
             var stream = ExcelReportHelper.CreateExcel(data, options, logoBytes);

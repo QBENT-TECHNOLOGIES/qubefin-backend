@@ -170,19 +170,30 @@ namespace QubeFin.Report.Api.Endpoints
                 {
                     return Results.Forbid();
                 }
+
                 var empId = principal.Identity.GetEmployeeId();
 
                 var attendanceResult = await sender.Send(new GetAttendanceHistoryByQuery(request, empId));
 
                 if (attendanceResult.IsFailed)
+                {
                     return attendanceResult.ToHttpResult();
+                }
 
-                var command = new GenerateLinqNPOIReportCommand<AttendanceSearchResult>(attendanceResult.Value, request.CompanyId, "Attendance_History_Report", ReportTitle: "Attendance History", null, false);
+                var command = new GenerateLinqNPOIReportCommand(
+                        Data: attendanceResult.Value,
+                        CompanyId: request.CompanyId,
+                        FileName: "Attendance_History_Report",
+                        ReportTitle: "Attendance History",
+                        SubHeader: null,
+                        ShowCompanyHeader: false);
 
                 var result = await sender.Send(command);
 
                 if (result.IsFailed)
+                {
                     return result.ToHttpResult();
+                }
 
                 var file = result.Value;
 

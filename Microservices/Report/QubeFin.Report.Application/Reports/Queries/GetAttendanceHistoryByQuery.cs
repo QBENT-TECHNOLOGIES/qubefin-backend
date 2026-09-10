@@ -43,10 +43,10 @@ internal sealed class GetAttendanceHistoryByQueryHandler(QubeFinDataContext cont
             query = ApplyStatusFilter(query, request.searchParam.Status);
             query = ApplySort(query, request.searchParam.SortOn, request.searchParam.SortDirection);
 
-            var skip = request.searchParam.PageIndex * request.searchParam.PageSize;
+            //var skip = request.searchParam.PageIndex * request.searchParam.PageSize;
             var data = await query
-                .Skip(skip)
-                .Take(request.searchParam.PageSize)
+                //.Skip(skip)
+                //.Take(request.searchParam.PageSize)
                 .ToListAsync(cancellationToken);
 
             var attendances = data.Select(MapToResult).ToList();
@@ -139,7 +139,7 @@ internal sealed class GetAttendanceHistoryByQueryHandler(QubeFinDataContext cont
 
     private static AttendanceSearchResult MapToResult(TblAttendance m) => new()
     {
-        Id = m.Id,
+        //Id = m.Id,
         OrganizationUnit = m.Employee.OrganizationUnit?.Name,
         EmployeeName = m.Employee.FullName,
         EmployeeCode = m.Employee.Code,

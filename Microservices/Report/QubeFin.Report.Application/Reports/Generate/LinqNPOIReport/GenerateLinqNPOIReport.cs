@@ -9,13 +9,21 @@ namespace QubeFin.Report.Application.Reports.Generate.LinqNPOIReport;
 
 #region --- COMMAND ---
 
-public record GenerateLinqNPOIReportCommand<T>(IEnumerable<T> Data, Guid CompanyId, string FileName, string? ReportTitle = null, string? SubHeader = null, bool ShowCompanyHeader = false) : IRequest<Result<GenerateNPOIReportsResponse>>;
+public record GenerateLinqNPOIReportCommand(
+    IEnumerable<object> Data,
+    Guid CompanyId,
+    string FileName,
+    string? ReportTitle = null,
+    string? SubHeader = null,
+    bool ShowCompanyHeader = false)
+    : IRequest<Result<GenerateNPOIReportsResponse>>;
 
 #endregion
 
 #region --- VALIDATOR ---
 
-public class GenerateLinqNPOIReportCommandValidator<T> : AbstractValidator<GenerateLinqNPOIReportCommand<T>>
+public class GenerateLinqNPOIReportCommandValidator
+    : AbstractValidator<GenerateLinqNPOIReportCommand>
 {
     public GenerateLinqNPOIReportCommandValidator()
     {
@@ -29,10 +37,9 @@ public class GenerateLinqNPOIReportCommandValidator<T> : AbstractValidator<Gener
 
 #region --- HANDLER ---
 
-internal sealed class GenerateLinqNPOIReportHandler<T>(IReportRepository reportRepository)
-    : IRequestHandler<GenerateLinqNPOIReportCommand<T>, Result<GenerateNPOIReportsResponse>>
+public sealed class GenerateLinqNPOIReportHandler(IReportRepository reportRepository) : IRequestHandler<GenerateLinqNPOIReportCommand, Result<GenerateNPOIReportsResponse>>
 {
-    public async Task<Result<GenerateNPOIReportsResponse>> Handle(GenerateLinqNPOIReportCommand<T> request, CancellationToken cancellationToken)
+    public async Task<Result<GenerateNPOIReportsResponse>> Handle(GenerateLinqNPOIReportCommand request, CancellationToken cancellationToken)
     {
         var options = new ExcelReportOptions(ShowCompanyHeader: request.ShowCompanyHeader, ReportTitle: request.ReportTitle, SubHeader: request.SubHeader);
         var result = await reportRepository.GenerateExcelFromLINQAsync(request.Data, request.CompanyId, options, request.FileName, cancellationToken);

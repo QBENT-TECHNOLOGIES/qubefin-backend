@@ -12,7 +12,7 @@ namespace QubeFin.Report.Application.Reports.Models
 
     public class AttendanceSearchResult
     {
-        public Guid Id { get; set; }
+        //public Guid Id { get; set; }
         public string? OrganizationUnit { get; set; }
         public string? EmployeeName { get; set; }
         public string? EmployeeCode { get; set; }

@@ -178,6 +178,118 @@ namespace QubeFin.Report.Persistence.Repositories.ExcelHelpers
                     .ToArray();
         }
 
+        #region OBJECT (RUNTIME-TYPE) OVERLOAD — for IEnumerable<object> callers
+
+        public static MemoryStream CreateExcel(IEnumerable<object> data, ExcelReportOptions options, byte[]? logoBytes)
+        {
+            var rows = data as IReadOnlyList<object> ?? data.ToList();
+
+            // Resolve the REAL type from the first item, not from the object wrapper.
+            // Falls back to object if the collection is empty (no columns to render).
+            var itemType = rows.Count > 0 ? rows[0]!.GetType() : typeof(object);
+
+            var workbook = new XSSFWorkbook();
+
+            try
+            {
+                var sheet = workbook.CreateSheet("Report");
+                var accessors = ObjectPropertyAccessorCache.GetAccessors(itemType);
+
+                ApplyColumnWidths(sheet, accessors, rows);
+
+                var currentRow = 0;
+
+                if (options.ShowCompanyHeader)
+                    currentRow = ExcelCompanyHeaderHelper.AddCompanyHeader(workbook, sheet, currentRow, accessors.Length, logoBytes);
+                else 
+                    currentRow = ExcelCompanyHeaderHelper.AddCompanyLogo(workbook, sheet, currentRow, accessors.Length, logoBytes);
+
+                if (!string.IsNullOrWhiteSpace(options.ReportTitle))
+                    AddHeader(workbook, sheet, ref currentRow, options.ReportTitle, accessors.Length);
+
+                if (!string.IsNullOrWhiteSpace(options.SubHeader))
+                    AddSubHeader(workbook, sheet, ref currentRow, options.SubHeader, accessors.Length);
+
+                AddColumnHeaders(workbook, sheet, ref currentRow, accessors);
+
+                if (rows.Count == 0)
+                    AddNoDataRow(workbook, sheet, ref currentRow, accessors.Length);
+                else
+                    AddData(workbook, sheet, ref currentRow, accessors, rows);
+
+                var stream = new MemoryStream();
+                workbook.Write(stream, leaveOpen: true);
+                stream.Position = 0;
+                return stream;
+            }
+            finally
+            {
+                workbook.Close();
+            }
+        }
+
+        private static void ApplyColumnWidths(ISheet sheet, (string Name, Func<object, object?> Getter)[] accessors, IReadOnlyList<object> rows)
+        {
+            for (var i = 0; i < accessors.Length; i++)
+            {
+                var maxLength = ToDisplayName(accessors[i].Name).Length;
+
+                foreach (var item in rows)
+                {
+                    var text = accessors[i].Getter(item)?.ToString() ?? string.Empty;
+                    if (text.Length > maxLength)
+                        maxLength = text.Length;
+                }
+
+                var widthChars = Math.Min(Math.Max(maxLength + 4, 10), 45);
+                sheet.SetColumnWidth(i, widthChars * 256);
+            }
+        }
+
+        private static void AddColumnHeaders(IWorkbook workbook, ISheet sheet, ref int currentRow, (string Name, Func<object, object?> Getter)[] accessors)
+        {
+            var row = sheet.CreateRow(currentRow++);
+            var style = CreateColumnHeaderStyle(workbook);
+
+            for (var i = 0; i < accessors.Length; i++)
+            {
+                var cell = row.CreateCell(i);
+                cell.SetCellValue(ToDisplayName(accessors[i].Name));
+                cell.CellStyle = style;
+            }
+        }
+
+        private static void AddData(IWorkbook workbook, ISheet sheet, ref int currentRow, (string Name, Func<object, object?> Getter)[] accessors, IReadOnlyList<object> rows)
+        {
+            var dateStyle = workbook.CreateCellStyle();
+            dateStyle.DataFormat = workbook.CreateDataFormat().GetFormat("dd/MM/yyyy");
+
+            foreach (var item in rows)
+            {
+                var row = sheet.CreateRow(currentRow++);
+
+                for (var i = 0; i < accessors.Length; i++)
+                {
+                    var cell = row.CreateCell(i);
+                    var value = accessors[i].Getter(item);
+                    ExcelCellHelper.SetValue(cell, value ?? DBNull.Value, dateStyle);
+                }
+            }
+        }
+
+        private static class ObjectPropertyAccessorCache
+        {
+            private static readonly System.Collections.Concurrent.ConcurrentDictionary<Type, (string Name, Func<object, object?> Getter)[]> _cache = new();
+
+            public static (string Name, Func<object, object?> Getter)[] GetAccessors(Type type) =>
+                _cache.GetOrAdd(type, t =>
+                    t.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                        .Select(p => (p.Name, Getter: (Func<object, object?>)p.GetValue))
+                        .ToArray());
+        }
+
+        #endregion
+
         #endregion
 
         #region HELPERS
