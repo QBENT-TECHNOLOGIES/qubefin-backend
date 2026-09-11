@@ -15,6 +15,8 @@ public partial class TblCompany
 
     public virtual ICollection<TblEmployee> TblEmployees { get; set; } = new List<TblEmployee>();
 
+    public virtual ICollection<TblInterviewCandidate> TblInterviewCandidates { get; set; } = new List<TblInterviewCandidate>();
+
     public virtual ICollection<TblOrganizationUnit> TblOrganizationUnits { get; set; } = new List<TblOrganizationUnit>();
 
     public virtual ICollection<TblPayRoll> TblPayRolls { get; set; } = new List<TblPayRoll>();
