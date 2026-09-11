@@ -21,7 +21,7 @@ public class AttendanceEndpoints : IEndpoint
                 return Results.Forbid();
             }
             var empId = principal.Identity.GetEmployeeId();
-            var result = await sender.Send(new CreateAttendanceCommand(empId, command.time, command.Lat, command.Long));
+            var result = await sender.Send(new CreateAttendanceCommand(empId, command.OrganizationUnitId, command.time, command.Lat, command.Long));
             return result.ToHttpResult();
         })
         .WithSummary("Attendance Check in and Check out Saved")
@@ -59,7 +59,7 @@ public class AttendanceEndpoints : IEndpoint
             }
 
             var empId = principal.Identity.GetEmployeeId();
-            var result = await sender.Send(new GetAttendanceHistoryByQuery(request));
+            var result = await sender.Send(new GetAttendanceHistoryByQuery(request, empId));
             return Results.Ok(result);
         }).WithSummary("Get all employees attendance history with optional filters").WithTags("Attendance").RequireAuthorization();
 
@@ -131,6 +131,21 @@ public class AttendanceEndpoints : IEndpoint
         })
         .WithSummary("Decision regularization (Approved/Reject/Recommend)")
         .WithTags("Regularization")
+        .RequireAuthorization();
+
+        app.MapGet("attendances/last-working-days", async (ClaimsPrincipal principal, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+
+            var empId = principal.Identity.GetEmployeeId();
+            var result = await sender.Send(new GetLastWorkingDaysQuery(empId));
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get Last Working Days")
+        .WithTags("Attendance")
         .RequireAuthorization();
     }
 }

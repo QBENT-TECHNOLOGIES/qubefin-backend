@@ -10,7 +10,7 @@ public record GetEmployeeBySearchTextQuery(string SearchText) : IRequest<Result<
 #endregion
 
 #region --- RESPONSE ---
-public record GetEmployeeBySearchTextResponse(Guid Id, string? EmployeeName, string EmployeeCode, bool HasSignaturePhoto);
+public record GetEmployeeBySearchTextResponse(Guid Id, string? EmployeeName, string EmployeeCode, bool HasSignaturePhoto, Guid userId);
 #endregion
 
 #region --- HANDLER ---
@@ -19,9 +19,9 @@ internal sealed class GetEmployeeBySearchTextQueryHandler(QubeFinDataContext con
     public async Task<Result<List<GetEmployeeBySearchTextResponse>>> Handle(GetEmployeeBySearchTextQuery request, CancellationToken cancellationToken)
     {
 
-        var employeEntities = await context.TblEmployees.Include(m => m.TblEmployeeDocuments).Where(m => m.IsActive && (m.FullName.StartsWith(request.SearchText) || m.Code.StartsWith(request.SearchText))).OrderBy(m => m.FirstName).ToListAsync();
+        var employeEntities = await context.TblEmployees.Include(m => m.TblUsers).Include(m => m.TblEmployeeDocuments).Where(m => m.IsActive && (m.FullName.StartsWith(request.SearchText) || m.Code.StartsWith(request.SearchText))).OrderBy(m => m.FirstName).ToListAsync();
         var searchResult = employeEntities == null ? new List<GetEmployeeBySearchTextResponse>() :
-               employeEntities.Select(m => new GetEmployeeBySearchTextResponse(m.Id, m.FullName + "(" + m.Code + ")", m.Code, HasSignaturePhoto(m))).ToList();
+               employeEntities.Select(m => new GetEmployeeBySearchTextResponse(m.Id, m.FullName + "(" + m.Code + ")", m.Code, HasSignaturePhoto(m), m.TblUsers.Any() ? m.TblUsers.FirstOrDefault().Id : Guid.Empty)).ToList();
 
         return Result.Ok(searchResult);
     }

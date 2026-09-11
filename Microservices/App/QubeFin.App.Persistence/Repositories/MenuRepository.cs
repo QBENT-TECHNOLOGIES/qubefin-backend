@@ -68,49 +68,123 @@ public class MenuRepository(QubeFinDataContext context) : IMenuRepository
 
     public async Task<IEnumerable<MenuTree>> GetTreeAsync(Guid employeeId)
     {
+        // =========================================================
+        // GET USER
+        // =========================================================
+
+        var userId = await context.TblUsers
+            .AsNoTracking()
+            .Where(x =>
+                x.EmployeeId == employeeId &&
+                x.IsActive)
+            .Select(x => (Guid?)x.Id)
+            .FirstOrDefaultAsync();
+
+        if (userId is null)
+        {
+            return Enumerable.Empty<MenuTree>();
+        }
+
+
+        // =========================================================
+        // GET EMPLOYEE DESIGNATION
+        // =========================================================
+
         var designationId = await context.TblEmployeeDesignations
-           .AsNoTracking()
-           .Where(e => e.EmployeeId == employeeId)
-           .OrderByDescending(d => d.EffectiveTo == null)
-           .ThenByDescending(d => d.EffectiveFrom)
-           .Select(d => (Guid?)d.DesignationId)
-           .FirstOrDefaultAsync();
+            .AsNoTracking()
+            .Where(x => x.EmployeeId == employeeId)
+            .OrderByDescending(x => x.EffectiveTo == null)
+            .ThenByDescending(x => x.EffectiveFrom)
+            .Select(x => (Guid?)x.DesignationId)
+            .FirstOrDefaultAsync();
 
         if (designationId is null)
         {
             return Enumerable.Empty<MenuTree>();
         }
 
-        var roleId = await context.TblDesignationRoles
-            .AsNoTracking()
-            .Where(dr => dr.DesignationId == designationId)
-            .OrderByDescending(dr => dr.CreatedOn)
-            .Select(dr => (Guid?)dr.RoleId)
-            .FirstOrDefaultAsync();
 
-        if (roleId is null)
+        // =========================================================
+        // GET ROLE(S) FOR DESIGNATION
+        // =========================================================
+
+        var roleIds = await context.TblDesignationRoles
+            .AsNoTracking()
+            .Where(x => x.DesignationId == designationId)
+            .Select(x => x.RoleId)
+            .Distinct()
+            .ToListAsync();
+
+
+        // =========================================================
+        // GET ROLE BASED MENUS
+        // =========================================================
+
+        var roleMenuIds = await context.TblRoleMenuPermissions
+            .AsNoTracking()
+            .Where(x =>
+                roleIds.Contains(x.RoleId) &&
+                x.MenuPermission.Menu.IsActive)
+            .Select(x => x.MenuPermission.Menu.Id)
+            .Distinct()
+            .ToListAsync();
+
+
+        // =========================================================
+        // GET USER SPECIFIC MENUS
+        // =========================================================
+
+        var userMenuIds = await context.TblUserMenuPermissions
+            .AsNoTracking()
+            .Where(x =>
+                x.UserId == userId &&
+                x.MenuPermission.Menu.IsActive)
+            .Select(x => x.MenuPermission.Menu.Id)
+            .Distinct()
+            .ToListAsync();
+
+
+        // =========================================================
+        // COMBINE ROLE + USER MENUS
+        // =========================================================
+
+        var menuIds = roleMenuIds
+            .Concat(userMenuIds)
+            .Distinct()
+            .ToList();
+
+
+        if (menuIds.Count == 0)
         {
             return Enumerable.Empty<MenuTree>();
         }
 
-        var menuTree = await context.TblRoleMenuPermissions
-         .AsNoTracking()
-         .Where(rmp => rmp.RoleId == roleId && rmp.MenuPermission.Menu.IsActive)
-         .OrderBy(rmp => rmp.MenuPermission.Menu.DisplayPosition)
-         .Select(rmp => new MenuTree
-         {
-             Id = rmp.MenuPermission.Menu.Id,
-             Name = rmp.MenuPermission.Menu.Name,
-             Icon = rmp.MenuPermission.Menu.Icon,
-             Target = rmp.MenuPermission.Menu.Target,
-             ParentId = rmp.MenuPermission.Menu.ParentId,
-             DisplayPosition = rmp.MenuPermission.Menu.DisplayPosition,
-             IsActive = rmp.MenuPermission.Menu.IsActive,
-             Children = new List<MenuTree>()
-         })
-         .Distinct()
-         .ToListAsync();
-        return menuTree;
+
+        // =========================================================
+        // GET MENUS
+        // =========================================================
+
+        var menus = await context.TblMenus
+            .AsNoTracking()
+            .Where(x =>
+                menuIds.Contains(x.Id) &&
+                x.IsActive)
+            .OrderBy(x => x.DisplayPosition)
+            .Select(x => new MenuTree
+            {
+                Id = x.Id,
+                Name = x.Name,
+                Icon = x.Icon,
+                Target = x.Target,
+                ParentId = x.ParentId,
+                DisplayPosition = x.DisplayPosition,
+                IsActive = x.IsActive,
+                Children = new List<MenuTree>()
+            })
+            .ToListAsync();
+
+
+        return menus;
     }
 
     public void Remove(Menu menu)

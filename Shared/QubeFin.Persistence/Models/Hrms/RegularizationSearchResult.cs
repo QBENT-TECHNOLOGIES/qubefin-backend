@@ -24,6 +24,9 @@ namespace QubeFin.Persistence.Models.Hrms
         public Guid EmployeeId { get; set; }
         public string? RegularizationType { get; set; }
         public string? RegularizationDates { get; set; }
+        public string? RegularizationFor { get; set; }
+        public TimeOnly? ActualInTime { get; set; }
+        public TimeOnly? ActualOutTime { get; set; }
         public string? Reason { get; set; }
         public string? Attachment { get; set; }
         public string? Remarks { get; set; }

@@ -59,7 +59,6 @@ internal sealed class GetAttendanceByEmployeeQueryHandler(QubeFinDataContext con
         {
             result.Id = attendanceEntity.Id;
             result.EmployeeId = attendanceEntity.EmployeeId;
-            result.OrganizationUnitId = attendanceEntity.OrganizationUnitId;
 
             result.AttendanceDate = attendanceEntity.AttendanceDate;
 
@@ -68,6 +67,9 @@ internal sealed class GetAttendanceByEmployeeQueryHandler(QubeFinDataContext con
 
             result.ActualInTime = attendanceEntity.ActualInTime;
             result.ActualOutTime = attendanceEntity.ActualOutTime;
+
+            result.CheckinOrganizationUnitId = attendanceEntity.CheckinOrganizationUnitId;
+            result.CheckoutOrganizationUnitId = attendanceEntity.CheckoutOrganizationUnitId;
 
             result.IsEarlyLeave = attendanceEntity.IsEarlyLeave;
             result.IsLateEntry = attendanceEntity.IsLateEntry;

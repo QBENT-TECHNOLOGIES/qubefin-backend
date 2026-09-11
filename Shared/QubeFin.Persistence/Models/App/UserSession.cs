@@ -58,4 +58,8 @@ public class UserSession
     {
         LogoutTime = DateTime.Now;
     }
+    public void MarkMfaVerified()
+    {
+        IsMfaVerified = true;
+    }
 }

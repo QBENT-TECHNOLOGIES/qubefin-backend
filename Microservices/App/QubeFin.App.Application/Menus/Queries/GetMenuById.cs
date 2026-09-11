@@ -1,6 +1,7 @@
 ﻿using FluentResults;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using QubeFin.App.Application.Menus.Models;
 using QubeFin.Core.Results;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.App;
@@ -8,45 +9,21 @@ using QubeFin.Persistence.Models.App;
 namespace QubeFin.App.Application.Menus.Queries;
 
 #region --- QUERY ---
-public record GetMenuByIdQuery(Guid Id) : IRequest<Result<GetMenuByIdResponse>>;
-#endregion
 
-#region --- RESPONSE ---
-public sealed record GetMenuByIdResponse
-{
-    public Guid Id { get; init; }
-    public string Name { get; init; } = string.Empty;
-    public string Icon { get; init; } = string.Empty;
-    public string? Target { get; init; }
-    public Guid? ParentId { get; init; }
-    public int DisplayPosition { get; init; }
-    public bool IsActive { get; set; }
-    public string CreatedBy { get; init; } = string.Empty;
-    public DateTime CreatedOn { get; init; }
-    public string? LastModifiedBy { get; init; }
-    public DateTime? LastModifiedOn { get; init; }
-    public IReadOnlyList<MenuHierarchyItem> Hierarchy { get; init; } = [];
-    public IReadOnlyList<PermissionResponse> Permissions { get; init; } = [];
-}
-public sealed record PermissionResponse
-{
-    public Guid Id { get; init; }
-    public string PermissionToken { get; init; } = string.Empty;
-    public string Description { get; init; } = string.Empty;
-    public string Icon { get; init; } = string.Empty;
-    public string BackgroundClass { get; init; } = string.Empty;
-    public string IconClass { get; init; } = string.Empty;
-    public int DisplayPosition { get; init; }
-    public bool Checked { get; init; }
-}
+public record GetMenuByIdQuery(Guid Id) : IRequest<Result<GetMenuResponse>>;
+
 #endregion
 
 #region --- HANDLER ---
-internal sealed class GetMenuByIdQueryHandler(QubeFinDataContext context)
-    : IRequestHandler<GetMenuByIdQuery, Result<GetMenuByIdResponse>>
+
+internal sealed class GetMenuByIdQueryHandler(QubeFinDataContext context) : IRequestHandler<GetMenuByIdQuery, Result<GetMenuResponse>>
 {
-    public async Task<Result<GetMenuByIdResponse>> Handle(GetMenuByIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<GetMenuResponse>> Handle(GetMenuByIdQuery request, CancellationToken cancellationToken)
     {
+        // =========================================================
+        // MENU HIERARCHY
+        // =========================================================
+
         var hierarchy = await context.Set<MenuHierarchyItem>()
             .FromSqlInterpolated($@"
                 ;WITH Hierarchy AS
@@ -59,7 +36,8 @@ internal sealed class GetMenuByIdQueryHandler(QubeFinDataContext context)
                         m.ParentId,
                         0 AS Level
                     FROM [Auth].[Tbl_Menu] m
-                    WHERE M.Id = {request.Id}
+                    WHERE m.Id = {request.Id}
+
                     UNION ALL
 
                     SELECT
@@ -73,19 +51,23 @@ internal sealed class GetMenuByIdQueryHandler(QubeFinDataContext context)
                     INNER JOIN Hierarchy h
                         ON h.ParentId = p.Id
                 )
-                SELECT Id, Name, Icon, Target, Level
+                SELECT
+                    Id,
+                    Name,
+                    Icon,
+                    Target,
+                    Level
                 FROM Hierarchy
                 ORDER BY Level DESC
-                ")
+            ")
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
-        var menu = await context
-            .TblMenus
-            .AsNoTracking()
-            .Where(m => m.Id == request.Id)
-            .Select(m => new GetMenuByIdResponse
+
+        var menu = await context.TblMenus.AsNoTracking().Where(m => m.Id == request.Id)
+            .Select(m => new GetMenuResponse
             {
+
                 Id = m.Id,
                 Name = m.Name,
                 Icon = m.Icon,
@@ -99,27 +81,46 @@ internal sealed class GetMenuByIdQueryHandler(QubeFinDataContext context)
                 LastModifiedOn = m.LastModifiedOn,
                 Hierarchy = hierarchy,
 
-                Permissions = m.TblMenuPermissions
-                    .OrderBy(x  => x.Permission.DisplayPosition)
-                    .Select(p => new PermissionResponse
+                Permissions = m.TblMenuPermissions.OrderBy(x => x.Permission.DisplayPosition).Select(p => new PermissionResponse
+                {
+                    Id = p.Id,
+                    PermissionToken = p.Permission.PermissionToken,
+                    Description = p.Permission.Description,
+                    Icon = p.Permission.Icon,
+                    BackgroundClass = p.Permission.BackgroundClass,
+                    IconClass = p.Permission.IconClass,
+                    DisplayPosition = p.Permission.DisplayPosition
+                })
+                .ToList(),
+
+                Roles = context.TblRoles.Where(r => r.IsActive)
+                    .Select(r => new RoleMenuAssignmentResponse
                     {
-                        Id = p.Permission.Id,
-                        PermissionToken = p.Permission.PermissionToken,
-                        Description = p.Permission.Description,
-                        Icon = p.Permission.Icon,
-                        BackgroundClass = p.Permission.BackgroundClass,
-                        IconClass = p.Permission.IconClass,
-                        DisplayPosition = p.Permission.DisplayPosition
+                        RoleId = r.Id,
+                        RoleName = r.Name,
+                        MenuPermissionIds = r.TblRoleMenuPermissions.Where(rmp => m.TblMenuPermissions.Select(mp => mp.Id).Contains(rmp.MenuPermissionId)).Select(rmp => rmp.MenuPermissionId).ToList(),
+                        IsSelected = r.TblRoleMenuPermissions.Any(rmp => m.TblMenuPermissions.Select(mp => mp.Id).Contains(rmp.MenuPermissionId))
+                    }).ToList(),
+
+                Users = context.TblUsers.Where(u => u.IsActive && u.TblUserMenuPermissions.Any(ump => m.TblMenuPermissions.Select(mp => mp.Id).Contains(ump.MenuPermissionId)))
+                    .Select(u => new UserMenuAssignmentResponse
+                    {
+                        UserId = u.Id,
+                        EmployeeId = u.EmployeeId,
+                        UserName = u.UserName,
+                        MenuPermissionIds = u.TblUserMenuPermissions.Where(ump => m.TblMenuPermissions.Select(mp => mp.Id).Contains(ump.MenuPermissionId)).Select(ump => ump.MenuPermissionId).ToList()
                     })
                     .ToList()
-            })
-            .FirstOrDefaultAsync(cancellationToken);
+            }).FirstOrDefaultAsync(cancellationToken);
+
 
         if (menu is null)
         {
-            return new RecordNotFoundError($"Menu not found for the given Id");
+            return new RecordNotFoundError("Menu not found for the given Id");
         }
+
         return Result.Ok(menu);
     }
 }
+
 #endregion

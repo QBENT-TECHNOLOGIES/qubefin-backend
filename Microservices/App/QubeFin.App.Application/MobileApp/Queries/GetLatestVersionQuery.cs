@@ -32,12 +32,25 @@ internal sealed class GetLatestVersionQueryHandler(QubeFinDataContext context) :
         {
             return new RecordNotFoundError($"Mobile app version not found for the given version");
         }
+        if (mobileAppVersion.IsCurrentVersion)
+        {
+            return new MobileAppVersion
+            {
+                LatestVersion = mobileAppVersion.Version,
+                IsDiscontinued = false,
+                DownloadUrl = null
+            };
+        }
         var latestMobileAppVersion = await context.TblMobileAppVersions.AsNoTracking().Where(v => v.IsCurrentVersion).FirstOrDefaultAsync(cancellationToken: cancellationToken);
+        if (latestMobileAppVersion is null)
+        {
+            return new RecordNotFoundError($"Latest mobile app version not found");
+        }
         return new MobileAppVersion
         {
-            LatestVersion = mobileAppVersion.IsCurrentVersion ? mobileAppVersion.Version : latestMobileAppVersion.Version,
-            IsDiscontinued = mobileAppVersion.IsCurrentVersion ? false : true,
-            DownloadUrl = mobileAppVersion.IsCurrentVersion ? null : latestMobileAppVersion.AppUrl
+            LatestVersion = latestMobileAppVersion.Version,
+            IsDiscontinued = true,
+            DownloadUrl = latestMobileAppVersion.AppUrl
         };
     }
 }

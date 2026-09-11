@@ -222,6 +222,31 @@ namespace QubeFin.Payroll.Api.Endpoints
 
                 return Results.File(file.FileStream, file.ContentType, $"Salary_Disbursement_Sheet_{month}_{year}.xlsx");
             }).WithSummary("Generate Salary Disbursement Sheet Report.");
+
+            app.MapGet("/generate-salary-register-report/{month:int}/{year:int}/{companyId:Guid}", [Authorize] async (ClaimsPrincipal principal, int month, int year, Guid companyId, ISender sender) =>
+            {
+                var employeeId = principal.Identity.GetEmployeeId();
+                var command = new GenerateEmployeeSalaryRegisterCommand("Hrms.USP_EmployeeSalaryRegister",
+                    new Dictionary<string, object?>
+                    {
+                        ["@p_Month"] = month,
+                        ["@p_Year"] = year,
+                        ["@p_companyId"] = companyId
+                    },
+                    companyId,
+                    month,
+                    year
+                );
+
+                var result = await sender.Send(command);
+
+                if (result.IsFailed)
+                    return result.ToHttpResult();
+
+                var file = result.Value;
+
+                return Results.File(file.FileStream, file.ContentType, $"Salary_Register_Report_{month}_{year}.xlsx");
+            }).WithSummary("Generate Salary Register Report.");
             #endregion
         }
     }

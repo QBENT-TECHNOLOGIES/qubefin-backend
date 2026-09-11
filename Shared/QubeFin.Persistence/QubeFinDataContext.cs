@@ -100,6 +100,8 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblEmployeeReference> TblEmployeeReferences { get; set; }
 
+    public virtual DbSet<TblEmployeeTransfer> TblEmployeeTransfers { get; set; }
+
     public virtual DbSet<TblFinancialInstitute> TblFinancialInstitutes { get; set; }
 
     public virtual DbSet<TblFinancialYear> TblFinancialYears { get; set; }
@@ -202,6 +204,8 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblSystemValue> TblSystemValues { get; set; }
 
+    public virtual DbSet<TblTempBranch> TblTempBranches { get; set; }
+
     public virtual DbSet<TblUser> TblUsers { get; set; }
 
     public virtual DbSet<TblUserDevice> TblUserDevices { get; set; }
@@ -211,10 +215,6 @@ public partial class QubeFinDataContext : DbContext
     public virtual DbSet<TblUserSession> TblUserSessions { get; set; }
 
     public virtual DbSet<WegrowConsolidateEmployee> WegrowConsolidateEmployees { get; set; }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=65.2.146.91;Database=QubeFinData;User Id=sa;Password=KuPH8Bt97ipg;TrustServerCertificate=Yes;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -486,14 +486,18 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.OutTimeLatitude).HasColumnType("numeric(9, 6)");
             entity.Property(e => e.OutTimeLongitude).HasColumnType("numeric(9, 6)");
 
+            entity.HasOne(d => d.CheckinOrganizationUnit).WithMany(p => p.TblAttendanceCheckinOrganizationUnits)
+                .HasForeignKey(d => d.CheckinOrganizationUnitId)
+                .HasConstraintName("FK_Tbl_Attendance_Tbl_OrganizationUnit1");
+
+            entity.HasOne(d => d.CheckoutOrganizationUnit).WithMany(p => p.TblAttendanceCheckoutOrganizationUnits)
+                .HasForeignKey(d => d.CheckoutOrganizationUnitId)
+                .HasConstraintName("FK_Tbl_Attendance_Tbl_OrganizationUnit2");
+
             entity.HasOne(d => d.Employee).WithMany(p => p.TblAttendances)
                 .HasForeignKey(d => d.EmployeeId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_Attendance_Tbl_Employee");
-
-            entity.HasOne(d => d.OrganizationUnit).WithMany(p => p.TblAttendances)
-                .HasForeignKey(d => d.OrganizationUnitId)
-                .HasConstraintName("FK_Tbl_Attendance_Tbl_OrganizationUnit");
         });
 
         modelBuilder.Entity<TblAttendanceRegularization>(entity =>
@@ -506,6 +510,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.CurrentStatus).HasMaxLength(30);
             entity.Property(e => e.Reason).HasMaxLength(50);
             entity.Property(e => e.RegularizationDates).HasMaxLength(200);
+            entity.Property(e => e.RegularizationFor).HasMaxLength(50);
             entity.Property(e => e.RegularizationType).HasMaxLength(50);
             entity.Property(e => e.Remarks).HasMaxLength(200);
 
@@ -670,12 +675,10 @@ public partial class QubeFinDataContext : DbContext
 
             entity.HasOne(d => d.FinancialInstitute).WithMany(p => p.TblCompanyBankAccounts)
                 .HasForeignKey(d => d.FinancialInstituteId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_CompanyBankAccount_Tbl_FinancialInstitute");
 
             entity.HasOne(d => d.Ledger).WithMany(p => p.TblCompanyBankAccounts)
                 .HasForeignKey(d => d.LedgerId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_CompanyBankAccount_Tbl_AccountLedger");
         });
 
@@ -999,7 +1002,6 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.PresentRoadName).HasMaxLength(50);
             entity.Property(e => e.Religion).HasMaxLength(25);
             entity.Property(e => e.Salutation).HasMaxLength(20);
-            entity.Property(e => e.SeparationDate).HasComputedColumnSql("(dateadd(year,(60),[DateOfBirth]))", false);
             entity.Property(e => e.UniversalAccountNo).HasMaxLength(50);
 
             entity.HasOne(d => d.Bank).WithMany(p => p.TblEmployees)
@@ -1180,6 +1182,34 @@ public partial class QubeFinDataContext : DbContext
                 .HasForeignKey(d => d.EmployeeId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_EmployeeReference_Tbl_Employee");
+        });
+
+        modelBuilder.Entity<TblEmployeeTransfer>(entity =>
+        {
+            entity.ToTable("Tbl_EmployeeTransfer", "Hrms");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.GrossSalary).HasColumnType("numeric(18, 2)");
+
+            entity.HasOne(d => d.Designation).WithMany(p => p.TblEmployeeTransfers)
+                .HasForeignKey(d => d.DesignationId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_EmployeeTransfer_Tbl_Designation");
+
+            entity.HasOne(d => d.Employee).WithMany(p => p.TblEmployeeTransfers)
+                .HasForeignKey(d => d.EmployeeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_EmployeeTransfer_Tbl_Employee");
+
+            entity.HasOne(d => d.OrganisationUnit).WithMany(p => p.TblEmployeeTransfers)
+                .HasForeignKey(d => d.OrganisationUnitId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_EmployeeTransfer_Tbl_OrganizationUnit");
+
+            entity.HasOne(d => d.SalaryGrade).WithMany(p => p.TblEmployeeTransfers)
+                .HasForeignKey(d => d.SalaryGradeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_EmployeeTransfer_Tbl_SalaryGrade");
         });
 
         modelBuilder.Entity<TblFinancialInstitute>(entity =>
@@ -1917,7 +1947,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.ActionUrl).HasMaxLength(200);
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.Icon).HasMaxLength(50);
-            entity.Property(e => e.Message).HasMaxLength(100);
+            entity.Property(e => e.Message).HasMaxLength(200);
             entity.Property(e => e.NotificationType)
                 .HasMaxLength(50)
                 .IsUnicode(false);
@@ -2320,6 +2350,19 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.SysVal).HasMaxLength(100);
         });
 
+        modelBuilder.Entity<TblTempBranch>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToTable("Tbl_TempBranches");
+
+            entity.Property(e => e.Address).HasMaxLength(500);
+            entity.Property(e => e.GoogleAddress).HasMaxLength(500);
+            entity.Property(e => e.Lat).HasMaxLength(50);
+            entity.Property(e => e.Lon).HasMaxLength(50);
+            entity.Property(e => e.Name).HasMaxLength(200);
+        });
+
         modelBuilder.Entity<TblUser>(entity =>
         {
             entity.ToTable("Tbl_User", "Auth");
@@ -2612,7 +2655,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.NetPay).HasColumnName("Net_Pay");
             entity.Property(e => e.NetPayCtc).HasColumnName("NET_PAY_CTC");
             entity.Property(e => e.OldCode)
-                .HasMaxLength(1)
+                .HasMaxLength(50)
                 .HasColumnName("Old_Code");
             entity.Property(e => e.OtherAllowance).HasColumnName("OTHER_ALLOWANCE");
             entity.Property(e => e.OtherAllowance2).HasColumnName("OTHER_ALLOWANCE2");

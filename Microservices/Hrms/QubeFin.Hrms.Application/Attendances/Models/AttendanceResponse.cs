@@ -4,7 +4,8 @@
     {
         public Guid? Id { get; set; }
         public Guid? EmployeeId { get; set; }
-        public Guid? OrganizationUnitId { get; set; }
+        public Guid? CheckinOrganizationUnitId { get; set; }
+        public Guid? CheckoutOrganizationUnitId { get; set; }
         public DateOnly? AttendanceDate { get; set; }
         public TimeOnly? ExpectedInTime { get; set; }
         public TimeOnly? ExpectedOutTime { get; set; }

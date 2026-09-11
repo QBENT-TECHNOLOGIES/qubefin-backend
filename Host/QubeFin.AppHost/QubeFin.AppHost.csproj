@@ -20,6 +20,7 @@
     <ProjectReference Include="..\..\Microservices\Global\QubeFin.Global.Api\QubeFin.Global.Api.csproj" />
     <ProjectReference Include="..\..\Microservices\Hrms\QubeFin.Hrms.Api\QubeFin.Hrms.Api.csproj" />
     <ProjectReference Include="..\..\Microservices\Payroll\QubeFin.Payroll.Api\QubeFin.Payroll.Api.csproj" />
+    <ProjectReference Include="..\..\Microservices\Report\QubeFin.Report.Api\QubeFin.Report.Api.csproj" />
   </ItemGroup>
 
 </Project>

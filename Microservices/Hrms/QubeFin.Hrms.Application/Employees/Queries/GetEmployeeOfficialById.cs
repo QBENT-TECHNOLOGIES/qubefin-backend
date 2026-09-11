@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Models.Global;
 
 namespace QubeFin.Hrms.Application.Employees.Queries;
 
@@ -14,10 +15,13 @@ public record GetOfficialResponse(
     Guid Id,
     string Code,
     Guid? OrganizationUnitTypeId,
+    string? OrganizationUnitTypeName,
     Guid? OrganizationUnitId,
+    string? OrganizationUnitName,
     Guid? CompanyId,
     string? CompanyName,
     Guid? DesignationId,
+    string? DesignationName,
     string? SalaryGrade,
     decimal? GrossSalary,
     Guid? DepartmentId,
@@ -42,11 +46,11 @@ internal sealed class GetEmployeeOfficialByIdQueryHandler(QubeFinDataContext con
     {
         var employee = await context
             .TblEmployees
-            .Include(e => e.OrganizationUnit)
+            .Include(e => e.OrganizationUnit).ThenInclude(e => e.OrganizationUnitType)
             .Include(e => e.Company)
             //.Include(e => e.Department)
             .Include(e => e.TblEmployeeGrossSalaries)
-            .Include(e => e.TblEmployeeDesignations)
+            .Include(e => e.TblEmployeeDesignations).ThenInclude(e => e.Designation)
             .Where(m => m.Id == request.Id)
             .AsNoTracking()
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
@@ -55,18 +59,18 @@ internal sealed class GetEmployeeOfficialByIdQueryHandler(QubeFinDataContext con
             return new RecordNotFoundError($"Employee not found for the given Id");
         }
 
-        Guid? designationId = !employee.TblEmployeeDesignations.Any() ? null :   
+        var designation = !employee.TblEmployeeDesignations.Any() ? null :
             employee.TblEmployeeDesignations.Any(ed => ed.EffectiveTo == null) ?
-            employee.TblEmployeeDesignations.Where(ed => ed.EffectiveTo == null).First()?.DesignationId :
-            employee.TblEmployeeDesignations.OrderByDescending(ed => ed.EffectiveFrom).First()?.DesignationId;
+            employee.TblEmployeeDesignations.Where(ed => ed.EffectiveTo == null).First() :
+            employee.TblEmployeeDesignations.OrderByDescending(ed => ed.EffectiveFrom).First();
 
-        var employeeDesignationGrade = designationId == null ? null : await context
+        var employeeDesignationGrade = designation == null ? null : await context
             .TblDesignationGradeMappings.Include(e => e.Grade)
-            .Where(m => m.DesignationId == designationId)
+            .Where(m => m.DesignationId == designation.DesignationId)
             .AsNoTracking()
             .ToListAsync(cancellationToken: cancellationToken);
 
-        string? salaryGrade = employeeDesignationGrade == null ? null : 
+        string? salaryGrade = employeeDesignationGrade == null ? null :
             employeeDesignationGrade.Any(dg => dg.IsActive) ?
             employeeDesignationGrade.First(dg => dg.IsActive).Grade?.Name :
             employeeDesignationGrade.FirstOrDefault()?.Grade?.Name;
@@ -80,11 +84,13 @@ internal sealed class GetEmployeeOfficialByIdQueryHandler(QubeFinDataContext con
             Id: employee.Id,
             Code: employee.Code,
             OrganizationUnitTypeId: employee.OrganizationUnit?.OrganizationUnitTypeId,
+            OrganizationUnitTypeName: employee.OrganizationUnit?.OrganizationUnitType?.Name,
             OrganizationUnitId: employee.OrganizationUnitId,
+            OrganizationUnitName: employee.OrganizationUnit?.Name,
             CompanyId: employee.CompanyId,
             CompanyName: employee.Company?.Name,
-            DesignationId: designationId,
-            //OrganizationUnitName: employee.OrganizationUnit?.Name,
+            DesignationId: designation?.DesignationId,
+            DesignationName: designation?.Designation?.Name,
             SalaryGrade: salaryGrade,
             GrossSalary: grossSalary,
             DepartmentId: employee.DepartmentId,

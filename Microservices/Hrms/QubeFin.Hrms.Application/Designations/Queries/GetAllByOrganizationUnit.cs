@@ -10,7 +10,7 @@ public record GetAllByOrganizationUnitQuery(Guid OrganizationUnitId) : IRequest<
 #endregion
 
 #region --- RESPONSE ---
-public record GetAllByOrganizationUnitResponse(Guid Id, string Name, string SalaryGrade, decimal? GrossSalary);
+public record GetAllByOrganizationUnitResponse(Guid Id, string Name, Guid SalaryGradeId, string SalaryGrade, decimal? GrossSalary);
 #endregion
 
 #region --- HANDLER ---
@@ -42,6 +42,7 @@ internal sealed class GetAllByOrganizationUnitQueryHandler(QubeFinDataContext co
           .Select(x => new GetAllByOrganizationUnitResponse(
               x.Id,
               x.Name,
+              x.Mapping != null && x.Mapping.GradeId != null ? x.Mapping.Grade.Id : Guid.Empty,
               x.Mapping != null && x.Mapping.Grade != null ? x.Mapping.Grade.Name : string.Empty,
               x.Mapping != null && x.Mapping.Grade != null
                   ? x.Mapping.Grade.TblSalaryStructures

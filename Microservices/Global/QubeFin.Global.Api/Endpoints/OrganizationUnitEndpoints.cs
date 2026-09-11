@@ -71,7 +71,7 @@ public class OrganizationUnitEndpoints : IEndpoint
             }
             var userId = principal.Identity.GetUserId();
 
-            var result = await sender.Send(new CreateOrganizationUnitCommand(request.OrganizationUnitTypeId, request.Name, request.Codeval, request.ParentId, 
+            var result = await sender.Send(new CreateOrganizationUnitCommand(request.OrganizationUnitTypeId, request.Name, request.Codeval, request.ParentId, request.CompanyId, 
                 request.Latitude, request.Longitude, request.AttendanceInTime, request.AttendanceOutTime, request.CheckRadiusInMeter, userId));
             return result.ToHttpResult();
         })
@@ -89,7 +89,7 @@ public class OrganizationUnitEndpoints : IEndpoint
             var userId = principal.Identity.GetUserId();
 
             var result = await sender.Send(new UpdateOrganizationUnitCommand(id, request.OrganizationUnitTypeId, request.Name, request.Codeval, request.Latitude, request.Longitude, 
-                request.AttendanceInTime, request.AttendanceOutTime, request.CheckRadiusInMeter, request.ParentId, userId));
+                request.AttendanceInTime, request.AttendanceOutTime, request.CheckRadiusInMeter, request.ParentId, request.CompanyId, userId));
             return result.ToHttpResult();
         })
         .WithSummary("Update Organization Unit")

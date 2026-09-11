@@ -10,7 +10,7 @@ namespace QubeFin.Hrms.Application.Attendances.Commands
 {
 
     #region --- COMMAND ---
-    public record CreateAttendanceCommand(Guid EmployeeId, TimeOnly time, decimal Lat, decimal Long) : IRequest<Result<string>>;
+    public record CreateAttendanceCommand(Guid EmployeeId, Guid OrganizationUnitId, TimeOnly time, decimal Lat, decimal Long) : IRequest<Result<string>>;
     #endregion
 
     #region --- VALIDATOR ---
@@ -19,6 +19,7 @@ namespace QubeFin.Hrms.Application.Attendances.Commands
         public CreateAttendanceCommandValidator()
         {
             RuleFor(v => v.EmployeeId).NotEmpty().WithMessage("Employee Id is required.");
+            RuleFor(v => v.OrganizationUnitId).NotEmpty().WithMessage("Organization Unit Id is required.");
             RuleFor(v => v.Lat).NotEmpty().WithMessage("Latitude is required");
             RuleFor(v => v.Long).NotEmpty().WithMessage("Longitude is required");
             RuleFor(v => v.time).NotEmpty().WithMessage("Time is required");
@@ -32,24 +33,23 @@ namespace QubeFin.Hrms.Application.Attendances.Commands
     {
         public async Task<Result<string>> Handle(CreateAttendanceCommand request, CancellationToken cancellationToken)
         {
-            var employeeOrganization = await employeeRepository.GetEmloyeeOrganization(request.EmployeeId);
-            if (employeeOrganization == null || employeeOrganization.OrganizationInfo.AttendanceInTime == null || employeeOrganization.OrganizationInfo.AttendanceOutTime == null)
+            var organization = await attendanceRepository.GetOrganization(request.OrganizationUnitId);
+            if (organization == null || organization.AttendanceInTime == null || organization.AttendanceOutTime == null)
             {
                 throw new Exception("Organization In / Out Time not set.");
             }
-            var org = employeeOrganization.OrganizationInfo;
             var todayAttendance = await attendanceRepository.GetTodayAttendanceData(request.EmployeeId);
-            var expectedInTime = new TimeOnly(org.AttendanceInTime.Value.Hour, org.AttendanceInTime.Value.Minute);
-            var expectedOutTime = new TimeOnly(org.AttendanceOutTime.Value.Hour, org.AttendanceOutTime.Value.Minute);
+            var expectedInTime = new TimeOnly(organization.AttendanceInTime.Value.Hour, organization.AttendanceInTime.Value.Minute);
+            var expectedOutTime = new TimeOnly(organization.AttendanceOutTime.Value.Hour, organization.AttendanceOutTime.Value.Minute);
             var actualTime = new TimeOnly(request.time.Hour, request.time.Minute);
             if (todayAttendance is null)
             {
-                var attendance = Attendance.MarkCheckIn(Guid.NewGuid(), request.EmployeeId, actualTime, null, org?.OrganizationUnitId, expectedInTime, expectedOutTime, request.Lat, request.Long, null, null, DateOnly.FromDateTime(DateTime.Now));
+                var attendance = Attendance.MarkCheckIn(Guid.NewGuid(), request.EmployeeId, actualTime, null, request.OrganizationUnitId, expectedInTime, expectedOutTime, request.Lat, request.Long, null, null, DateOnly.FromDateTime(DateTime.Now));
                 await attendanceRepository.Create(attendance);
             }
             else
             {
-                todayAttendance.MarchCheckOut(actualTime, expectedOutTime, request.Lat, request.Long);
+                todayAttendance.MarchCheckOut(actualTime, expectedOutTime, request.Lat, request.Long, request.OrganizationUnitId);
                 await attendanceRepository.Update(todayAttendance);
             }
 

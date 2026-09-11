@@ -9,8 +9,6 @@ public partial class TblAttendance
 
     public Guid EmployeeId { get; set; }
 
-    public Guid? OrganizationUnitId { get; set; }
-
     public DateOnly AttendanceDate { get; set; }
 
     public TimeOnly? ExpectedInTime { get; set; }
@@ -20,6 +18,10 @@ public partial class TblAttendance
     public TimeOnly ActualInTime { get; set; }
 
     public TimeOnly? ActualOutTime { get; set; }
+
+    public Guid? CheckinOrganizationUnitId { get; set; }
+
+    public Guid? CheckoutOrganizationUnitId { get; set; }
 
     public bool IsEarlyLeave { get; set; }
 
@@ -37,7 +39,9 @@ public partial class TblAttendance
 
     public bool IsOnDuty { get; set; }
 
-    public virtual TblEmployee Employee { get; set; } = null!;
+    public virtual TblOrganizationUnit? CheckinOrganizationUnit { get; set; }
 
-    public virtual TblOrganizationUnit? OrganizationUnit { get; set; }
+    public virtual TblOrganizationUnit? CheckoutOrganizationUnit { get; set; }
+
+    public virtual TblEmployee Employee { get; set; } = null!;
 }

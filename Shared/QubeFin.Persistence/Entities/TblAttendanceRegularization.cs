@@ -13,6 +13,12 @@ public partial class TblAttendanceRegularization
 
     public string RegularizationDates { get; set; } = null!;
 
+    public string? RegularizationFor { get; set; }
+
+    public TimeOnly? ActualInTime { get; set; }
+
+    public TimeOnly? ActualOutTime { get; set; }
+
     public string? Reason { get; set; }
 
     public string? Attachment { get; set; }
