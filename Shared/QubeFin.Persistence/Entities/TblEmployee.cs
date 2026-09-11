@@ -161,6 +161,8 @@ public partial class TblEmployee
 
     public virtual ICollection<TblAttendance> TblAttendances { get; set; } = new List<TblAttendance>();
 
+    public virtual ICollection<TblDepartment> TblDepartments { get; set; } = new List<TblDepartment>();
+
     public virtual ICollection<TblEmployeeDesignation> TblEmployeeDesignations { get; set; } = new List<TblEmployeeDesignation>();
 
     public virtual ICollection<TblEmployeeDocument> TblEmployeeDocuments { get; set; } = new List<TblEmployeeDocument>();
@@ -176,6 +178,8 @@ public partial class TblEmployee
     public virtual ICollection<TblEmployeeReference> TblEmployeeReferences { get; set; } = new List<TblEmployeeReference>();
 
     public virtual ICollection<TblEmployeeTransfer> TblEmployeeTransfers { get; set; } = new List<TblEmployeeTransfer>();
+
+    public virtual ICollection<TblInterviewPanel> TblInterviewPanels { get; set; } = new List<TblInterviewPanel>();
 
     public virtual ICollection<TblLeavePrayer> TblLeavePrayers { get; set; } = new List<TblLeavePrayer>();
 

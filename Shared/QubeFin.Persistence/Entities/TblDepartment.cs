@@ -9,6 +9,8 @@ public partial class TblDepartment
 
     public string Name { get; set; } = null!;
 
+    public Guid? HodEmployeeId { get; set; }
+
     public bool IsActive { get; set; }
 
     public DateTime? CreatedOn { get; set; }
@@ -21,5 +23,9 @@ public partial class TblDepartment
 
     public byte[] RowVersion { get; set; } = null!;
 
+    public virtual TblEmployee? HodEmployee { get; set; }
+
     public virtual ICollection<TblEmployee> TblEmployees { get; set; } = new List<TblEmployee>();
+
+    public virtual ICollection<TblInterviewCandidate> TblInterviewCandidates { get; set; } = new List<TblInterviewCandidate>();
 }

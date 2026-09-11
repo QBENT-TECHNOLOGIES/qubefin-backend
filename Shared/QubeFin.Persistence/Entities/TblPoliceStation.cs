@@ -21,5 +21,7 @@ public partial class TblPoliceStation
 
     public virtual TblAdministrativeUnit District { get; set; } = null!;
 
+    public virtual ICollection<TblInterviewCandidate> TblInterviewCandidates { get; set; } = new List<TblInterviewCandidate>();
+
     public virtual ICollection<TblMemberAddress> TblMemberAddresses { get; set; } = new List<TblMemberAddress>();
 }
