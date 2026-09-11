@@ -1,14 +1,26 @@
 ﻿using QubeFin.Persistence.Models.Global;
-using QubeFin.Persistence.Models.Hrms;
 
-namespace QubeFin.Hrms.Application.Departments.Models
+namespace QubeFin.Hrms.Application.Departments.Models;
+
+public class DepartmentResponse
 {
-    public class DepartmentResponse: Department
-    {
-        public DepartmentResponse(Guid id, string name, bool isActive, DateTime? createdOn, Guid? createdBy, DateTime? lastModifiedOn, Guid? lastModifiedBy)
-            : base(id, name, isActive, createdOn, createdBy, lastModifiedOn, lastModifiedBy)
-        {
-        }
-        public AuditInfo? AuditInfo { get; set; } = new AuditInfo();
-    }
+    public Guid Id { get; set; }
+
+    public string Name { get; set; } = null!;
+
+    public Guid? HodEmployeeId { get; set; }
+
+    public string? HodEmployeeName { get; set; }
+
+    public bool IsActive { get; set; }
+
+    public DateTime? CreatedOn { get; set; }
+
+    public Guid? CreatedBy { get; set; }
+
+    public DateTime? LastModifiedOn { get; set; }
+
+    public Guid? LastModifiedBy { get; set; }
+
+    public AuditInfo? AuditInfo { get; set; } = new AuditInfo();
 }

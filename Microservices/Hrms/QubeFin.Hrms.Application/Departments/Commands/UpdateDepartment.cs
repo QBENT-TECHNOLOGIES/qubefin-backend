@@ -11,6 +11,7 @@ namespace QubeFin.Hrms.Application.Departments.Commands;
     public record UpdateDepartmentCommand(
         Guid Id,
         string Name,
+        Guid HodEmployeeId,
         bool IsActive,
         Guid ModifiedBy) : IRequest<Result<string>>;
 public class UpdateDepartmentCommandValidator : AbstractValidator<UpdateDepartmentCommand>
@@ -33,10 +34,10 @@ internal sealed class UpdateDepartmentCommandHandler(IDepartmentRepository depar
             return new RecordNotFoundError("department not found.");
         }
 
-        department.Update(request.Name.Trim(), request.IsActive, request.ModifiedBy);
+        department.Update(request.Name.Trim(), request.HodEmployeeId, request.IsActive, request.ModifiedBy);
         await departmentRepository.UpdateAsync(department);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Ok($"{request.Name} Holiday updated successfully.");
+        return Result.Ok($"{request.Name} Department updated successfully.");
     }
 }

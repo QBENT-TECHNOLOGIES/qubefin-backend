@@ -40,7 +40,7 @@ public class DepartmentEndpoints : IEndpoint
                 return Results.Forbid();
             }
             var userId = principal.Identity.GetUserId();
-            var result = await sender.Send(new CreateDepartmentCommand(request.Name, request.IsActive, userId));
+            var result = await sender.Send(new CreateDepartmentCommand(request.Name,request.HodEmployeeId, request.IsActive, userId));
             return result.ToHttpResult();
         }).WithSummary("Create a new department")
           .WithDescription("Creates a new department in the system.")
@@ -54,7 +54,7 @@ public class DepartmentEndpoints : IEndpoint
                 return Results.Forbid();
             }
             var userId = principal.Identity.GetUserId();
-            var result = await sender.Send(new UpdateDepartmentCommand(id, request.Name, request.IsActive, userId));
+            var result = await sender.Send(new UpdateDepartmentCommand(id, request.Name, request.HodEmployeeId, request.IsActive, userId));
             return result.ToHttpResult();
         }).WithSummary("Update an existing department")
           .WithDescription("Updates an existing department in the system.")

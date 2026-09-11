@@ -8,6 +8,7 @@ namespace QubeFin.Hrms.Application.Departments.Models
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
+        public Guid HodEmployeeId { get; set; }
         public bool IsActive { get; set; }
     }
 }

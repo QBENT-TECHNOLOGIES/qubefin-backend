@@ -9,7 +9,7 @@ using QubeFin.Persistence.Models.Hrms;
 namespace QubeFin.Hrms.Application.Departments.Commands
 {
     #region --- COMMAND ---
-    public record CreateDepartmentCommand(string Name, bool IsActive, Guid CreatedBy) : IRequest<Result<string>>;
+    public record CreateDepartmentCommand(string Name, Guid HodEmployeeId, bool IsActive, Guid CreatedBy) : IRequest<Result<string>>;
     #endregion
     #region --- VALIDATION ---
     internal sealed class CreateDepartmentCommandValidator : AbstractValidator<CreateDepartmentCommand>
@@ -33,6 +33,7 @@ namespace QubeFin.Hrms.Application.Departments.Commands
            var department = Department.Create(
                id:Guid.NewGuid(),
                name:request.Name,
+               hodEmployeeId: request.HodEmployeeId,
                isActive:request.IsActive,
                createdBy:request.CreatedBy);
             await departmentRepository.AddAsync(department);

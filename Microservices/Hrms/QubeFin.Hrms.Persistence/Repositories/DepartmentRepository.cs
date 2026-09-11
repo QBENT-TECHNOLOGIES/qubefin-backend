@@ -19,15 +19,25 @@ public class DepartmentRepository(QubeFinDataContext context) : IDepartmentRepos
     {
         await context.TblDepartments.AddAsync(department.ToEntity());
     }
-    public Task UpdateAsync(Department department)
+    public async Task UpdateAsync(Department department)
     {
-        context.TblDepartments.Update(department.ToEntity());
-        return Task.CompletedTask;
+        var existingEntity = await context.TblDepartments.FindAsync(department.Id);
+
+        if (existingEntity != null)
+        {
+            existingEntity.Name = department.Name;
+            existingEntity.HodEmployeeId = department.HodEmployeeId == Guid.Empty ? null : department.HodEmployeeId;
+            existingEntity.IsActive = department.IsActive;
+            existingEntity.LastModifiedOn = department.LastModifiedOn;
+            existingEntity.LastModifiedBy = department.LastModifiedBy;
+
+            context.TblDepartments.Update(existingEntity);
+        }
     }
 
     public async Task<Department?> GetByIdAsync(Guid id)
     {
-        var entity = await context.TblDepartments
+        var entity = await context.TblDepartments.Include(m=>m.HodEmployee)
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id);
         return entity?.ToDomain();
