@@ -15,7 +15,8 @@ public static class DepartmentMapper
             entity.CreatedOn,
             entity.CreatedBy,
             entity.LastModifiedOn,
-            entity.LastModifiedBy);
+            entity.LastModifiedBy,
+            entity.HodEmployee?.FullName);
     }
 
     public static Entity ToEntity(this Department domain)

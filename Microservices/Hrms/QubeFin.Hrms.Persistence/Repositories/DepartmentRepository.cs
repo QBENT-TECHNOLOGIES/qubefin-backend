@@ -44,7 +44,7 @@ public class DepartmentRepository(QubeFinDataContext context) : IDepartmentRepos
     }
     public async Task<IEnumerable<Department>> GetAllAsync()
     {
-        var entities = await context.TblDepartments
+        var entities = await context.TblDepartments.Include(m=>m.HodEmployee)
             .AsNoTracking()
             .OrderBy(x => x.Name)
             .ToListAsync();

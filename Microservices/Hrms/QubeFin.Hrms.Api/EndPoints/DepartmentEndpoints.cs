@@ -21,7 +21,7 @@ public class DepartmentEndpoints : IEndpoint
             return result.ToHttpResult();
         }).WithSummary("Get all departments")
             .WithDescription("Retrieves a list of departments.")
-            .WithTags("Departmentss")
+            .WithTags("Departments")
           .RequireAuthorization();
 
         app.MapGet("departments/{id}", async (Guid id, ISender sender) =>
