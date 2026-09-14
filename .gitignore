@@ -60,3 +60,4 @@ nunit-*.xml
 /Microservices/Hrms/QubeFin.Hrms.Api/appsettings.json
 /Microservices/Payroll/QubeFin.Payroll.Api/appsettings.json
 /Microservices/Payroll/QubeFin.Payroll.Api/appsettings.json
+/Microservices/Report/QubeFin.Report.Api/appsettings.json

@@ -4,15 +4,11 @@ using NPOI.XSSF.UserModel;
 using System.Data;
 using System.Globalization;
 
-namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
+namespace QubeFin.Report.Persistence.Repositories.ExcelHelpers.CustomHelper
 {
     public static class EmployeeSalaryExcelHelper
     {
-        public static MemoryStream CreateEmployeeSalaryExcel(
-            DataTable dataTable,
-            byte[]? logoBytes,
-            int month,
-            int year)
+        public static MemoryStream CreateEmployeeSalaryExcel(DataTable dataTable, byte[]? logoBytes, int month, int year)
         {
             var workbook = new XSSFWorkbook();
 
@@ -35,10 +31,7 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
                     "EmployeeId"
                 };
 
-                var columns = dataTable.Columns
-                    .Cast<DataColumn>()
-                    .Where(x => !excludedColumns.Contains(x.ColumnName))
-                    .ToList();
+                var columns = dataTable.Columns.Cast<DataColumn>().Where(x => !excludedColumns.Contains(x.ColumnName)).ToList();
 
                 // =========================================================
                 // COLUMN WIDTHS
@@ -158,12 +151,7 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
         // TITLE
         // =============================================================
 
-        private static void AddTitle(
-            IWorkbook workbook,
-            ISheet sheet,
-            ref int currentRow,
-            string title,
-            int columnCount)
+        private static void AddTitle(IWorkbook workbook, ISheet sheet, ref int currentRow, string title, int columnCount)
         {
             var row = sheet.CreateRow(currentRow++);
 
@@ -193,12 +181,7 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
         // SUB HEADER
         // =============================================================
 
-        private static void AddSubHeader(
-            IWorkbook workbook,
-            ISheet sheet,
-            ref int currentRow,
-            string text,
-            int columnCount)
+        private static void AddSubHeader(IWorkbook workbook, ISheet sheet, ref int currentRow, string text, int columnCount)
         {
             var row = sheet.CreateRow(currentRow++);
 
@@ -228,11 +211,7 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
         // GROUP HEADER
         // =============================================================
 
-        private static void AddGroupedHeader(
-            IWorkbook workbook,
-            ISheet sheet,
-            ref int currentRow,
-            List<DataColumn> columns)
+        private static void AddGroupedHeader(IWorkbook workbook, ISheet sheet, ref int currentRow, List<DataColumn> columns)
         {
             var row = sheet.CreateRow(currentRow++);
 
@@ -315,14 +294,7 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
         // MERGE GROUP
         // =============================================================
 
-        private static void MergeGroup(
-        ISheet sheet,
-        IRow row,
-        ICellStyle style,
-        List<DataColumn> columns,
-        string title,
-        string startColumn,
-        string endColumn)
+        private static void MergeGroup(ISheet sheet, IRow row, ICellStyle style, List<DataColumn> columns, string title, string startColumn, string endColumn)
         {
             var startIndex = FindColumnIndex(columns, startColumn);
             var endIndex = FindColumnIndex(columns, endColumn);
@@ -352,11 +324,7 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
         // COLUMN HEADER
         // =============================================================
 
-        private static void AddColumnHeader(
-            IWorkbook workbook,
-            ISheet sheet,
-            ref int currentRow,
-            List<DataColumn> columns)
+        private static void AddColumnHeader(IWorkbook workbook, ISheet sheet, ref int currentRow, List<DataColumn> columns)
         {
             var row = sheet.CreateRow(currentRow++);
 
@@ -378,12 +346,7 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
         // DATA ROWS
         // =============================================================
 
-        private static void AddDataRows(
-            IWorkbook workbook,
-            ISheet sheet,
-            ref int currentRow,
-            DataTable dataTable,
-            List<DataColumn> columns)
+        private static void AddDataRows(IWorkbook workbook, ISheet sheet, ref int currentRow, DataTable dataTable, List<DataColumn> columns)
         {
             var textStyle = CreateDataStyle(workbook);
 
@@ -450,9 +413,7 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
         // FIND COLUMN
         // =============================================================
 
-        private static int FindColumnIndex(
-            List<DataColumn> columns,
-            string columnName)
+        private static int FindColumnIndex(List<DataColumn> columns, string columnName)
         {
             for (var i = 0; i < columns.Count; i++)
             {
@@ -471,9 +432,7 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
         // COLUMN WIDTHS
         // =============================================================
 
-        private static void ApplyColumnWidths(
-            ISheet sheet,
-            List<DataColumn> columns)
+        private static void ApplyColumnWidths(ISheet sheet, List<DataColumn> columns)
         {
             for (var i = 0; i < columns.Count; i++)
             {
@@ -526,13 +485,9 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
         // NUMERIC COLUMN
         // =============================================================
 
-        private static bool IsNumericColumn(
-            DataColumn column)
+        private static bool IsNumericColumn(DataColumn column)
         {
-            var type =
-                Nullable.GetUnderlyingType(
-                    column.DataType)
-                ?? column.DataType;
+            var type = Nullable.GetUnderlyingType(column.DataType) ?? column.DataType;
 
             return type == typeof(byte)
                    || type == typeof(short)
@@ -547,28 +502,21 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
         // PAYMENT MONTH
         // =============================================================
 
-        private static string GetPaymentMonth(
-            int month,
-            int year)
+        private static string GetPaymentMonth(int month, int year)
         {
             if (month < 1 || month > 12)
             {
                 return string.Empty;
             }
 
-            return new DateTime(
-                    year,
-                    month,
-                    1)
-                .ToString("MMMM yyyy");
+            return new DateTime(year, month, 1).ToString("MMMM yyyy");
         }
 
         // =============================================================
         // TITLE STYLE
         // =============================================================
 
-        private static ICellStyle CreateTitleStyle(
-            IWorkbook workbook)
+        private static ICellStyle CreateTitleStyle(IWorkbook workbook)
         {
             var style = workbook.CreateCellStyle();
 
@@ -592,16 +540,13 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
         // SUB HEADER STYLE
         // =============================================================
 
-        private static ICellStyle CreateSubHeaderStyle(
-            IWorkbook workbook)
+        private static ICellStyle CreateSubHeaderStyle(IWorkbook workbook)
         {
             var style = workbook.CreateCellStyle();
 
-            style.Alignment =
-                HorizontalAlignment.Center;
+            style.Alignment = HorizontalAlignment.Center;
 
-            style.VerticalAlignment =
-                VerticalAlignment.Center;
+            style.VerticalAlignment = VerticalAlignment.Center;
 
             var font = workbook.CreateFont();
 
@@ -617,35 +562,18 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
         // GROUP HEADER STYLE
         // =============================================================
 
-        private static ICellStyle CreateGroupHeaderStyle(
-            IWorkbook workbook)
+        private static ICellStyle CreateGroupHeaderStyle(IWorkbook workbook)
         {
             var style = workbook.CreateCellStyle();
 
-            style.Alignment =
-                HorizontalAlignment.Center;
-
-            style.VerticalAlignment =
-                VerticalAlignment.Center;
-
-            style.FillForegroundColor =
-                IndexedColors.Grey25Percent.Index;
-
-            style.FillPattern =
-                FillPattern.SolidForeground;
-
-            style.BorderTop =
-                BorderStyle.Thin;
-
-            style.BorderBottom =
-                BorderStyle.Thin;
-
-            style.BorderLeft =
-                BorderStyle.Thin;
-
-            style.BorderRight =
-                BorderStyle.Thin;
-
+            style.Alignment = HorizontalAlignment.Center;
+            style.VerticalAlignment = VerticalAlignment.Center;
+            style.FillForegroundColor = IndexedColors.Grey25Percent.Index;
+            style.FillPattern = FillPattern.SolidForeground;
+            style.BorderTop = BorderStyle.Thin;
+            style.BorderBottom = BorderStyle.Thin;
+            style.BorderLeft = BorderStyle.Thin;
+            style.BorderRight = BorderStyle.Thin;
             var font = workbook.CreateFont();
 
             font.IsBold = true;
@@ -660,28 +588,16 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
         // COLUMN HEADER STYLE
         // =============================================================
 
-        private static ICellStyle CreateColumnHeaderStyle(
-            IWorkbook workbook)
+        private static ICellStyle CreateColumnHeaderStyle(IWorkbook workbook)
         {
             var style = workbook.CreateCellStyle();
 
-            style.Alignment =
-                HorizontalAlignment.Center;
-
-            style.VerticalAlignment =
-                VerticalAlignment.Center;
-
-            style.BorderTop =
-                BorderStyle.Thin;
-
-            style.BorderBottom =
-                BorderStyle.Thin;
-
-            style.BorderLeft =
-                BorderStyle.Thin;
-
-            style.BorderRight =
-                BorderStyle.Thin;
+            style.Alignment = HorizontalAlignment.Center;
+            style.VerticalAlignment = VerticalAlignment.Center;
+            style.BorderTop = BorderStyle.Thin;
+            style.BorderBottom = BorderStyle.Thin;
+            style.BorderLeft = BorderStyle.Thin;
+            style.BorderRight = BorderStyle.Thin;
 
             var font = workbook.CreateFont();
 
@@ -697,28 +613,16 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
         // DATA STYLE
         // =============================================================
 
-        private static ICellStyle CreateDataStyle(
-            IWorkbook workbook)
+        private static ICellStyle CreateDataStyle(IWorkbook workbook)
         {
             var style = workbook.CreateCellStyle();
 
-            style.Alignment =
-                HorizontalAlignment.Left;
-
-            style.VerticalAlignment =
-                VerticalAlignment.Center;
-
-            style.BorderTop =
-                BorderStyle.Thin;
-
-            style.BorderBottom =
-                BorderStyle.Thin;
-
-            style.BorderLeft =
-                BorderStyle.Thin;
-
-            style.BorderRight =
-                BorderStyle.Thin;
+            style.Alignment = HorizontalAlignment.Left;
+            style.VerticalAlignment = VerticalAlignment.Center;
+            style.BorderTop = BorderStyle.Thin;
+            style.BorderBottom = BorderStyle.Thin;
+            style.BorderLeft = BorderStyle.Thin;
+            style.BorderRight = BorderStyle.Thin;
 
             return style;
         }
@@ -727,28 +631,16 @@ namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
         // NUMERIC DATA STYLE
         // =============================================================
 
-        private static ICellStyle CreateNumericDataStyle(
-            IWorkbook workbook)
+        private static ICellStyle CreateNumericDataStyle(IWorkbook workbook)
         {
             var style = workbook.CreateCellStyle();
 
-            style.Alignment =
-                HorizontalAlignment.Right;
-
-            style.VerticalAlignment =
-                VerticalAlignment.Center;
-
-            style.BorderTop =
-                BorderStyle.Thin;
-
-            style.BorderBottom =
-                BorderStyle.Thin;
-
-            style.BorderLeft =
-                BorderStyle.Thin;
-
-            style.BorderRight =
-                BorderStyle.Thin;
+            style.Alignment = HorizontalAlignment.Right;
+            style.VerticalAlignment = VerticalAlignment.Center;
+            style.BorderTop = BorderStyle.Thin;
+            style.BorderBottom = BorderStyle.Thin;
+            style.BorderLeft = BorderStyle.Thin;
+            style.BorderRight = BorderStyle.Thin;
 
             return style;
         }

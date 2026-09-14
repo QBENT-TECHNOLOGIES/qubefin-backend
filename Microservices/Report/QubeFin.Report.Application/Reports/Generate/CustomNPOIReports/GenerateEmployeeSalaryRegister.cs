@@ -1,13 +1,9 @@
 ﻿using FluentResults;
 using FluentValidation;
 using MediatR;
-using QubeFin.Payroll.Persistence.Repositories;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using static QubeFin.Payroll.Persistence.Repositories.ExcelHelpers.ExcelReportHelper;
+using QubeFin.Report.Persistence.Repositories;
 
-namespace QubeFin.Payroll.Application.Payrolls.Report;
+namespace QubeFin.Report.Application.Reports.Generate.CustomNPOIReports;
 
 #region --- COMMAND ---
 

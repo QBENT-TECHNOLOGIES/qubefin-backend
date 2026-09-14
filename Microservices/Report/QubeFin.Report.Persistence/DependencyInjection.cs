@@ -2,13 +2,10 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using QubeFin.Core.Security;
-using QubeFin.Payroll.Persistence.Repositories;
 using QubeFin.Persistence;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using QubeFin.Report.Persistence.Repositories;
 
-namespace QubeFin.Payroll.Persistence;
+namespace QubeFin.Report.Persistence;
 
 public static class DependencyInjection
 {
@@ -23,7 +20,7 @@ public static class DependencyInjection
         services.AddHttpClient();
 
         services.AddScoped<ITokenGenerator, TokenGenerator>();
-        services.AddScoped<IPayrollRepository, PayrollRepository>();
+        services.AddScoped<IReportRepository, ReportRepository>();
         return services;
     }
 }

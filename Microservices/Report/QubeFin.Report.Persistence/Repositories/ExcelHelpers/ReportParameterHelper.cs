@@ -1,7 +1,7 @@
 ﻿using Microsoft.Data.SqlClient;
 using System.Data;
 
-namespace QubeFin.Payroll.Persistence.Repositories.ExcelHelpers
+namespace QubeFin.Report.Persistence.Repositories.ExcelHelpers
 {
     public static class ReportParameterHelper
     {

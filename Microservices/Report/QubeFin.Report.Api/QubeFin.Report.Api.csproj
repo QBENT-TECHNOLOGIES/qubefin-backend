@@ -8,10 +8,14 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.16.11" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Host\QubeFin.ServiceDefaults\QubeFin.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\QubeFin.Report.Application\QubeFin.Report.Application.csproj" />
+    <ProjectReference Include="..\QubeFin.Report.Infrastructure\QubeFin.Report.Infrastructure.csproj" />
+    <ProjectReference Include="..\QubeFin.Report.Persistence\QubeFin.Report.Persistence.csproj" />
   </ItemGroup>
 
 </Project>

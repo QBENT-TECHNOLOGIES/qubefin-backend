@@ -4,6 +4,7 @@ namespace QubeFin.Hrms.Application.Attendances.Models
 {
     public class AttendanceSearchRequest : SearchParam
     {
+        public Guid? CompanyId { get; set; }
         public DateOnly? FromDate { get; set; }
         public DateOnly? ToDate { get; set; }
         public string? Status { get; set; }
