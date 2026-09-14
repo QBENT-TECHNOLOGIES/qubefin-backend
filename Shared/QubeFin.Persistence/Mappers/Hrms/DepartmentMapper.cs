@@ -10,7 +10,7 @@ public static class DepartmentMapper
         return new Department(
             entity.Id,
             entity.Name,
-            entity.HodEmployeeId ?? Guid.Empty,
+            entity.HodEmployeeId,
             entity.IsActive,
             entity.CreatedOn,
             entity.CreatedBy,

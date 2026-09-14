@@ -11,16 +11,15 @@ namespace QubeFin.Hrms.Application.Departments.Commands;
     public record UpdateDepartmentCommand(
         Guid Id,
         string Name,
-        Guid HodEmployeeId,
+        Guid? HodEmployeeId,
         bool IsActive,
         Guid ModifiedBy) : IRequest<Result<string>>;
 public class UpdateDepartmentCommandValidator : AbstractValidator<UpdateDepartmentCommand>
 {
     public UpdateDepartmentCommandValidator()
     {
-        RuleFor(x => x.Id).NotEmpty();
-        RuleFor(x => x.Name).NotEmpty();
-        RuleFor(x => x.ModifiedBy).NotEmpty();
+        RuleFor(x => x.Id).NotEmpty().WithMessage("Department id is required");
+        RuleFor(x => x.Name).NotEmpty().WithMessage(" Department name is required").MaximumLength(20).WithMessage("Department name cannot exceed 20 characters.");
     }
 }
 internal sealed class UpdateDepartmentCommandHandler(IDepartmentRepository departmentRepository, IUnitOfWork unitOfWork)

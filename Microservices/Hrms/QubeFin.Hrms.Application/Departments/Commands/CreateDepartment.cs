@@ -9,14 +9,14 @@ using QubeFin.Persistence.Models.Hrms;
 namespace QubeFin.Hrms.Application.Departments.Commands
 {
     #region --- COMMAND ---
-    public record CreateDepartmentCommand(string Name, Guid HodEmployeeId, bool IsActive, Guid CreatedBy) : IRequest<Result<string>>;
+    public record CreateDepartmentCommand(string Name, Guid? HodEmployeeId, bool IsActive, Guid CreatedBy) : IRequest<Result<string>>;
     #endregion
     #region --- VALIDATION ---
     internal sealed class CreateDepartmentCommandValidator : AbstractValidator<CreateDepartmentCommand>
     {
         public CreateDepartmentCommandValidator() 
         {
-            RuleFor(x => x.Name).NotEmpty().WithMessage("Name is required").MaximumLength(20).WithMessage("Department name cannot exceed 20 characters.");
+            RuleFor(x => x.Name).NotEmpty().WithMessage(" Department name is required").MaximumLength(20).WithMessage("Department name cannot exceed 20 characters.");
         }
     }
     #endregion
