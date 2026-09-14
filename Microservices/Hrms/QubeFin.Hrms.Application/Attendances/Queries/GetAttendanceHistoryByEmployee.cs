@@ -14,9 +14,7 @@ public record GetAttendanceHistoryByEmployee(Guid EmployeeId, AttendanceSearchRe
 public class GetAttendanceHistoryByEmployeeValidator : AbstractValidator<GetAttendanceHistoryByEmployee>
 {
     public GetAttendanceHistoryByEmployeeValidator()
-    {
-       
-        RuleFor(v => v.searchParam.CompanyId).NotNull().WithMessage("Company Id is required.");
+    {       
         RuleFor(v => v.EmployeeId).NotNull().WithMessage("Employee Id is required.");
     }
 }
