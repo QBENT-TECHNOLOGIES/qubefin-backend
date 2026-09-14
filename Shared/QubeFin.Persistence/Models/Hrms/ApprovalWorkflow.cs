@@ -135,4 +135,12 @@ public class ApprovalWorkflow
         _steps.Clear();
         _steps.AddRange(steps);
     }
+
+    public void UpdateSteps(IEnumerable<ApprovalWorkflowStep> steps)
+    {
+        ArgumentNullException.ThrowIfNull(steps);
+
+        _steps.Clear();
+        _steps.AddRange(steps);
+    }
 }
