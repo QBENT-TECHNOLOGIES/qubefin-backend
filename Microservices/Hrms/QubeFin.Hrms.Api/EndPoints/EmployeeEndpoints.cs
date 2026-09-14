@@ -315,5 +315,35 @@ public class EmployeeEndpoints : IEndpoint
         .WithSummary("Transfer Employee")
         .RequireAuthorization();
         #endregion
+
+        #region Employee Gross Salary
+
+        app.MapGet("employees/gross-salary/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+            var command = new GetEmployeeGrossSalaryHistoryQuery(id);
+            var result = await sender.Send(command);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get Employee Gross Salary History")
+        .RequireAuthorization();
+
+        app.MapPost("employees/gross-salary", async (ClaimsPrincipal principal, [FromBody] EmployeeGrossSalaryRequest request, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+
+            var command = new SaveEmployeeGrossSalaryCommand(request);
+            var result = await sender.Send(command);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Save Employee Gross Salary")
+        .RequireAuthorization();
+        #endregion
     }
 }
