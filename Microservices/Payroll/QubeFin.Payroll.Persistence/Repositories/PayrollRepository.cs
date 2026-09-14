@@ -134,7 +134,7 @@ namespace QubeFin.Payroll.Persistence.Repositories
 
         public  async Task<List<TblSalaryGrade>> GetAllSalaryGrade()
         {
-            return await context.TblSalaryGrades.Where(m => m.IsActive).AsNoTracking().ToListAsync();
+            return await context.TblSalaryGrades.Include(m => m.TblSalaryStructures).Where(m => m.IsActive).AsNoTracking().ToListAsync();
         }
     }
 }
