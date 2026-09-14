@@ -41,6 +41,8 @@ public partial class TblAdministrativeUnit
 
     public virtual ICollection<TblGroup> TblGroups { get; set; } = new List<TblGroup>();
 
+    public virtual ICollection<TblInterviewCandidate> TblInterviewCandidates { get; set; } = new List<TblInterviewCandidate>();
+
     public virtual ICollection<TblMemberAddress> TblMemberAddresses { get; set; } = new List<TblMemberAddress>();
 
     public virtual ICollection<TblPoliceStation> TblPoliceStations { get; set; } = new List<TblPoliceStation>();

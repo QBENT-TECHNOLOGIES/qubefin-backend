@@ -47,6 +47,12 @@ public partial class TblUser
 
     public virtual ICollection<TblApprovalWorkflow> TblApprovalWorkflowLastModifiedByNavigations { get; set; } = new List<TblApprovalWorkflow>();
 
+    public virtual ICollection<TblInterviewCandidate> TblInterviewCandidateCreatedByNavigations { get; set; } = new List<TblInterviewCandidate>();
+
+    public virtual ICollection<TblInterviewCandidate> TblInterviewCandidateModifiedByNavigations { get; set; } = new List<TblInterviewCandidate>();
+
+    public virtual ICollection<TblInterviewPanel> TblInterviewPanels { get; set; } = new List<TblInterviewPanel>();
+
     public virtual ICollection<TblLeaveType> TblLeaveTypeCreatedByNavigations { get; set; } = new List<TblLeaveType>();
 
     public virtual ICollection<TblLeaveType> TblLeaveTypeLastModifiedByNavigations { get; set; } = new List<TblLeaveType>();

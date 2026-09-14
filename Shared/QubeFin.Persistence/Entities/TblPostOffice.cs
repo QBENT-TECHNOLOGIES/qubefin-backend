@@ -18,4 +18,6 @@ public partial class TblPostOffice
     public DateTime? LastModifiedOn { get; set; }
 
     public Guid? LastModifiedBy { get; set; }
+
+    public virtual ICollection<TblInterviewCandidate> TblInterviewCandidates { get; set; } = new List<TblInterviewCandidate>();
 }

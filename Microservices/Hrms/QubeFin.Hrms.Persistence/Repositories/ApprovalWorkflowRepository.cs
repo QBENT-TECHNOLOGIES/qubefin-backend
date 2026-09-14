@@ -31,7 +31,7 @@ public class ApprovalWorkflowRepository(QubeFinDataContext context) : IApprovalW
             .Include(x => x.TblApprovalWorkflowSteps)
             .FirstAsync(x => x.Id == approvalWorkflow.Id);
 
-        // Update workflow fields
+        // Workflow fields
         entity.Category = approvalWorkflow.Category;
         entity.LeaveTypeId = approvalWorkflow.LeaveTypeId;
         entity.OrganizationUnitTypeId = approvalWorkflow.OrganizationUnitTypeId;
@@ -42,39 +42,55 @@ public class ApprovalWorkflowRepository(QubeFinDataContext context) : IApprovalW
         entity.LastModifiedOn = approvalWorkflow.LastModifiedOn;
         entity.LastModifiedBy = approvalWorkflow.LastModifiedBy;
 
-        // Existing steps currently in database
+        // Existing DB steps
         var existingSteps = entity.TblApprovalWorkflowSteps
             .ToDictionary(x => x.Id);
 
-        // Steps coming from the request
+        // Requested steps
         var requestedSteps = approvalWorkflow.Steps.ToList();
 
+        // Requested existing IDs
         var requestedStepIds = requestedSteps
             .Where(x => x.Id != Guid.Empty)
             .Select(x => x.Id)
             .ToHashSet();
 
-        // Remove steps which are no longer present
+        // Remove deleted steps
         var stepsToRemove = entity.TblApprovalWorkflowSteps
             .Where(x => !requestedStepIds.Contains(x.Id))
             .ToList();
 
-        context.TblApprovalWorkflowSteps.RemoveRange(stepsToRemove);
+        context.TblApprovalWorkflowSteps.RemoveRange(
+            stepsToRemove);
 
-        // Add/update requested steps
+        // Update existing / add new
         foreach (var step in requestedSteps)
         {
-            // Existing step
             if (step.Id != Guid.Empty &&
-                existingSteps.TryGetValue(step.Id, out var existingStep))
+                existingSteps.TryGetValue(
+                    step.Id,
+                    out var existingStep))
             {
-                existingStep.ReceiverPostId = step.ReceiverPostId;
-                existingStep.OrganizationUnitTypeId = step.OrganizationUnitTypeId;
-                existingStep.IsRecommendEvent = step.IsRecommendEvent;
-                existingStep.IsApprovalEvent = step.IsApprovalEvent;
-                existingStep.EventStatus = step.EventStatus;
-                existingStep.EventButtonText = step.EventButtonText;
-                existingStep.SequenceNo = step.SequenceNo;
+                existingStep.ReceiverPostId =
+                    step.ReceiverPostId;
+
+                existingStep.OrganizationUnitTypeId =
+                    step.OrganizationUnitTypeId;
+
+                existingStep.IsRecommendEvent =
+                    step.IsRecommendEvent;
+
+                existingStep.IsApprovalEvent =
+                    step.IsApprovalEvent;
+
+                existingStep.EventStatus =
+                    step.EventStatus;
+
+                existingStep.EventButtonText =
+                    step.EventButtonText;
+
+                existingStep.SequenceNo =
+                    step.SequenceNo;
 
                 continue;
             }
@@ -82,9 +98,11 @@ public class ApprovalWorkflowRepository(QubeFinDataContext context) : IApprovalW
             // New step
             var newStep = step.ToEntity();
 
-            newStep.ApprovalWorkflowId = entity.Id;
+            newStep.ApprovalWorkflowId =
+                entity.Id;
 
-            await context.TblApprovalWorkflowSteps.AddAsync(newStep);
+            context.TblApprovalWorkflowSteps.Add(
+                newStep);
         }
     }
 
