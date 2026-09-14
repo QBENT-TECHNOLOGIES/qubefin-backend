@@ -15,8 +15,8 @@ namespace QubeFin.Hrms.Application.Departments.Commands
     internal sealed class CreateDepartmentCommandValidator : AbstractValidator<CreateDepartmentCommand>
     {
         public CreateDepartmentCommandValidator() 
-        { 
-            
+        {
+            RuleFor(x => x.Name).NotEmpty().WithMessage("Name is required").MaximumLength(20).WithMessage("Department name cannot exceed 20 characters.");
         }
     }
     #endregion
