@@ -17,4 +17,10 @@
     <ProjectReference Include="..\QubeFin.Hrms.Persistence\QubeFin.Hrms.Persistence.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="InterviewProcess\Commands\" />
+    <Folder Include="InterviewProcess\Models\" />
+    <Folder Include="InterviewProcess\Queries\" />
+  </ItemGroup>
+
 </Project>
