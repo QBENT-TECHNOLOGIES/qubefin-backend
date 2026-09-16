@@ -17,7 +17,7 @@ public class CandidateEndpoints : IEndpoint
         app.MapGet("candidates", async ([AsParameters] CandidateSearchParam searchParam, ISender sender, CancellationToken cancellationToken) =>
         {
             var result = await sender.Send(new GetCandidatesQuery(searchParam), cancellationToken);
-            return Results.Ok(result);
+            return result.ToHttpResult();
         })
         .WithSummary("Search interview candidates")
         .WithTags("Candidates")
