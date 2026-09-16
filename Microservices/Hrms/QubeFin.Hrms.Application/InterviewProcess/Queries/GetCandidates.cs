@@ -18,8 +18,8 @@ internal sealed class GetCandidatesQueryHandler(QubeFinDataContext context) : IR
         var pageIndex = request.SearchParam.PageIndex < 0 ? 0 : request.SearchParam.PageIndex;
         var pageSize = request.SearchParam.PageSize <= 0 ? 10 : request.SearchParam.PageSize;
         var query = context.TblInterviewCandidates
-            .AsNoTracking()
-            .Where(c => c.CompanyId == request.SearchParam.CompanyId);
+            .AsNoTracking();
+            //.Where(c => c.CompanyId == request.SearchParam.CompanyId);
 
         if (!string.IsNullOrWhiteSpace(request.SearchParam.SearchText))
         {

@@ -4,7 +4,7 @@ namespace QubeFin.Hrms.Application.InterviewProcess.Models;
 
 public class CandidateSearchParam : SearchParam
 {
-    public Guid CompanyId { get; set; }
+    public Guid? CompanyId { get; set; }
 }
 
 public class CandidateListDto
