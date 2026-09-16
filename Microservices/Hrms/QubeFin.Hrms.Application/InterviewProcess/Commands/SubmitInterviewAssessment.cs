@@ -9,7 +9,7 @@ using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
-public record SubmitInterviewAssessmentCommand(Guid PanelId, AssessmentSubmitDto Assessment, Guid SubmittedBy) : IRequest<Result>;
+public record SubmitInterviewAssessmentCommand(Guid PanelId, AssessmentSubmitDto Assessment, Guid SubmittedBy) : IRequest<Result<string>>;
 
 public class SubmitInterviewAssessmentCommandValidator : AbstractValidator<SubmitInterviewAssessmentCommand>
 {
@@ -30,9 +30,9 @@ public class SubmitInterviewAssessmentCommandValidator : AbstractValidator<Submi
     }
 }
 
-internal sealed class SubmitInterviewAssessmentCommandHandler(IInterviewPanelRepository panelRepository, IUnitOfWork unitOfWork) : IRequestHandler<SubmitInterviewAssessmentCommand, Result>
+internal sealed class SubmitInterviewAssessmentCommandHandler(IInterviewPanelRepository panelRepository, IUnitOfWork unitOfWork) : IRequestHandler<SubmitInterviewAssessmentCommand, Result<string>>
 {
-    public async Task<Result> Handle(SubmitInterviewAssessmentCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(SubmitInterviewAssessmentCommand request, CancellationToken cancellationToken)
     {
         if (request.SubmittedBy == Guid.Empty)
         {
@@ -71,6 +71,6 @@ internal sealed class SubmitInterviewAssessmentCommandHandler(IInterviewPanelRep
         await panelRepository.UpdateAsync(panel);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Ok();
+        return Result.Ok("Assessment submitted successfully.");
     }
 }

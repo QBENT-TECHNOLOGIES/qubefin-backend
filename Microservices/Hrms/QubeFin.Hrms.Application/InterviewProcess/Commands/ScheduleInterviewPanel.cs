@@ -9,7 +9,7 @@ using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
-public record ScheduleInterviewPanelCommand(Guid CandidateId, List<PanelistScheduleDto> Panelists, Guid ScheduledBy) : IRequest<Result>;
+public record ScheduleInterviewPanelCommand(Guid CandidateId, List<PanelistScheduleDto> Panelists, Guid ScheduledBy) : IRequest<Result<string>>;
 
 public class ScheduleInterviewPanelCommandValidator : AbstractValidator<ScheduleInterviewPanelCommand>
 {
@@ -27,13 +27,13 @@ public class ScheduleInterviewPanelCommandValidator : AbstractValidator<Schedule
     }
 }
 
-internal sealed class ScheduleInterviewPanelCommandHandler(IInterviewPanelRepository panelRepository, ICandidateRepository candidateRepository, IUnitOfWork unitOfWork) : IRequestHandler<ScheduleInterviewPanelCommand, Result>
+internal sealed class ScheduleInterviewPanelCommandHandler(IInterviewPanelRepository panelRepository, ICandidateRepository candidateRepository, IUnitOfWork unitOfWork) : IRequestHandler<ScheduleInterviewPanelCommand, Result<string>>
 {
-    public async Task<Result> Handle(ScheduleInterviewPanelCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(ScheduleInterviewPanelCommand request, CancellationToken cancellationToken)
     {
         if (request.ScheduledBy == Guid.Empty)
         {
-            return new ValidationError("Authenticated user is required.");
+            return Result.Fail("Authenticated user is required.");
         }
 
         var candidate = await candidateRepository.GetByIdAsync(request.CandidateId);
@@ -65,6 +65,6 @@ internal sealed class ScheduleInterviewPanelCommandHandler(IInterviewPanelReposi
         await panelRepository.AddRangeAsync(panelists, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Ok();
+        return Result.Ok("Interview panel scheduled successfully.");
     }
 }
