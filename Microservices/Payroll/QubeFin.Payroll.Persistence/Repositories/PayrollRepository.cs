@@ -7,10 +7,11 @@ using QubeFin.Persistence.Models.Hrms;
 using QubeFin.Persistence.Models.Payroll;
 
 namespace QubeFin.Payroll.Persistence.Repositories
-{   
+{
     public interface IPayrollRepository
     {
         Task<PayrollModel?> GetPayrollById(Guid payrollId);
+        Task<List<PayrollDetailRow>> GetPayrollDetailByIdAsync(Guid payrollId, CancellationToken cancellationToken = default);
         Task<IEnumerable<PayrollModel>> GetAllPayrolls();
         Task<MonthlyPayroll> GetMonthlyPayrollAsync(int payrollMonth, int payrollYear);
         Task<List<TblPayRoll>> GetPayrollsForUpdateAsync(int month, int year, CancellationToken cancellationToken = default);
@@ -26,12 +27,71 @@ namespace QubeFin.Payroll.Persistence.Repositories
     {
         public async Task<PayrollModel?> GetPayrollById(Guid payrollId)
         {
-            var entity = await context.TblPayRolls.Include(m => m.OrganizationUnit).Include(m => m.Employee).Include(m => m.Designation).Include(m => m.Company).Include(m => m.FinYear)
+            var entity = await context.TblPayRolls.Include(m => m.OrganizationUnit).Include(m => m.Employee).Include(m => m.Designation).Include(m => m.Company)
+                .Include(m => m.FinYear)
                 .Include(m => m.TblPayRollComponents)
                     .ThenInclude(c => c.SalaryComponent)
                         .ThenInclude(sc => sc.Category)
                         .Include(m => m.SalaryGrade).AsNoTracking().FirstOrDefaultAsync(x => x.Id == payrollId);
             return entity?.ToDomain();
+        }
+        public async Task<List<PayrollDetailRow>> GetPayrollDetailByIdAsync(Guid payrollId, CancellationToken cancellationToken = default)
+        {
+            var payrollIdParameter = new SqlParameter("@PayrollId", payrollId);
+
+            // IsEditable is sourced from Tbl_SalaryStructureComponent (matched on the payroll's SalaryStructureId
+            // and the component's SalaryComponentId), falling back to Tbl_SalaryComponent when no structure row exists.
+            var sql = """
+                SELECT
+                    p.Id AS Id,
+                    p.EmployeeId AS EmployeeId,
+                    e.FullName AS EmployeeName,
+                    e.Code AS EmployeeCode,
+                    p.OrganizationUnitId AS OrganizationUnitId,
+                    ou.Name AS OrganizationUnitName,
+                    ou.CodeVal AS OrganizationCode,
+                    p.DesignationId AS DesignationId,
+                    d.Name AS DesignationTitle,
+                    p.CompanyId AS CompanyId,
+                    c.Name AS CompanyName,
+                    fy.Caption AS FinYear,
+                    p.PayrollMonth AS PayrollMonth,
+                    p.PayrollYear AS PayrollYear,
+                    p.IsLocked AS IsLocked,
+                    p.DayCount AS DayCount,
+                    p.SalaryGradeId AS SalaryGradeId,
+                    sg.Name AS SalaryGradeName,
+                    p.CreatedOn AS CreatedOn,
+                    p.CreatedBy AS CreatedBy,
+                    p.SalaryStructureId AS SalaryStructureId,
+                    pc.Id AS ComponentId,
+                    pc.SalaryComponentId AS SalaryComponentId,
+                    sc.Name AS SalaryComponentName,
+                    cat.Name AS CategoryName,
+                    sc.DisplayOrder AS DisplayOrder,
+                    pc.Percentage AS Percentage,
+                    pc.Amount AS Amount,
+                    COALESCE(ssc.IsEditable, sc.IsEditable) AS IsEditable
+                FROM Payroll.Tbl_PayRoll p
+                INNER JOIN Hrms.Tbl_Employee e ON e.Id = p.EmployeeId
+                INNER JOIN Global.Tbl_OrganizationUnit ou ON ou.Id = p.OrganizationUnitId
+                INNER JOIN Hrms.Tbl_Designation d ON d.Id = p.DesignationId
+                INNER JOIN Global.Tbl_Company c ON c.Id = p.CompanyId
+                INNER JOIN Finance.Tbl_FinancialYear fy ON fy.Id = p.FinYearId
+                LEFT JOIN Payroll.Tbl_SalaryGrade sg ON sg.Id = p.SalaryGradeId
+                LEFT JOIN Payroll.Tbl_PayRollComponent pc ON pc.PayRollId = p.Id
+                LEFT JOIN Payroll.Tbl_SalaryComponent sc ON sc.Id = pc.SalaryComponentId
+                LEFT JOIN Payroll.Tbl_SalaryComponentCategory cat ON cat.Id = sc.CategoryId
+                LEFT JOIN Payroll.Tbl_SalaryStructureComponent ssc
+                    ON ssc.SalaryStructureId = p.SalaryStructureId
+                    AND ssc.SalaryComponentId = pc.SalaryComponentId
+                WHERE p.Id = @PayrollId
+                ORDER BY sc.DisplayOrder
+                """;
+
+            return await context.Database
+                .SqlQueryRaw<PayrollDetailRow>(sql, payrollIdParameter)
+                .ToListAsync(cancellationToken);
         }
         public async Task<IEnumerable<PayrollModel>> GetAllPayrolls()
         {
@@ -59,11 +119,11 @@ namespace QubeFin.Payroll.Persistence.Repositories
         }
         public async Task<bool> HasOpenPayrollAsync(Guid companyId, CancellationToken cancellationToken)
         {
-            return await context.TblPayRolls .AnyAsync(p => p.CompanyId == companyId && p.IsLocked == false, cancellationToken);
+            return await context.TblPayRolls.AnyAsync(p => p.CompanyId == companyId && p.IsLocked == false, cancellationToken);
         }
         public async Task<IEnumerable<MonthwisePayrollData>> GetMonthwisePayrollSummaryAsync(Guid? companyId, int? payrollMonth, int payrollYear)
         {
-            var companyParameter = new SqlParameter("@p_CompanyId",  companyId ?? (object?)DBNull.Value);
+            var companyParameter = new SqlParameter("@p_CompanyId", companyId ?? (object?)DBNull.Value);
             var yearParameter = new SqlParameter("@p_Year", payrollYear);
             var monthParameter = new SqlParameter("@p_Month", payrollMonth ?? (object?)DBNull.Value);
 
@@ -74,15 +134,15 @@ namespace QubeFin.Payroll.Persistence.Repositories
                     @p_Month = @p_Month
                 """;
 
-                var result = await context.Database
-                    .SqlQueryRaw<MonthwisePayrollData>(
-                        sql,
-                        companyParameter,
-                        yearParameter,
-                        monthParameter)
-                    .ToListAsync();
+            var result = await context.Database
+                .SqlQueryRaw<MonthwisePayrollData>(
+                    sql,
+                    companyParameter,
+                    yearParameter,
+                    monthParameter)
+                .ToListAsync();
 
-                return result;
+            return result;
         }
         public async Task<List<TblPayRoll>> GetPayrollsForUpdateAsync(int month, int year, CancellationToken cancellationToken = default)
         {
@@ -132,7 +192,7 @@ namespace QubeFin.Payroll.Persistence.Repositories
             return await context.SP_GetEmployeePayslip(employeeId);
         }
 
-        public  async Task<List<TblSalaryGrade>> GetAllSalaryGrade()
+        public async Task<List<TblSalaryGrade>> GetAllSalaryGrade()
         {
             return await context.TblSalaryGrades.Include(m => m.TblSalaryStructures).Where(m => m.IsActive).AsNoTracking().ToListAsync();
         }
