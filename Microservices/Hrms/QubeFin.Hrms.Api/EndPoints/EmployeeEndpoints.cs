@@ -23,6 +23,32 @@ public class EmployeeEndpoints : IEndpoint
         .WithSummary("Search Employees by Free Text, Office Or Designation")
         .RequireAuthorization();
 
+        app.MapPost("employees/records/search", async (ClaimsPrincipal principal, EmployeeRecordSearchRequest request, ISender sender) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Forbid();
+            }
+
+            var employeeId = principal.Identity.GetEmployeeId();
+            var result = await sender.Send(new GetEmployeeRecordsBySearchQuery(employeeId, request));
+            return Results.Ok(result);
+        })
+        .WithSummary("Search employee records across leave, regularization, prayer, attendance and fitness")
+        .WithDescription("Returns one page of a single record type mapped onto a shared row shape, plus the total count of every record type for the same filters.")
+        .WithTags("Employees")
+        .RequireAuthorization();
+
+        app.MapGet("employees/records/{recordType}/{id:guid}", async (string recordType, Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new GetEmployeeRecordDetailQuery(recordType, id));
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get a single employee record with its approval trail")
+        .WithDescription("Read-only detail for the employee records console. It is not scoped to the caller's designation and carries no approve or reject affordances.")
+        .WithTags("Employees")
+        .RequireAuthorization();
+
         app.MapGet("employees/{id:guid}", async (Guid id, ISender sender) =>
         {
             var result = await sender.Send(new GetEmployeeByIdQuery(id));
