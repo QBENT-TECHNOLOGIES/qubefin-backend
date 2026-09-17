@@ -267,8 +267,8 @@ internal sealed class GetEmployeeRecordDetailQueryHandler(
             {
                 e.EventDate,
                 e.Remarks,
+                e.IsSubmitted,
                 e.ApprovalWorkflowStep.EventStatus,
-                WorkflowCategory = e.ApprovalWorkflowStep.ApprovalWorkflow.Category,
                 SenderDesignation = e.SenderDesignation.Name,
                 SenderHolder = context.TblEmployeeDesignations
                     .Where(d => d.DesignationId == e.SenderDesignationId && d.EffectiveTo == null)
@@ -282,22 +282,27 @@ internal sealed class GetEmployeeRecordDetailQueryHandler(
             })
             .ToListAsync(cancellationToken);
 
+        // An unsubmitted event is the step the record is still sitting on, so it reads as
+        // the pending entry rather than as something that already happened.
         var events = rows.Select(e => new EmployeeRecordEvent
         {
-            Category = e.WorkflowCategory,
-            EventStatus = e.EventStatus,
+            EventStatus = e.IsSubmitted ? e.EventStatus : EmployeeRecordStatuses.Pending,
             EventDate = e.EventDate,
-            Remarks = e.Remarks,
-            SenderDesignation = FormatDesignation(e.SenderDesignation, e.SenderHolder),
-            ReceiverDesignation = FormatDesignation(e.ReceiverDesignation, e.ReceiverHolder)
+            Designation = FormatDesignation(e.ReceiverDesignation, e.ReceiverHolder),
+            Remarks = e.Remarks
         }).ToList();
 
-        // The submission itself is not stored as an event, so the trail starts with it.
+        // The submission itself is not stored as an event, so the trail starts with it,
+        // attributed to the sender of the first step.
+        var firstSender = rows.FirstOrDefault();
+
         events.Insert(0, new EmployeeRecordEvent
         {
             EventStatus = "Requested",
             EventDate = requestedOn,
-            SenderDesignation = events.FirstOrDefault()?.SenderDesignation
+            Designation = firstSender is null
+                ? null
+                : FormatDesignation(firstSender.SenderDesignation, firstSender.SenderHolder)
         });
 
         return events;

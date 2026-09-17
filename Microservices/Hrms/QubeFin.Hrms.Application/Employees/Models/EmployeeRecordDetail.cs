@@ -43,11 +43,9 @@ namespace QubeFin.Hrms.Application.Employees.Models
 
     public class EmployeeRecordEvent
     {
-        public string? Category { get; set; }
         public string? EventStatus { get; set; }
         public DateTime? EventDate { get; set; }
+        public string? Designation { get; set; }
         public string? Remarks { get; set; }
-        public string? SenderDesignation { get; set; }
-        public string? ReceiverDesignation { get; set; }
     }
 }
