@@ -94,6 +94,7 @@ internal sealed class UpdateCandidateCommandHandler(ICandidateRepository candida
             request.Candidate.InterviewTime,
             request.Candidate.DepartmentId,
             request.Candidate.InterviewPost,
+            null,
             request.Candidate.VenueOrganizationUnitId,
             request.Candidate.InterviewMode,
             request.Candidate.ReferedBy,

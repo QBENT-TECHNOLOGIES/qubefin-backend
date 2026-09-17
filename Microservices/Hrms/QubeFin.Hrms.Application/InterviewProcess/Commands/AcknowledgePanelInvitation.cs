@@ -7,13 +7,13 @@ using QubeFin.Persistence;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
-public record AcknowledgePanelInvitationCommand(Guid PanelId, Guid AcknowledgedBy) : IRequest<Result<string>>;
+public record AcknowledgePanelInvitationCommand(Guid CandidateId, Guid EmployeeId, Guid AcknowledgedBy) : IRequest<Result<string>>;
 
 public class AcknowledgePanelInvitationCommandValidator : AbstractValidator<AcknowledgePanelInvitationCommand>
 {
     public AcknowledgePanelInvitationCommandValidator()
     {
-        RuleFor(x => x.PanelId).NotEmpty().WithMessage("Interview panel entry is required.");
+        RuleFor(x => x.CandidateId).NotEmpty().WithMessage("Interview panel entry is required.");
     }
 }
 
@@ -26,7 +26,7 @@ internal sealed class AcknowledgePanelInvitationCommandHandler(IInterviewPanelRe
             return new ValidationError("Authenticated user is required.");
         }
 
-        var panel = await panelRepository.GetByIdAsync(request.PanelId);
+        var panel = await panelRepository.GetByEmployeeIdAsync(request.CandidateId, request.EmployeeId);
         if (panel is null)
         {
             return Result.Fail("Interview panel entry not found.");

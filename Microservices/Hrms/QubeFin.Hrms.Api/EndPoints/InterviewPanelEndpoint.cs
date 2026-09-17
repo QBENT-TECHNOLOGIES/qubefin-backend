@@ -37,14 +37,14 @@ public class InterviewPanelEndpoint : IEndpoint
         .WithTags("Interview Panels")
         .RequireAuthorization();
 
-        app.MapPost("interview-panels/{panelId:guid}/acknowledge", async (Guid panelId, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        app.MapPost("interview-panels/{candidateId:guid}/acknowledge", async (Guid candidateId, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)
             {
                 return Results.Forbid();
             }
 
-            var result = await sender.Send(new AcknowledgePanelInvitationCommand(panelId, principal.Identity.GetUserId()), cancellationToken);
+            var result = await sender.Send(new AcknowledgePanelInvitationCommand(candidateId, principal.Identity.GetEmployeeId(), principal.Identity.GetUserId()), cancellationToken);
             return result.ToHttpResult();
         })
         .WithSummary("Acknowledge interview panel invitation")

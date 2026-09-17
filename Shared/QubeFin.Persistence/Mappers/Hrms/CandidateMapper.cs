@@ -29,6 +29,7 @@ public static class CandidateMapper
             entity.InterviewTime,
             entity.DepartmentId,
             entity.InterviewPost,
+            entity.InterviewPostNavigation.Name,
             entity.VenueOrganizationUnitId,
             entity.InterviewMode,
             entity.ReferedBy,

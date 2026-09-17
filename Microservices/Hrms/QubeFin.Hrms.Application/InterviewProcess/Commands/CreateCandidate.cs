@@ -87,6 +87,7 @@ internal sealed class CreateCandidateCommandHandler(ICandidateRepository candida
             candidate.InterviewTime,
             candidate.DepartmentId,
             candidate.InterviewPost,
+            null,
             candidate.VenueOrganizationUnitId,
             candidate.InterviewMode,
             candidate.ReferedBy,

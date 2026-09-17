@@ -45,6 +45,7 @@ public class CandidateDetailDto
     public TimeOnly? InterviewTime { get; set; }
     public Guid? DepartmentId { get; set; }
     public Guid InterviewPost { get; set; }
+    public string? interviewPostName { get; set; }
     public Guid? VenueOrganizationUnitId { get; set; }
     public string? InterviewMode { get; set; }
     public string? ReferedBy { get; set; }

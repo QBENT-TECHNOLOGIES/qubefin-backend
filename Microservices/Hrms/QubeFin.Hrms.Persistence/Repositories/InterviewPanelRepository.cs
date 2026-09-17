@@ -8,6 +8,7 @@ namespace QubeFin.Hrms.Persistence.Repositories;
 public interface IInterviewPanelRepository
 {
     Task<InterviewPanel?> GetByIdAsync(Guid id);
+    Task<InterviewPanel?> GetByEmployeeIdAsync(Guid id, Guid employeeId);
     Task<List<InterviewPanel>> GetByCandidateIdAsync(Guid candidateId);
     Task<InterviewPanel?> GetByCandidateAndEmployeeAsync(Guid candidateId, Guid employeeId);
     Task AddRangeAsync(IEnumerable<InterviewPanel> panelists, CancellationToken cancellationToken = default);
@@ -19,6 +20,11 @@ public class InterviewPanelRepository(QubeFinDataContext context) : IInterviewPa
     public async Task<InterviewPanel?> GetByIdAsync(Guid id)
     {
         var entity = await context.TblInterviewPanels.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+        return entity?.ToDomain();
+    }
+    public async Task<InterviewPanel?> GetByEmployeeIdAsync(Guid id, Guid employeeId)
+    {
+        var entity = await context.TblInterviewPanels.AsNoTracking().FirstOrDefaultAsync(x => x.CandidateId == id && x.EmployeeId == employeeId);
         return entity?.ToDomain();
     }
 

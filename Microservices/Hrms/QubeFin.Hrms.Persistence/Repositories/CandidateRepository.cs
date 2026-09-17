@@ -18,7 +18,7 @@ public class CandidateRepository(QubeFinDataContext context) : ICandidateReposit
 {
     public async Task<Candidate?> GetByIdAsync(Guid id)
     {
-        var entity = await context.TblInterviewCandidates.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+        var entity = await context.TblInterviewCandidates.Include(m => m.InterviewPostNavigation).AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
         return entity?.ToDomain();
     }
 

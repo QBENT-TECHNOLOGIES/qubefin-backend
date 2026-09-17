@@ -23,6 +23,7 @@ public class Candidate
     public TimeOnly? InterviewTime { get; private set; }
     public Guid? DepartmentId { get; private set; }
     public Guid InterviewPost { get; private set; }
+    public string InterviewPostName { get; private set; }
     public Guid? VenueOrganizationUnitId { get; private set; }
     public string? InterviewMode { get; private set; }
     public string? ReferedBy { get; private set; }
@@ -85,6 +86,7 @@ public class Candidate
         TimeOnly? interviewTime,
         Guid? departmentId,
         Guid interviewPost,
+        string? interviewPostName,
         Guid? venueOrganizationUnitId,
         string? interviewMode,
         string? referedBy,
@@ -142,7 +144,7 @@ public class Candidate
 
         Apply(firstName, middleName, lastName, gender, fatherName, mobileNo, email, houseNo, roadName, landMark,
             administrativeUnitId, policeStationId, postOfficeId, pinCode, interviewDate, interviewTime, departmentId,
-            interviewPost, venueOrganizationUnitId, interviewMode, referedBy, recruitmentSource, vacancyReference,
+            interviewPost, interviewPostName, venueOrganizationUnitId, interviewMode, referedBy, recruitmentSource, vacancyReference,
             currentSalary, expectedSalary, noticePeriodInDays, earliestJoiningDate, isWillingRelocate,
             preferredLocation, postedOrganizationUnitId, dateOfJoining, reportingTime, monthlyCostCompany,
             overallPerformance, suitableRoleDepartment, recommendedGradeId, isTrainingRequired, recommendationStatus,
@@ -177,7 +179,7 @@ public class Candidate
         Apply(details.FirstName, details.MiddleName, details.LastName, details.Gender, details.FatherName,
             details.MobileNo, details.Email, details.HouseNo, details.RoadName, details.LandMark,
             details.AdministrativeUnitId, details.PoliceStationId, details.PostOfficeId, details.PinCode,
-            details.InterviewDate, details.InterviewTime, details.DepartmentId, details.InterviewPost,
+            details.InterviewDate, details.InterviewTime, details.DepartmentId, details.InterviewPost, details.InterviewPostName,
             details.VenueOrganizationUnitId, details.InterviewMode, details.ReferedBy, details.RecruitmentSource,
             details.VacancyReference, details.CurrentSalary, details.ExpectedSalary, details.NoticePeriodInDays,
             details.EarliestJoiningDate, details.IsWillingRelocate, details.PreferredLocation,
@@ -208,6 +210,7 @@ public class Candidate
         TimeOnly? interviewTime,
         Guid? departmentId,
         Guid interviewPost,
+        string? interviewPostName,
         Guid? venueOrganizationUnitId,
         string? interviewMode,
         string? referedBy,
@@ -251,6 +254,7 @@ public class Candidate
         InterviewTime = interviewTime;
         DepartmentId = departmentId;
         InterviewPost = interviewPost;
+        InterviewPostName = interviewPostName;
         VenueOrganizationUnitId = venueOrganizationUnitId;
         InterviewMode = interviewMode;
         ReferedBy = referedBy;
@@ -300,6 +304,7 @@ public record CandidateDetails(
     TimeOnly? InterviewTime,
     Guid? DepartmentId,
     Guid InterviewPost,
+    string? InterviewPostName,
     Guid? VenueOrganizationUnitId,
     string? InterviewMode,
     string? ReferedBy,

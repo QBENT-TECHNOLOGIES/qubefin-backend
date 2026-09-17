@@ -1,3 +1,4 @@
+using Amazon.Auth.AccessControlPolicy;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using QubeFin.Core.Endpoint;
@@ -23,9 +24,10 @@ public class CandidateEndpoints : IEndpoint
         .WithTags("Candidates")
         .RequireAuthorization();
 
-        app.MapGet("candidates/{id:guid}", async (Guid id, ISender sender, CancellationToken cancellationToken) =>
+        app.MapGet("candidates/{id:guid}", async (Guid id, ISender sender, ClaimsPrincipal principal, CancellationToken cancellationToken) =>
         {
-            var result = await sender.Send(new GetCandidateByIdQuery(id), cancellationToken);
+            var empId = principal.Identity.GetEmployeeId();
+            var result = await sender.Send(new GetCandidateByIdQuery(id, empId), cancellationToken);
             return result.ToHttpResult();
         })
         .WithSummary("Get interview candidate by ID")

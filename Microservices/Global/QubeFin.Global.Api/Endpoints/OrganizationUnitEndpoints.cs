@@ -25,15 +25,6 @@ public class OrganizationUnitEndpoints : IEndpoint
         .WithTags("OrganizationUnits")
         .RequireAuthorization();
 
-        app.MapGet("organization-units/employees", async (ISender sender) =>
-        {
-            var result = await sender.Send(new GetOrganizationUnitsWithEmployeesQuery());
-            return result.ToHttpResult();
-        })
-        .WithSummary("Get All Organization Units With Their Employees")
-        .WithTags("OrganizationUnits")
-        .RequireAuthorization();
-
         app.MapGet("organization-units/{id:guid}/types", async (ISender sender, [FromRoute] Guid id) =>
         {
             var result = await sender.Send(new GetOrganizationUnitByUnitTypeQuery(id));

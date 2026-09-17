@@ -1,82 +1,31 @@
 using FluentResults;
 using MediatR;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using QubeFin.Hrms.Application.InterviewProcess.Models;
 using QubeFin.Hrms.Persistence.Repositories;
+using QubeFin.Persistence;
+using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Queries;
 
-public record GetCandidateByIdQuery(Guid Id) : IRequest<Result<CandidateDetailDto>>;
+public record GetCandidateByIdQuery(Guid CandidateId, Guid employeeId) : IRequest<Result<GetInterviewCandidateDetail>>;
 
-internal sealed class GetCandidateByIdQueryHandler(ICandidateRepository candidateRepository) : IRequestHandler<GetCandidateByIdQuery, Result<CandidateDetailDto>>
+internal sealed class GetCandidateByIdQueryHandler(QubeFinDataContext context, IFileStorageRepository fileStorageRepository) : IRequestHandler<GetCandidateByIdQuery, Result<GetInterviewCandidateDetail>>
 {
-    public async Task<Result<CandidateDetailDto>> Handle(GetCandidateByIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<GetInterviewCandidateDetail>> Handle(GetCandidateByIdQuery request, CancellationToken cancellationToken)
     {
         try
         {
-            var candidate = await candidateRepository.GetByIdAsync(request.Id);
+            var CandidateInterviewInfo = await context.Set<GetInterviewCandidateDetail>().FromSqlRaw("EXEC [Hrms].[USP_GetInterviewCandidateById] @CandidateId, @EmployeeId",
+             new SqlParameter("@CandidateId", request.CandidateId),
+             new SqlParameter("@EmployeeId", request.employeeId)
+            ).AsNoTracking().ToListAsync(cancellationToken);
 
-            if (candidate is null)
-            {
-                return Result.Fail("Candidate not found for the given Id.");
-            }
+            if (CandidateInterviewInfo == null || !CandidateInterviewInfo.Any())
+                return Result.Fail("Something went wrong. Please try again later.");
 
-            var result = new CandidateDetailDto
-            {
-                Id = candidate.Id,
-                FirstName = candidate.FirstName,
-                MiddleName = candidate.MiddleName,
-                LastName = candidate.LastName,
-                Gender = candidate.Gender,
-                FatherName = candidate.FatherName,
-                MobileNo = candidate.MobileNo,
-                Email = candidate.Email,
-                HouseNo = candidate.HouseNo,
-                RoadName = candidate.RoadName,
-                LandMark = candidate.LandMark,
-                AdministrativeUnitId = candidate.AdministrativeUnitId,
-                PoliceStationId = candidate.PoliceStationId,
-                PostOfficeId = candidate.PostOfficeId,
-                PinCode = candidate.PinCode,
-                ReferenceNo = candidate.ReferenceNo,
-                InterviewDate = candidate.InterviewDate,
-                InterviewTime = candidate.InterviewTime,
-                DepartmentId = candidate.DepartmentId,
-                InterviewPost = candidate.InterviewPost,
-                VenueOrganizationUnitId = candidate.VenueOrganizationUnitId,
-                InterviewMode = candidate.InterviewMode,
-                ReferedBy = candidate.ReferedBy,
-                RecruitmentSource = candidate.RecruitmentSource,
-                VacancyReference = candidate.VacancyReference,
-                CurrentSalary = candidate.CurrentSalary,
-                ExpectedSalary = candidate.ExpectedSalary,
-                NoticePeriodInDays = candidate.NoticePeriodInDays,
-                EarliestJoiningDate = candidate.EarliestJoiningDate,
-                IsWillingRelocate = candidate.IsWillingRelocate,
-                PreferredLocation = candidate.PreferredLocation,
-                PostedOrganizationUnitId = candidate.PostedOrganizationUnitId,
-                DateOfJoining = candidate.DateOfJoining,
-                ReportingTime = candidate.ReportingTime,
-                MonthlyCostCompany = candidate.MonthlyCostCompany,
-                OverallPerformance = candidate.OverallPerformance,
-                SuitableRoleDepartment = candidate.SuitableRoleDepartment,
-                RecommendedGradeId = candidate.RecommendedGradeId,
-                IsTrainingRequired = candidate.IsTrainingRequired,
-                RecommendationStatus = candidate.RecommendationStatus,
-                TotalRatingPoint = candidate.TotalRatingPoint,
-                RatingStatus = candidate.RatingStatus,
-                AadharNumber = candidate.AadharNumber,
-                IsAadharValidated = candidate.IsAadharValidated,
-                VoterNumber = candidate.VoterNumber,
-                IsVoterValited = candidate.IsVoterValited,
-                Pan = candidate.Pan,
-                IsPanValidated = candidate.IsPanValidated,
-                IsMobileValidated = candidate.IsMobileValidated,
-                Uan = candidate.Uan,
-                IsUanVerified = candidate.IsUanVerified,
-                IsCreditBureauChecked = candidate.IsCreditBureauChecked,
-                CreditBureauReportLink = candidate.CreditBureauReportLink
-            };
-
+            var result = CandidateInterviewInfo.First();
             return Result.Ok(result);
         }
         catch(Exception ex)
