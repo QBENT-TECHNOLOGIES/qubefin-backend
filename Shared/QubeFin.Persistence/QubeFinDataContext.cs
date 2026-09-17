@@ -1343,6 +1343,9 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Uan).HasMaxLength(50);
             entity.Property(e => e.VacancyReference).HasMaxLength(50);
             entity.Property(e => e.VoterNumber).HasMaxLength(20);
+            entity.Property(e => e.WrittenInterviewFile)
+                .HasMaxLength(100)
+                .HasColumnName("WrittenInterviewFIle");
 
             entity.HasOne(d => d.AdministrativeUnit).WithMany(p => p.TblInterviewCandidates)
                 .HasForeignKey(d => d.AdministrativeUnitId)
@@ -1361,6 +1364,11 @@ public partial class QubeFinDataContext : DbContext
             entity.HasOne(d => d.Department).WithMany(p => p.TblInterviewCandidates)
                 .HasForeignKey(d => d.DepartmentId)
                 .HasConstraintName("FK_Tbl_InterviewCandidate_Tbl_Department");
+
+            entity.HasOne(d => d.InterviewPostNavigation).WithMany(p => p.TblInterviewCandidates)
+                .HasForeignKey(d => d.InterviewPost)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_InterviewCandidate_Tbl_Post");
 
             entity.HasOne(d => d.ModifiedByNavigation).WithMany(p => p.TblInterviewCandidateModifiedByNavigations)
                 .HasForeignKey(d => d.ModifiedBy)
