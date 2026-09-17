@@ -23,7 +23,17 @@ public class MenuRepository(QubeFinDataContext context) : IMenuRepository
 {
     public async Task AddAsync(Menu menu)
     {
-        await context.TblMenus.AddAsync(menu.ToEntity());
+        var entity = menu.ToEntity();
+
+        // ToEntity only copies the menu's own columns, so the permission assignments are
+        // attached here. Without this a new menu is saved with no permissions at all.
+        foreach (var permission in menu.Permissions)
+        {
+            entity.TblMenuPermissions.Add(
+                MenuPermission.Create(entity.Id, permission.Id, menu.CreatedBy).ToEntity());
+        }
+
+        await context.TblMenus.AddAsync(entity);
     }
 
     public async Task<Menu?> GetByIdAsync(Guid id)
@@ -206,6 +216,7 @@ public class MenuRepository(QubeFinDataContext context) : IMenuRepository
         entity.Icon = menu.Icon;
         entity.Target = menu.Target;
         entity.ParentId = menu.ParentId;
+        entity.IsActive = menu.IsActive;
         //entity.DisplayPosition = menu.DisplayPosition;
         entity.LastModifiedBy = userId;
         entity.LastModifiedOn = DateTime.Now;
@@ -221,7 +232,9 @@ public class MenuRepository(QubeFinDataContext context) : IMenuRepository
 
         foreach (var permission in menu.Permissions)
         {
-            var existing = entity.TblMenuPermissions.FirstOrDefault(x => x.Id == permission.Id);
+            // Match on PermissionId, not on the assignment row's own key: comparing the row
+            // key against a permission id never matches, so every save added a duplicate.
+            var existing = entity.TblMenuPermissions.FirstOrDefault(x => x.PermissionId == permission.Id);
 
             if (existing == null)
             {
@@ -232,8 +245,7 @@ public class MenuRepository(QubeFinDataContext context) : IMenuRepository
             else
             {
                 // Existing assignment
-                existing.PermissionId = permission.Id;
-                existing.LastModifiedBy = menu.LastModifiedBy;
+                existing.LastModifiedBy = userId;
                 existing.LastModifiedOn = DateTime.Now;
             }
         }
