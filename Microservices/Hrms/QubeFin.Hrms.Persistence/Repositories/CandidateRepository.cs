@@ -11,6 +11,7 @@ public interface ICandidateRepository
     Task AddAsync(Candidate candidate, CancellationToken cancellationToken = default);
     Task UpdateAsync(Candidate candidate);
     Task<int> CountCreatedInYearAsync(Guid companyId, int year, CancellationToken cancellationToken = default);
+    Task<CandidateVerificationDto?> GetVerificationAsync(Guid candidateId, CancellationToken cancellationToken = default);
 }
 
 public class CandidateRepository(QubeFinDataContext context) : ICandidateRepository
@@ -35,5 +36,44 @@ public class CandidateRepository(QubeFinDataContext context) : ICandidateReposit
     public Task<int> CountCreatedInYearAsync(Guid companyId, int year, CancellationToken cancellationToken = default)
     {
         return context.TblInterviewCandidates.AsNoTracking().CountAsync(c => c.CompanyId == companyId && c.CreatedOn.Year == year, cancellationToken);
+    }
+
+    public async Task<CandidateVerificationDto?> GetVerificationAsync(Guid candidateId, CancellationToken cancellationToken = default)
+    {
+        return await context.TblInterviewCandidates
+            .AsNoTracking()
+            .Where(x => x.Id == candidateId)
+            .Select(x => new CandidateVerificationDto
+            {
+                CandidateId = x.Id,
+
+                AadharNumber = x.AadharNumber,
+                IsAadharValidated = x.IsAadharValidated,
+
+                VoterNumber = x.VoterNumber,
+                IsVoterValited = x.IsVoterValited,
+
+                Pan = x.Pan,
+                IsPanValidated = x.IsPanValidated,
+
+                MobileNo = x.MobileNo,
+                IsMobileValidated = x.IsMobileValidated,
+
+                Uan = x.Uan,
+                IsUanVerified = x.IsUanVerified,
+
+                IsCreditBureauChecked = x.IsCreditBureauChecked,
+                CreditBureauReportLink = x.CreditBureauReportLink,
+
+                OverallStatus =
+                    x.IsAadharValidated &&
+                    x.IsVoterValited &&
+                    x.IsPanValidated &&
+                    x.IsMobileValidated &&
+                    x.IsCreditBureauChecked
+                        ? "Verified"
+                        : "Pending"
+            })
+            .FirstOrDefaultAsync(cancellationToken);
     }
 }

@@ -17,7 +17,7 @@ internal sealed class GetCandidatesQueryHandler(QubeFinDataContext context) : IR
     {
         var pageIndex = request.SearchParam.PageIndex < 0 ? 0 : request.SearchParam.PageIndex;
         var pageSize = request.SearchParam.PageSize <= 0 ? 10 : request.SearchParam.PageSize;
-        var query = context.TblInterviewCandidates
+        var query = context.TblInterviewCandidates.Include(m => m.InterviewPost)
             .AsNoTracking();
             //.Where(c => c.CompanyId == request.SearchParam.CompanyId);
 
@@ -44,13 +44,14 @@ internal sealed class GetCandidatesQueryHandler(QubeFinDataContext context) : IR
         };
 
         var totalCount = await query.CountAsync(cancellationToken);
-        var items = await query
+            var items = await query
             .Skip(pageIndex * pageSize)
             .Take(pageSize)
             .Select(c => new CandidateListDto
             {
                 Id = c.Id,
-                FullName = (c.FirstName + " " + (c.MiddleName ?? string.Empty) + " " + c.LastName).Replace("  ", " ").Trim(),
+                    FullName = ((c.FirstName + " " + (c.MiddleName ?? string.Empty) + " " + c.LastName).Replace("  ", " ").Trim() 
+                                + (string.IsNullOrWhiteSpace(c.ReferenceNo) ? string.Empty : " (" + c.ReferenceNo + ")")),
                 InterviewPost = c.InterviewPost,
                 InterviewDate = c.InterviewDate,
                 RecommendationStatus = c.RecommendationStatus ?? "Pending",

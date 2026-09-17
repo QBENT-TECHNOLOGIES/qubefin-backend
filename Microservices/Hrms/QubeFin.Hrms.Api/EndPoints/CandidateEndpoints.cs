@@ -59,5 +59,23 @@ public class CandidateEndpoints : IEndpoint
         .WithSummary("Update interview candidate")
         .WithTags("Candidates")
         .RequireAuthorization();
+
+        app.MapGet("candidates/search", async (string searchText, int maxResults, ISender sender, CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(new SearchCandidatesByTextQuery(searchText, maxResults), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Search candidates by text (returns Name (Ref No))")
+        .WithTags("Candidates")
+        .RequireAuthorization();
+
+        app.MapGet("candidate-verifications/{candidateId:guid}", async (Guid candidateId, ISender sender, CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(new GetCandidateVerificationQuery(candidateId), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get candidate verification details")
+        .WithTags("Candidate Verification")
+        .RequireAuthorization();
     }
 }
