@@ -48,7 +48,7 @@ public class AdministrativeUnitEndpoints : IEndpoint
             }
             var userId = principal.Identity.GetUserId();
 
-            var result = await sender.Send(new CreateAdministrativeUnitCommand(request.AdministrativeUnitTypeId, request.Name, request.ParentId, userId));
+            var result = await sender.Send(new CreateAdministrativeUnitCommand(request.AdministrativeUnitTypeId, request.Name, request.NormalizedParentId, userId));
             return result.ToHttpResult();
         })
         .RequireAuthorization()
@@ -63,7 +63,7 @@ public class AdministrativeUnitEndpoints : IEndpoint
             }
             var userId = principal.Identity.GetUserId();
 
-            var result = await sender.Send(new UpdateAdministrativeUnitCommand(id, request.AdministrativeUnitTypeId, request.Name, request.ParentId, userId));
+            var result = await sender.Send(new UpdateAdministrativeUnitCommand(id, request.AdministrativeUnitTypeId, request.Name, request.NormalizedParentId, request.IsActive, userId));
             return result.ToHttpResult();
         })
         .RequireAuthorization()
