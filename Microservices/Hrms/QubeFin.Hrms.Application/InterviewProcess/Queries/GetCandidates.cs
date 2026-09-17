@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Hrms.Application.InterviewProcess.Models;
 using QubeFin.Persistence;
+using System.Globalization;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Queries;
 
@@ -17,7 +18,7 @@ internal sealed class GetCandidatesQueryHandler(QubeFinDataContext context) : IR
     {
         var pageIndex = request.SearchParam.PageIndex < 0 ? 0 : request.SearchParam.PageIndex;
         var pageSize = request.SearchParam.PageSize <= 0 ? 10 : request.SearchParam.PageSize;
-        var query = context.TblInterviewCandidates.Include(m => m.InterviewPost)
+        var query = context.TblInterviewCandidates.Include(m => m.InterviewPostNavigation)
             .AsNoTracking();
             //.Where(c => c.CompanyId == request.SearchParam.CompanyId);
 
@@ -49,14 +50,12 @@ internal sealed class GetCandidatesQueryHandler(QubeFinDataContext context) : IR
             .Take(pageSize)
             .Select(c => new CandidateListDto
             {
-                Id = c.Id,
-                    FullName = ((c.FirstName + " " + (c.MiddleName ?? string.Empty) + " " + c.LastName).Replace("  ", " ").Trim() 
-                                + (string.IsNullOrWhiteSpace(c.ReferenceNo) ? string.Empty : " (" + c.ReferenceNo + ")")),
-                InterviewPost = c.InterviewPost,
+                Id = c.Id, 
+                FullName = ((c.FirstName + " " + (c.MiddleName ?? string.Empty) + " " + c.LastName).Replace("  ", " ").Trim()),
+                InterviewPost = c.InterviewPostNavigation.Name,
                 InterviewDate = c.InterviewDate,
+                InterviewTime = c.InterviewTime != null ? c.InterviewTime.Value.ToString("h.mm tt", CultureInfo.InvariantCulture).ToLowerInvariant() : string.Empty,
                 RecommendationStatus = c.RecommendationStatus ?? "Pending",
-                TotalRatingPoint = c.TotalRatingPoint,
-                RatingStatus = c.RatingStatus ?? "Not started",
                 ReferenceNo = c.ReferenceNo
             })
             .ToListAsync(cancellationToken);

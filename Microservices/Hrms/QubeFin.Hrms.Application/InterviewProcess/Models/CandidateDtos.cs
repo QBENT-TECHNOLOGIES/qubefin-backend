@@ -11,8 +11,9 @@ public class CandidateListDto
 {
     public Guid Id { get; set; }
     public string FullName { get; set; } = string.Empty;
-    public Guid InterviewPost { get; set; }
+    public string InterviewPost { get; set; } = string.Empty;
     public DateOnly InterviewDate { get; set; }
+    public string? InterviewTime { get; set; }
     public string? RecommendationStatus { get; set; }
     public int? TotalRatingPoint { get; set; }
     public string? RatingStatus { get; set; }
