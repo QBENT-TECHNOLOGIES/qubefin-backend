@@ -16,6 +16,7 @@ public class CandidateListDto
     public string? RecommendationStatus { get; set; }
     public int? TotalRatingPoint { get; set; }
     public string? RatingStatus { get; set; }
+    public string? ReferenceNo { get; set; }
 }
 
 public class CandidateDetailDto

@@ -56,7 +56,8 @@ internal sealed class GetCandidatesQueryHandler(QubeFinDataContext context) : IR
                 InterviewDate = c.InterviewDate,
                 RecommendationStatus = c.RecommendationStatus ?? "Pending",
                 TotalRatingPoint = c.TotalRatingPoint,
-                RatingStatus = c.RatingStatus ?? "Not started"
+                RatingStatus = c.RatingStatus ?? "Not started",
+                ReferenceNo = c.ReferenceNo
             })
             .ToListAsync(cancellationToken);
 
