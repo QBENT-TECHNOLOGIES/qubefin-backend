@@ -32,6 +32,15 @@ namespace QubeFin.Payroll.Api.Endpoints
               .WithTags("Payrolls")
             .RequireAuthorization();
 
+            app.MapGet("payroll-detail/{id}", async (Guid id, ISender sender, CancellationToken cancellationToken) =>
+            {
+                var result = await sender.Send(new GetPayrollDetailByIdQuery(id), cancellationToken);
+                return result.ToHttpResult();
+            }).WithSummary("Get a payroll detail by ID")
+              .WithDescription("Retrieves a specific payroll by its unique identifier, with each component's IsEditable sourced from the salary structure component.")
+              .WithTags("Payrolls")
+            .RequireAuthorization();
+
             app.MapGet("payrolls/{month:int}/{year:int}", async (int month, int year, ISender sender, CancellationToken cancellationToken) =>
             {
                 var result = await sender.Send(new GetMonthlyPayrollQuery(month, year), cancellationToken);

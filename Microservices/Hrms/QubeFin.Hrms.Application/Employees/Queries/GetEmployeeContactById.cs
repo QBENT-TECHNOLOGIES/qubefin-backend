@@ -2,9 +2,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
-using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
-using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.Employees.Queries;
 
@@ -24,23 +22,27 @@ internal sealed class GetEmployeeContactByIdQueryHandler(QubeFinDataContext cont
 {
     public async Task<Result<GetContactResponse>> Handle(GetEmployeeContactByIdQuery request, CancellationToken cancellationToken)
     {
-        var employee = await context.TblEmployees.Where(m => m.Id == request.Id).FirstOrDefaultAsync(cancellationToken: cancellationToken);
-
+        var employee = await context.TblEmployees.FirstOrDefaultAsync(m => m.Id == request.Id, cancellationToken);
         if (employee is null)
         {
-            return new RecordNotFoundError($"Employee not found for the given Id");
+            return new RecordNotFoundError("Employee not found for the given Id");
         }
+
         return Result.Ok(new GetContactResponse(
             employee.Id,
-            employee.MobileNo,
-            employee.PersonalEmail,
-            employee.EmergencyContactRelation1,
-            employee.EmergencyContactName1,
-            employee.EmergencyContactMobile1,
-            employee.EmergencyContactRelation2,
-            employee.EmergencyContactName2,
-            employee.EmergencyContactMobile2
+            EmptyIfWhiteSpace(employee.MobileNo),
+            EmptyIfWhiteSpace(employee.PersonalEmail),
+            EmptyIfWhiteSpace(employee.EmergencyContactRelation1),
+            EmptyIfWhiteSpace(employee.EmergencyContactName1),
+            EmptyIfWhiteSpace(employee.EmergencyContactMobile1),
+            EmptyIfWhiteSpace(employee.EmergencyContactRelation2),
+            EmptyIfWhiteSpace(employee.EmergencyContactName2),
+            EmptyIfWhiteSpace(employee.EmergencyContactMobile2)
         ));
+    }
+    private static string EmptyIfWhiteSpace(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
     }
 }
 #endregion

@@ -170,6 +170,38 @@ namespace QubeFin.Persistence.Models.Payroll
         public decimal TotalDeductions { get; set; }
         public decimal EmployerContribution { get; set; }
     }
+    public class PayrollDetailRow
+    {
+        public Guid Id { get; set; }
+        public Guid EmployeeId { get; set; }
+        public string? EmployeeName { get; set; }
+        public string? EmployeeCode { get; set; }
+        public Guid OrganizationUnitId { get; set; }
+        public string? OrganizationUnitName { get; set; }
+        public int? OrganizationCode { get; set; }
+        public Guid DesignationId { get; set; }
+        public string? DesignationTitle { get; set; }
+        public Guid CompanyId { get; set; }
+        public string? CompanyName { get; set; }
+        public string? FinYear { get; set; }
+        public int PayrollMonth { get; set; }
+        public int PayrollYear { get; set; }
+        public bool IsLocked { get; set; }
+        public int? DayCount { get; set; }
+        public Guid? SalaryGradeId { get; set; }
+        public string? SalaryGradeName { get; set; }
+        public DateTime? CreatedOn { get; set; }
+        public Guid? CreatedBy { get; set; }
+        public Guid? SalaryStructureId { get; set; }
+        public Guid? ComponentId { get; set; }
+        public Guid? SalaryComponentId { get; set; }
+        public string? SalaryComponentName { get; set; }
+        public string? CategoryName { get; set; }
+        public int? DisplayOrder { get; set; }
+        public decimal? Percentage { get; set; }
+        public decimal? Amount { get; set; }
+        public bool? IsEditable { get; set; }
+    }
     public class MonthwisePayrollData
     {
         public int PayrollYear { get; set; }
