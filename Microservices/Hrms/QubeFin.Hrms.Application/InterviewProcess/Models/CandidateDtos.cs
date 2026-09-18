@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using QubeFin.Persistence.Models;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Models;
@@ -90,6 +91,12 @@ public record CandidateLetterStatusRequest(
     bool? IsOfferLetterReceived,
     bool? IsAppointmentLetterReceived,
     bool? IsWelcomeLetterReceived);
+
+/// <summary>[FromForm] request body for uploading the candidate's written-interview/personality form.</summary>
+public class CandidateInterviewUploadRequest
+{
+    public IFormFile? Attachment { get; set; }
+}
 
 public class CandidateCreateUpdateDto
 {

@@ -76,6 +76,21 @@ public class CandidateEndpoints : IEndpoint
         .WithTags("Candidates")
         .RequireAuthorization();
 
+        app.MapPost("candidates/{id:guid}/interview-upload", async (Guid id, [FromForm] CandidateInterviewUploadRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Forbid();
+            }
+
+            var result = await sender.Send(new UploadCandidateInterviewFormatCommand(id, request, principal.Identity.GetUserId()), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .DisableAntiforgery()
+        .WithSummary("Upload the candidate's filled written-interview/personality form")
+        .WithTags("Candidates")
+        .RequireAuthorization();
+
         app.MapGet("candidates/search", async (string searchText, int maxResults, ISender sender, CancellationToken cancellationToken) =>
         {
             var result = await sender.Send(new SearchCandidatesByTextQuery(searchText, maxResults), cancellationToken);

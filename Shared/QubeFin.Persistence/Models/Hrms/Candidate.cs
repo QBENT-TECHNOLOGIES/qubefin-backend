@@ -61,6 +61,7 @@ public class Candidate
     public bool IsOfferLetterReceived { get; private set; }
     public bool IsAppointmentLetterReceived { get; private set; }
     public bool IsWelcomeLetterRecieved { get; private set; }
+    public string? WrittenInterviewFile { get; private set; }
     public Guid CreatedBy { get; private set; }
     public DateTime CreatedOn { get; private set; }
     public Guid? ModifiedBy { get; private set; }
@@ -128,6 +129,7 @@ public class Candidate
         bool isOfferLetterReceived,
         bool isAppointmentLetterReceived,
         bool isWelcomeLetterRecieved,
+        string? writtenInterviewFile,
         Guid createdBy,
         DateTime createdOn,
         Guid? modifiedBy,
@@ -153,6 +155,7 @@ public class Candidate
         IsOfferLetterReceived = isOfferLetterReceived;
         IsAppointmentLetterReceived = isAppointmentLetterReceived;
         IsWelcomeLetterRecieved = isWelcomeLetterRecieved;
+        WrittenInterviewFile = writtenInterviewFile;
 
         Apply(firstName, middleName, lastName, gender, fatherName, mobileNo, email, houseNo, roadName, landMark,
             administrativeUnitId, policeStationId, postOfficeId, pinCode, interviewDate, interviewTime, departmentId,
@@ -214,6 +217,14 @@ public class Candidate
             IsWelcomeLetterRecieved = isWelcomeLetterReceived.Value;
         }
 
+        ModifiedBy = modifiedBy;
+        ModifiedOn = DateTime.UtcNow;
+    }
+
+    /// <summary>Sets the uploaded written-interview form/document reference (storage key) for this candidate.</summary>
+    public void SetWrittenInterviewFile(string? filePath, Guid modifiedBy)
+    {
+        WrittenInterviewFile = filePath;
         ModifiedBy = modifiedBy;
         ModifiedOn = DateTime.UtcNow;
     }
