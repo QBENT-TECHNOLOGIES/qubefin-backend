@@ -30,7 +30,7 @@ public class InterviewPanelRepository(QubeFinDataContext context) : IInterviewPa
 
     public async Task<List<InterviewPanel>> GetByCandidateIdAsync(Guid candidateId)
     {
-        var entities = await context.TblInterviewPanels
+        var entities = await context.TblInterviewPanels.Include(m => m.Employee).ThenInclude(m => m.TblEmployeeDesignations).ThenInclude(m => m.Designation)
             .AsNoTracking()
             .Where(x => x.CandidateId == candidateId)
             .ToListAsync();

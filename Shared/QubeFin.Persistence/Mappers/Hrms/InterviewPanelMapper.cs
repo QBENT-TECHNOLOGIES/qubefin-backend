@@ -7,6 +7,20 @@ public static class InterviewPanelMapper
 {
     public static InterviewPanel ToDomain(this TblInterviewPanel entity)
     {
+        // derive employee info from included navigation properties
+        var employeeCode = entity.Employee?.Code;
+        var employeeName = entity.Employee?.FullName;
+        string? designation = null;
+        if (entity.Employee?.TblEmployeeDesignations != null && entity.Employee.TblEmployeeDesignations.Any())
+        {
+            var current = entity.Employee.TblEmployeeDesignations
+                .Where(d => d.EffectiveTo == null)
+                .OrderByDescending(d => d.EffectiveFrom)
+                .FirstOrDefault();
+
+            designation = current?.Designation?.Name;
+        }
+
         return new InterviewPanel(
             entity.Id,
             entity.CandidateId,
@@ -43,7 +57,10 @@ public static class InterviewPanelMapper
             entity.IsSubmitted,
             entity.SubmissionDate,
             entity.ModifiedBy,
-            entity.ModifiedOn);
+            entity.ModifiedOn,
+            employeeCode,
+            designation,
+            employeeName);
     }
 
     public static TblInterviewPanel ToEntity(this InterviewPanel panel)
