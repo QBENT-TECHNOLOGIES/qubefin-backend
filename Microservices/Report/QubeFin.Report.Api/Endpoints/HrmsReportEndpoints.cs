@@ -108,7 +108,7 @@ namespace QubeFin.Report.Api.Endpoints
                 return Results.File(file.FileStream, file.ContentType, file.FileName);
             }).WithSummary("Generate Wegrow appointment letter.");
 
-            app.MapGet("/interview/weegrobc-appoinment-letter/{candidateId:guid}", [Authorize] async (Guid candidateId, ISender sender) =>
+            app.MapGet("/interview/weegrobc-appointment-letter/{candidateId:guid}", [Authorize] async (Guid candidateId, ISender sender) =>
             {
                 var command = new GenerateSSRSReportsCommand(
                 "Rpt_WegroBc_AppointmentLetter",
@@ -240,6 +240,44 @@ namespace QubeFin.Report.Api.Endpoints
                 var file = result.Value;
                 return Results.File(file.FileStream, file.ContentType, file.FileName);
             }).WithSummary("Generate Wegro BC interview panel acknowledgement.");
+
+            app.MapGet("/interview/wegrow-jobapplication-form/{candidateId:guid}", [Authorize] async (Guid candidateId, ISender sender) =>
+            {
+                var command = new GenerateSSRSReportsCommand(
+                "Rpt_Wegrow_JobApplication",
+                "PDF",
+                new Dictionary<string, string>
+                {
+                    ["CandidateId"] = candidateId.ToString()
+                });
+
+                var result = await sender.Send(command);
+
+                if (result.IsFailed)
+                    return result.ToHttpResult();
+
+                var file = result.Value;
+                return Results.File(file.FileStream, file.ContentType, file.FileName);
+            }).WithSummary("Generate Wegrow job application form.");
+
+            app.MapGet("/interview/weegrobc-jobapplication-form/{candidateId:guid}", [Authorize] async (Guid candidateId, ISender sender) =>
+            {
+                var command = new GenerateSSRSReportsCommand(
+                "Rpt_WeegroBC_JobApplication",
+                "PDF",
+                new Dictionary<string, string>
+                {
+                    ["CandidateId"] = candidateId.ToString()
+                });
+
+                var result = await sender.Send(command);
+
+                if (result.IsFailed)
+                    return result.ToHttpResult();
+
+                var file = result.Value;
+                return Results.File(file.FileStream, file.ContentType, file.FileName);
+            }).WithSummary("Generate Wegro BC job application form.");
 
             #endregion
         }
