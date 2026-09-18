@@ -108,7 +108,7 @@ namespace QubeFin.Report.Api.Endpoints
                 return Results.File(file.FileStream, file.ContentType, file.FileName);
             }).WithSummary("Generate Wegrow appointment letter.");
 
-            app.MapGet("/interview/weegrobc-appoinment-letter/{candidateId:guid}", [Authorize] async (Guid candidateId, ISender sender) =>
+            app.MapGet("/interview/weegrobc-appointment-letter/{candidateId:guid}", [Authorize] async (Guid candidateId, ISender sender) =>
             {
                 var command = new GenerateSSRSReportsCommand(
                 "Rpt_WegroBc_AppointmentLetter",
