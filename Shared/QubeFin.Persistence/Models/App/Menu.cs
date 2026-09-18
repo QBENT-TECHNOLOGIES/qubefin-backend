@@ -36,13 +36,14 @@ public class Menu
         LastModifiedBy = lastModifiedBy;
         LastModifiedOn = lastModifiedOn;
     }
-    public Menu(Guid id, string name, string icon, string? target, Guid? parentId, Guid userId, List<PermissionAssigned> permissions)
+    public Menu(Guid id, string name, string icon, string? target, Guid? parentId, bool isActive, Guid userId, List<PermissionAssigned> permissions)
     {
         Id = id;
         Name = name;
         Icon = icon;
         Target = target;
         ParentId = parentId;
+        IsActive = isActive;
         if (permissions != null && permissions.Any())
         {
             _permissions.AddRange(permissions);

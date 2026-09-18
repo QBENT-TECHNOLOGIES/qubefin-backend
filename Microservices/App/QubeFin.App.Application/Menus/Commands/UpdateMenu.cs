@@ -8,7 +8,7 @@ using QubeFin.Persistence.Models.Global;
 namespace QubeFin.App.Application.Menus.Commands;
 
 #region --- COMMAND ---
-public record UpdateMenuCommand(Guid Id, string Name, string Icon, string? Target, Guid ParentId, Guid UserId, List<PermissionAssigned> Permissions) : IRequest<Result<UpdateMenuResponse>>;
+public record UpdateMenuCommand(Guid Id, string Name, string Icon, string? Target, Guid ParentId, bool IsActive, Guid UserId, List<PermissionAssigned> Permissions) : IRequest<Result<UpdateMenuResponse>>;
 #endregion
 
 #region --- RESPONSE ---
@@ -21,7 +21,7 @@ internal sealed class UpdateMenuCommandHandler(IMenuRepository menuRepository, I
 {
     public async Task<Result<UpdateMenuResponse>> Handle(UpdateMenuCommand request, CancellationToken cancellationToken)
     {
-        var menu = new Menu(request.Id, request.Name, request.Icon, request.Target, request.ParentId, request.UserId, request.Permissions);
+        var menu = new Menu(request.Id, request.Name, request.Icon, request.Target, request.ParentId, request.IsActive, request.UserId, request.Permissions);
 
         await menuRepository.UpdateAsync(menu, request.UserId);
         await unitOfWork.SaveChangesAsync(cancellationToken);

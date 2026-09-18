@@ -130,7 +130,7 @@ public class MenuEndpoints : IEndpoint
                 .Select(x => new PermissionAssigned { Id = x.Id })
             .ToList();
 
-            var result = await sender.Send(new UpdateMenuCommand(id, menu.Name, menu.Icon, menu.Target, menu.ParentId, userId, permissions));
+            var result = await sender.Send(new UpdateMenuCommand(id, menu.Name, menu.Icon, menu.Target, menu.ParentId, menu.IsActive, userId, permissions));
             return result.ToHttpResult();
         })
         .RequireAuthorization()
