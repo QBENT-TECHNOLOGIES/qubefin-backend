@@ -1,4 +1,4 @@
-﻿using FluentResults;
+using FluentResults;
 using FluentValidation;
 using MediatR;
 using QubeFin.Core.Results;
@@ -9,13 +9,18 @@ using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
-public record SubmitInterviewAssessmentCommand(Guid CandidateId, Guid EmployeeId, AssessmentSubmitDto Assessment, Guid SubmittedBy) : IRequest<Result<string>>;
+/// <summary>Saves a panelist's in-progress assessment as a draft. Unlike submit, this does not lock the
+/// record and does not require a recommendation yet. Saving a draft marks the panelist as attended.
+/// Looked up by CandidateId + EmployeeId rather than a client-supplied PanelId - the endpoint overrides
+/// EmployeeId from the authenticated user's claims, so a panelist can only ever save their own assessment.</summary>
+public record SaveInterviewAssessmentDraftCommand(Guid CandidateId, Guid EmployeeId, AssessmentSubmitDto Assessment, Guid SavedBy) : IRequest<Result<string>>;
 
-public class SubmitInterviewAssessmentCommandValidator : AbstractValidator<SubmitInterviewAssessmentCommand>
+public class SaveInterviewAssessmentDraftCommandValidator : AbstractValidator<SaveInterviewAssessmentDraftCommand>
 {
-    public SubmitInterviewAssessmentCommandValidator()
+    public SaveInterviewAssessmentDraftCommandValidator()
     {
-        RuleFor(x => x.Assessment.IsRecommendedForPosition).NotNull().WithMessage("Recommendation (Yes/No) is required.");
+        RuleFor(x => x.CandidateId).NotEmpty().WithMessage("Candidate is required.");
+        RuleFor(x => x.EmployeeId).NotEmpty().WithMessage("Panelist is required.");
         RuleFor(x => x.Assessment.AppearanceAttitudeRating).InclusiveBetween(0, 5).When(x => x.Assessment.AppearanceAttitudeRating.HasValue);
         RuleFor(x => x.Assessment.PersonalityRating).InclusiveBetween(0, 5).When(x => x.Assessment.PersonalityRating.HasValue);
         RuleFor(x => x.Assessment.CommunicationRating).InclusiveBetween(0, 5).When(x => x.Assessment.CommunicationRating.HasValue);
@@ -29,11 +34,11 @@ public class SubmitInterviewAssessmentCommandValidator : AbstractValidator<Submi
     }
 }
 
-internal sealed class SubmitInterviewAssessmentCommandHandler(IInterviewPanelRepository panelRepository, IUnitOfWork unitOfWork) : IRequestHandler<SubmitInterviewAssessmentCommand, Result<string>>
+internal sealed class SaveInterviewAssessmentDraftCommandHandler(IInterviewPanelRepository panelRepository, IUnitOfWork unitOfWork) : IRequestHandler<SaveInterviewAssessmentDraftCommand, Result<string>>
 {
-    public async Task<Result<string>> Handle(SubmitInterviewAssessmentCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(SaveInterviewAssessmentDraftCommand request, CancellationToken cancellationToken)
     {
-        if (request.SubmittedBy == Guid.Empty)
+        if (request.SavedBy == Guid.Empty)
         {
             return new ValidationError("Authenticated user is required.");
         }
@@ -41,7 +46,7 @@ internal sealed class SubmitInterviewAssessmentCommandHandler(IInterviewPanelRep
         var panel = await panelRepository.GetByCandidateAndEmployeeAsync(request.CandidateId, request.EmployeeId);
         if (panel is null)
         {
-            return Result.Fail("Interview panel entry not found.");
+            return new RecordNotFoundError("Interview panel entry not found for the given candidate and employee.");
         }
 
         var dto = request.Assessment;
@@ -61,15 +66,15 @@ internal sealed class SubmitInterviewAssessmentCommandHandler(IInterviewPanelRep
             dto.PositiveRemarks,
             dto.NegativeRemarks);
 
-        var result = panel.SubmitAssessment(details, request.SubmittedBy);
+        var result = panel.SaveAssessmentDraft(details, request.SavedBy);
         if (!result)
         {
-            return Result.Fail("This assessment has already been submitted and cannot be changed.");
+            return new ValidationError("This assessment has already been submitted and cannot be changed.");
         }
 
         await panelRepository.UpdateAsync(panel);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Ok("Assessment submitted successfully.");
+        return Result.Ok("Assessment saved as draft successfully.");
     }
 }

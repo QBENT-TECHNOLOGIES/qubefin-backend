@@ -57,6 +57,10 @@ public class Candidate
     public bool IsUanVerified { get; private set; }
     public bool IsCreditBureauChecked { get; private set; }
     public string? CreditBureauReportLink { get; private set; }
+    public bool IsInterviewLetterRecieved { get; private set; }
+    public bool IsOfferLetterReceived { get; private set; }
+    public bool IsAppointmentLetterReceived { get; private set; }
+    public bool IsWelcomeLetterRecieved { get; private set; }
     public Guid CreatedBy { get; private set; }
     public DateTime CreatedOn { get; private set; }
     public Guid? ModifiedBy { get; private set; }
@@ -120,6 +124,10 @@ public class Candidate
         bool isUanVerified,
         bool isCreditBureauChecked,
         string? creditBureauReportLink,
+        bool isInterviewLetterRecieved,
+        bool isOfferLetterReceived,
+        bool isAppointmentLetterReceived,
+        bool isWelcomeLetterRecieved,
         Guid createdBy,
         DateTime createdOn,
         Guid? modifiedBy,
@@ -141,6 +149,10 @@ public class Candidate
         IsUanVerified = isUanVerified;
         IsCreditBureauChecked = isCreditBureauChecked;
         CreditBureauReportLink = creditBureauReportLink;
+        IsInterviewLetterRecieved = isInterviewLetterRecieved;
+        IsOfferLetterReceived = isOfferLetterReceived;
+        IsAppointmentLetterReceived = isAppointmentLetterReceived;
+        IsWelcomeLetterRecieved = isWelcomeLetterRecieved;
 
         Apply(firstName, middleName, lastName, gender, fatherName, mobileNo, email, houseNo, roadName, landMark,
             administrativeUnitId, policeStationId, postOfficeId, pinCode, interviewDate, interviewTime, departmentId,
@@ -170,6 +182,38 @@ public class Candidate
     public void Update(CandidateDetails details, Guid modifiedBy)
     {
         Apply(details);
+        ModifiedBy = modifiedBy;
+        ModifiedOn = DateTime.UtcNow;
+    }
+
+    /// <summary>Updates one letter-received flag at a time (only the flag(s) passed as non-null are changed).</summary>
+    public void UpdateLetterStatus(
+        bool? isInterviewLetterReceived,
+        bool? isOfferLetterReceived,
+        bool? isAppointmentLetterReceived,
+        bool? isWelcomeLetterReceived,
+        Guid modifiedBy)
+    {
+        if (isInterviewLetterReceived.HasValue)
+        {
+            IsInterviewLetterRecieved = isInterviewLetterReceived.Value;
+        }
+
+        if (isOfferLetterReceived.HasValue)
+        {
+            IsOfferLetterReceived = isOfferLetterReceived.Value;
+        }
+
+        if (isAppointmentLetterReceived.HasValue)
+        {
+            IsAppointmentLetterReceived = isAppointmentLetterReceived.Value;
+        }
+
+        if (isWelcomeLetterReceived.HasValue)
+        {
+            IsWelcomeLetterRecieved = isWelcomeLetterReceived.Value;
+        }
+
         ModifiedBy = modifiedBy;
         ModifiedOn = DateTime.UtcNow;
     }

@@ -62,6 +62,20 @@ public class CandidateEndpoints : IEndpoint
         .WithTags("Candidates")
         .RequireAuthorization();
 
+        app.MapPost("candidates/{id:guid}/letter-status", async (Guid id, [FromBody] CandidateLetterStatusRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Forbid();
+            }
+
+            var result = await sender.Send(new UpdateCandidateLetterStatusCommand(id, request, principal.Identity.GetUserId()), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Update one candidate letter-received flag (send exactly one per call) and send the letter email")
+        .WithTags("Candidates")
+        .RequireAuthorization();
+
         app.MapGet("candidates/search", async (string searchText, int maxResults, ISender sender, CancellationToken cancellationToken) =>
         {
             var result = await sender.Send(new SearchCandidatesByTextQuery(searchText, maxResults), cancellationToken);

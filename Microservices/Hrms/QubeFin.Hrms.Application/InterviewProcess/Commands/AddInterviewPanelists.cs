@@ -1,4 +1,4 @@
-﻿using FluentResults;
+using FluentResults;
 using FluentValidation;
 using MediatR;
 using QubeFin.Core.Results;
@@ -9,11 +9,12 @@ using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
-public record ScheduleInterviewPanelCommand(Guid CandidateId, List<PanelistScheduleDto> Panelists, Guid ScheduledBy) : IRequest<Result<string>>;
+/// <summary>Adds one or more panelists to a candidate's existing interview panel.</summary>
+public record AddInterviewPanelistsCommand(Guid CandidateId, List<PanelistScheduleDto> Panelists, Guid AddedBy) : IRequest<Result<string>>;
 
-public class ScheduleInterviewPanelCommandValidator : AbstractValidator<ScheduleInterviewPanelCommand>
+public class AddInterviewPanelistsCommandValidator : AbstractValidator<AddInterviewPanelistsCommand>
 {
-    public ScheduleInterviewPanelCommandValidator()
+    public AddInterviewPanelistsCommandValidator()
     {
         RuleFor(x => x.CandidateId).NotEmpty().WithMessage("Candidate is required.");
         RuleFor(x => x.Panelists).NotEmpty().WithMessage("At least one panelist must be selected.");
@@ -27,19 +28,19 @@ public class ScheduleInterviewPanelCommandValidator : AbstractValidator<Schedule
     }
 }
 
-internal sealed class ScheduleInterviewPanelCommandHandler(IInterviewPanelRepository panelRepository, ICandidateRepository candidateRepository, IUnitOfWork unitOfWork) : IRequestHandler<ScheduleInterviewPanelCommand, Result<string>>
+internal sealed class AddInterviewPanelistsCommandHandler(IInterviewPanelRepository panelRepository, ICandidateRepository candidateRepository, IUnitOfWork unitOfWork) : IRequestHandler<AddInterviewPanelistsCommand, Result<string>>
 {
-    public async Task<Result<string>> Handle(ScheduleInterviewPanelCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(AddInterviewPanelistsCommand request, CancellationToken cancellationToken)
     {
-        if (request.ScheduledBy == Guid.Empty)
+        if (request.AddedBy == Guid.Empty)
         {
-            return Result.Fail("Authenticated user is required.");
+            return new ValidationError("Authenticated user is required.");
         }
 
         var candidate = await candidateRepository.GetByIdAsync(request.CandidateId);
         if (candidate is null)
         {
-            return Result.Fail("Candidate not found.");
+            return new RecordNotFoundError("Candidate not found.");
         }
 
         var duplicateEmployeeIds = request.Panelists
@@ -54,23 +55,31 @@ internal sealed class ScheduleInterviewPanelCommandHandler(IInterviewPanelReposi
         }
 
         var existingPanelists = await panelRepository.GetByCandidateIdAsync(request.CandidateId);
-        if (existingPanelists.Count > 0)
+        var alreadyScheduledEmployeeIds = existingPanelists.Select(p => p.EmployeeId).ToHashSet();
+
+        var alreadyOnPanel = request.Panelists.Any(p => alreadyScheduledEmployeeIds.Contains(p.EmployeeId));
+        if (alreadyOnPanel)
         {
-            return new ValidationError("This candidate already has an interview panel. Use \"Add Panelists\" to add more.");
+            return new ValidationError("One or more selected panelists are already on this candidate's interview panel.");
         }
 
-        var panelists = request.Panelists
+        if (existingPanelists.Any(p => p.IsAttened))
+        {
+            return new ValidationError("Panelists cannot be added once the interview has started for this candidate.");
+        }
+
+        var newPanelists = request.Panelists
             .Select(p => InterviewPanel.Schedule(
                 request.CandidateId,
                 p.EmployeeId,
                 p.ScheduledDate,
                 p.ScheduledTime,
-                request.ScheduledBy))
+                request.AddedBy))
             .ToList();
 
-        await panelRepository.AddRangeAsync(panelists, cancellationToken);
+        await panelRepository.AddRangeAsync(newPanelists, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Ok("Interview panel scheduled successfully.");
+        return Result.Ok("Panelist(s) added successfully.");
     }
 }

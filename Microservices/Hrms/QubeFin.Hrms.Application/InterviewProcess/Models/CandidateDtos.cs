@@ -84,6 +84,13 @@ public class CandidateDetailDto
     public string? CreditBureauReportLink { get; set; }
 }
 
+/// <summary>Send exactly one of these flags (non-null) per request - the rest should be left null.</summary>
+public record CandidateLetterStatusRequest(
+    bool? IsInterviewLetterReceived,
+    bool? IsOfferLetterReceived,
+    bool? IsAppointmentLetterReceived,
+    bool? IsWelcomeLetterReceived);
+
 public class CandidateCreateUpdateDto
 {
     public Guid CompanyId { get; set; }

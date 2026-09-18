@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Mappers.Hrms;
 using QubeFin.Persistence.Models.Hrms;
 
@@ -13,6 +14,7 @@ public interface IInterviewPanelRepository
     Task<InterviewPanel?> GetByCandidateAndEmployeeAsync(Guid candidateId, Guid employeeId);
     Task AddRangeAsync(IEnumerable<InterviewPanel> panelists, CancellationToken cancellationToken = default);
     Task UpdateAsync(InterviewPanel panel);
+    Task DeleteAsync(Guid id);
 }
 
 public class InterviewPanelRepository(QubeFinDataContext context) : IInterviewPanelRepository
@@ -41,6 +43,7 @@ public class InterviewPanelRepository(QubeFinDataContext context) : IInterviewPa
     public async Task<InterviewPanel?> GetByCandidateAndEmployeeAsync(Guid candidateId, Guid employeeId)
     {
         var entity = await context.TblInterviewPanels
+            .Include(m => m.Employee).ThenInclude(m => m.TblEmployeeDesignations).ThenInclude(m => m.Designation)
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.CandidateId == candidateId && x.EmployeeId == employeeId);
 
@@ -56,5 +59,15 @@ public class InterviewPanelRepository(QubeFinDataContext context) : IInterviewPa
     {
         context.TblInterviewPanels.Update(panel.ToEntity());
         return Task.CompletedTask;
+    }
+
+    public async Task DeleteAsync(Guid id)
+    {
+        var entity = await context.TblInterviewPanels.FirstOrDefaultAsync(x => x.Id == id);
+
+        if (entity == null)
+            return;
+
+        context.TblInterviewPanels.Remove(entity);
     }
 }

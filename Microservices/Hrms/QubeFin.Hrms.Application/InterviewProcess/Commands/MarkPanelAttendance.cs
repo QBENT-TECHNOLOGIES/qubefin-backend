@@ -1,11 +1,13 @@
-﻿using FluentResults;
+using FluentResults;
 using FluentValidation;
 using MediatR;
+using QubeFin.Core.Results;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
+/// <summary>Marks whether a panelist attended the interview.</summary>
 public record MarkPanelAttendanceCommand(Guid PanelId, bool IsAttended, Guid ModifiedBy) : IRequest<Result<string>>;
 
 public class MarkPanelAttendanceCommandValidator : AbstractValidator<MarkPanelAttendanceCommand>
@@ -22,13 +24,13 @@ internal sealed class MarkPanelAttendanceCommandHandler(IInterviewPanelRepositor
     {
         if (request.ModifiedBy == Guid.Empty)
         {
-            return Result.Fail("Authenticated user is required.");
+            return new ValidationError("Authenticated user is required.");
         }
 
         var panel = await panelRepository.GetByIdAsync(request.PanelId);
         if (panel is null)
         {
-            return Result.Fail("Interview panel entry not found.");
+            return new RecordNotFoundError("Interview panel entry not found.");
         }
 
         panel.MarkAttendance(request.IsAttended, request.ModifiedBy);
@@ -36,6 +38,6 @@ internal sealed class MarkPanelAttendanceCommandHandler(IInterviewPanelRepositor
         await panelRepository.UpdateAsync(panel);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Ok("Panel attendance marked successfully.");
+        return Result.Ok("Attendance updated successfully.");
     }
 }

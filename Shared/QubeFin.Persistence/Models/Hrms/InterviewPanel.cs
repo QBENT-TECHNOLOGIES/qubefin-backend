@@ -226,9 +226,52 @@ public class InterviewPanel
         PositiveRemarks = details.PositiveRemarks;
         NegativeRemarks = details.NegativeRemarks;
 
+        IsAttened = true;
         IsSubmitted = true;
         SubmissionDate = DateTime.UtcNow;
         ModifiedBy = submittedBy;
+        ModifiedOn = DateTime.UtcNow;
+
+        return true;
+    }
+
+    /// <summary>Panelist saves in-progress assessment as a draft. Unlike SubmitAssessment, this does not
+    /// lock the record - it can be saved again later. Saving a draft implies the panelist attended, so
+    /// IsAttened is set to true. Fails only if the assessment has already been finally submitted.</summary>
+    public bool SaveAssessmentDraft(AssessmentDetails details, Guid savedBy)
+    {
+        if (IsSubmitted)
+        {
+            return false;
+        }
+
+        AppearanceAttitudeRating = details.AppearanceAttitudeRating;
+        AppearanceAttitudeRemarks = details.AppearanceAttitudeRemarks;
+        PersonalityRating = details.PersonalityRating;
+        PersonalityRemarks = details.PersonalityRemarks;
+        CommunicationRating = details.CommunicationRating;
+        CommunicationRemarks = details.CommunicationRemarks;
+        EducationRating = details.EducationRating;
+        EducationRemarks = details.EducationRemarks;
+        WorkExperienceRating = details.WorkExperienceRating;
+        WorkExperienceRemarks = details.WorkExperienceRemarks;
+        TechnicalCompetenceRating = details.TechnicalCompetenceRating;
+        TechnicalCompetenceRemarks = details.TechnicalCompetenceRemarks;
+        FlexibilityRating = details.FlexibilityRating;
+        FlexibilityRemarks = details.FlexibilityRemarks;
+        AmbitionRating = details.AmbitionRating;
+        AmbitionRemarks = details.AmbitionRemarks;
+        PotentialRating = details.PotentialRating;
+        PotentialRemarks = details.PotentialRemarks;
+        OthersRating = details.OthersRating;
+        OthersRemarks = details.OthersRemarks;
+        AnyOtherJobsSuitedRemarks = details.AnyOtherJobsSuitedRemarks;
+        IsRecommendedForPosition = details.IsRecommendedForPosition;
+        PositiveRemarks = details.PositiveRemarks;
+        NegativeRemarks = details.NegativeRemarks;
+
+        IsAttened = true;
+        ModifiedBy = savedBy;
         ModifiedOn = DateTime.UtcNow;
 
         return true;
