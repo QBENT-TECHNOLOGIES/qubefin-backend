@@ -41,6 +41,9 @@ public class InterviewPanel
     public DateTime? SubmissionDate { get; private set; }
     public Guid ModifiedBy { get; private set; }
     public DateTime ModifiedOn { get; private set; }
+    public string? Designation { get; private set; } = null;
+    public string? EmployeeName { get; private set; } = null;
+    public string? EmployeeCode { get; private set; } = null;
 
     /// <summary>Sum of the ten scored parameters. Null until at least one has been rated.</summary>
     public int? TotalRatingPoint
@@ -99,7 +102,10 @@ public class InterviewPanel
         bool isSubmitted,
         DateTime? submissionDate,
         Guid modifiedBy,
-        DateTime modifiedOn)
+        DateTime modifiedOn,
+         string? employeeCode = null,
+         string? designation = null,
+         string? employeeName = null)
     {
         Id = id;
         CandidateId = candidateId;
@@ -137,6 +143,9 @@ public class InterviewPanel
         SubmissionDate = submissionDate;
         ModifiedBy = modifiedBy;
         ModifiedOn = modifiedOn;
+        EmployeeCode = employeeCode;
+        EmployeeName = employeeName;
+        Designation = designation;
     }
 
     /// <summary>HR schedules a panelist against a candidate's interview.</summary>
