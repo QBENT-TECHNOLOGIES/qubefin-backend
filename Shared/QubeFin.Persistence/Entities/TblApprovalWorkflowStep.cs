@@ -23,6 +23,8 @@ public partial class TblApprovalWorkflowStep
 
     public int SequenceNo { get; set; }
 
+    public bool IsDelete { get; set; }
+
     public virtual TblApprovalWorkflow ApprovalWorkflow { get; set; } = null!;
 
     public virtual TblOrganizationUnitType OrganizationUnitType { get; set; } = null!;

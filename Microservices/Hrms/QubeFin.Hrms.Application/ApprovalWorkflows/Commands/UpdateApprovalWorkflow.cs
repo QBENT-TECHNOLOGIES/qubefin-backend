@@ -63,33 +63,8 @@ internal sealed class UpdateApprovalWorkflowCommandHandler(
             .ToList();
 
 
-        // ---------------------------------------------------------
-        // 3. Check salary grade conflicts
-        // ---------------------------------------------------------
-        if (requestedGradeIds.Count > 0)
-        {
-            var hasConflict =
-                await approvalWorkflowRepository.HasConflictingWorkflowAsync(
-                    anchor.Id,
-                    request.Workflow.Category.Trim(),
-                    request.Workflow.OrganizationUnitTypeId,
-                    request.Workflow.LeaveTypeId,
-                    request.Workflow.MinimumDays,
-                    request.Workflow.MaximumDays,
-                    requestedGradeIds);
-
-            if (hasConflict)
-            {
-                return Result.Fail(
-                    "Cannot update approval workflow because one or more " +
-                    "selected Salary Grade(s) already have an approval " +
-                    "workflow for the selected Leave Type.");
-            }
-        }
-
-
         // =========================================================
-        // 4. Categories WITHOUT salary grade
+        // 3. Categories WITHOUT salary grade
         //    Example: ONDUTY / ATTENDANCE
         // =========================================================
         if (requestedGradeIds.Count == 0 &&
@@ -113,7 +88,7 @@ internal sealed class UpdateApprovalWorkflowCommandHandler(
 
 
         // =========================================================
-        // 5. Salary grade is required for this workflow
+        // 4. Salary grade is required for this workflow
         // =========================================================
         if (requestedGradeIds.Count == 0)
         {
@@ -123,7 +98,11 @@ internal sealed class UpdateApprovalWorkflowCommandHandler(
 
 
         // =========================================================
-        // 6. Get all sibling workflows
+        // 5. Get all sibling workflows
+        //
+        // The workflow is stored as one row per salary grade. Only
+        // the rows walking the SAME approval path belong to the
+        // workflow being edited.
         // =========================================================
         var siblings =
             await approvalWorkflowRepository.GetSiblingsAsync(
@@ -132,6 +111,12 @@ internal sealed class UpdateApprovalWorkflowCommandHandler(
                 anchor.LeaveTypeId,
                 anchor.MinimumDays,
                 anchor.MaximumDays);
+
+        var anchorPathKey = ApprovalWorkflowPath.GetKey(anchor);
+
+        siblings = siblings
+            .Where(x => ApprovalWorkflowPath.GetKey(x) == anchorPathKey)
+            .ToList();
 
 
         // Make sure anchor is included
@@ -144,12 +129,43 @@ internal sealed class UpdateApprovalWorkflowCommandHandler(
 
 
         // =========================================================
+        // 6. Check salary grade conflicts
+        //
+        // Every sibling is excluded, not just the anchor: the other
+        // rows of this same workflow are the ones already holding
+        // the selected salary grades.
+        // =========================================================
+        var siblingIds = siblings
+            .Select(x => x.Id)
+            .ToList();
+
+        var hasConflict =
+            await approvalWorkflowRepository.HasConflictingWorkflowAsync(
+                siblingIds,
+                request.Workflow.Category.Trim(),
+                request.Workflow.OrganizationUnitTypeId,
+                request.Workflow.LeaveTypeId,
+                request.Workflow.MinimumDays,
+                request.Workflow.MaximumDays,
+                requestedGradeIds);
+
+        if (hasConflict)
+        {
+            return Result.Fail(
+                "Cannot update approval workflow because one or more " +
+                "selected Salary Grade(s) already have an approval " +
+                "workflow for the selected Leave Type.");
+        }
+
+
+        // =========================================================
         // 7. Existing workflows grouped by Salary Grade
         // =========================================================
         var existingByGrade =
             siblings
                 .Where(x => x.SalaryGradeId.HasValue)
-                .ToDictionary(x => x.SalaryGradeId!.Value);
+                .GroupBy(x => x.SalaryGradeId!.Value)
+                .ToDictionary(x => x.Key, x => x.First());
 
 
         // =========================================================
@@ -158,13 +174,6 @@ internal sealed class UpdateApprovalWorkflowCommandHandler(
         //    - workflows to remove
         //    - workflows to create
         // =========================================================
-        var toRemove =
-            existingByGrade
-                .Where(x => !requestedGradeIds.Contains(x.Key))
-                .Select(x => x.Value)
-                .ToList();
-
-
         var toKeep =
             requestedGradeIds
                 .Where(existingByGrade.ContainsKey)
@@ -174,6 +183,20 @@ internal sealed class UpdateApprovalWorkflowCommandHandler(
         var toAdd =
             requestedGradeIds
                 .Except(existingByGrade.Keys)
+                .ToList();
+
+
+        // Rows whose salary grade was removed, plus any row of this
+        // group carrying no salary grade at all (the category was
+        // switched to a grade based one).
+        var keptWorkflowIds =
+            toKeep
+                .Select(x => existingByGrade[x].Id)
+                .ToHashSet();
+
+        var toRemove =
+            siblings
+                .Where(x => !keptWorkflowIds.Contains(x.Id))
                 .ToList();
 
 
@@ -199,6 +222,9 @@ internal sealed class UpdateApprovalWorkflowCommandHandler(
 
         // =========================================================
         // 10. Remove workflows whose salary grade was removed
+        //
+        // Steps already referenced by an approval request event are
+        // soft deleted by the repository instead of being dropped.
         // =========================================================
         foreach (var workflow in toRemove)
         {
@@ -246,31 +272,10 @@ internal sealed class UpdateApprovalWorkflowCommandHandler(
 
 
     // =============================================================
-    // Update workflow fields
-    // =============================================================
-    private static void ApplyFields(
-        ApprovalWorkflow workflow,
-        ApprovalWorkflowRequest request,
-        Guid? salaryGradeId,
-        Guid modifiedBy)
-    {
-        workflow.Update(
-            request.Category.Trim(),
-            request.LeaveTypeId,
-            request.OrganizationUnitTypeId,
-            salaryGradeId,
-            request.PostId,
-            request.MinimumDays,
-            request.MaximumDays,
-            modifiedBy);
-    }
-
-
-    // =============================================================
     // Create model used for updating an EXISTING workflow
     //
-    // Existing step IDs from request are preserved here.
-    // Repository uses these IDs to find existing DB steps.
+    // Update() is called on purpose: Create() alone leaves
+    // LastModifiedOn / LastModifiedBy empty.
     // =============================================================
     private static ApprovalWorkflow CreateUpdateModel(
         ApprovalWorkflow existingWorkflow,
@@ -278,7 +283,7 @@ internal sealed class UpdateApprovalWorkflowCommandHandler(
         Guid? salaryGradeId,
         Guid modifiedBy)
     {
-        return ApprovalWorkflow.Create(
+        var workflow = ApprovalWorkflow.Create(
             existingWorkflow.Id,
             request.Category.Trim(),
             request.LeaveTypeId,
@@ -291,6 +296,18 @@ internal sealed class UpdateApprovalWorkflowCommandHandler(
             BuildExistingSteps(
                 request.Steps,
                 existingWorkflow.Id));
+
+        workflow.Update(
+            request.Category.Trim(),
+            request.LeaveTypeId,
+            request.OrganizationUnitTypeId,
+            salaryGradeId,
+            request.PostId,
+            request.MinimumDays,
+            request.MaximumDays,
+            modifiedBy);
+
+        return workflow;
     }
 
 
@@ -298,9 +315,10 @@ internal sealed class UpdateApprovalWorkflowCommandHandler(
     // Existing workflow steps
     //
     // IMPORTANT:
-    // Existing step ID is preserved.
-    // This allows repository UpdateAsync() to find and update
-    // the existing database row.
+    // The step ID from the request is preserved so the repository
+    // can find the matching database row of the workflow being
+    // edited. The sibling workflows keep their own step rows, and
+    // for those the repository falls back to SequenceNo.
     // =============================================================
     private static IEnumerable<ApprovalWorkflowStep> BuildExistingSteps(
         IReadOnlyList<ApprovalWorkflowStepRequest> steps,
@@ -308,9 +326,7 @@ internal sealed class UpdateApprovalWorkflowCommandHandler(
     {
         return steps.Select(step =>
             ApprovalWorkflowStep.Create(
-                step.Id.GetValueOrDefault() == Guid.Empty
-                    ? Guid.NewGuid()
-                    : step.Id.Value,
+                step.Id.GetValueOrDefault(),
 
                 workflowId,
 

@@ -22,6 +22,9 @@ namespace QubeFin.Hrms.Application.ApprovalWorkflows.Models
         public DateTime? LastModifiedOn { get; set; }
         public List<ApprovalWorkflowStep>? Steps { get; set; }
         public string? StepPost { get; set; }
+
+        // Same one line summary the list shows, e.g. "Branch Manager -> Area Manager".
+        public string ApprovalPath { get; set; } = string.Empty;
         public List<ApprovalStep> ApprovalSteps { get; set; } = new();
     }
 
@@ -37,5 +40,6 @@ namespace QubeFin.Hrms.Application.ApprovalWorkflows.Models
         public string EventButtonText { get; set; } = string.Empty;
         public int SequenceNo { get; set; }
         public string? OrganizationUnitTypeName { get; set; }
+        public string? ReceiverPostName { get; set; }
     }
 }

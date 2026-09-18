@@ -226,6 +226,7 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<WegrowConsolidateEmployee> WegrowConsolidateEmployees { get; set; }
 
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<DboTempEmpBranch>(entity =>
@@ -305,6 +306,7 @@ public partial class QubeFinDataContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.IsActive).HasDefaultValue(true, "DF_Tbl_AdministrativeUnit_IsActive");
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
             entity.Property(e => e.Name).HasMaxLength(50);
 
@@ -1343,6 +1345,9 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Uan).HasMaxLength(50);
             entity.Property(e => e.VacancyReference).HasMaxLength(50);
             entity.Property(e => e.VoterNumber).HasMaxLength(20);
+            entity.Property(e => e.WrittenInterviewFile)
+                .HasMaxLength(100)
+                .HasColumnName("WrittenInterviewFIle");
 
             entity.HasOne(d => d.AdministrativeUnit).WithMany(p => p.TblInterviewCandidates)
                 .HasForeignKey(d => d.AdministrativeUnitId)
@@ -1361,6 +1366,11 @@ public partial class QubeFinDataContext : DbContext
             entity.HasOne(d => d.Department).WithMany(p => p.TblInterviewCandidates)
                 .HasForeignKey(d => d.DepartmentId)
                 .HasConstraintName("FK_Tbl_InterviewCandidate_Tbl_Department");
+
+            entity.HasOne(d => d.InterviewPostNavigation).WithMany(p => p.TblInterviewCandidates)
+                .HasForeignKey(d => d.InterviewPost)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_InterviewCandidate_Tbl_Post");
 
             entity.HasOne(d => d.ModifiedByNavigation).WithMany(p => p.TblInterviewCandidateModifiedByNavigations)
                 .HasForeignKey(d => d.ModifiedBy)
