@@ -62,10 +62,10 @@ public class OrganizationUnit
 
         return organizationUnit;
     }
+
     public void Update(Guid organizationUnitTypeId,
         string name,
-        int codeVal,
-        decimal? latitude, 
+        decimal? latitude,
         decimal? longitude,
         TimeOnly? attendanceInTime,
         TimeOnly? attendanceOutTime,
@@ -76,7 +76,6 @@ public class OrganizationUnit
     {
         Name = name;
         OrganizationUnitTypeId = organizationUnitTypeId;
-        CodeVal = codeVal;
         ParentId = parentId;
         CompanyId = companyId;
         Latitude = latitude;
