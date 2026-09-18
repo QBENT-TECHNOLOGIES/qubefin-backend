@@ -79,12 +79,12 @@ internal sealed class GetApprovalWorkflowByIdQueryHandler(
             // as the selected workflow.
             // --------------------------------------------------------
 
-            var workflowPathKey = GetApprovalPathKey(workflow);
+            var workflowPathKey = ApprovalWorkflowPath.GetKey(workflow);
 
             var gradedSiblings = siblings
                 .Where(x =>
                     x.SalaryGradeId.HasValue &&
-                    GetApprovalPathKey(x) == workflowPathKey)
+                    ApprovalWorkflowPath.GetKey(x) == workflowPathKey)
                 .ToList();
 
 
@@ -138,9 +138,21 @@ internal sealed class GetApprovalWorkflowByIdQueryHandler(
                 EventStatus = s.EventStatus,
                 EventButtonText = s.EventButtonText,
                 SequenceNo = s.SequenceNo,
-                OrganizationUnitTypeName = s.OrganizationUnitTypeName
+                OrganizationUnitTypeName = s.OrganizationUnitTypeName,
+                ReceiverPostName = s.ReceiverPostName
             })
             .ToList();
+
+
+        // ============================================================
+        // 4b. APPROVAL PATH (one line summary)
+        // ============================================================
+
+        var approvalPath = string.Join(
+            " → ",
+            approvalSteps
+                .Select(s => s.ReceiverPostName)
+                .Where(name => !string.IsNullOrWhiteSpace(name)));
 
 
         // ============================================================
@@ -207,42 +219,14 @@ internal sealed class GetApprovalWorkflowByIdQueryHandler(
             ApprovalSteps =
                 approvalStepResponse,
 
+            ApprovalPath =
+                approvalPath,
+
             StepPost =
                 firstStep?.ReceiverPostName
         };
 
 
         return Result.Ok(detail);
-    }
-
-
-    // ================================================================
-    // Creates a unique key for the approval workflow/path.
-    //
-    // Salary Grade is deliberately NOT included.
-    //
-    // Example:
-    //
-    // Branch Manager:
-    // D6FB...:D1AE...:1
-    //
-    // Area Manager:
-    // D6FB...:A514...:1
-    //
-    // Therefore they are treated as different workflows.
-    // ================================================================
-
-    private static string GetApprovalPathKey(
-        ApprovalWorkflow workflow)
-    {
-        return string.Join(
-            "|",
-            (workflow.Steps ??
-             new List<ApprovalWorkflowStep>())
-                .OrderBy(s => s.SequenceNo)
-                .Select(s =>
-                    $"{s.OrganizationUnitTypeId}:" +
-                    $"{s.ReceiverPostId}:" +
-                    $"{s.SequenceNo}"));
     }
 }

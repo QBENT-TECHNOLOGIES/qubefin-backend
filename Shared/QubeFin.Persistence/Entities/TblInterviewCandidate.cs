@@ -43,6 +43,8 @@ public partial class TblInterviewCandidate
 
     public TimeOnly? InterviewTime { get; set; }
 
+    public string? WrittenInterviewFile { get; set; }
+
     public Guid? DepartmentId { get; set; }
 
     public Guid InterviewPost { get; set; }
@@ -113,6 +115,14 @@ public partial class TblInterviewCandidate
 
     public decimal? MonthlyCostCompany { get; set; }
 
+    public bool IsInterviewLetterRecieved { get; set; }
+
+    public bool IsOfferLetterReceived { get; set; }
+
+    public bool IsAppointmentLetterReceived { get; set; }
+
+    public bool IsWelcomeLetterRecieved { get; set; }
+
     public Guid CreatedBy { get; set; }
 
     public DateTime CreatedOn { get; set; }
@@ -128,6 +138,8 @@ public partial class TblInterviewCandidate
     public virtual TblUser CreatedByNavigation { get; set; } = null!;
 
     public virtual TblDepartment? Department { get; set; }
+
+    public virtual TblPost InterviewPostNavigation { get; set; } = null!;
 
     public virtual TblUser? ModifiedByNavigation { get; set; }
 
