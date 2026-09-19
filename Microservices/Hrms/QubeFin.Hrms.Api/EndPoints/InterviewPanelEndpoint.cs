@@ -89,20 +89,6 @@ public class InterviewPanelEndpoint : IEndpoint
         .WithTags("Interview Panels")
         .RequireAuthorization();
 
-        app.MapPost("interview-panels/{panelId:guid}/attendance", async (Guid panelId, [FromBody] bool isAttended, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
-        {
-            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
-            {
-                return Results.Forbid();
-            }
-
-            var result = await sender.Send(new MarkPanelAttendanceCommand(panelId, isAttended, principal.Identity.GetUserId()), cancellationToken);
-            return result.ToHttpResult();
-        })
-        .WithSummary("Mark whether a panelist attended the interview")
-        .WithTags("Interview Panels")
-        .RequireAuthorization();
-
         app.MapPost("interview-panels/assessment", async ([FromBody] SubmitInterviewAssessmentCommand command, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)

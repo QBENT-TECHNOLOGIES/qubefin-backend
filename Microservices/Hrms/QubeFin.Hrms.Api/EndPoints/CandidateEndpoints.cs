@@ -76,6 +76,20 @@ public class CandidateEndpoints : IEndpoint
         .WithTags("Candidates")
         .RequireAuthorization();
 
+        app.MapPost("candidates/{id:guid}/send-letter", async (Guid id, [FromBody] CandidateLetterStatusRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Forbid();
+            }
+
+            var result = await sender.Send(new SendLetterToCandidateCommand(id, request, principal.Identity.GetUserId()), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Send letter to candidate")
+        .WithTags("Candidates")
+        .RequireAuthorization();
+
         app.MapPost("candidates/{id:guid}/interview-upload", async (Guid id, [FromForm] CandidateInterviewUploadRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)
