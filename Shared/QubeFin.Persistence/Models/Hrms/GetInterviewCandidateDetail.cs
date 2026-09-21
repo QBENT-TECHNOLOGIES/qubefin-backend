@@ -65,7 +65,6 @@
         public DateOnly? DateOfJoining { get; set; }
         public TimeOnly? ReportingTime { get; set; }
         public decimal? MonthlyCostCompany { get; set; }
-        public bool? IsInterviewLetterRecieved { get; set; }
         public bool? IsOfferLetterReceived { get; set; }
         public bool? IsAppointmentLetterReceived { get; set; }
         public bool? IsWelcomeLetterRecieved { get; set; }
@@ -90,11 +89,7 @@
         public bool? IsCandidateQualified { get; set; }
         public bool? IsShowCandidateVerificationButton { get; set; }
         public bool? IsCandidateVerificationCompleted { get; set; }
-        public bool? CanGenerateOfferLetter { get; set; }
-        public bool? IsOfferLetterGenerated { get; set; }
         public string? CurrentWorkflowStage { get; set; }
-        public bool? IsInterviewerAcknowledgedOld { get; set; }
-        public bool? OldIsShowHrAssessmentButton { get; set; }
         public bool? ShowViewPanelButton { get; set; }
         public bool? IsAssessmentDate { get; set; }
 
@@ -102,8 +97,58 @@
         /// IsShowHrAssessmentButton stays true in this state so the form can be reopened.</summary>
         public bool? IsHrAssessmentDraftSaved { get; set; }
 
-        /// <summary>HR's own row in Hrms.Tbl_InterviewPanel has been finalised.</summary>
+        /// <summary>The candidate's AssessmentType = 'HR' row in Hrms.Tbl_InterviewPanel has been finalised.
+        /// Separate from any interviewer submission by the same HR employee.</summary>
         public bool? IsHrAssessmentSubmitted { get; set; }
+
+        /// <summary>The calling employee owns the candidate's AssessmentType = 'HR' row. Independent of
+        /// IsCurrentEmployeePanelMember - an HR employee can be both.</summary>
+        public bool? IsCurrentEmployeeHrAssessor { get; set; }
+
+        /// <summary>What the calling employee is on this candidate: 'INTERVIEWER', 'HR', 'BOTH', or null
+        /// when they hold no row at all. The UI must use this rather than inferring from IsHR.</summary>
+        public string? CurrentEmployeeAssessmentType { get; set; }
+
+        // ============================================================
+        // POST-OFFER DOCUMENT CHAIN
+        //
+        // One flag per step, each opening only once the previous step's letter
+        // has been received:
+        //   verification done -> offer -> (additional info + appointment)
+        //   -> joining letter -> welcome letter.
+        // ============================================================
+
+        /// <summary>The candidate's signed joining letter is on file
+        /// (Tbl_InterviewCandidate.SignedJoiningLetterFile is set).</summary>
+        public bool? IsJoiningLetterUploaded { get; set; }
+
+        /// <summary>HR may view/print, send and mark received the interview letter.</summary>
+        public bool? ShowInterviewLetterActions { get; set; }
+
+        /// <summary>The filled-in written interview form is on file (WrittenInterviewFIle is set).</summary>
+        public bool? IsWrittenAssessmentUploaded { get; set; }
+
+        /// <summary>Show the interview format download/upload pair: every interviewer has acknowledged,
+        /// the form is not on file yet, and the HR Assessment has not been completed.</summary>
+        public bool? ShowInterviewFormatActions { get; set; }
+
+        /// <summary>Candidate verification is complete and the offer letter has not been
+        /// received yet - show view/print, send and receive.</summary>
+        public bool? ShowOfferLetterActions { get; set; }
+
+        /// <summary>The offer letter is with the candidate - show "Add Additional Info".</summary>
+        public bool? ShowAddAdditionalInfoButton { get; set; }
+
+        /// <summary>The offer letter is received and the appointment letter is not - show
+        /// view/print, send and receive.</summary>
+        public bool? ShowAppointmentLetterActions { get; set; }
+
+        /// <summary>The appointment letter is received - show joining letter download and upload.</summary>
+        public bool? ShowJoiningLetterActions { get; set; }
+
+        /// <summary>The signed joining letter is uploaded and the welcome letter is not received -
+        /// show view/print, send and receive.</summary>
+        public bool? ShowWelcomeLetterActions { get; set; }
 
         /// <summary>Total of the ten averaged category ratings stored on HR's assessment row.</summary>
         public int? HrAssessmentTotalRatingPoint { get; set; }

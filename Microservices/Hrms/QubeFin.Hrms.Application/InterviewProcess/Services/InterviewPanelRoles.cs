@@ -3,34 +3,38 @@ using QubeFin.Persistence.Models.Hrms;
 namespace QubeFin.Hrms.Application.InterviewProcess.Services;
 
 /// <summary>
-/// Hrms.Tbl_InterviewPanel holds two different kinds of row: the interviewers HR scheduled onto the panel,
-/// and the single row HR writes when they fill in the HR Assessment (the averaged ratings have to be stored
-/// somewhere, and the panel table is the only table with a column per rating category).
+/// Hrms.Tbl_InterviewPanel holds two different kinds of row: the interviewers HR scheduled onto the panel
+/// (AssessmentType = 'INTERVIEWER'), and the single row the HR Assessment writes to
+/// (AssessmentType = 'HR', which is where the averaged ratings and HR's own decision remarks live).
 ///
-/// Nothing on the table itself distinguishes the two, and we are not allowed to add a column, so both this
-/// layer and USP_GetInterviewCandidateById identify the HR row the same way: by the PostId behind the panel
-/// member's current designation. Keep the GUID below in sync with @HRPostId in that stored procedure.
+/// AssessmentType is the ONLY source of truth for that distinction. The employee's HR designation must
+/// never be used for it: an HR employee can also be scheduled as a genuine panel interviewer, in which
+/// case they hold BOTH an 'INTERVIEWER' row (their own interview) and, once they start the HR Assessment,
+/// an 'HR' row (their decision). Keep this in step with USP_GetInterviewCandidateById, which filters on
+/// the same column.
 /// </summary>
 public static class InterviewPanelRoles
 {
-    /// <summary>PostId of the HR post - mirrors @HRPostId in Hrms.USP_GetInterviewCandidateById.</summary>
-    public static readonly Guid HrPostId = new("416B4D7C-DB96-426B-BA19-0FB46D1940FF");
+    /// <summary>True when this row is the HR Assessment row rather than a scheduled interviewer's row.</summary>
+    public static bool IsHrAssessmentRow(this InterviewPanel panel) =>
+        string.Equals(panel.AssessmentType, InterviewPanel.HrAssessmentType, StringComparison.OrdinalIgnoreCase);
 
-    /// <summary>True when this panel row belongs to HR rather than to an interviewer, i.e. it is the row the
-    /// HR Assessment writes to.</summary>
-    public static bool IsHrRow(this InterviewPanel panel) => panel.DesignationPostId == HrPostId;
+    /// <summary>True when this row is a scheduled panel interviewer's row - including one belonging to an
+    /// HR employee who genuinely sits on the panel.</summary>
+    public static bool IsInterviewerRow(this InterviewPanel panel) => !panel.IsHrAssessmentRow();
 
-    /// <summary>The interviewer rows for a candidate: every panel row except HR's own assessment row. These
+    /// <summary>The interviewer rows for a candidate: every panel row except the HR Assessment row. These
     /// are the rows whose ratings get averaged, and the rows the "everyone has submitted" gate looks at.</summary>
     public static IEnumerable<InterviewPanel> Interviewers(this IEnumerable<InterviewPanel> panel) =>
-        panel.Where(p => !p.IsHrRow());
+        panel.Where(p => p.IsInterviewerRow());
 
-    /// <summary>True when HR's own panel row shows they were genuinely scheduled onto the panel as an
-    /// interviewer, rather than only holding the administrative row the HR Assessment save/submit flow
-    /// creates for a pure (non-interviewer) HR. This is the one reliable existing signal without adding a
-    /// column: Acknowledge() is only ever called by the ordinary panel-invitation flow
-    /// (AcknowledgePanelInvitationCommand) - the HR Assessment flow never touches IsAcknowledged on the row
-    /// it creates or updates. Used to decide whether HR's own row should count toward the interviewer
-    /// aggregates and averages, and whether the HR Assessment save/submit flow may safely write into it.</summary>
-    public static bool IsGenuineInterviewer(this InterviewPanel? hrOwnRow) => hrOwnRow is { IsAcknowledged: true };
+    /// <summary>The candidate's HR Assessment row, if HR has started one. At most one exists per candidate.</summary>
+    public static InterviewPanel? HrAssessmentRow(this IEnumerable<InterviewPanel> panel) =>
+        panel.FirstOrDefault(p => p.IsHrAssessmentRow());
+
+    /// <summary>This employee's own interviewer row on the panel, if they are scheduled as one. Used to tell
+    /// "HR is genuinely a panel interviewer" from "HR only holds the HR Assessment row" - never their
+    /// designation, and never the HR row's IsSubmitted.</summary>
+    public static InterviewPanel? InterviewerRowFor(this IEnumerable<InterviewPanel> panel, Guid employeeId) =>
+        panel.FirstOrDefault(p => p.IsInterviewerRow() && p.EmployeeId == employeeId);
 }

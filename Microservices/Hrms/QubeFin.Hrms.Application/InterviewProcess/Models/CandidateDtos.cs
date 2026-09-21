@@ -110,6 +110,15 @@ public class CandidateInterviewUploadRequest
     public IFormFile? Attachment { get; set; }
 }
 
+/// <summary>[FromForm] request body for uploading the candidate's signed/returned joining letter.</summary>
+public class CandidateJoiningLetterUploadRequest
+{
+    public IFormFile? Attachment { get; set; }
+}
+
+/// <summary>Whether the candidate's signed joining letter has been uploaded, and a URL to download it if so.</summary>
+public record CandidateJoiningLetterStatusDto(bool IsUploaded, string? FileUrl);
+
 public class CandidateCreateUpdateDto
 {
     public Guid CompanyId { get; set; }

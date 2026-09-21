@@ -141,6 +141,48 @@ namespace QubeFin.Report.Api.Endpoints
                 }
             }).WithSummary("Generate appointment letter.");
 
+            app.MapGet("/interview/welcome-letter/{candidateId:guid}", [Authorize] async (Guid candidateId, ISender sender, IConfiguration configuration) =>
+            {
+                var company = await sender.Send(new GetCompanyByCandidateIdQuery(candidateId));
+
+                if (company.IsFailed)
+                    return company.ToHttpResult();
+                else if (company.Value.companyId == Guid.Parse(configuration["Company:Wegrow"]))
+                {
+                    var command = new GenerateSSRSReportsCommand(
+                    "Rpt_Wegrow_WelcomeLetter",
+                    "PDF",
+                    new Dictionary<string, string>
+                    {
+                        ["CandidateId"] = candidateId.ToString()
+                    });
+                    var result = await sender.Send(command);
+                    if (result.IsFailed)
+                        return result.ToHttpResult();
+                    var file = result.Value;
+                    return Results.File(file.FileStream, file.ContentType, file.FileName);
+                }
+                else if (company.Value.companyId == Guid.Parse(configuration["Company:WegroBC"]))
+                {
+                    var command = new GenerateSSRSReportsCommand(
+                    "Rpt_WegroBC_WelcomeLetter",
+                    "PDF",
+                    new Dictionary<string, string>
+                    {
+                        ["CandidateId"] = candidateId.ToString()
+                    });
+                    var result = await sender.Send(command);
+                    if (result.IsFailed)
+                        return result.ToHttpResult();
+                    var file = result.Value;
+                    return Results.File(file.FileStream, file.ContentType, file.FileName);
+                }
+                else
+                {
+                    return Results.NotFound("Company not found for the given candidate.");
+                }
+            }).WithSummary("Generate welcome letter.");
+
             app.MapGet("/interview/joining-letter/{candidateId:guid}", [Authorize] async (Guid candidateId, ISender sender, IConfiguration configuration) =>
             {
                 var company = await sender.Send(new GetCompanyByCandidateIdQuery(candidateId));

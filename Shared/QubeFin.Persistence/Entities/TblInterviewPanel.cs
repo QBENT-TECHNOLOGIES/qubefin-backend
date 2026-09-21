@@ -77,6 +77,8 @@ public partial class TblInterviewPanel
 
     public DateTime ModifiedOn { get; set; }
 
+    public string AssessmentType { get; set; } = null!;
+
     public virtual TblInterviewCandidate Candidate { get; set; } = null!;
 
     public virtual TblEmployee Employee { get; set; } = null!;

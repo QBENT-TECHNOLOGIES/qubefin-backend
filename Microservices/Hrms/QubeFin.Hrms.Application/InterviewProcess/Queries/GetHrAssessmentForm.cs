@@ -1,9 +1,10 @@
-using FluentResults;
+﻿using FluentResults;
 using MediatR;
 using QubeFin.Core.Results;
 using QubeFin.Hrms.Application.InterviewProcess.Models;
 using QubeFin.Hrms.Application.InterviewProcess.Services;
 using QubeFin.Hrms.Persistence.Repositories;
+using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Queries;
 
@@ -25,22 +26,18 @@ internal sealed class GetHrAssessmentFormQueryHandler(
         }
 
         var allPanelEntries = await panelRepository.GetByCandidateIdAsync(request.CandidateId);
-        var hrEntry = allPanelEntries.FirstOrDefault(p => p.EmployeeId == request.HrEmployeeId);
-        var hrIsInterviewer = hrEntry.IsGenuineInterviewer();
 
-        // The interviewers - everyone on the panel except HR's own administrative entry. Rows belonging to
-        // the HR post are excluded too, so this matches what USP_GetInterviewCandidateById counts - except
-        // when HR is genuinely scheduled on the panel (hrIsInterviewer), in which case their own submitted
-        // score counts like anyone else's.
-        var interviewerEntries = allPanelEntries
-            .Where(p => p.EmployeeId != request.HrEmployeeId && !p.IsHrRow())
-            .ToList();
-        if (hrIsInterviewer)
-        {
-            interviewerEntries.Add(hrEntry!);
-        }
+        // Role is decided by AssessmentType, never by the employee's HR designation:
+        //   - interviewers          = every AssessmentType = 'INTERVIEWER' row, HR's own included
+        //   - hrRow                 = the single AssessmentType = 'HR' row, if HR has started one
+        //   - hrIsInterviewer       = HR also holds an INTERVIEWER row on this candidate
+        var interviewers = allPanelEntries.Interviewers().ToList();
+        var hrRow = allPanelEntries.HrAssessmentRow();
+        var hrOwnInterviewerRow = allPanelEntries.InterviewerRowFor(request.HrEmployeeId);
+        var hrIsInterviewer = hrOwnInterviewerRow is not null;
+        var isHrOnlyInterviewer = hrIsInterviewer && interviewers.Count == 1;
 
-        var submittedInterviewers = interviewerEntries.Where(p => p.IsSubmitted).ToList();
+        var submittedInterviewers = interviewers.Where(p => p.IsSubmitted).ToList();
 
         if (submittedInterviewers.Count == 0)
         {
@@ -69,46 +66,44 @@ internal sealed class GetHrAssessmentFormQueryHandler(
                 p.IsRecommendedForPosition))
             .ToList();
 
-        // Whether HR's *decision* has been finalized. When HR is also a genuine interviewer, hrEntry.IsSubmitted
-        // reflects THEIR OWN interview submission, not the HR decision - so we key off RecommendationStatus
-        // instead, the same signal Candidate.SubmitHrAssessment sets. For a pure (non-interviewer) HR,
-        // hrEntry.IsSubmitted is still the right signal, exactly as before.
-        var isHrDecisionSubmitted = hrIsInterviewer
-            ? !string.IsNullOrEmpty(candidate.RecommendationStatus) && candidate.RecommendationStatus != "Pending"
-            : hrEntry?.IsSubmitted ?? false;
+        // Whether HR's *decision* has been finalized. The HR row's IsSubmitted now belongs solely to the
+        // HR Assessment workflow (HR's own interviewer submission lives on their separate INTERVIEWER row),
+        // but RecommendationStatus stays the authoritative completion signal, matching
+        // Candidate.SubmitHrAssessment and IsHrAssessmentCompleted in USP_GetInterviewCandidateById.
+        var isHrDecisionSubmitted =
+            (!string.IsNullOrEmpty(candidate.RecommendationStatus) && candidate.RecommendationStatus != "Pending")
+            || (hrRow?.IsSubmitted ?? false);
 
-        // The rating block: for a pure HR, once submitted the row is frozen and the stored snapshot is shown.
-        // For a dual-role HR, hrEntry IS their own locked interviewer row - it is never overwritten with the
-        // average - so always recompute live; it stays reproducible since the rows it's built from are
-        // themselves locked once submitted.
-        var showFrozenSnapshot = !hrIsInterviewer && isHrDecisionSubmitted;
+        // Once submitted the HR row is frozen, so show the stored snapshot; until then show the live average.
+        var showFrozenSnapshot = isHrDecisionSubmitted && hrRow is not null;
 
         var dto = new HrAssessmentFormDto(
             request.CandidateId,
             isHrDecisionSubmitted,
             hrIsInterviewer,
+            isHrOnlyInterviewer,
 
-            showFrozenSnapshot ? hrEntry!.AppearanceAttitudeRating : averages.AppearanceAttitudeRating,
-            showFrozenSnapshot ? hrEntry!.PersonalityRating : averages.PersonalityRating,
-            showFrozenSnapshot ? hrEntry!.CommunicationRating : averages.CommunicationRating,
-            showFrozenSnapshot ? hrEntry!.EducationRating : averages.EducationRating,
-            showFrozenSnapshot ? hrEntry!.WorkExperienceRating : averages.WorkExperienceRating,
-            showFrozenSnapshot ? hrEntry!.TechnicalCompetenceRating : averages.TechnicalCompetenceRating,
-            showFrozenSnapshot ? hrEntry!.FlexibilityRating : averages.FlexibilityRating,
-            showFrozenSnapshot ? hrEntry!.AmbitionRating : averages.AmbitionRating,
-            showFrozenSnapshot ? hrEntry!.PotentialRating : averages.PotentialRating,
-            showFrozenSnapshot ? hrEntry!.OthersRating : averages.OthersRating,
-            showFrozenSnapshot ? hrEntry!.TotalRatingPoint : averages.Total,
+            showFrozenSnapshot ? hrRow!.AppearanceAttitudeRating : averages.AppearanceAttitudeRating,
+            showFrozenSnapshot ? hrRow!.PersonalityRating : averages.PersonalityRating,
+            showFrozenSnapshot ? hrRow!.CommunicationRating : averages.CommunicationRating,
+            showFrozenSnapshot ? hrRow!.EducationRating : averages.EducationRating,
+            showFrozenSnapshot ? hrRow!.WorkExperienceRating : averages.WorkExperienceRating,
+            showFrozenSnapshot ? hrRow!.TechnicalCompetenceRating : averages.TechnicalCompetenceRating,
+            showFrozenSnapshot ? hrRow!.FlexibilityRating : averages.FlexibilityRating,
+            showFrozenSnapshot ? hrRow!.AmbitionRating : averages.AmbitionRating,
+            showFrozenSnapshot ? hrRow!.PotentialRating : averages.PotentialRating,
+            showFrozenSnapshot ? hrRow!.OthersRating : averages.OthersRating,
+            showFrozenSnapshot ? hrRow!.TotalRatingPoint : averages.Total,
 
             candidate.OverallPerformance,
             candidate.SuitableRoleDepartment,
             candidate.RecommendedGradeId,
             candidate.IsTrainingRequired,
             candidate.RecommendationStatus,
-            hrEntry?.AnyOtherJobsSuitedRemarks,
-            hrEntry?.IsRecommendedForPosition,
-            hrEntry?.PositiveRemarks,
-            hrEntry?.NegativeRemarks,
+            hrRow?.AnyOtherJobsSuitedRemarks,
+            hrRow?.IsRecommendedForPosition,
+            hrRow?.PositiveRemarks,
+            hrRow?.NegativeRemarks,
             panelistSummaries);
 
         return Result.Ok(dto);

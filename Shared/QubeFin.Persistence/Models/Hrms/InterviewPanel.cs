@@ -5,6 +5,15 @@ public class InterviewPanel
     public Guid Id { get; private set; }
     public Guid CandidateId { get; private set; }
     public Guid EmployeeId { get; private set; }
+
+    /// <summary>Which kind of row this is: <see cref="InterviewerAssessmentType"/> for a scheduled panel
+    /// interviewer, <see cref="HrAssessmentType"/> for the single row the HR Assessment writes to. This is
+    /// the ONLY source of truth for the distinction - never the employee's HR designation, because an HR
+    /// employee can also be scheduled as a genuine panel interviewer.</summary>
+    public string AssessmentType { get; private set; } = InterviewerAssessmentType;
+
+    public const string InterviewerAssessmentType = "INTERVIEWER";
+    public const string HrAssessmentType = "HR";
     public DateOnly ScheduledDate { get; private set; }
     public TimeOnly ScheduledTime { get; private set; }
     public bool IsAcknowledged { get; private set; }
@@ -111,7 +120,8 @@ public class InterviewPanel
          string? employeeCode = null,
          string? designation = null,
          string? employeeName = null,
-         Guid? designationPostId = null)
+         Guid? designationPostId = null,
+         string? assessmentType = null)
     {
         Id = id;
         CandidateId = candidateId;
@@ -153,9 +163,13 @@ public class InterviewPanel
         EmployeeName = employeeName;
         Designation = designation;
         DesignationPostId = designationPostId;
+        AssessmentType = string.IsNullOrWhiteSpace(assessmentType)
+            ? InterviewerAssessmentType
+            : assessmentType.Trim().ToUpperInvariant();
     }
 
-    /// <summary>HR schedules a panelist against a candidate's interview.</summary>
+    /// <summary>HR schedules a panelist against a candidate's interview. Always an INTERVIEWER row - the
+    /// HR Assessment row is created by <see cref="CreateHrAssessmentRow"/> instead.</summary>
     public static InterviewPanel Schedule(
         Guid candidateId,
         Guid employeeId,
@@ -173,7 +187,34 @@ public class InterviewPanel
             IsAcknowledged = false,
             IsAttened = false,
             IsSubmitted = false,
+            AssessmentType = InterviewerAssessmentType,
             ModifiedBy = scheduledBy,
+            ModifiedOn = DateTime.UtcNow
+        };
+    }
+
+    /// <summary>The single row the HR Assessment writes to for a candidate. Separate from any INTERVIEWER
+    /// row the same HR employee may hold, so the HR decision's state (IsAcknowledged / IsAttened /
+    /// IsSubmitted) never collides with their own interviewer submission state.</summary>
+    public static InterviewPanel CreateHrAssessmentRow(
+        Guid candidateId,
+        Guid hrEmployeeId,
+        DateOnly scheduledDate,
+        TimeOnly scheduledTime,
+        Guid createdBy)
+    {
+        return new InterviewPanel
+        {
+            Id = Guid.NewGuid(),
+            CandidateId = candidateId,
+            EmployeeId = hrEmployeeId,
+            ScheduledDate = scheduledDate,
+            ScheduledTime = scheduledTime,
+            IsAcknowledged = false,
+            IsAttened = false,
+            IsSubmitted = false,
+            AssessmentType = HrAssessmentType,
+            ModifiedBy = createdBy,
             ModifiedOn = DateTime.UtcNow
         };
     }

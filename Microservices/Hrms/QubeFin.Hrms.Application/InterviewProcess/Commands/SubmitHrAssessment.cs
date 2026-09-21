@@ -1,4 +1,4 @@
-using FluentResults;
+﻿using FluentResults;
 using FluentValidation;
 using MediatR;
 using QubeFin.Core.Results;
@@ -44,16 +44,12 @@ internal sealed class SubmitHrAssessmentCommandHandler(
         }
 
         var allPanelEntries = await panelRepository.GetByCandidateIdAsync(request.CandidateId);
-        var hrEntry = allPanelEntries.FirstOrDefault(p => p.EmployeeId == request.HrEmployeeId);
-        var hrIsInterviewer = hrEntry.IsGenuineInterviewer();
 
-        var interviewers = allPanelEntries
-            .Where(p => p.EmployeeId != request.HrEmployeeId && !p.IsHrRow())
-            .ToList();
-        if (hrIsInterviewer)
-        {
-            interviewers.Add(hrEntry!);
-        }
+        // Interviewers are the AssessmentType = 'INTERVIEWER' rows - including HR's own row when HR is
+        // genuinely scheduled on the panel, so HR must submit their own interview assessment first.
+        var interviewers = allPanelEntries.Interviewers().ToList();
+        var hrOwnInterviewerRow = allPanelEntries.InterviewerRowFor(request.HrEmployeeId);
+        var hrIsInterviewer = hrOwnInterviewerRow is not null;
 
         if (interviewers.Count == 0)
         {
@@ -62,7 +58,7 @@ internal sealed class SubmitHrAssessmentCommandHandler(
 
         if (interviewers.Any(p => !p.IsSubmitted))
         {
-            return new ValidationError(hrIsInterviewer
+            return new ValidationError(hrIsInterviewer && !hrOwnInterviewerRow!.IsSubmitted
                 ? "Every panelist, including your own interview assessment, must be submitted before HR Assessment can be submitted."
                 : "Every panelist must submit their assessment before HR Assessment can be submitted.");
         }
@@ -70,55 +66,53 @@ internal sealed class SubmitHrAssessmentCommandHandler(
         var averages = HrAssessmentAverageCalculator.Compute(interviewers);
         var decision = request.Decision;
 
-        if (!hrIsInterviewer)
+        // The averaged ratings are snapshotted onto the HR Assessment row. HR's own INTERVIEWER row, when
+        // they have one, already holds their real interview score and is never overwritten here.
+        var details = new AssessmentDetails(
+            averages.AppearanceAttitudeRating, null,
+            averages.PersonalityRating, null,
+            averages.CommunicationRating, null,
+            averages.EducationRating, null,
+            averages.WorkExperienceRating, null,
+            averages.TechnicalCompetenceRating, null,
+            averages.FlexibilityRating, null,
+            averages.AmbitionRating, null,
+            averages.PotentialRating, null,
+            averages.OthersRating, null,
+            decision.AnyOtherJobsSuitedRemarks,
+            decision.IsRecommendedForPosition,
+            decision.PositiveRemarks,
+            decision.NegativeRemarks);
+
+        var hrRow = allPanelEntries.HrAssessmentRow();
+
+        if (hrRow is null)
         {
-            // hrEntry is the administrative row (or none yet) - not HR's own interview submission, since HR
-            // isn't genuinely on the panel. Snapshot the average into it as before.
-            var details = new AssessmentDetails(
-                averages.AppearanceAttitudeRating, null,
-                averages.PersonalityRating, null,
-                averages.CommunicationRating, null,
-                averages.EducationRating, null,
-                averages.WorkExperienceRating, null,
-                averages.TechnicalCompetenceRating, null,
-                averages.FlexibilityRating, null,
-                averages.AmbitionRating, null,
-                averages.PotentialRating, null,
-                averages.OthersRating, null,
-                decision.AnyOtherJobsSuitedRemarks,
-                decision.IsRecommendedForPosition,
-                decision.PositiveRemarks,
-                decision.NegativeRemarks);
+            // Stamp the HR row with the candidate's own interview slot rather than "whenever HR happened to
+            // open the form", so the row lines up with the interviewers' rows on the same candidate.
+            var scheduledDate = candidate.InterviewDate;
+            var scheduledTime = candidate.InterviewTime ?? TimeOnly.FromDateTime(DateTime.UtcNow);
+            hrRow = InterviewPanel.CreateHrAssessmentRow(request.CandidateId, request.HrEmployeeId, scheduledDate, scheduledTime, request.SubmittedBy);
+            hrRow.Acknowledge(request.SubmittedBy);
 
-            if (hrEntry is null)
+            if (!hrRow.SubmitAssessment(details, request.SubmittedBy))
             {
-                // Stamp HR's row with the candidate's own interview slot rather than "whenever HR happened to
-                // open the form", so the row lines up with the interviewers' rows on the same candidate.
-                var scheduledDate = candidate.InterviewDate;
-                var scheduledTime = candidate.InterviewTime ?? TimeOnly.FromDateTime(DateTime.UtcNow);
-                hrEntry = InterviewPanel.Schedule(request.CandidateId, request.HrEmployeeId, scheduledDate, scheduledTime, request.SubmittedBy);
-
-                if (!hrEntry.SubmitAssessment(details, request.SubmittedBy))
-                {
-                    return new ValidationError("The HR Assessment has already been submitted and cannot be changed.");
-                }
-
-                await panelRepository.AddRangeAsync(new[] { hrEntry }, cancellationToken);
+                return new ValidationError("The HR Assessment has already been submitted and cannot be changed.");
             }
-            else
-            {
-                if (!hrEntry.SubmitAssessment(details, request.SubmittedBy))
-                {
-                    return new ValidationError("The HR Assessment has already been submitted and cannot be changed.");
-                }
 
-                await panelRepository.UpdateAsync(hrEntry);
-            }
+            await panelRepository.AddRangeAsync(new[] { hrRow }, cancellationToken);
         }
-        // When HR is also a genuine interviewer, hrEntry already holds their own locked, submitted score -
-        // it's included in `averages` above via `interviewers`. Nothing further to write to the panel table;
-        // only the Candidate-level decision below changes, so submitting the HR decision is never blocked by
-        // HR's own interviewer submission, and can be resubmitted freely (e.g. to revise the recommendation).
+        else
+        {
+            hrRow.Acknowledge(request.SubmittedBy);
+
+            if (!hrRow.SubmitAssessment(details, request.SubmittedBy))
+            {
+                return new ValidationError("The HR Assessment has already been submitted and cannot be changed.");
+            }
+
+            await panelRepository.UpdateAsync(hrRow);
+        }
 
         candidate.SubmitHrAssessment(
             decision.OverallPerformance,

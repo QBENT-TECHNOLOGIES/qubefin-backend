@@ -3,6 +3,7 @@ using FluentValidation;
 using MediatR;
 using QubeFin.Core.Results;
 using QubeFin.Hrms.Application.InterviewProcess.Models;
+using QubeFin.Hrms.Application.InterviewProcess.Services;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Hrms;
@@ -53,7 +54,8 @@ internal sealed class ScheduleInterviewPanelCommandHandler(IInterviewPanelReposi
             return new ValidationError("The same panelist cannot be added to a candidate more than once.");
         }
 
-        var existingPanelists = await panelRepository.GetByCandidateIdAsync(request.CandidateId);
+        // Only INTERVIEWER rows count as "the panel" - the HR Assessment row lives in the same table.
+        var existingPanelists = (await panelRepository.GetByCandidateIdAsync(request.CandidateId)).Interviewers().ToList();
         if (existingPanelists.Count > 0)
         {
             return new ValidationError("This candidate already has an interview panel. Use \"Add Panelists\" to add more.");

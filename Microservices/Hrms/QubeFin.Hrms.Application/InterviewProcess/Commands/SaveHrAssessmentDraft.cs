@@ -1,4 +1,4 @@
-using FluentResults;
+﻿using FluentResults;
 using FluentValidation;
 using MediatR;
 using QubeFin.Core.Results;
@@ -43,15 +43,15 @@ internal sealed class SaveHrAssessmentDraftCommandHandler(
         }
 
         var allPanelEntries = await panelRepository.GetByCandidateIdAsync(request.CandidateId);
-        var hrEntry = allPanelEntries.FirstOrDefault(p => p.EmployeeId == request.HrEmployeeId);
-        var hrIsInterviewer = hrEntry.IsGenuineInterviewer();
 
-        var submittedInterviewers = allPanelEntries
-            .Where(p => p.EmployeeId != request.HrEmployeeId && !p.IsHrRow() && p.IsSubmitted)
-            .ToList();
-        if (hrIsInterviewer && hrEntry!.IsSubmitted)
+        // Interviewers are the AssessmentType = 'INTERVIEWER' rows - including HR's own row when HR is
+        // genuinely scheduled on the panel. The HR Assessment row is never one of them.
+        var interviewers = allPanelEntries.Interviewers().ToList();
+        var submittedInterviewers = interviewers.Where(p => p.IsSubmitted).ToList();
+
+        if (interviewers.Count == 0)
         {
-            submittedInterviewers.Add(hrEntry);
+            return new ValidationError("This candidate has no interview panel yet.");
         }
 
         if (submittedInterviewers.Count == 0)
@@ -61,56 +61,53 @@ internal sealed class SaveHrAssessmentDraftCommandHandler(
 
         var decision = request.Decision;
 
-        if (hrIsInterviewer)
+        // The averaged ratings are always recomputed from the submitted interviewers and stored on the HR
+        // Assessment row. HR's own INTERVIEWER row (if any) is never touched here - it holds their real
+        // interview score and is locked once they submitted it.
+        var averages = HrAssessmentAverageCalculator.Compute(submittedInterviewers);
+        var details = new AssessmentDetails(
+            averages.AppearanceAttitudeRating, null,
+            averages.PersonalityRating, null,
+            averages.CommunicationRating, null,
+            averages.EducationRating, null,
+            averages.WorkExperienceRating, null,
+            averages.TechnicalCompetenceRating, null,
+            averages.FlexibilityRating, null,
+            averages.AmbitionRating, null,
+            averages.PotentialRating, null,
+            averages.OthersRating, null,
+            decision.AnyOtherJobsSuitedRemarks,
+            decision.IsRecommendedForPosition,
+            decision.PositiveRemarks,
+            decision.NegativeRemarks);
+
+        var hrRow = allPanelEntries.HrAssessmentRow();
+
+        if (hrRow is null)
         {
-            // hrEntry is HR's own genuine interviewer row - it already holds their real score and their own
-            // answers to IsRecommendedForPosition/PositiveRemarks/NegativeRemarks/AnyOtherJobsSuitedRemarks
-            // via the ordinary interviewer submit/draft flow. Never overwrite it with the panel average here:
-            // that would destroy HR's own interview record, and once they've submitted it, SaveAssessmentDraft
-            // would simply fail (it's locked). The decision saved below only ever touches the Candidate
-            // record, so saving it is never blocked by HR's own interviewer submission state.
+            // Stamp the HR row with the candidate's own interview slot rather than "whenever HR happened to
+            // open the form", so the row lines up with the interviewers' rows on the same candidate.
+            var scheduledDate = candidate.InterviewDate;
+            var scheduledTime = candidate.InterviewTime ?? TimeOnly.FromDateTime(DateTime.UtcNow);
+            hrRow = InterviewPanel.CreateHrAssessmentRow(request.CandidateId, request.HrEmployeeId, scheduledDate, scheduledTime, request.SavedBy);
+            hrRow.SaveAssessmentDraft(details, request.SavedBy); // also sets IsAttened = true
+            hrRow.Acknowledge(request.SavedBy);
+            await panelRepository.AddRangeAsync(new[] { hrRow }, cancellationToken);
         }
         else
         {
-            var averages = HrAssessmentAverageCalculator.Compute(submittedInterviewers);
-            var details = new AssessmentDetails(
-                averages.AppearanceAttitudeRating, null,
-                averages.PersonalityRating, null,
-                averages.CommunicationRating, null,
-                averages.EducationRating, null,
-                averages.WorkExperienceRating, null,
-                averages.TechnicalCompetenceRating, null,
-                averages.FlexibilityRating, null,
-                averages.AmbitionRating, null,
-                averages.PotentialRating, null,
-                averages.OthersRating, null,
-                decision.AnyOtherJobsSuitedRemarks,
-                decision.IsRecommendedForPosition,
-                decision.PositiveRemarks,
-                decision.NegativeRemarks);
-
-            if (hrEntry is null)
+            if (!hrRow.SaveAssessmentDraft(details, request.SavedBy))
             {
-                // Stamp HR's row with the candidate's own interview slot rather than "whenever HR happened to
-                // open the form", so the row lines up with the interviewers' rows on the same candidate.
-                var scheduledDate = candidate.InterviewDate;
-                var scheduledTime = candidate.InterviewTime ?? TimeOnly.FromDateTime(DateTime.UtcNow);
-                hrEntry = InterviewPanel.Schedule(request.CandidateId, request.HrEmployeeId, scheduledDate, scheduledTime, request.SavedBy);
-                hrEntry.SaveAssessmentDraft(details, request.SavedBy);
-                await panelRepository.AddRangeAsync(new[] { hrEntry }, cancellationToken);
+                return new ValidationError("The HR Assessment has already been submitted and cannot be changed.");
             }
-            else
-            {
-                if (!hrEntry.SaveAssessmentDraft(details, request.SavedBy))
-                {
-                    return new ValidationError("The HR Assessment has already been submitted and cannot be changed.");
-                }
 
-                await panelRepository.UpdateAsync(hrEntry);
-            }
+            // Saving the HR Assessment counts as HR acknowledging/attending the HR workflow.
+            hrRow.Acknowledge(request.SavedBy);
+            await panelRepository.UpdateAsync(hrRow);
         }
 
         candidate.SaveHrAssessmentDraft(
+            decision.RecommendationStatus,
             decision.OverallPerformance,
             decision.SuitableRoleDepartment,
             decision.RecommendedGradeId,

@@ -29,14 +29,20 @@ public record HrAssessmentFormDto(
     Guid CandidateId,
     bool IsSubmitted,
 
-    // True when HR is genuinely scheduled on this candidate's panel as an interviewer (not just holding the
-    // administrative HR row). When true, the frontend should disable the fields shared with the interviewer
+    // True when HR has already submitted their own individual interviewer assessment (genuinely scheduled
+    // on the panel, not just holding the administrative HR row). The fields shared with the interviewer
     // assessment form (the rating block, IsRecommendedForPosition, PositiveRemarks, NegativeRemarks,
-    // AnyOtherJobsSuitedRemarks) - they are HR's own already-submitted interviewer answers, sourced below,
-    // and are never re-asked or overwritten by the HR Assessment save/submit endpoints. The remaining
-    // decision fields (OverallPerformance onward) stay editable and can be saved/submitted repeatedly,
-    // since they no longer share a lock with HR's own interviewer row.
+    // AnyOtherJobsSuitedRemarks) are sourced from HR's own submission below and are never re-asked or
+    // overwritten by the HR Assessment save/submit endpoints in either case; whether the frontend should
+    // render them disabled or editable is IsHrOnlyInterviewer, right below.
     bool HrIsInterviewer,
+
+    // True when HrIsInterviewer is true AND no other panelist is scheduled on this candidate's panel - HR
+    // is literally the sole interviewer. In that case the shared fields should render disabled (HR's own
+    // single score is definitive, nothing else to reconcile it against). When false but HrIsInterviewer is
+    // true, HR is one of several interviewers - the shared fields (the live average of everyone including
+    // HR) keep updating as other panelists submit, so the frontend should leave them enabled.
+    bool IsHrOnlyInterviewer,
 
     // Read-only: average of the submitted panelists' ratings per category.
     int? AverageAppearanceAttitudeRating,

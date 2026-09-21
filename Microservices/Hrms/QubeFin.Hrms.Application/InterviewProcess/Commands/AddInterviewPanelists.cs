@@ -1,8 +1,9 @@
-using FluentResults;
+﻿using FluentResults;
 using FluentValidation;
 using MediatR;
 using QubeFin.Core.Results;
 using QubeFin.Hrms.Application.InterviewProcess.Models;
+using QubeFin.Hrms.Application.InterviewProcess.Services;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Hrms;
@@ -54,7 +55,10 @@ internal sealed class AddInterviewPanelistsCommandHandler(IInterviewPanelReposit
             return new ValidationError("The same panelist cannot be added to a candidate more than once.");
         }
 
-        var existingPanelists = await panelRepository.GetByCandidateIdAsync(request.CandidateId);
+        // Only INTERVIEWER rows count as "the panel". Without this filter, an HR employee holding the HR
+        // Assessment row would be rejected as "already on the panel", and the IsAttened gate below would
+        // trip on that row (the HR Assessment marks itself attended).
+        var existingPanelists = (await panelRepository.GetByCandidateIdAsync(request.CandidateId)).Interviewers().ToList();
         var alreadyScheduledEmployeeIds = existingPanelists.Select(p => p.EmployeeId).ToHashSet();
 
         var alreadyOnPanel = request.Panelists.Any(p => alreadyScheduledEmployeeIds.Contains(p.EmployeeId));

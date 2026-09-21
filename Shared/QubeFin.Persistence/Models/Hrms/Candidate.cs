@@ -62,6 +62,11 @@ public class Candidate
     public bool IsAppointmentLetterReceived { get; private set; }
     public bool IsWelcomeLetterRecieved { get; private set; }
     public string? WrittenInterviewFile { get; private set; }
+
+    /// <summary>Storage key for the candidate's signed/returned joining letter, uploaded by HR once the
+    /// candidate sends it back. Distinct from the SSRS-generated "Download Joining Letter" report, which is
+    /// rendered on demand from candidate data rather than stored.</summary>
+    public string? SignedJoiningLetterFile { get; private set; }
     public Guid CreatedBy { get; private set; }
     public DateTime CreatedOn { get; private set; }
     public Guid? ModifiedBy { get; private set; }
@@ -130,6 +135,7 @@ public class Candidate
         bool isAppointmentLetterReceived,
         bool isWelcomeLetterRecieved,
         string? writtenInterviewFile,
+        string? signedJoiningLetterFile,
         Guid createdBy,
         DateTime createdOn,
         Guid? modifiedBy,
@@ -156,6 +162,7 @@ public class Candidate
         IsAppointmentLetterReceived = isAppointmentLetterReceived;
         IsWelcomeLetterRecieved = isWelcomeLetterRecieved;
         WrittenInterviewFile = writtenInterviewFile;
+        SignedJoiningLetterFile = signedJoiningLetterFile;
 
         Apply(firstName, middleName, lastName, gender, fatherName, mobileNo, email, houseNo, roadName, landMark,
             administrativeUnitId, policeStationId, postOfficeId, pinCode, interviewDate, interviewTime, departmentId,
@@ -253,6 +260,14 @@ public class Candidate
         ModifiedOn = DateTime.UtcNow;
     }
 
+    /// <summary>Sets the uploaded signed/returned joining letter reference (storage key) for this candidate.</summary>
+    public void SetSignedJoiningLetterFile(string? filePath, Guid modifiedBy)
+    {
+        SignedJoiningLetterFile = filePath;
+        ModifiedBy = modifiedBy;
+        ModifiedOn = DateTime.UtcNow;
+    }
+
     /// <summary>Sets whether the interview was conducted Online or Offline. Editable on its own (e.g. from the
     /// HR Assessment form) rather than only via the full candidate update.</summary>
     public void SetInterviewMode(string interviewMode, Guid modifiedBy)
@@ -267,12 +282,14 @@ public class Candidate
     /// "HR Assessment not finished yet", and that is what keeps the HR Assessment button visible so HR can
     /// come back to the draft. The averaged category ratings live on HR's own Tbl_InterviewPanel row.</summary>
     public void SaveHrAssessmentDraft(
+        string? recommendationStatus,
         string? overallPerformance,
         string? suitableRoleDepartment,
         Guid? recommendedGradeId,
         bool isTrainingRequired,
         Guid modifiedBy)
     {
+        RecommendationStatus = recommendationStatus;
         OverallPerformance = overallPerformance;
         SuitableRoleDepartment = suitableRoleDepartment;
         RecommendedGradeId = recommendedGradeId;

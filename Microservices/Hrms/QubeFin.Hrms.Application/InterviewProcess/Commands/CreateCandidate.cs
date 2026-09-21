@@ -9,7 +9,7 @@ using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
-public record CreateCandidateCommand(CandidateCreateUpdateDto Candidate, Guid CreatedBy) : IRequest<Result<Guid>>;
+public record CreateCandidateCommand(CandidateCreateUpdateDto Candidate, Guid CreatedBy) : IRequest<Result<string>>;
 
 public class CreateCandidateCommandValidator : AbstractValidator<CreateCandidateCommand>
 {
@@ -55,9 +55,9 @@ public class CreateCandidateCommandValidator : AbstractValidator<CreateCandidate
     }
 }
 
-internal sealed class CreateCandidateCommandHandler(ICandidateRepository candidateRepository, IUnitOfWork unitOfWork) : IRequestHandler<CreateCandidateCommand, Result<Guid>>
+internal sealed class CreateCandidateCommandHandler(ICandidateRepository candidateRepository, IUnitOfWork unitOfWork) : IRequestHandler<CreateCandidateCommand, Result<string>>
 {
-    public async Task<Result<Guid>> Handle(CreateCandidateCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(CreateCandidateCommand request, CancellationToken cancellationToken)
     {
         if (request.CreatedBy == Guid.Empty)
         {
@@ -66,7 +66,7 @@ internal sealed class CreateCandidateCommandHandler(ICandidateRepository candida
 
         var candidate = request.Candidate;
 
-        var referenceNo = await GenerateReferenceNoAsync(candidate.CompanyId, cancellationToken);
+        var referenceNo = await GenerateReferenceNoAsync(cancellationToken);
 
         var candidateDetails = new CandidateDetails(
             candidate.FirstName,
@@ -119,14 +119,13 @@ internal sealed class CreateCandidateCommandHandler(ICandidateRepository candida
         await candidateRepository.AddAsync(entity);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Ok(entity.Id);
+        return Result.Ok($"Candidate {candidate.FirstName} {candidate.LastName} created successfully. Reference No: {referenceNo}.");
     }
 
-    private async Task<string> GenerateReferenceNoAsync(Guid companyId, CancellationToken cancellationToken)
+    private async Task<string> GenerateReferenceNoAsync(CancellationToken cancellationToken)
     {
+        var countThisYear = await candidateRepository.CountCreatedInYearAsync(cancellationToken);
         var year = DateTime.UtcNow.Year;
-        var countThisYear = await candidateRepository.CountCreatedInYearAsync(companyId, year, cancellationToken);
-
         return $"WGRW/CAND/{year}/{countThisYear + 1:D4}";
     }
 }

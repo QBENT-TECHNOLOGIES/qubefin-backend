@@ -45,6 +45,8 @@ public partial class TblInterviewCandidate
 
     public string? WrittenInterviewFile { get; set; }
 
+    public string? SignedJoiningLetterFile { get; set; }
+
     public Guid? DepartmentId { get; set; }
 
     public Guid InterviewPost { get; set; }

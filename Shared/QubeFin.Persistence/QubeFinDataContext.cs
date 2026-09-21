@@ -305,6 +305,7 @@ public partial class QubeFinDataContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.IsActive).HasDefaultValue(true, "DF_Tbl_AdministrativeUnit_IsActive");
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
             entity.Property(e => e.Name).HasMaxLength(50);
 
@@ -1339,6 +1340,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.ReferedBy).HasMaxLength(100);
             entity.Property(e => e.ReferenceNo).HasMaxLength(50);
             entity.Property(e => e.RoadName).HasMaxLength(50);
+            entity.Property(e => e.SignedJoiningLetterFile).HasMaxLength(500);
             entity.Property(e => e.SuitableRoleDepartment).HasMaxLength(50);
             entity.Property(e => e.Uan).HasMaxLength(50);
             entity.Property(e => e.VacancyReference).HasMaxLength(50);
@@ -1401,6 +1403,10 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.AmbitionRemarks).HasMaxLength(100);
             entity.Property(e => e.AnyOtherJobsSuitedRemarks).HasMaxLength(100);
             entity.Property(e => e.AppearanceAttitudeRemarks).HasMaxLength(100);
+            entity.Property(e => e.AssessmentType)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasDefaultValue("INTERVIEWER", "DF_Tbl_InterviewPanel_AssessmentType");
             entity.Property(e => e.CommunicationRemarks).HasMaxLength(100);
             entity.Property(e => e.EducationRemarks).HasMaxLength(100);
             entity.Property(e => e.FlexibilityRemarks).HasMaxLength(100);

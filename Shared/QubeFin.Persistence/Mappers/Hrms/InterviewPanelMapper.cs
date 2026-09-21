@@ -63,7 +63,8 @@ public static class InterviewPanelMapper
             employeeCode,
             designation,
             employeeName,
-            designationPostId);
+            designationPostId,
+            entity.AssessmentType);
     }
 
     public static TblInterviewPanel ToEntity(this InterviewPanel panel)
@@ -105,7 +106,8 @@ public static class InterviewPanelMapper
             IsSubmitted = panel.IsSubmitted,
             SubmissionDate = panel.SubmissionDate,
             ModifiedBy = panel.ModifiedBy,
-            ModifiedOn = panel.ModifiedOn
+            ModifiedOn = panel.ModifiedOn,
+            AssessmentType = panel.AssessmentType
         };
     }
 }
