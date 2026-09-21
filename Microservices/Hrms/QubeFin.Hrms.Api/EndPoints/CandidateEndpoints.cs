@@ -8,6 +8,7 @@ using QubeFin.Hrms.Application.InterviewProcess.Commands;
 using QubeFin.Hrms.Application.InterviewProcess.Models;
 using QubeFin.Hrms.Application.InterviewProcess.Queries;
 using System.Security.Claims;
+using System.Security.Principal;
 
 namespace QubeFin.Hrms.Api.Endpoints;
 
@@ -15,9 +16,10 @@ public class CandidateEndpoints : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("candidates", async ([AsParameters] CandidateSearchParam searchParam, ISender sender, CancellationToken cancellationToken) =>
+        app.MapPost("candidates/filter", async ([FromBody] CandidateSearchParam searchParam, ISender sender, ClaimsPrincipal principal, CancellationToken cancellationToken) =>
         {
-            var result = await sender.Send(new GetCandidatesQuery(searchParam), cancellationToken);
+            var empId = principal.Identity.GetEmployeeId();
+            var result = await sender.Send(new GetCandidatesQuery(searchParam, empId), cancellationToken);
             return result.ToHttpResult();
         })
         .WithSummary("Search interview candidates")
@@ -121,6 +123,45 @@ public class CandidateEndpoints : IEndpoint
         })
         .WithSummary("Get candidate verification details")
         .WithTags("Candidate Verification")
+        .RequireAuthorization();
+
+        app.MapPut("candidate-verifications/{candidateId:guid}", async (Guid candidateId, [FromBody] CandidateVerificationUpdateRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Forbid();
+            }
+
+            var command = new UpdateCandidateVerificationCommand(
+                candidateId,
+                request.IsAadharValidated,
+                request.IsVoterValited,
+                request.IsPanValidated,
+                request.IsMobileValidated,
+                request.IsUanVerified,
+                request.IsCreditBureauChecked,
+                request.CreditBureauReportLink,
+                principal.Identity.GetUserId());
+
+            var result = await sender.Send(command, cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Update candidate verification checks (all flags sent together)")
+        .WithTags("Candidate Verification")
+        .RequireAuthorization();
+
+        app.MapPost("candidates/{id:guid}/interview-mode", async (Guid id, [FromBody] CandidateInterviewModeUpdateRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Forbid();
+            }
+
+            var result = await sender.Send(new UpdateCandidateInterviewModeCommand(id, request.InterviewMode, principal.Identity.GetUserId()), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Set whether the candidate's interview was Online or Offline")
+        .WithTags("Candidates")
         .RequireAuthorization();
     }
 }

@@ -221,10 +221,88 @@ public class Candidate
         ModifiedOn = DateTime.UtcNow;
     }
 
+    /// <summary>Records the outcome of the candidate's background/identity verification checks. All flags are
+    /// set together (unlike <see cref="UpdateLetterStatus"/>, which updates one at a time).</summary>
+    public void UpdateVerification(
+        bool isAadharValidated,
+        bool isVoterValited,
+        bool isPanValidated,
+        bool isMobileValidated,
+        bool isUanVerified,
+        bool isCreditBureauChecked,
+        string? creditBureauReportLink,
+        Guid modifiedBy)
+    {
+        IsAadharValidated = isAadharValidated;
+        IsVoterValited = isVoterValited;
+        IsPanValidated = isPanValidated;
+        IsMobileValidated = isMobileValidated;
+        IsUanVerified = isUanVerified;
+        IsCreditBureauChecked = isCreditBureauChecked;
+        CreditBureauReportLink = creditBureauReportLink;
+
+        ModifiedBy = modifiedBy;
+        ModifiedOn = DateTime.UtcNow;
+    }
+
     /// <summary>Sets the uploaded written-interview form/document reference (storage key) for this candidate.</summary>
     public void SetWrittenInterviewFile(string? filePath, Guid modifiedBy)
     {
         WrittenInterviewFile = filePath;
+        ModifiedBy = modifiedBy;
+        ModifiedOn = DateTime.UtcNow;
+    }
+
+    /// <summary>Sets whether the interview was conducted Online or Offline. Editable on its own (e.g. from the
+    /// HR Assessment form) rather than only via the full candidate update.</summary>
+    public void SetInterviewMode(string interviewMode, Guid modifiedBy)
+    {
+        InterviewMode = interviewMode;
+        ModifiedBy = modifiedBy;
+        ModifiedOn = DateTime.UtcNow;
+    }
+
+    /// <summary>Stores HR's in-progress assessment decision. Deliberately leaves RecommendationStatus,
+    /// TotalRatingPoint and RatingStatus untouched: the workflow reads RecommendationStatus = 'Pending' as
+    /// "HR Assessment not finished yet", and that is what keeps the HR Assessment button visible so HR can
+    /// come back to the draft. The averaged category ratings live on HR's own Tbl_InterviewPanel row.</summary>
+    public void SaveHrAssessmentDraft(
+        string? overallPerformance,
+        string? suitableRoleDepartment,
+        Guid? recommendedGradeId,
+        bool isTrainingRequired,
+        Guid modifiedBy)
+    {
+        OverallPerformance = overallPerformance;
+        SuitableRoleDepartment = suitableRoleDepartment;
+        RecommendedGradeId = recommendedGradeId;
+        IsTrainingRequired = isTrainingRequired;
+
+        ModifiedBy = modifiedBy;
+        ModifiedOn = DateTime.UtcNow;
+    }
+
+    /// <summary>Finalizes HR's assessment. Unlike the draft this also writes RecommendationStatus, which moves
+    /// the candidate out of the HR_ASSESSMENT stage, plus the total and status derived from the average of the
+    /// interviewers' ratings - HR never types those in, they are computed from Tbl_InterviewPanel.</summary>
+    public void SubmitHrAssessment(
+        string? overallPerformance,
+        string? suitableRoleDepartment,
+        Guid? recommendedGradeId,
+        bool isTrainingRequired,
+        string recommendationStatus,
+        int? totalRatingPoint,
+        string? ratingStatus,
+        Guid modifiedBy)
+    {
+        OverallPerformance = overallPerformance;
+        SuitableRoleDepartment = suitableRoleDepartment;
+        RecommendedGradeId = recommendedGradeId;
+        IsTrainingRequired = isTrainingRequired;
+        RecommendationStatus = recommendationStatus;
+        TotalRatingPoint = totalRatingPoint;
+        RatingStatus = ratingStatus;
+
         ModifiedBy = modifiedBy;
         ModifiedOn = DateTime.UtcNow;
     }

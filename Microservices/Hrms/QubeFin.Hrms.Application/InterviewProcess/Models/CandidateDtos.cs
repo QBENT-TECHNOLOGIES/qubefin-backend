@@ -92,6 +92,18 @@ public record CandidateLetterStatusRequest(
     bool? IsAppointmentLetterReceived,
     bool? IsWelcomeLetterReceived);
 
+/// <summary>All six verification flags are sent together in one call - unlike <see cref="CandidateLetterStatusRequest"/>.</summary>
+public record CandidateVerificationUpdateRequest(
+    bool IsAadharValidated,
+    bool IsVoterValited,
+    bool IsPanValidated,
+    bool IsMobileValidated,
+    bool IsUanVerified,
+    bool IsCreditBureauChecked,
+    string? CreditBureauReportLink);
+
+public record CandidateInterviewModeUpdateRequest(string InterviewMode);
+
 /// <summary>[FromForm] request body for uploading the candidate's written-interview/personality form.</summary>
 public class CandidateInterviewUploadRequest
 {

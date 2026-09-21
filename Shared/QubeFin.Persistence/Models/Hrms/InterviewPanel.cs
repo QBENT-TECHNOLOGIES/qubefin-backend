@@ -45,6 +45,11 @@ public class InterviewPanel
     public string? EmployeeName { get; private set; } = null;
     public string? EmployeeCode { get; private set; } = null;
 
+    /// <summary>PostId behind this panel member's current designation. Lets the application layer tell an HR
+    /// row apart from an interviewer row using exactly the same test USP_GetInterviewCandidateById uses,
+    /// without needing a new column on Hrms.Tbl_InterviewPanel.</summary>
+    public Guid? DesignationPostId { get; private set; } = null;
+
     /// <summary>Sum of the ten scored parameters. Null until at least one has been rated.</summary>
     public int? TotalRatingPoint
     {
@@ -105,7 +110,8 @@ public class InterviewPanel
         DateTime modifiedOn,
          string? employeeCode = null,
          string? designation = null,
-         string? employeeName = null)
+         string? employeeName = null,
+         Guid? designationPostId = null)
     {
         Id = id;
         CandidateId = candidateId;
@@ -146,6 +152,7 @@ public class InterviewPanel
         EmployeeCode = employeeCode;
         EmployeeName = employeeName;
         Designation = designation;
+        DesignationPostId = designationPostId;
     }
 
     /// <summary>HR schedules a panelist against a candidate's interview.</summary>

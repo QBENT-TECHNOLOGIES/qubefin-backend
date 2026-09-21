@@ -96,5 +96,22 @@
         public bool? IsInterviewerAcknowledgedOld { get; set; }
         public bool? OldIsShowHrAssessmentButton { get; set; }
         public bool? ShowViewPanelButton { get; set; }
+        public bool? IsAssessmentDate { get; set; }
+
+        /// <summary>HR has started the HR Assessment and saved it as a draft, but has not submitted it yet.
+        /// IsShowHrAssessmentButton stays true in this state so the form can be reopened.</summary>
+        public bool? IsHrAssessmentDraftSaved { get; set; }
+
+        /// <summary>HR's own row in Hrms.Tbl_InterviewPanel has been finalised.</summary>
+        public bool? IsHrAssessmentSubmitted { get; set; }
+
+        /// <summary>Total of the ten averaged category ratings stored on HR's assessment row.</summary>
+        public int? HrAssessmentTotalRatingPoint { get; set; }
+
+        /// <summary>How many interviewers (excluding HR's assessment row) have acknowledged.</summary>
+        public int? InterviewerAcknowledgedCount { get; set; }
+
+        /// <summary>How many interviewers (excluding HR's assessment row) have submitted their assessment.</summary>
+        public int? InterviewerSubmittedCount { get; set; }
     }
 }
