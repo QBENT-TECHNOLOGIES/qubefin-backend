@@ -324,6 +324,29 @@ public class Candidate
         ModifiedOn = DateTime.UtcNow;
     }
 
+    /// <summary>The candidate's salary and joining expectations, as confirmed by HR on the HR Assessment
+    /// form. Kept apart from the HR decision itself: these are facts about the candidate (also captured at
+    /// candidate creation), not part of HR's recommendation, and both the draft and the submit write them.</summary>
+    public void SaveSalaryAndJoiningDetails(
+        decimal? currentSalary,
+        decimal? expectedSalary,
+        int? noticePeriodInDays,
+        DateOnly? earliestJoiningDate,
+        bool isWillingRelocate,
+        string? preferredLocation,
+        Guid modifiedBy)
+    {
+        CurrentSalary = currentSalary;
+        ExpectedSalary = expectedSalary;
+        NoticePeriodInDays = noticePeriodInDays;
+        EarliestJoiningDate = earliestJoiningDate;
+        IsWillingRelocate = isWillingRelocate;
+        PreferredLocation = preferredLocation;
+
+        ModifiedBy = modifiedBy;
+        ModifiedOn = DateTime.UtcNow;
+    }
+
     private Candidate Apply(CandidateDetails details)
     {
         Apply(details.FirstName, details.MiddleName, details.LastName, details.Gender, details.FatherName,

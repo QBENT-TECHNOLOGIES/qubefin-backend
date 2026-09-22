@@ -68,6 +68,15 @@ public record HrAssessmentFormDto(
     string? PositiveRemarks,
     string? NegativeRemarks,
 
+    // Salary & joining expectations. These live on the candidate rather than the HR row - they may already
+    // have been captured when the candidate was created, and HR confirms/corrects them here.
+    decimal? CurrentSalary,
+    decimal? ExpectedSalary,
+    int? NoticePeriodInDays,
+    DateOnly? EarliestJoiningDate,
+    bool IsWillingRelocate,
+    string? PreferredLocation,
+
     // For reference - the individual panelists these averages were computed from.
     IReadOnlyList<PanelistRatingSummaryDto> Panelists);
 
@@ -84,4 +93,12 @@ public record HrAssessmentDecisionDto(
     string? AnyOtherJobsSuitedRemarks,
     bool? IsRecommendedForPosition,
     string? PositiveRemarks,
-    string? NegativeRemarks);
+    string? NegativeRemarks,
+
+    // Salary & joining expectations, written straight to the candidate by both the draft and the submit.
+    decimal? CurrentSalary,
+    decimal? ExpectedSalary,
+    int? NoticePeriodInDays,
+    DateOnly? EarliestJoiningDate,
+    bool IsWillingRelocate,
+    string? PreferredLocation);

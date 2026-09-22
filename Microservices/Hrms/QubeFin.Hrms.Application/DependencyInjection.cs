@@ -8,7 +8,7 @@ namespace QubeFin.Hrms.Application;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddApplication(this IServiceCollection services)
+    public static IServiceCollection AddApplication(this IServiceCollection services,IConfiguration configuration)
     {
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
         services.AddMediatR(config =>
@@ -21,6 +21,7 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly(), includeInternalTypes: true);
         services.AddMemoryCache();
 
+        services.Configure<MailSettings>(configuration.GetSection("MailSettings"));
         services.AddScoped<ICandidateLetterMailer, CandidateLetterMailer>();
 
         return services;

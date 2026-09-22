@@ -80,6 +80,20 @@ public class CandidateEndpoints : IEndpoint
         #endregion
 
         #region SEND MAIL & RECEIVE FLAG UPDATE
+
+        // Multipart, not JSON: the caller posts the rendered letter PDF as `File` and it is what gets
+        // attached to the mail.
+        app.MapPost("candidates/{id:guid}/send-letter", async (Guid id, [FromForm] CandidateLetterStatusRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Forbid();
+            }
+
+            var result = await sender.Send(new SendLetterToCandidateCommand(id, request, principal.Identity.GetUserId()), cancellationToken);
+            return result.ToHttpResult();
+        }).DisableAntiforgery().WithSummary("Send letter to candidate").WithTags("Candidates").RequireAuthorization();
+
         app.MapPost("candidates/{id:guid}/letter-status", async (Guid id, [FromBody] CandidateLetterStatusRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)
@@ -90,17 +104,6 @@ public class CandidateEndpoints : IEndpoint
             var result = await sender.Send(new UpdateCandidateLetterStatusCommand(id, request, principal.Identity.GetUserId()), cancellationToken);
             return result.ToHttpResult();
         }).WithSummary("Update one candidate letter-received flag (send exactly one per call) and send the letter email").WithTags("Candidates").RequireAuthorization();
-
-        app.MapPost("candidates/{id:guid}/send-letter", async (Guid id, [FromBody] CandidateLetterStatusRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
-        {
-            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
-            {
-                return Results.Forbid();
-            }
-
-            var result = await sender.Send(new SendLetterToCandidateCommand(id, request, principal.Identity.GetUserId()), cancellationToken);
-            return result.ToHttpResult();
-        }).WithSummary("Send letter to candidate").WithTags("Candidates").RequireAuthorization();
         #endregion
 
         #region UPLOAD INTERVIEW RELATED DOC

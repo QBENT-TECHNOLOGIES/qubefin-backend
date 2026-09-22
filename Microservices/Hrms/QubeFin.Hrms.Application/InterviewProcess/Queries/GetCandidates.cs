@@ -18,7 +18,16 @@ internal sealed class GetCandidatesQueryHandler(QubeFinDataContext context, ICon
     public async Task<Result<GetCandidatesResponse>> Handle(GetCandidatesQuery request, CancellationToken cancellationToken)
     {
         var hrPostId = Guid.Parse(configuration["HrPost"]!);
-        var isHrEmployee = await context.TblDesignations.AnyAsync(d => d.PostId == hrPostId && d.TblEmployeeDesignations.Any(ed => ed.EmployeeId == request.employeeId && ed.EffectiveTo == null));
+        var candidateCreatedBy = await context.TblInterviewCandidates.Include(m => m.CreatedByNavigation).FirstOrDefaultAsync(m => m.CreatedByNavigation.EmployeeId == request.employeeId);
+        bool isHrEmployee;
+        if (candidateCreatedBy == null)
+        {
+            isHrEmployee = await context.TblDesignations.AnyAsync(d => d.PostId == hrPostId && d.TblEmployeeDesignations.Any(ed => ed.EmployeeId == request.employeeId && ed.EffectiveTo == null));
+        }
+        else
+        {
+            isHrEmployee = true;
+        }
 
         var pageIndex = request.SearchParam.PageIndex < 0 ? 0 : request.SearchParam.PageIndex;
         var pageSize = request.SearchParam.PageSize <= 0 ? 10 : request.SearchParam.PageSize;

@@ -17,18 +17,23 @@ internal sealed class GetCandidateByIdQueryHandler(QubeFinDataContext context, I
     {
         try
         {
-            var CandidateInterviewInfo = await context.Set<GetInterviewCandidateDetail>().FromSqlRaw("EXEC [Hrms].[USP_GetInterviewCandidateById] @CandidateId, @EmployeeId",
-             new SqlParameter("@CandidateId", request.CandidateId),
-             new SqlParameter("@EmployeeId", request.employeeId)
-            ).AsNoTracking().ToListAsync(cancellationToken);
+            var candidateInterviewInfo = await context.Set<GetInterviewCandidateDetail>()
+                                        .FromSqlRaw(
+                                            "EXEC [Hrms].[USP_GetInterviewCandidateById] @CandidateId, @EmployeeId",
+                                            new SqlParameter("@CandidateId", request.CandidateId),
+                                            new SqlParameter("@EmployeeId", request.employeeId)
+                                        ).AsNoTracking().ToListAsync(cancellationToken);
 
-            if (CandidateInterviewInfo == null || !CandidateInterviewInfo.Any())
+            if (candidateInterviewInfo == null || !candidateInterviewInfo.Any())
                 return Result.Fail("Something went wrong. Please try again later.");
 
-            var result = CandidateInterviewInfo.First();
+            var result = candidateInterviewInfo.First();
+            result.WrittenInterviewFIleUrl = !string.IsNullOrEmpty(result.WrittenInterviewFIle) ? await fileStorageRepository.GetFileUrlAsync(result.WrittenInterviewFIle, cancellationToken) : null;
+            result.SignedJoiningLetterFileUrl = !string.IsNullOrEmpty(result.SignedJoiningLetterFile) ? await fileStorageRepository.GetFileUrlAsync(result.SignedJoiningLetterFile, cancellationToken) : null;
+
             return Result.Ok(result);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             return Result.Fail("Something went wrong while fetching candidate details.");
         }

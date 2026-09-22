@@ -124,6 +124,15 @@ internal sealed class SubmitHrAssessmentCommandHandler(
             HrAssessmentAverageCalculator.RatingStatusFor(averages.Total),
             request.SubmittedBy);
 
+        candidate.SaveSalaryAndJoiningDetails(
+            decision.CurrentSalary,
+            decision.ExpectedSalary,
+            decision.NoticePeriodInDays,
+            decision.EarliestJoiningDate,
+            decision.IsWillingRelocate,
+            decision.PreferredLocation,
+            request.SubmittedBy);
+
         await candidateRepository.UpdateAsync(candidate);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 

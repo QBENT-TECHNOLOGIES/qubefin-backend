@@ -85,12 +85,18 @@ public class CandidateDetailDto
     public string? CreditBureauReportLink { get; set; }
 }
 
-/// <summary>Send exactly one of these flags (non-null) per request - the rest should be left null.</summary>
-public record CandidateLetterStatusRequest(
-    bool? IsInterviewLetterReceived,
-    bool? IsOfferLetterReceived,
-    bool? IsAppointmentLetterReceived,
-    bool? IsWelcomeLetterReceived);
+/// <summary>Send exactly one of these flags (non-null) per request - the rest should be left null.
+/// A class with settable properties rather than a positional record on purpose: [FromForm] complex-type
+/// binding writes through property setters and needs a parameterless constructor, so a positional record
+/// never binds from multipart and every send-letter call comes back 400.</summary>
+public class CandidateLetterStatusRequest
+{
+    public IFormFile? File { get; set; }
+    public bool? IsInterviewLetterReceived { get; set; }
+    public bool? IsOfferLetterReceived { get; set; }
+    public bool? IsAppointmentLetterReceived { get; set; }
+    public bool? IsWelcomeLetterReceived { get; set; }
+}
 
 /// <summary>All six verification flags are sent together in one call - unlike <see cref="CandidateLetterStatusRequest"/>.</summary>
 public record CandidateVerificationUpdateRequest(

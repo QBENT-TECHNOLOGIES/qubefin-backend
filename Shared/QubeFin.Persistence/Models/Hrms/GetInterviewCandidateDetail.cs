@@ -25,6 +25,9 @@
         public DateOnly? InterviewDate { get; set; }
         public TimeOnly? InterviewTime { get; set; }
         public string? WrittenInterviewFIle { get; set; }
+        public string? SignedJoiningLetterFile { get; set; }
+        public string? WrittenInterviewFIleUrl { get; set; }
+        public string? SignedJoiningLetterFileUrl { get; set; }
         public Guid? DepartmentId { get; set; }
         public string? DepartmentName { get; set; }
         public Guid? InterviewPost { get; set; }

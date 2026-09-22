@@ -9,10 +9,6 @@ using QubeFin.Persistence;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
-/// <summary>
-/// Updates one letter-received flag on a candidate (send exactly one of the four flags per call) and
-/// triggers the corresponding letter email.
-/// </summary>
 public record UpdateCandidateLetterStatusCommand(Guid CandidateId, CandidateLetterStatusRequest LetterStatus, Guid ModifiedBy) : IRequest<Result<string>>;
 
 public class UpdateCandidateLetterStatusCommandValidator : AbstractValidator<UpdateCandidateLetterStatusCommand>
@@ -20,10 +16,7 @@ public class UpdateCandidateLetterStatusCommandValidator : AbstractValidator<Upd
     public UpdateCandidateLetterStatusCommandValidator()
     {
         RuleFor(x => x.CandidateId).NotEmpty().WithMessage("Candidate is required.");
-
-        RuleFor(x => x.LetterStatus)
-            .Must(HasExactlyOneFlag)
-            .WithMessage("Send exactly one letter status flag per request.");
+        RuleFor(x => x.LetterStatus)            .Must(HasExactlyOneFlag)            .WithMessage("Send exactly one letter status flag per request.");
     }
 
     private static bool HasExactlyOneFlag(CandidateLetterStatusRequest request)
@@ -40,10 +33,7 @@ public class UpdateCandidateLetterStatusCommandValidator : AbstractValidator<Upd
     }
 }
 
-internal sealed class UpdateCandidateLetterStatusCommandHandler(
-    ICandidateRepository candidateRepository,
-    ICandidateLetterMailer candidateLetterMailer,
-    IUnitOfWork unitOfWork) : IRequestHandler<UpdateCandidateLetterStatusCommand, Result<string>>
+internal sealed class UpdateCandidateLetterStatusCommandHandler(ICandidateRepository candidateRepository, IUnitOfWork unitOfWork) : IRequestHandler<UpdateCandidateLetterStatusCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(UpdateCandidateLetterStatusCommand request, CancellationToken cancellationToken)
     {
@@ -70,17 +60,6 @@ internal sealed class UpdateCandidateLetterStatusCommandHandler(
         await candidateRepository.UpdateAsync(candidate);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var letterType = ResolveLetterType(letterStatus);
-        await candidateLetterMailer.SendLetterEmailAsync(candidate, letterType, cancellationToken);
-
         return Result.Ok("Candidate letter status updated successfully.");
-    }
-
-    private static CandidateLetterType ResolveLetterType(CandidateLetterStatusRequest letterStatus)
-    {
-        if (letterStatus.IsInterviewLetterReceived.HasValue) return CandidateLetterType.InterviewLetter;
-        if (letterStatus.IsOfferLetterReceived.HasValue) return CandidateLetterType.OfferLetter;
-        if (letterStatus.IsAppointmentLetterReceived.HasValue) return CandidateLetterType.AppointmentLetter;
-        return CandidateLetterType.WelcomeLetter;
     }
 }

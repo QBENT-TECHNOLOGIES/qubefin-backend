@@ -70,7 +70,7 @@ internal sealed class CreateCandidateCommandHandler(ICandidateRepository candida
 
         var candidateDetails = new CandidateDetails(
             candidate.FirstName,
-            candidate.MiddleName,
+            string.IsNullOrWhiteSpace(candidate.MiddleName) ? null : candidate.MiddleName,
             candidate.LastName,
             candidate.Gender,
             candidate.FatherName,

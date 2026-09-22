@@ -104,6 +104,14 @@ internal sealed class GetHrAssessmentFormQueryHandler(
             hrRow?.IsRecommendedForPosition,
             hrRow?.PositiveRemarks,
             hrRow?.NegativeRemarks,
+
+            candidate.CurrentSalary,
+            candidate.ExpectedSalary,
+            candidate.NoticePeriodInDays,
+            candidate.EarliestJoiningDate,
+            candidate.IsWillingRelocate,
+            candidate.PreferredLocation,
+
             panelistSummaries);
 
         return Result.Ok(dto);

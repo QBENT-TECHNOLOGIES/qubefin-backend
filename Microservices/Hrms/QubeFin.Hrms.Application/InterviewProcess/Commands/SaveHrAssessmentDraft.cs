@@ -114,6 +114,15 @@ internal sealed class SaveHrAssessmentDraftCommandHandler(
             decision.IsTrainingRequired,
             request.SavedBy);
 
+        candidate.SaveSalaryAndJoiningDetails(
+            decision.CurrentSalary,
+            decision.ExpectedSalary,
+            decision.NoticePeriodInDays,
+            decision.EarliestJoiningDate,
+            decision.IsWillingRelocate,
+            decision.PreferredLocation,
+            request.SavedBy);
+
         await candidateRepository.UpdateAsync(candidate);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
