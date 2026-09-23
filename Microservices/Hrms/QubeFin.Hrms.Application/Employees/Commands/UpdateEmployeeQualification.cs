@@ -99,6 +99,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
                     GradeOrMarks = req.GradeOrMarks,
                     DocFileName = req.DocFileName,
                     DocFileNo = req.DocFileNo,
+                    IsLatestQualification = req.IsLatestQualification,
                     Sequence = sequenceValue
                 };
 
