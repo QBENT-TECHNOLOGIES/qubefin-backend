@@ -93,6 +93,13 @@ namespace QubeFin.Hrms.Application.Employees.Commands
             }
             context.TblEmployeeReferences.AddRange(referenceEntityList);
             existingEmployee.SetModified(request.LastModifiedBy);
+            // FIX: existingEmployee came from GetByIdAsync(), which loads with AsNoTracking()
+            // and maps to a detached domain object -- SetModified() above only mutated that
+            // in-memory copy. Without this call the parent Employee row's ModifiedBy/ModifiedOn
+            // never reach the database, even though the child rows above are saved correctly
+            // (they're tracked directly against `context`). Matches how every other update
+            // handler in this folder (Personal/Official/Contact/Address/Payroll) persists it.
+            await employeeRepository.UpdateAsync(existingEmployee);
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Ok($"Employee reference information updated successfully for Name : {existingEmployee.PersonalInfo.FirstName} {existingEmployee.PersonalInfo.LastName}");
         }

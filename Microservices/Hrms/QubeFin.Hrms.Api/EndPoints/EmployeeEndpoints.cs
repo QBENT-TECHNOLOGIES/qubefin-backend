@@ -57,8 +57,16 @@ public class EmployeeEndpoints : IEndpoint
         .WithSummary("Get Employee By Id")
         .RequireAuthorization();
 
-        app.MapPost("employees", async (CreateEmployeeCommand command, ISender sender) =>
+        app.MapPost("employees", async (ClaimsPrincipal principal, [FromBody] PersonalInfoRequest request, ISender sender) =>
         {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+            var userId = principal.Identity.GetUserId();
+
+            var command = new CreateEmployeeCommand(request.Code, request.Salutation, request.FirstName, request.MiddleName, request.LastName, request.FatherName, request.MotherName,
+                request.HusbandName, request.DateOfBirth, request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisablityType, request.MaritalStatus, userId);
             var result = await sender.Send(command);
             return result.ToHttpResult();
         })
@@ -98,6 +106,14 @@ public class EmployeeEndpoints : IEndpoint
         .WithSummary("Get Employee Official By Id")
         .RequireAuthorization();
 
+        app.MapGet("employees/referral-details/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new GetEmployeeReferralQuery(id));
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get Employee Referral By Id")
+        .RequireAuthorization();
+
         app.MapGet("employees/kyc-details/{id:guid}", async (Guid id, ISender sender) =>
         {
             var result = await sender.Send(new GetEmployeeKycDetailQuery(id));
@@ -120,6 +136,14 @@ public class EmployeeEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         .WithSummary("Get Employee Employments By Id")
+        .RequireAuthorization();
+
+        app.MapGet("employees/dependent-nominees/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new GetEmployeeDependentNomineeQuery(id));
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get Employee Dependent Nominees By Id")
         .RequireAuthorization();
 
         app.MapGet("employees/qualifications/{id:guid}", async (Guid id, ISender sender) =>
@@ -170,6 +194,21 @@ public class EmployeeEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         .WithSummary("Update Employee Official data")
+        .RequireAuthorization();
+
+        app.MapPut("employees/update/referral/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] ReferralInfoRequest request, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+            var userId = principal.Identity.GetUserId();
+
+            var command = new UpdateEmployeeReferralCommand(id, request, userId);
+            var result = await sender.Send(command);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Update Employee Referral data")
         .RequireAuthorization();
 
         app.MapPut("employees/update/contact/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] ContactInfoRequest request, ISender sender) =>
@@ -273,6 +312,21 @@ public class EmployeeEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         .WithSummary("Update Employee Employment data")
+        .RequireAuthorization();
+
+        app.MapPatch("employees/update/dependent-nominees/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] List<DependentNomineeDetailRequest> dependentNominees, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+            var userId = principal.Identity.GetUserId();
+
+            var command = new UpdateEmployeeDependentNomineeCommand(id, dependentNominees, userId);
+            var result = await sender.Send(command);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Update Employee Dependent Nominee data")
         .RequireAuthorization();
 
         app.MapPatch("employees/update/qualifications/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] List<QualificationRequest> employments, ISender sender) =>

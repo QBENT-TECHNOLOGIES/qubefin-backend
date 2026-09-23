@@ -3,7 +3,6 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
 using QubeFin.Persistence;
-using QubeFin.Persistence.Models.Global;
 
 namespace QubeFin.Hrms.Application.Employees.Queries;
 
@@ -30,6 +29,7 @@ public record GetOfficialResponse(
     DateOnly? JoiningDate,
     DateOnly? ConfirmationDate,
     DateOnly? SeparationDate,
+    DateOnly? RetirementDate,
     Guid? ReferedBy,
     string? HowYouKnow,
     string? OfficialEmail,
@@ -99,6 +99,7 @@ internal sealed class GetEmployeeOfficialByIdQueryHandler(QubeFinDataContext con
             JoiningDate: employee.JoiningDate,
             ConfirmationDate: employee.ConfirmationDate,
             SeparationDate: employee.SeparationDate,
+            RetirementDate: employee.RetirementDate,
             ReferedBy: employee.ReferedBy,
             HowYouKnow: employee.HowYouKnow,
             OfficialEmail: employee.OfficialEmail,
