@@ -228,7 +228,6 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<WegrowConsolidateEmployee> WegrowConsolidateEmployees { get; set; }
 
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<DboTempEmpBranch>(entity =>
@@ -1072,7 +1071,7 @@ public partial class QubeFinDataContext : DbContext
 
             entity.ToTable("Tbl_EmployeeDependentNominee", "Hrms");
 
-            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Id).HasDefaultValueSql("(newid())", "DF__Tbl_Employee__Id__65CC03DF");
             entity.Property(e => e.AadharNumber)
                 .HasMaxLength(20)
                 .IsUnicode(false);
@@ -1081,13 +1080,11 @@ public partial class QubeFinDataContext : DbContext
                 .IsUnicode(false)
                 .HasColumnName("ABHA_Address");
             entity.Property(e => e.Age).HasComputedColumnSql("(datediff(year,[DateOfBirth],getdate())-case when datepart(month,[DateOfBirth])>datepart(month,getdate()) OR datepart(month,[DateOfBirth])=datepart(month,getdate()) AND datepart(day,[DateOfBirth])>datepart(day,getdate()) then (1) else (0) end)", false);
-            entity.Property(e => e.IsResidingWithIp)
-                .HasMaxLength(5)
-                .IsUnicode(false)
-                .HasColumnName("IsResidingWithIP");
+            entity.Property(e => e.IsResidingWithIp).HasColumnName("IsResidingWithIP");
             entity.Property(e => e.NomineeName)
                 .HasMaxLength(100)
                 .IsUnicode(false);
+            entity.Property(e => e.Percentage).HasColumnType("numeric(9, 2)");
             entity.Property(e => e.RelationWithInsuredPerson)
                 .HasMaxLength(50)
                 .IsUnicode(false);

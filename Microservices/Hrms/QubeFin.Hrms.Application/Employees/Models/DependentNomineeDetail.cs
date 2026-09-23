@@ -12,7 +12,10 @@ public class DependentNomineeDetailRequest
     public string? Uan { get; set; }
     public string? AadharNumber { get; set; }
     public string? VoterIdnumber { get; set; }
-    public string? IsResidingWithIp { get; set; }
+    public bool IsResidingWithIp { get; set; }
+    public Guid? StateId { get; set; }
+    public Guid? DistrictId { get; set; }
+    public decimal? Percentage { get; set; }
 }
 public class DependentNomineeDetailResponse
 {
@@ -27,5 +30,8 @@ public class DependentNomineeDetailResponse
     public string? Uan { get; set; }
     public string? AadharNumber { get; set; }
     public string? VoterIdnumber { get; set; }
-    public string? IsResidingWithIp { get; set; }
+    public bool IsResidingWithIp { get; set; }
+    public Guid? StateId { get; set; }
+    public Guid? DistrictId { get; set; }
+    public decimal? Percentage { get; set; }
 }

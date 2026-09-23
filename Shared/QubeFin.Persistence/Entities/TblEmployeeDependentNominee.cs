@@ -27,7 +27,13 @@ public partial class TblEmployeeDependentNominee
 
     public string? VoterIdnumber { get; set; }
 
-    public string? IsResidingWithIp { get; set; }
+    public bool IsResidingWithIp { get; set; }
+
+    public Guid? StateId { get; set; }
+
+    public Guid? DistrictId { get; set; }
+
+    public decimal? Percentage { get; set; }
 
     public virtual TblEmployee Employee { get; set; } = null!;
 }

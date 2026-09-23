@@ -39,7 +39,12 @@ internal sealed class GetEmployeeDependentNomineeQueryHandler(QubeFinDataContext
             Uan = d.Uan,
             AadharNumber = d.AadharNumber,
             VoterIdnumber = d.VoterIdnumber,
-            IsResidingWithIp = d.IsResidingWithIp
+            IsResidingWithIp = d.IsResidingWithIp,
+            StateId = d.StateId,
+            //StateName = d.State?.Name,
+            DistrictId = d.DistrictId,
+            //DistrictName = d.District?.Name,
+            Percentage = d.Percentage
         }).ToList();
 
         return Result.Ok(nominees);

@@ -63,7 +63,10 @@ namespace QubeFin.Hrms.Application.Employees.Commands
                 Uan = req.Uan,
                 AadharNumber = req.AadharNumber,
                 VoterIdnumber = req.VoterIdnumber,
-                IsResidingWithIp = req.IsResidingWithIp
+                IsResidingWithIp = req.IsResidingWithIp,
+                StateId = req.StateId,
+                DistrictId = req.DistrictId,
+                Percentage = req.Percentage
             }).ToList();
 
             var existingNominees = await context.TblEmployeeDependentNominees.Where(m => m.EmployeeId == request.Id).ToListAsync(cancellationToken: cancellationToken);
