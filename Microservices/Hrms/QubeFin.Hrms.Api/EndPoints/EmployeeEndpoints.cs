@@ -299,7 +299,7 @@ public class EmployeeEndpoints : IEndpoint
         .WithSummary("Update Employee Reference data")
         .RequireAuthorization();
 
-        app.MapPatch("employees/update/employments/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] List<EmploymentDetailRequest> employments, ISender sender) =>
+        app.MapPatch("employees/update/employments/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromForm] List<EmploymentDetailRequest> employments, ISender sender) =>
         {
             if (principal.Identity is null)
             {
@@ -310,8 +310,7 @@ public class EmployeeEndpoints : IEndpoint
             var command = new UpdateEmployeeEmploymentCommand(id, employments, userId);
             var result = await sender.Send(command);
             return result.ToHttpResult();
-        })
-        .WithSummary("Update Employee Employment data")
+        }).DisableAntiforgery().WithSummary("Update Employee Employment data")
         .RequireAuthorization();
 
         app.MapPatch("employees/update/dependent-nominees/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] List<DependentNomineeDetailRequest> dependentNominees, ISender sender) =>
