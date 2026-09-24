@@ -85,6 +85,14 @@ public class InterviewPanelEndpoint : IEndpoint
         .RequireAuthorization();
 
         #region INTERVIEW ASSESSMENT
+        app.MapGet("interview-panels/assessment/{candidateId:guid}/{employeeId:guid}", async (Guid candidateId, Guid employeeId, ISender sender, CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(new GetInterviewAssessmentByCandidateAndEmployeeQuery(candidateId, employeeId), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get a panelist's interview assessment by candidate and employee")
+        .WithTags("Interview Panels")
+        .RequireAuthorization();
 
         app.MapPost("interview-panels/assessment/draft", async ([FromBody] SaveInterviewAssessmentDraftCommand command, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
@@ -114,16 +122,6 @@ public class InterviewPanelEndpoint : IEndpoint
         .WithTags("Interview Panels")
         .RequireAuthorization();
         #endregion
-
-
-        app.MapGet("interview-panels/assessment/{candidateId:guid}/{employeeId:guid}", async (Guid candidateId, Guid employeeId, ISender sender, CancellationToken cancellationToken) =>
-        {
-            var result = await sender.Send(new GetInterviewAssessmentByCandidateAndEmployeeQuery(candidateId, employeeId), cancellationToken);
-            return result.ToHttpResult();
-        })
-        .WithSummary("Get a panelist's interview assessment by candidate and employee")
-        .WithTags("Interview Panels")
-        .RequireAuthorization();
 
         #region HR ASSESSMESNT
 
