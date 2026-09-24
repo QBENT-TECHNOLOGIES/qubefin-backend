@@ -45,19 +45,19 @@ public partial class TblEmployee
 
     public string Gender { get; set; } = null!;
 
-    public string Religion { get; set; } = null!;
+    public string? Religion { get; set; }
 
     public string? Caste { get; set; }
 
     public string Nationality { get; set; } = null!;
 
-    public string BloodGroup { get; set; } = null!;
+    public string? BloodGroup { get; set; }
 
     public string? DisablityType { get; set; }
 
     public string? MaritalStatus { get; set; }
 
-    public string MobileNo { get; set; } = null!;
+    public string? MobileNo { get; set; }
 
     public string? PersonalEmail { get; set; }
 

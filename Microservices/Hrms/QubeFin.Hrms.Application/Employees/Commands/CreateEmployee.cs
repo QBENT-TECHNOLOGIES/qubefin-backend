@@ -11,7 +11,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands;
 
 #region --- COMMAND ---
 public record CreateEmployeeCommand(string Code, string? Salutation, string FirstName, string? MiddleName, string LastName, string? FatherName, string? MotherName,
-    string? HusbandName, DateOnly DateOfBirth, string Gender, string Religion, string? Caste, string Nationality, string BloodGroup, string? DisablityType, string? MaritalStatus,
+    string? HusbandName, DateOnly DateOfBirth, string Gender, string? Religion, string? Caste, string Nationality, string? BloodGroup, string? DisablityType, string? MaritalStatus,
     Guid CreatedBy
 ) : IRequest<Result<CreateEmployeeResponse?>>;
 #endregion
@@ -30,7 +30,7 @@ public class CreateEmployeeCommandValidator : AbstractValidator<CreateEmployeeCo
             .MaximumLength(30).WithMessage("First Name cannot exceed 30 characters.");
         RuleFor(x => x.LastName)
             .NotEmpty()
-            .Matches("^[A-Za-z]{3,30}$")
+            .Matches("^[A-Za-z]{1,30}$")
             .WithMessage("Last name must contain only letters and be between 3 and 30 characters long.");
         RuleFor(x => x.Code)
             .NotEmpty()

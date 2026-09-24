@@ -32,11 +32,11 @@ public class UpdateEmployeePersonalCommandValidator : AbstractValidator<UpdateEm
             .MaximumLength(30).WithMessage("First Name cannot exceed 30 characters.");
         RuleFor(x => x.LastName)
             .NotEmpty()
-            .Matches("^[A-Za-z]{3,30}$")
+            .Matches("^[A-Za-z]{1,30}$")
             .WithMessage("Last name must contain only letters and be between 3 and 30 characters long.");
-        RuleFor(x => x.BloodGroup).NotEmpty().WithMessage("Blood Group is required.");
+        //RuleFor(x => x.BloodGroup).NotEmpty().WithMessage("Blood Group is required.");
+        //RuleFor(x => x.Religion).NotEmpty().WithMessage("Religion is required.");
         RuleFor(x => x.Nationality).NotEmpty().WithMessage("Nationality is required.");
-        RuleFor(x => x.Religion).NotEmpty().WithMessage("Religion is required.");
 
     }
 }

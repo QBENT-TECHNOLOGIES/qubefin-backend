@@ -299,13 +299,46 @@ public class EmployeeEndpoints : IEndpoint
         .WithSummary("Update Employee Reference data")
         .RequireAuthorization();
 
-        app.MapPatch("employees/update/employments/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] List<EmploymentDetailRequest> employments, ISender sender) =>
+        app.MapPatch("employees/update/employments/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, HttpRequest request, ISender sender) =>
         {
             if (principal.Identity is null)
             {
                 return Results.Forbid();
             }
             var userId = principal.Identity.GetUserId();
+            if (!request.HasFormContentType) return Results.BadRequest("Invalid content type");
+
+            var form = await request.ReadFormAsync();
+            var employments = new List<EmploymentDetailRequest>();
+            int index = 0;
+            while (form.ContainsKey($"employments[{index}].employerName"))
+            {
+                var emp = new EmploymentDetailRequest
+                {
+                    EmployerName = form[$"employments[{index}].employerName"].ToString(),
+                    Designation = form[$"employments[{index}].designation"].ToString(),
+                    JobTitle = form[$"employments[{index}].jobTitle"].ToString(),
+                    NocFileName = form[$"employments[{index}].nocFileName"].ToString(),
+                    ExpCertFileName = form[$"employments[{index}].expCertFileName"].ToString(),
+                    NocFile = form.Files[$"employments[{index}].nocFile"],
+                    ExpCertFile = form.Files[$"employments[{index}].expCertFile"]
+                };
+
+                if (Guid.TryParse(form[$"employments[{index}].id"], out var empId))
+                    emp.Id = empId;
+
+                if (decimal.TryParse(form[$"employments[{index}].lastDrawnSalary"], out var salary))
+                    emp.LastDrawnSalary = salary;
+
+                if (DateOnly.TryParse(form[$"employments[{index}].fromDate"], out var fromDate))
+                    emp.FromDate = fromDate;
+
+                if (DateOnly.TryParse(form[$"employments[{index}].toDate"], out var toDate))
+                    emp.ToDate = toDate;
+
+                employments.Add(emp);
+                index++;
+            }
 
             var command = new UpdateEmployeeEmploymentCommand(id, employments, userId);
             var result = await sender.Send(command);

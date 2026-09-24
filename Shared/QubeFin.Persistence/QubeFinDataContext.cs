@@ -1152,13 +1152,13 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.Designation).HasMaxLength(100);
             entity.Property(e => e.EmployerName).HasMaxLength(100);
-            entity.Property(e => e.ExpCertFileName).HasMaxLength(100);
-            entity.Property(e => e.ExpCertFileNo).HasMaxLength(50);
+            entity.Property(e => e.ExpCertFileName).HasMaxLength(200);
+            entity.Property(e => e.ExpCertFileNo).HasMaxLength(200);
             entity.Property(e => e.JobTitle).HasMaxLength(200);
             entity.Property(e => e.LastDrawnSalary).HasColumnType("numeric(18, 2)");
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
-            entity.Property(e => e.NocFileName).HasMaxLength(100);
-            entity.Property(e => e.NocFileNo).HasMaxLength(50);
+            entity.Property(e => e.NocFileName).HasMaxLength(200);
+            entity.Property(e => e.NocFileNo).HasMaxLength(200);
 
             entity.HasOne(d => d.Employee).WithMany(p => p.TblEmployeeEmployments)
                 .HasForeignKey(d => d.EmployeeId)
