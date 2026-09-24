@@ -1035,6 +1035,10 @@ public partial class QubeFinDataContext : DbContext
                 .HasForeignKey(d => d.BankId)
                 .HasConstraintName("FK_Tbl_Employee_Tbl_FinancialInstitute");
 
+            entity.HasOne(d => d.Candidate).WithMany(p => p.TblEmployees)
+                .HasForeignKey(d => d.CandidateId)
+                .HasConstraintName("FK_Tbl_Employee_Tbl_InterviewCandidate");
+
             entity.HasOne(d => d.Company).WithMany(p => p.TblEmployees)
                 .HasForeignKey(d => d.CompanyId)
                 .HasConstraintName("FK_Tbl_Employee_Tbl_Company");
