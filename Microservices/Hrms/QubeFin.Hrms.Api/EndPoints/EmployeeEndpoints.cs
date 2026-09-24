@@ -343,8 +343,7 @@ public class EmployeeEndpoints : IEndpoint
             var command = new UpdateEmployeeEmploymentCommand(id, employments, userId);
             var result = await sender.Send(command);
             return result.ToHttpResult();
-        })
-        .WithSummary("Update Employee Employment data")
+        }).DisableAntiforgery().WithSummary("Update Employee Employment data")
         .RequireAuthorization();
 
         app.MapPatch("employees/update/dependent-nominees/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] List<DependentNomineeDetailRequest> dependentNominees, ISender sender) =>
