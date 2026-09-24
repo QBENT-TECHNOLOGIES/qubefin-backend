@@ -27,6 +27,7 @@ public static class EmployeeMapper
             entity.CreatedDate,
             entity.LastModifiedBy,
             entity.LastModifiedOn
+            //entity.CandidateId
         );
     }
 
@@ -36,6 +37,7 @@ public static class EmployeeMapper
         {
             Id = employee.Id,
             Code = employee.Code,
+            //CandidateId = employee.CandidateId,
 
             Salutation = employee.PersonalInfo.Salutation,
             FirstName = employee.PersonalInfo.FirstName,

@@ -153,6 +153,10 @@
         /// show view/print, send and receive.</summary>
         public bool? ShowWelcomeLetterActions { get; set; }
 
+        /// <summary>An employee has been created from this candidate's joining information
+        /// (a Tbl_Employee row has CandidateId = this candidate). The welcome letter opens only then.</summary>
+        public bool? IsEmployeeCreated { get; set; }
+
         /// <summary>Total of the ten averaged category ratings stored on HR's assessment row.</summary>
         public int? HrAssessmentTotalRatingPoint { get; set; }
 

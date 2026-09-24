@@ -38,6 +38,7 @@ internal sealed class GetCandidatesQueryHandler(QubeFinDataContext context, ICon
             : request.SearchParam.PageSize;
 
         var query = context.TblInterviewCandidates
+            .Include(c => c.CreatedByNavigation)
             .Include(m => m.InterviewPostNavigation)
             .Include(m => m.TblInterviewPanels)
             .AsNoTracking();
@@ -46,6 +47,12 @@ internal sealed class GetCandidatesQueryHandler(QubeFinDataContext context, ICon
         if (!isHrEmployee)
         {
             query = query.Where(c =>
+                // Employee who created the candidate
+                c.CreatedByNavigation.EmployeeId == request.employeeId
+
+                ||
+
+                // Employee is part of the interview panel
                 c.TblInterviewPanels.Any(p =>
                     p.EmployeeId == request.employeeId
                 )
@@ -95,7 +102,16 @@ internal sealed class GetCandidatesQueryHandler(QubeFinDataContext context, ICon
             InterviewDate = c.InterviewDate,
             InterviewTime = c.InterviewTime != null ? c.InterviewTime.Value.ToString("h.mm tt", CultureInfo.InvariantCulture).ToLowerInvariant() : string.Empty,
             RecommendationStatus = c.RecommendationStatus ?? "Pending",
-            ReferenceNo = c.ReferenceNo
+            ReferenceNo = c.ReferenceNo,
+            // HR assessment counts as submitted once RecommendationStatus leaves 'Pending' - the same signal
+            // the HR Assessment form and USP_GetInterviewCandidateById use.
+            InterviewStatus = c.SignedJoiningLetterFile != null && c.SignedJoiningLetterFile != "" && c.
+                ? CandidateInterviewStatus.Joined
+                : c.IsOfferLetterReceived
+                    ? CandidateInterviewStatus.JoiningInProgress
+                    : c.RecommendationStatus != null && c.RecommendationStatus != "" && c.RecommendationStatus != "Pending"
+                        ? CandidateInterviewStatus.VerificationInProgress
+                        : CandidateInterviewStatus.InterviewInProgress
         })
         .ToListAsync(cancellationToken);
 

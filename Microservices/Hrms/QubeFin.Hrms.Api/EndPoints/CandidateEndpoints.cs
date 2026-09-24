@@ -170,20 +170,6 @@ public class CandidateEndpoints : IEndpoint
         }).WithSummary("Update candidate verification checks (all flags sent together)").WithTags("Candidate Verification").RequireAuthorization();
         #endregion
 
-        app.MapPost("candidates/{id:guid}/additional-info", async (Guid id, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
-        {
-            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
-            {
-                return Results.Forbid();
-            }
-
-            var result = await sender.Send(new AddCandidateAdditionalInfoCommand(id, principal.Identity.GetUserId()), cancellationToken);
-            return result.ToHttpResult();
-        })
-        .WithSummary("Add additional candidate info, shown once the Offer Letter is received (placeholder - not yet implemented)")
-        .WithTags("Candidates")
-        .RequireAuthorization();
-
         app.MapGet("candidates/{id:guid}/joining-letter-status", async (Guid id, ISender sender, CancellationToken cancellationToken) =>
         {
             var result = await sender.Send(new GetCandidateJoiningLetterStatusQuery(id), cancellationToken);
@@ -192,5 +178,37 @@ public class CandidateEndpoints : IEndpoint
         .WithSummary("Whether the candidate's signed joining letter has been uploaded, and its download URL if so")
         .WithTags("Candidates")
         .RequireAuthorization();
+
+        #region JOINING INFO
+        // Joining information captured once the candidate has joined. The Personal step creates the employee and
+        // links it to the candidate (Tbl_Employee.CandidateId); every other step then uses the employee APIs.
+
+        app.MapGet("candidates/{id:guid}/joining", async (Guid id, ISender sender, CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(new GetCandidateJoiningInfoQuery(id), cancellationToken);
+            return result.ToHttpResult();
+        }).WithSummary("Get the employee created from the candidate and the candidate details the joining steps prefill").WithTags("Candidate Joining").RequireAuthorization();
+
+        app.MapGet("candidates/{id:guid}/joining/personal", async (Guid id, ISender sender, CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(new GetCandidateJoiningPersonalQuery(id), cancellationToken);
+            return result.ToHttpResult();
+        }).WithSummary("Get joining personal info (prefilled from the candidate until the employee is created)").WithTags("Candidate Joining").RequireAuthorization();
+
+        app.MapPost("candidates/{id:guid}/joining/personal", async (Guid id, [FromForm] CandidateJoiningPersonalRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Forbid();
+            }
+
+            var result = await sender.Send(new SaveCandidateJoiningPersonalCommand(id, request, principal.Identity.GetUserId()), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .DisableAntiforgery()
+        .WithSummary("Save joining personal info with photo and signature - creates and links the employee on first save")
+        .WithTags("Candidate Joining")
+        .RequireAuthorization();
+        #endregion
     }
 }

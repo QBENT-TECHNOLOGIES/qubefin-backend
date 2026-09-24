@@ -19,6 +19,21 @@ public class CandidateListDto
     public int? TotalRatingPoint { get; set; }
     public string? RatingStatus { get; set; }
     public string? ReferenceNo { get; set; }
+
+    /// <summary>Where the candidate is in the hiring flow - one of <see cref="CandidateInterviewStatus"/>.</summary>
+    public string InterviewStatus { get; set; } = CandidateInterviewStatus.InterviewInProgress;
+}
+
+/// <summary>Stages shown in the candidate list. Each opens once the previous one is done: the HR assessment is
+/// submitted, then the offer letter is received, then the signed joining letter is uploaded. A candidate HR did
+/// not recommend stops at <see cref="Rejected"/>.</summary>
+public static class CandidateInterviewStatus
+{
+    public const string InterviewInProgress = "Interview in Progress";
+    public const string Rejected = "Rejected";
+    public const string VerificationInProgress = "Candidate Verification in Progress";
+    public const string JoiningInProgress = "Joining in Progress";
+    public const string Joined = "Joined";
 }
 
 public class CandidateDetailDto

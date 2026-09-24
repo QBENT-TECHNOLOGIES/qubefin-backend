@@ -12,6 +12,7 @@ public interface ICandidateRepository
     Task UpdateAsync(Candidate candidate);
     Task<int> CountCreatedInYearAsync(CancellationToken cancellationToken = default);
     Task<CandidateVerificationDto?> GetVerificationAsync(Guid candidateId, CancellationToken cancellationToken = default);
+    Task<Guid?> GetEmployeeIdAsync(Guid candidateId, CancellationToken cancellationToken = default);
 }
 
 public class CandidateRepository(QubeFinDataContext context) : ICandidateRepository
@@ -36,6 +37,15 @@ public class CandidateRepository(QubeFinDataContext context) : ICandidateReposit
     public Task<int> CountCreatedInYearAsync(CancellationToken cancellationToken = default)
     {
         return context.TblInterviewCandidates.AsNoTracking().CountAsync(cancellationToken);
+    }
+
+    public Task<Guid?> GetEmployeeIdAsync(Guid candidateId, CancellationToken cancellationToken = default)
+    {
+        return context.TblEmployees
+            .AsNoTracking()
+            .Where(x => x.CandidateId == candidateId)
+            .Select(x => (Guid?)x.Id)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<CandidateVerificationDto?> GetVerificationAsync(Guid candidateId, CancellationToken cancellationToken = default)
