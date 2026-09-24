@@ -19,4 +19,5 @@ public class OragnizationDesignations
     public string? RoleName { get; set; }
     public Guid? GradeId { get; set; }
     public string? GradeName { get; set; }
+    public string? EmployeeName { get; set; }
 }

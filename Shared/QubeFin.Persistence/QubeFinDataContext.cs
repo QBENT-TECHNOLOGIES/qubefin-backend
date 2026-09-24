@@ -86,6 +86,8 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblEmployeeAttendanceException> TblEmployeeAttendanceExceptions { get; set; }
 
+    public virtual DbSet<TblEmployeeDependentNominee> TblEmployeeDependentNominees { get; set; }
+
     public virtual DbSet<TblEmployeeDesignation> TblEmployeeDesignations { get; set; }
 
     public virtual DbSet<TblEmployeeDocument> TblEmployeeDocuments { get; set; }
@@ -225,7 +227,6 @@ public partial class QubeFinDataContext : DbContext
     public virtual DbSet<TmpLeaveBalanceLop> TmpLeaveBalanceLops { get; set; }
 
     public virtual DbSet<WegrowConsolidateEmployee> WegrowConsolidateEmployees { get; set; }
-
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -1026,6 +1027,7 @@ public partial class QubeFinDataContext : DbContext
                 .IsFixedLength();
             entity.Property(e => e.PresentRoadName).HasMaxLength(50);
             entity.Property(e => e.Religion).HasMaxLength(25);
+            entity.Property(e => e.RetirementDate).HasComputedColumnSql("(dateadd(year,(60),[DateOfBirth]))", false);
             entity.Property(e => e.Salutation).HasMaxLength(20);
             entity.Property(e => e.UniversalAccountNo).HasMaxLength(50);
 
@@ -1061,6 +1063,48 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.ApprovedOn).HasColumnType("datetime");
             entity.Property(e => e.NegativeElcount).HasColumnName("NegativeELCount");
+        });
+
+        modelBuilder.Entity<TblEmployeeDependentNominee>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Tbl_Empl__3214EC078A19BE1B");
+
+            entity.ToTable("Tbl_EmployeeDependentNominee", "Hrms");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("(newid())", "DF__Tbl_Employee__Id__65CC03DF");
+            entity.Property(e => e.AadharNumber)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.AbhaAddress)
+                .HasMaxLength(150)
+                .IsUnicode(false)
+                .HasColumnName("ABHA_Address");
+            entity.Property(e => e.Age).HasComputedColumnSql("(datediff(year,[DateOfBirth],getdate())-case when datepart(month,[DateOfBirth])>datepart(month,getdate()) OR datepart(month,[DateOfBirth])=datepart(month,getdate()) AND datepart(day,[DateOfBirth])>datepart(day,getdate()) then (1) else (0) end)", false);
+            entity.Property(e => e.IsResidingWithIp).HasColumnName("IsResidingWithIP");
+            entity.Property(e => e.NomineeName)
+                .HasMaxLength(100)
+                .IsUnicode(false);
+            entity.Property(e => e.Percentage).HasColumnType("numeric(9, 2)");
+            entity.Property(e => e.RelationWithInsuredPerson)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.Uan)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("UAN");
+            entity.Property(e => e.UhidAbhaNumber)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("UHID_ABHA_Number");
+            entity.Property(e => e.VoterIdnumber)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasColumnName("VoterIDNumber");
+
+            entity.HasOne(d => d.Employee).WithMany(p => p.TblEmployeeDependentNominees)
+                .HasForeignKey(d => d.EmployeeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_EmployeeDependentNominee_Tbl_Employee");
         });
 
         modelBuilder.Entity<TblEmployeeDesignation>(entity =>
@@ -1108,13 +1152,13 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.Designation).HasMaxLength(100);
             entity.Property(e => e.EmployerName).HasMaxLength(100);
-            entity.Property(e => e.ExpCertFileName).HasMaxLength(100);
-            entity.Property(e => e.ExpCertFileNo).HasMaxLength(50);
+            entity.Property(e => e.ExpCertFileName).HasMaxLength(200);
+            entity.Property(e => e.ExpCertFileNo).HasMaxLength(200);
             entity.Property(e => e.JobTitle).HasMaxLength(200);
             entity.Property(e => e.LastDrawnSalary).HasColumnType("numeric(18, 2)");
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
-            entity.Property(e => e.NocFileName).HasMaxLength(100);
-            entity.Property(e => e.NocFileNo).HasMaxLength(50);
+            entity.Property(e => e.NocFileName).HasMaxLength(200);
+            entity.Property(e => e.NocFileNo).HasMaxLength(200);
 
             entity.HasOne(d => d.Employee).WithMany(p => p.TblEmployeeEmployments)
                 .HasForeignKey(d => d.EmployeeId)
@@ -1341,6 +1385,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.ReferedBy).HasMaxLength(100);
             entity.Property(e => e.ReferenceNo).HasMaxLength(50);
             entity.Property(e => e.RoadName).HasMaxLength(50);
+            entity.Property(e => e.SignedJoiningLetterFile).HasMaxLength(500);
             entity.Property(e => e.SuitableRoleDepartment).HasMaxLength(50);
             entity.Property(e => e.Uan).HasMaxLength(50);
             entity.Property(e => e.VacancyReference).HasMaxLength(50);
@@ -1403,6 +1448,10 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.AmbitionRemarks).HasMaxLength(100);
             entity.Property(e => e.AnyOtherJobsSuitedRemarks).HasMaxLength(100);
             entity.Property(e => e.AppearanceAttitudeRemarks).HasMaxLength(100);
+            entity.Property(e => e.AssessmentType)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasDefaultValue("INTERVIEWER", "DF_Tbl_InterviewPanel_AssessmentType");
             entity.Property(e => e.CommunicationRemarks).HasMaxLength(100);
             entity.Property(e => e.EducationRemarks).HasMaxLength(100);
             entity.Property(e => e.FlexibilityRemarks).HasMaxLength(100);

@@ -99,6 +99,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
                     GradeOrMarks = req.GradeOrMarks,
                     DocFileName = req.DocFileName,
                     DocFileNo = req.DocFileNo,
+                    IsLatestQualification = req.IsLatestQualification,
                     Sequence = sequenceValue
                 };
 
@@ -111,6 +112,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
             }
             context.TblEmployeeQualifications.AddRange(updatedQualificationList);
             existingEmployee.SetModified(request.LastModifiedBy);
+            await employeeRepository.UpdateAsync(existingEmployee);
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Ok($"Employee qualifications information updated successfully for Name : {existingEmployee.PersonalInfo.FirstName} {existingEmployee.PersonalInfo.LastName}");
         }

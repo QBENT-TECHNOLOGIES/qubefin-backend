@@ -5,18 +5,17 @@ using QubeFin.Core.Results;
 using QubeFin.Hrms.Application.Employees.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
-using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.Employees.Queries;
 
 #region --- QUERY ---
-public record GetEmployeeEmploymentQuery(Guid Id) : IRequest<Result<List<EmploymentDetailRequest>>>;
+public record GetEmployeeEmploymentQuery(Guid Id) : IRequest<Result<List<EmploymentDetailResponse>>>;
 #endregion
 #region --- HANDLER ---
-internal sealed class GetEmployeeEmploymentQueryHandler(QubeFinDataContext context)
-    : IRequestHandler<GetEmployeeEmploymentQuery, Result<List<EmploymentDetailRequest>>>
+internal sealed class GetEmployeeEmploymentQueryHandler(QubeFinDataContext context, IFileStorageRepository fileStorageRepository)
+    : IRequestHandler<GetEmployeeEmploymentQuery, Result<List<EmploymentDetailResponse>>>
 {
-    public async Task<Result<List<EmploymentDetailRequest>>> Handle(GetEmployeeEmploymentQuery request, CancellationToken cancellationToken)
+    public async Task<Result<List<EmploymentDetailResponse>>> Handle(GetEmployeeEmploymentQuery request, CancellationToken cancellationToken)
     {
         var employee = await context.TblEmployees.Include(m => m.TblEmployeeEmployments).Where(m => m.Id == request.Id).FirstOrDefaultAsync(cancellationToken: cancellationToken);
 
@@ -25,7 +24,7 @@ internal sealed class GetEmployeeEmploymentQueryHandler(QubeFinDataContext conte
             return new RecordNotFoundError($"Employee not found for the given Id");
         }
         var employeeEmployment = employee.TblEmployeeEmployments.ToList();
-        var docs = employeeEmployment.Any() ? [.. employeeEmployment.Select(d => new EmploymentDetailRequest()
+        var employments = (await Task.WhenAll(employeeEmployment.Select(async d => new EmploymentDetailResponse
         {
             Id = d.Id,
             EmployeeId = d.EmployeeId,
@@ -36,12 +35,17 @@ internal sealed class GetEmployeeEmploymentQueryHandler(QubeFinDataContext conte
             LastDrawnSalary = d.LastDrawnSalary,
             JobTitle = d.JobTitle,
             NocFileName = d.NocFileName,
-            NocFileNo = d.NocFileNo,
+            NocFileUrl = !string.IsNullOrEmpty(d.NocFileNo)
+                ? await fileStorageRepository.GetFileUrlAsync(d.NocFileNo, cancellationToken)
+                : null,
             ExpCertFileName = d.ExpCertFileName,
-            ExpCertFileNo = d.ExpCertFileNo,
+            ExpCertFileUrl = !string.IsNullOrEmpty(d.ExpCertFileNo)
+                ? await fileStorageRepository.GetFileUrlAsync(d.ExpCertFileNo, cancellationToken)
+                : null,
             Sequence = d.Sequence
-        })] : new List<EmploymentDetailRequest>();
-        return Result.Ok(docs.OrderBy(m => m.Sequence).ToList());
+        }))).ToList();
+
+        return Result.Ok(employments.OrderBy(m => m.Sequence).ToList());
     }
 }
 #endregion

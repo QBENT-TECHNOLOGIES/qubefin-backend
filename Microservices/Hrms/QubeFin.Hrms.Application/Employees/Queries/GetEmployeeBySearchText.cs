@@ -10,7 +10,7 @@ public record GetEmployeeBySearchTextQuery(string SearchText) : IRequest<Result<
 #endregion
 
 #region --- RESPONSE ---
-public record GetEmployeeBySearchTextResponse(Guid Id, string? EmployeeName, string EmployeeCode, bool HasSignaturePhoto, Guid userId);
+public record GetEmployeeBySearchTextResponse(Guid Id, string? EmployeeName, string EmployeeCode, bool HasSignaturePhoto, Guid userId, string? Designation);
 #endregion
 
 #region --- HANDLER ---
@@ -19,9 +19,19 @@ internal sealed class GetEmployeeBySearchTextQueryHandler(QubeFinDataContext con
     public async Task<Result<List<GetEmployeeBySearchTextResponse>>> Handle(GetEmployeeBySearchTextQuery request, CancellationToken cancellationToken)
     {
 
-        var employeEntities = await context.TblEmployees.Include(m => m.TblUsers).Include(m => m.TblEmployeeDocuments).Where(m => m.IsActive && (m.FullName.StartsWith(request.SearchText) || m.Code.StartsWith(request.SearchText))).OrderBy(m => m.FirstName).ToListAsync();
+        var employeEntities = await context.TblEmployees.
+            Include(m => m.TblUsers).Include(m => m.TblEmployeeDocuments).
+            Include(m => m.TblEmployeeDesignations).ThenInclude(e => e.Designation).
+            Where(m => m.IsActive && (m.FullName.StartsWith(request.SearchText) || m.Code.StartsWith(request.SearchText))).
+            OrderBy(m => m.FirstName).ToListAsync();
         var searchResult = employeEntities == null ? new List<GetEmployeeBySearchTextResponse>() :
-               employeEntities.Select(m => new GetEmployeeBySearchTextResponse(m.Id, m.FullName + "(" + m.Code + ")", m.Code, HasSignaturePhoto(m), m.TblUsers.Any() ? m.TblUsers.FirstOrDefault().Id : Guid.Empty)).ToList();
+               employeEntities.Select(m => new GetEmployeeBySearchTextResponse(
+                   m.Id,
+                   m.FullName + "(" + m.Code + ")",
+                   m.Code, HasSignaturePhoto(m),
+                   m.TblUsers.Any() ? m.TblUsers.FirstOrDefault().Id : Guid.Empty,
+                   GetCurrentDesignationName(m))
+               ).ToList();
 
         return Result.Ok(searchResult);
     }
@@ -29,6 +39,19 @@ internal sealed class GetEmployeeBySearchTextQueryHandler(QubeFinDataContext con
     {
         return employee.TblEmployeeDocuments.Any(d => d.DocumentName == "SIGNATURE" && !string.IsNullOrWhiteSpace(d.FileName))
                && employee.TblEmployeeDocuments.Any(d => d.DocumentName == "PHOTO" && !string.IsNullOrWhiteSpace(d.FileName));
+    }
+    private static string? GetCurrentDesignationName(TblEmployee employee)
+    {
+        if (!employee.TblEmployeeDesignations.Any())
+        {
+            return null;
+        }
+
+        var currentDesignation = employee.TblEmployeeDesignations.Any(ed => ed.EffectiveTo == null)
+            ? employee.TblEmployeeDesignations.First(ed => ed.EffectiveTo == null)
+            : employee.TblEmployeeDesignations.OrderByDescending(ed => ed.EffectiveFrom).First();
+
+        return currentDesignation.Designation?.Name;
     }
 }
 #endregion

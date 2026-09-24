@@ -104,13 +104,13 @@ internal class OrganizationUnitRepository(QubeFinDataContext context) : IOrganiz
 
     public async Task AddDesignationAsync(string name, Guid organizationUnitId, Guid postId, Guid roleId, Guid salaryGradeId, Guid userId)
     {
-        var existingDesignation = await context.TblDesignations
-            .AsNoTracking()
-            .FirstOrDefaultAsync(d => d.Name.Trim().ToLower() == name.Trim().ToLower() && d.OrganizationUnitId == organizationUnitId);
-        if (existingDesignation != null)
-        {
-            throw new InvalidOperationException($"Designation {name} already exists under the specified organization unit.");
-        }
+        //var existingDesignation = await context.TblDesignations
+        //    .AsNoTracking()
+        //    .FirstOrDefaultAsync(d => d.Name.Trim().ToLower() == name.Trim().ToLower() && d.OrganizationUnitId == organizationUnitId);
+        //if (existingDesignation != null)
+        //{
+        //    throw new InvalidOperationException($"Designation {name} already exists under the specified organization unit.");
+        //}
 
         var designation = new TblDesignation
         {

@@ -41,21 +41,23 @@ public partial class TblEmployee
 
     public DateOnly? SeparationDate { get; set; }
 
+    public DateOnly? RetirementDate { get; set; }
+
     public string Gender { get; set; } = null!;
 
-    public string Religion { get; set; } = null!;
+    public string? Religion { get; set; }
 
     public string? Caste { get; set; }
 
     public string Nationality { get; set; } = null!;
 
-    public string BloodGroup { get; set; } = null!;
+    public string? BloodGroup { get; set; }
 
     public string? DisablityType { get; set; }
 
     public string? MaritalStatus { get; set; }
 
-    public string MobileNo { get; set; } = null!;
+    public string? MobileNo { get; set; }
 
     public string? PersonalEmail { get; set; }
 
@@ -162,6 +164,8 @@ public partial class TblEmployee
     public virtual ICollection<TblAttendance> TblAttendances { get; set; } = new List<TblAttendance>();
 
     public virtual ICollection<TblDepartment> TblDepartments { get; set; } = new List<TblDepartment>();
+
+    public virtual ICollection<TblEmployeeDependentNominee> TblEmployeeDependentNominees { get; set; } = new List<TblEmployeeDependentNominee>();
 
     public virtual ICollection<TblEmployeeDesignation> TblEmployeeDesignations { get; set; } = new List<TblEmployeeDesignation>();
 
