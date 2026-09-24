@@ -3,9 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
 using QubeFin.Hrms.Application.Employees.Models;
-using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
-using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.Employees.Queries;
 
@@ -37,6 +35,7 @@ internal sealed class GetEmployeeQualificationQueryHandler(QubeFinDataContext co
             GradeOrMarks = d.GradeOrMarks,
             DocFileName = d.DocFileName,
             DocFileNo = d.DocFileNo,
+            IsLatestQualification = d.IsLatestQualification,
             Sequence = d.Sequence
         })] : new List<QualificationRequest>();
         return Result.Ok(qualifications.OrderBy(m => m.Sequence).ToList());

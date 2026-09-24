@@ -90,6 +90,15 @@ public class HolidayEndpoints : IEndpoint
         .WithTags("Holidays")
         .RequireAuthorization();
 
+        app.MapGet("holidays/calendar/{employeeId}", async (ClaimsPrincipal principal, ISender sender, int year, int month, Guid employeeId, CancellationToken cancellationToken) =>
+        {
+            var result = await sender.Send(new GetCalendarDaysByEmployeeQuery(employeeId, year, month), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get calendar days by employee")
+        .WithTags("Holidays")
+        .RequireAuthorization();
+
         app.MapGet("holidays/leave-calendar", async (ClaimsPrincipal principal, ISender sender, int year, int month, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)

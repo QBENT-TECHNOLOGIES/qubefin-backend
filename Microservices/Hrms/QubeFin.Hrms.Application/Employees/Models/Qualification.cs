@@ -9,6 +9,7 @@ public class QualificationRequest
     public string? UniversityOrBoard { get;  set; }
     public string? SchoolOrCollege { get;  set; }
     public string? GradeOrMarks { get;  set; }
+    public bool IsLatestQualification { get;  set; }
     public string? DocFileName { get;  set; }
     public string? DocFileNo { get;  set; }
     public Guid EmployeeId { get;  set; }

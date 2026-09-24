@@ -50,14 +50,7 @@ internal sealed class SearchApprovalWorkflowQueryHandler(
 
                 // Child workflow identifies whether this is
                 // BM Approval or AM Approval.
-                ApprovalPath = string.Join(
-                    "|",
-                    (x.Steps ?? new List<ApprovalWorkflowStep>())
-                        .OrderBy(s => s.SequenceNo)
-                        .Select(s =>
-                            $"{s.OrganizationUnitTypeId}:" +
-                            $"{s.ReceiverPostId}:" +
-                            $"{s.SequenceNo}"))
+                ApprovalPath = ApprovalWorkflowPath.GetKey(x)
             })
             .Select(g => BuildListItem(g.ToList()))
             .ToList();
@@ -88,8 +81,8 @@ internal sealed class SearchApprovalWorkflowQueryHandler(
                             item.MaximumDays &&
                         r.PostId ==
                             item.PostId &&
-                        GetApprovalPathKey(r) ==
-                            GetApprovalPathKey(
+                        ApprovalWorkflowPath.GetKey(r) ==
+                            ApprovalWorkflowPath.GetKey(
                                 rows.First(x =>
                                     x.Id == item.Id))))
                 .ToList();
@@ -202,18 +195,5 @@ internal sealed class SearchApprovalWorkflowQueryHandler(
 
             ApprovalPath = approvalPath
         };
-    }
-
-    private static string GetApprovalPathKey(
-    ApprovalWorkflow workflow)
-    {
-        return string.Join(
-            "|",
-            (workflow.Steps ?? new List<ApprovalWorkflowStep>())
-                .OrderBy(s => s.SequenceNo)
-                .Select(s =>
-                    $"{s.OrganizationUnitTypeId}:" +
-                    $"{s.ReceiverPostId}:" +
-                    $"{s.SequenceNo}"));
     }
 }

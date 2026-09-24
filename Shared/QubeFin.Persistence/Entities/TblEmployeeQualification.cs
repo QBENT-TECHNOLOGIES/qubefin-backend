@@ -7,6 +7,8 @@ public partial class TblEmployeeQualification
 {
     public Guid Id { get; set; }
 
+    public Guid EmployeeId { get; set; }
+
     public string AcademicStream { get; set; } = null!;
 
     public string? Specialization { get; set; }
@@ -23,7 +25,7 @@ public partial class TblEmployeeQualification
 
     public string? DocFileNo { get; set; }
 
-    public Guid EmployeeId { get; set; }
+    public bool IsLatestQualification { get; set; }
 
     public int Sequence { get; set; }
 

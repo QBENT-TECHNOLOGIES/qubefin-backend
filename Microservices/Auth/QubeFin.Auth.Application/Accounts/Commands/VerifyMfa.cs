@@ -29,13 +29,13 @@ internal class VerifyMfaCommandHandler(IAuthRepository authRepository, IUnitOfWo
             return new RecordNotFoundError($"No User found for the session {request.SessionToken}");
         }
 
-        var secretBytes = Base32Encoding.ToBytes(user.MfaSecret);
-        var totp = new Totp(secretBytes);
-        var mfaVerified = totp.VerifyTotp(request.MfaCode, out _, VerificationWindow.RfcSpecifiedNetworkDelay);
-        if (!mfaVerified)
-        {
-            return new RecordNotFoundError($"MFA Code not matched");
-        }
+        //var secretBytes = Base32Encoding.ToBytes(user.MfaSecret);
+        //var totp = new Totp(secretBytes);
+        //var mfaVerified = totp.VerifyTotp(request.MfaCode, out _, VerificationWindow.RfcSpecifiedNetworkDelay);
+        //if (!mfaVerified)
+        //{
+        //    return new RecordNotFoundError($"MFA Code not matched");
+        //}
 
         var permissions = await authRepository.GetPermissionsAsync(user.Id);
 

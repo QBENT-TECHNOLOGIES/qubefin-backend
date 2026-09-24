@@ -14,6 +14,9 @@ public interface IOrganizationUnitRepository
     void Update(OrganizationUnit organizationUnit);
     Task<List<OrganizationUnit>> GetAllOrganisationUnit(CancellationToken cancellationToken);
     Task AddDesignationAsync(string name, Guid organizationUnitId, Guid postId, Guid roleId, Guid salaryGradeId, Guid userId);
+    Task<int> GetNextCodeValAsync(CancellationToken cancellationToken);
+    Task<bool> ExistsByNameAsync(string name, Guid? parentId, Guid? excludedId, CancellationToken cancellationToken);
+    Task<bool> IsSelfOrDescendantAsync(Guid candidateParentId, Guid organizationUnitId, CancellationToken cancellationToken);
 }
 
 internal class OrganizationUnitRepository(QubeFinDataContext context) : IOrganizationUnitRepository
@@ -58,15 +61,56 @@ internal class OrganizationUnitRepository(QubeFinDataContext context) : IOrganiz
         var organizationUnitEntity = await context.TblOrganizationUnits.AsNoTracking().OrderBy(m => m.CodeVal).ToListAsync(cancellationToken) ?? throw new Exception("No organization found.");
         return organizationUnitEntity?.ToDomain().ToList();
     }
+    public async Task<int> GetNextCodeValAsync(CancellationToken cancellationToken)
+    {
+        var highestCodeVal = await context.TblOrganizationUnits
+            .AsNoTracking()
+            .MaxAsync(m => (int?)m.CodeVal, cancellationToken);
+
+        return (highestCodeVal ?? 0) + 1;
+    }
+
+    public async Task<bool> ExistsByNameAsync(string name, Guid? parentId, Guid? excludedId, CancellationToken cancellationToken)
+    {
+        return await context.TblOrganizationUnits
+            .AsNoTracking()
+            .AnyAsync(m => m.Name.Trim().ToLower() == name.Trim().ToLower()
+                && m.ParentId == parentId
+                && (excludedId == null || m.Id != excludedId), cancellationToken);
+    }
+
+    public async Task<bool> IsSelfOrDescendantAsync(Guid candidateParentId, Guid organizationUnitId, CancellationToken cancellationToken)
+    {
+        var parentLookup = await context.TblOrganizationUnits
+            .AsNoTracking()
+            .Select(m => new { m.Id, m.ParentId })
+            .ToDictionaryAsync(m => m.Id, m => m.ParentId, cancellationToken);
+
+        var visitedIds = new HashSet<Guid>();
+        var currentId = (Guid?)candidateParentId;
+
+        while (currentId.HasValue && visitedIds.Add(currentId.Value))
+        {
+            if (currentId.Value == organizationUnitId)
+            {
+                return true;
+            }
+
+            currentId = parentLookup.TryGetValue(currentId.Value, out var parentId) ? parentId : null;
+        }
+
+        return false;
+    }
+
     public async Task AddDesignationAsync(string name, Guid organizationUnitId, Guid postId, Guid roleId, Guid salaryGradeId, Guid userId)
     {
-        var existingDesignation = await context.TblDesignations
-            .AsNoTracking()
-            .FirstOrDefaultAsync(d => d.Name.Trim().ToLower() == name.Trim().ToLower() && d.OrganizationUnitId == organizationUnitId);
-        if (existingDesignation != null)
-        {
-            throw new InvalidOperationException($"Designation {name} already exists under the specified organization unit.");
-        }
+        //var existingDesignation = await context.TblDesignations
+        //    .AsNoTracking()
+        //    .FirstOrDefaultAsync(d => d.Name.Trim().ToLower() == name.Trim().ToLower() && d.OrganizationUnitId == organizationUnitId);
+        //if (existingDesignation != null)
+        //{
+        //    throw new InvalidOperationException($"Designation {name} already exists under the specified organization unit.");
+        //}
 
         var designation = new TblDesignation
         {

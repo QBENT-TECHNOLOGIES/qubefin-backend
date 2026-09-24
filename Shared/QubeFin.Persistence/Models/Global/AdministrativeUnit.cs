@@ -6,6 +6,7 @@ public class AdministrativeUnit
     public Guid AdministrativeUnitTypeId { get; set; }
     public string Name { get; set; } = null!;
     public Guid? ParentId { get; set; }
+    public bool IsActive { get; set; }
     public DateTime CreatedOn { get; set; }
     public Guid CreatedBy { get; set; }
     public DateTime? LastModifiedOn { get; set; }
@@ -13,12 +14,13 @@ public class AdministrativeUnit
 
     private AdministrativeUnit() { }
 
-    public AdministrativeUnit(Guid id, Guid administrativrUnitTypeId, string name, Guid? parentId, Guid createdBy, DateTime createdOn, Guid? lastModifiedBy, DateTime? lastModifiedOn)
+    public AdministrativeUnit(Guid id, Guid administrativrUnitTypeId, string name, Guid? parentId, bool isActive, Guid createdBy, DateTime createdOn, Guid? lastModifiedBy, DateTime? lastModifiedOn)
     {
         Id = id;
         AdministrativeUnitTypeId = administrativrUnitTypeId;
         Name = name;
         ParentId = parentId;
+        IsActive = isActive;
         CreatedOn = createdOn;
         CreatedBy = createdBy;
         LastModifiedOn = lastModifiedOn;
@@ -33,6 +35,8 @@ public class AdministrativeUnit
             AdministrativeUnitTypeId = administrativrUnitTypeId,
             Name = name,
             ParentId = parentId,
+            // A newly created unit is always active; deactivating is an update-time action.
+            IsActive = true,
             CreatedBy = createdBy,
             CreatedOn = DateTime.Now
         };
@@ -40,11 +44,12 @@ public class AdministrativeUnit
         return administrativeUnit;
     }
 
-    public void Update(Guid administrativrUnitTypeId, string name, Guid? parentId, Guid userId)
+    public void Update(Guid administrativrUnitTypeId, string name, Guid? parentId, bool isActive, Guid userId)
     {
         AdministrativeUnitTypeId = administrativrUnitTypeId;
         Name = name;
         ParentId = parentId;
+        IsActive = isActive;
         LastModifiedBy = userId;
         LastModifiedOn = DateTime.UtcNow;
     }

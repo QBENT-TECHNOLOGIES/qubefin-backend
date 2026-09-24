@@ -71,7 +71,7 @@ public class OrganizationUnitEndpoints : IEndpoint
             }
             var userId = principal.Identity.GetUserId();
 
-            var result = await sender.Send(new CreateOrganizationUnitCommand(request.OrganizationUnitTypeId, request.Name, request.Codeval, request.ParentId, request.CompanyId, 
+            var result = await sender.Send(new CreateOrganizationUnitCommand(request.OrganizationUnitTypeId, request.Name, NormalizeId(request.ParentId), NormalizeId(request.CompanyId),
                 request.Latitude, request.Longitude, request.AttendanceInTime, request.AttendanceOutTime, request.CheckRadiusInMeter, userId));
             return result.ToHttpResult();
         })
@@ -88,8 +88,8 @@ public class OrganizationUnitEndpoints : IEndpoint
             }
             var userId = principal.Identity.GetUserId();
 
-            var result = await sender.Send(new UpdateOrganizationUnitCommand(id, request.OrganizationUnitTypeId, request.Name, request.Codeval, request.Latitude, request.Longitude, 
-                request.AttendanceInTime, request.AttendanceOutTime, request.CheckRadiusInMeter, request.ParentId, request.CompanyId, userId));
+            var result = await sender.Send(new UpdateOrganizationUnitCommand(id, request.OrganizationUnitTypeId, request.Name, request.Latitude, request.Longitude,
+                request.AttendanceInTime, request.AttendanceOutTime, request.CheckRadiusInMeter, NormalizeId(request.ParentId), NormalizeId(request.CompanyId), userId));
             return result.ToHttpResult();
         })
         .WithSummary("Update Organization Unit")
@@ -106,4 +106,8 @@ public class OrganizationUnitEndpoints : IEndpoint
         .WithTags("OrganizationUnits")
         .RequireAuthorization();
     }
+
+    // An empty Guid on the wire means "not selected", so it is stored as NULL
+    // rather than as a foreign key pointing at a row that does not exist.
+    private static Guid? NormalizeId(Guid? id) => id == Guid.Empty ? null : id;
 }

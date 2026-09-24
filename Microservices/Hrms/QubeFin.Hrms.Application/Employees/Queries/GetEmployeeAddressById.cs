@@ -42,7 +42,7 @@ internal sealed class GetEmployeeAddressByIdQueryHandler(QubeFinDataContext cont
         return Result.Ok(new GetAddressResponse(
             Id: employee.Id,
             Code: employee.Code,
-            SameAsPresentAddress: employee.PresentAdministrativeUnitId == employee.PermanentAdministrativeUnitId,
+            SameAsPresentAddress: employee.PresentAdministrativeUnitId != null && employee.PermanentAdministrativeUnitId != null &&  employee.PresentAdministrativeUnitId == employee.PermanentAdministrativeUnitId,
             PresentAddressInfo: new AddressInfoResponse
             {
                 HouseNo = employee.PresentHouseNo,

@@ -21,24 +21,25 @@ namespace QubeFin.Hrms.Application.Employees.Commands
     {
         public UpdateEmployeeEmploymentCommandValidator()
         {
-            //RuleFor(x => x.FirstName)
-            //    .Must(value => !string.IsNullOrWhiteSpace(value)
-            //        && Regex.IsMatch(value, @"^[A-Za-z]+$")
-            //        && !value.Equals("Select", StringComparison.OrdinalIgnoreCase))
-            //    .WithMessage("Please enter a valid First Name name.")
-            //    .MinimumLength(3).WithMessage("First Name must be more than 2 characters.")
-            //    .MaximumLength(30).WithMessage("First Name cannot exceed 30 characters.");
-            //RuleFor(x => x.LastName)
-            //    .NotEmpty()
-            //    .Matches("^[A-Za-z]{3,30}$")
-            //    .WithMessage("Last name must contain only letters and be between 3 and 30 characters long.");
-
+            RuleFor(x => x.Id).NotEmpty().WithMessage("Employee ID is required.");
+            RuleFor(x => x.Employments).NotEmpty().WithMessage("At least one employment entry must be provided.");
+            RuleForEach(x => x.Employments).SetValidator(new EmploymentDetailRequestValidator());
+        }
+    }
+    public class EmploymentDetailRequestValidator : AbstractValidator<EmploymentDetailRequest>
+    {
+        public EmploymentDetailRequestValidator()
+        {
+            RuleFor(x => x.EmployerName).NotEmpty().WithMessage("Employer name is required.");
+            RuleFor(x => x.Designation).NotEmpty().WithMessage("Designation is required.");
+            RuleFor(x => x.ToDate).GreaterThanOrEqualTo(x => x.FromDate).WithMessage("To date cannot be earlier than from date.");
+            RuleFor(x => x.LastDrawnSalary).GreaterThanOrEqualTo(0).WithMessage("Last drawn salary cannot be negative.");
         }
     }
     #endregion
 
     #region --- HANDLER ---
-    internal sealed class UpdateEmployeeEmploymentCommandHandler(IEmployeeRepository employeeRepository, IUnitOfWork unitOfWork, QubeFinDataContext context)
+    internal sealed class UpdateEmployeeEmploymentCommandHandler(IEmployeeRepository employeeRepository, IUnitOfWork unitOfWork, QubeFinDataContext context, IFileStorageRepository fileStorageRepository)
         : IRequestHandler<UpdateEmployeeEmploymentCommand, Result<string>>
     {
         public async Task<Result<string>> Handle(UpdateEmployeeEmploymentCommand request, CancellationToken cancellationToken)
@@ -57,6 +58,29 @@ namespace QubeFin.Hrms.Application.Employees.Commands
                 var req = orderByQualifications[i];
                 int sequenceValue = i + 1;
                 //int sequenceValue = i + 1;
+
+
+                if (req.NocFile != null && req.NocFile.Length > 0)
+                {
+                    req.NocFileName = req.NocFile.FileName;
+                    await using var stream = req.NocFile.OpenReadStream();
+                    req.NocFileNo = await fileStorageRepository.UploadFileAsync(
+                        stream,
+                        req.NocFile.FileName,
+                        req.NocFile.ContentType ?? "application/octet-stream",
+                        cancellationToken).ConfigureAwait(false);
+                }
+
+                if (req.ExpCertFile != null && req.ExpCertFile.Length > 0)
+                {
+                    req.ExpCertFileName = req.ExpCertFile.FileName;
+                    await using var stream = req.ExpCertFile.OpenReadStream();
+                    req.ExpCertFileNo = await fileStorageRepository.UploadFileAsync(
+                        stream,
+                        req.ExpCertFile.FileName,
+                        req.ExpCertFile.ContentType ?? "application/octet-stream",
+                        cancellationToken).ConfigureAwait(false);
+                }
 
                 var employmentEntity = new TblEmployeeEmployment()
                 {
@@ -86,6 +110,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
             }
             context.TblEmployeeEmployments.AddRange(updatedEmploymentEntityList);
             existingEmployee.SetModified(request.LastModifiedBy);
+            await employeeRepository.UpdateAsync(existingEmployee);
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Ok($"Employee employment information updated successfully for Name : {existingEmployee.PersonalInfo.FirstName} {existingEmployee.PersonalInfo.LastName}");
         }

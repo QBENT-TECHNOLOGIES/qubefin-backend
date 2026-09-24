@@ -84,6 +84,7 @@ internal sealed class GetOrganizationUnitByIdQueryHandler(QubeFinDataContext con
                 RoleName = d.TblDesignationRoles.Select(r => r.Role.Name).FirstOrDefault(),
                 GradeId = d.TblDesignationGradeMappings.Select(g => (Guid?)g.GradeId).FirstOrDefault(),
                 GradeName = d.TblDesignationGradeMappings.Select(g => g.Grade.Name).FirstOrDefault(),
+                EmployeeName = d.TblEmployeeDesignations.Where(ed => ed.DesignationId == d.Id && ed.EffectiveTo == null).Select(e => e.Employee.FullName + "(" + e.Employee.Code + ")").FirstOrDefault()
             })
             .OrderBy(d => d.Name)
             .AsNoTracking()
