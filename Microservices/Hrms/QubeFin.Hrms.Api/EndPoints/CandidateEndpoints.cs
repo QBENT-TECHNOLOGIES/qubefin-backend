@@ -168,6 +168,17 @@ public class CandidateEndpoints : IEndpoint
             var result = await sender.Send(command, cancellationToken);
             return result.ToHttpResult();
         }).WithSummary("Update candidate verification checks (all flags sent together)").WithTags("Candidate Verification").RequireAuthorization();
+
+        app.MapPost("candidate-verifications/{candidateId:guid}/verify", async (Guid candidateId, [FromBody] VerifyCandidateCheckRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Forbid();
+            }
+
+            var result = await sender.Send(new VerifyCandidateCheckCommand(candidateId, request.Check, request.Value, principal.Identity.GetUserId()), cancellationToken);
+            return result.ToHttpResult();
+        }).WithSummary("Verify a single candidate verification check").WithTags("Candidate Verification").RequireAuthorization();
         #endregion
 
         app.MapGet("candidates/{id:guid}/joining-letter-status", async (Guid id, ISender sender, CancellationToken cancellationToken) =>

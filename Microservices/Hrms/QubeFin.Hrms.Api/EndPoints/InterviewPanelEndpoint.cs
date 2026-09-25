@@ -17,31 +17,33 @@ public class InterviewPanelEndpoint : IEndpoint
     {
         #region INTERVIEW PANEL CREATION & UPDATION
 
-        app.MapPost("interview-panels/schedule", async ([FromBody] ScheduleInterviewPanelCommand command, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        app.MapPost("interview-panels/schedule", async ([FromForm] InterviewPanelScheduleRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)
             {
                 return Results.Forbid();
             }
 
-            var result = await sender.Send(command with { ScheduledBy = principal.Identity.GetUserId() }, cancellationToken);
+            var result = await sender.Send(new ScheduleInterviewPanelCommand(request.CandidateId, request.ToPanelists(), principal.Identity.GetUserId(), request.File), cancellationToken);
             return result.ToHttpResult();
         })
-        .WithSummary("Schedule interview panel for a candidate")
+        .DisableAntiforgery()
+        .WithSummary("Schedule interview panel for a candidate and email the panelists")
         .WithTags("Interview Panels")
         .RequireAuthorization();
 
-        app.MapPost("interview-panels/{candidateId:guid}/panelists", async (Guid candidateId, [FromBody] List<PanelistScheduleDto> panelists, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        app.MapPost("interview-panels/{candidateId:guid}/panelists", async (Guid candidateId, [FromForm] InterviewPanelScheduleRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)
             {
                 return Results.Forbid();
             }
 
-            var result = await sender.Send(new AddInterviewPanelistsCommand(candidateId, panelists, principal.Identity.GetUserId()), cancellationToken);
+            var result = await sender.Send(new AddInterviewPanelistsCommand(candidateId, request.ToPanelists(), principal.Identity.GetUserId(), request.File), cancellationToken);
             return result.ToHttpResult();
         })
-        .WithSummary("Add panelist(s) to a candidate's existing interview panel")
+        .DisableAntiforgery()
+        .WithSummary("Add panelist(s) to a candidate's existing interview panel and email them")
         .WithTags("Interview Panels")
         .RequireAuthorization();
 

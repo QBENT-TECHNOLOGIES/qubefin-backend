@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace QubeFin.Persistence.Models.Hrms;
 
 public class Candidate
@@ -247,6 +249,44 @@ public class Candidate
         IsUanVerified = isUanVerified;
         IsCreditBureauChecked = isCreditBureauChecked;
         CreditBureauReportLink = creditBureauReportLink;
+
+        ModifiedBy = modifiedBy;
+        ModifiedOn = DateTime.UtcNow;
+    }
+
+    /// <summary>Marks one verification check as verified and stores the value that was checked (document
+    /// number, mobile number or credit bureau report link). A blank value keeps what is already on record.</summary>
+    public void VerifyCheck(CandidateVerificationCheck check, string? value, Guid modifiedBy)
+    {
+        var trimmed = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+        switch (check)
+        {
+            case CandidateVerificationCheck.Aadhar:
+                AadharNumber = trimmed ?? AadharNumber;
+                IsAadharValidated = true;
+                break;
+            case CandidateVerificationCheck.Voter:
+                VoterNumber = trimmed ?? VoterNumber;
+                IsVoterValited = true;
+                break;
+            case CandidateVerificationCheck.Pan:
+                Pan = trimmed?.ToUpperInvariant() ?? Pan;
+                IsPanValidated = true;
+                break;
+            case CandidateVerificationCheck.Mobile:
+                MobileNo = trimmed ?? MobileNo;
+                IsMobileValidated = true;
+                break;
+            case CandidateVerificationCheck.Uan:
+                Uan = trimmed ?? Uan;
+                IsUanVerified = true;
+                break;
+            case CandidateVerificationCheck.CreditBureau:
+                CreditBureauReportLink = trimmed ?? CreditBureauReportLink;
+                IsCreditBureauChecked = true;
+                break;
+        }
 
         ModifiedBy = modifiedBy;
         ModifiedOn = DateTime.UtcNow;
@@ -502,3 +542,15 @@ public record CandidateDetails(
     string? VoterNumber,
     string? Pan,
     string? Uan);
+
+/// <summary>A single candidate verification check, verified one at a time from the Candidate Verification form.</summary>
+[JsonConverter(typeof(JsonStringEnumConverter<CandidateVerificationCheck>))]
+public enum CandidateVerificationCheck
+{
+    Aadhar,
+    Voter,
+    Pan,
+    Mobile,
+    Uan,
+    CreditBureau,
+}

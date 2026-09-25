@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using QubeFin.Hrms.Application.InterviewProcess.Services;
@@ -23,6 +23,7 @@ public static class DependencyInjection
 
         services.Configure<MailSettings>(configuration.GetSection("MailSettings"));
         services.AddScoped<ICandidateLetterMailer, CandidateLetterMailer>();
+        services.AddScoped<IPanelInvitationMailer, PanelInvitationMailer>();
 
         return services;
     }

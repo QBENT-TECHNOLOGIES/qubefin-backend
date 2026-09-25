@@ -165,7 +165,7 @@ namespace QubeFin.Report.Api.Endpoints
                 else if (company.Value.companyId == Guid.Parse(configuration["Company:WegroBC"]))
                 {
                     var command = new GenerateSSRSReportsCommand(
-                    "Rpt_WegroBC_WelcomeLetter",
+                    "Rpt_WeegroBC_WelcomeLetter",
                     "PDF",
                     new Dictionary<string, string>
                     {

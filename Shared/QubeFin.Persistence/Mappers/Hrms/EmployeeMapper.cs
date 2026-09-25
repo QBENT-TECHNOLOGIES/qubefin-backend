@@ -26,8 +26,8 @@ public static class EmployeeMapper
             entity.CreatedBy,
             entity.CreatedDate,
             entity.LastModifiedBy,
-            entity.LastModifiedOn
-            //entity.CandidateId
+            entity.LastModifiedOn,
+            entity.CandidateId
         );
     }
 
@@ -37,7 +37,8 @@ public static class EmployeeMapper
         {
             Id = employee.Id,
             Code = employee.Code,
-            //CandidateId = employee.CandidateId,
+            // Updates replace the whole row, so the candidate link must be written back every time.
+            CandidateId = employee.CandidateId,
 
             Salutation = employee.PersonalInfo.Salutation,
             FirstName = employee.PersonalInfo.FirstName,

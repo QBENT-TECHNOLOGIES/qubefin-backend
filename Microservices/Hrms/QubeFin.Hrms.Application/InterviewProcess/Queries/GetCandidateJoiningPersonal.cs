@@ -26,12 +26,11 @@ internal sealed class GetCandidateJoiningPersonalQueryHandler(QubeFinDataContext
             return new RecordNotFoundError("Candidate not found.");
         }
 
-        //var employeeId = await context.TblEmployees
-        //    .AsNoTracking()
-        //    .Where(x => x.CandidateId == request.CandidateId)
-        //    .Select(x => (Guid?)x.Id)
-        //    .FirstOrDefaultAsync(cancellationToken);
-        var employeeId = null as Guid?;
+        var employeeId = await context.TblEmployees
+            .AsNoTracking()
+            .Where(x => x.CandidateId == request.CandidateId)
+            .Select(x => (Guid?)x.Id)
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (employeeId is null)
         {

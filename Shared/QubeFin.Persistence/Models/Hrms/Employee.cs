@@ -88,10 +88,12 @@
             AddressInfo presentAddressInfo,
             AddressInfo permanentAddressInfo,
             PayrollInfo payrollInfo,
-            Guid createdBy)
+            Guid createdBy,
+            Guid? candidateId = null)
         {
             return new Employee
             {
+                CandidateId = candidateId,
                 Id = id,
                 Code = code,
                 PersonalInfo = personalInfo,

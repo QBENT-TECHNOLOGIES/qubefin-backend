@@ -9,6 +9,7 @@ using QubeFin.Hrms.Application.InterviewProcess.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Entities;
+using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
@@ -48,6 +49,7 @@ public record SaveCandidateJoiningPersonalResponse(Guid EmployeeId, string? Mess
 internal sealed class SaveCandidateJoiningPersonalCommandHandler(
     ICandidateRepository candidateRepository,
     IFileStorageRepository fileStorageRepository,
+    IEmployeeRepository employeeRepository,
     IUnitOfWork unitOfWork,
     QubeFinDataContext context,
     ISender sender) : IRequestHandler<SaveCandidateJoiningPersonalCommand, Result<SaveCandidateJoiningPersonalResponse>>
@@ -72,15 +74,29 @@ internal sealed class SaveCandidateJoiningPersonalCommandHandler(
 
         if (existingEmployeeId is null)
         {
-            var created = await sender.Send(new CreateEmployeeCommand(p.Code, p.Salutation, p.FirstName, p.MiddleName, p.LastName, p.FatherName, p.MotherName,
-                p.HusbandName, p.DateOfBirth, p.Gender, p.Religion, p.Caste, p.Nationality, p.BloodGroup, p.DisablityType, p.MaritalStatus, request.UserId), cancellationToken);
-            if (created.IsFailed)
+            var existingEmployee = await employeeRepository.GetExsitingEmployeeByCode(null, p.Code);
+            if (existingEmployee)
             {
-                return Result.Fail(created.Errors);
+                return new ValidationError("Employee already exist with same code.");
             }
 
-            employeeId = created.Value!.Id;
-            message = created.Value.Message;
+            employeeId = Guid.NewGuid();
+            var employee = Employee.Create(
+                employeeId,
+                p.Code,
+                new PersonalInfo(p.Code, p.Salutation, p.FirstName, p.MiddleName, p.LastName, p.FatherName, p.MotherName, p.HusbandName,
+                    p.DateOfBirth, p.Gender, p.Religion, p.Caste, p.Nationality, p.BloodGroup, p.DisablityType, p.MaritalStatus),
+                new OfficialInfo(),
+                new ContactInfo(),
+                new AddressInfo(),
+                new AddressInfo(),
+                new PayrollInfo(),
+                request.UserId,
+                request.CandidateId);
+
+            // Saved together with the photo/signature rows below.
+            await employeeRepository.AddAsync(employee);
+            message = $"Employee created successfully with Name : {p.FirstName} {p.LastName}";
         }
         else
         {
@@ -93,14 +109,8 @@ internal sealed class SaveCandidateJoiningPersonalCommandHandler(
             }
 
             message = updated.Value;
-        }
-        context.ChangeTracker.Clear();
-
-        if (existingEmployeeId is null)
-        {
-            await context.TblEmployees
-                .Where(e => e.Id == employeeId)
-                .ExecuteUpdateAsync(s => s.SetProperty(e => e.CandidateId, request.CandidateId), cancellationToken);
+            // UpdateEmployeePersonalCommand saved through the same context - drop what it left tracked.
+            context.ChangeTracker.Clear();
         }
 
         await ReplaceDocument(employeeId, CandidateJoiningDocumentCategory.Photo, "Passport Size Photo", p.Photo, request.UserId, cancellationToken);

@@ -22,6 +22,15 @@ public class CandidateListDto
 
     /// <summary>Where the candidate is in the hiring flow - one of <see cref="CandidateInterviewStatus"/>.</summary>
     public string InterviewStatus { get; set; } = CandidateInterviewStatus.InterviewInProgress;
+
+    /// <summary>Files the list offers for download at the candidate's current <see cref="InterviewStatus"/>.</summary>
+    public List<CandidateDownloadFileDto> Downloads { get; set; } = [];
+}
+
+public class CandidateDownloadFileDto
+{
+    public string Name { get; set; } = string.Empty;
+    public string Url { get; set; } = string.Empty;
 }
 
 /// <summary>Stages shown in the candidate list. Each opens once the previous one is done: the HR assessment is

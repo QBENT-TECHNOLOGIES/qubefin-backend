@@ -2,6 +2,7 @@
 using FluentValidation;
 using MediatR;
 using QubeFin.Core.Results;
+using Microsoft.AspNetCore.Http;
 using QubeFin.Hrms.Application.InterviewProcess.Models;
 using QubeFin.Hrms.Application.InterviewProcess.Services;
 using QubeFin.Hrms.Persistence.Repositories;
@@ -11,7 +12,7 @@ using QubeFin.Persistence.Models.Hrms;
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
 /// <summary>Adds one or more panelists to a candidate's existing interview panel.</summary>
-public record AddInterviewPanelistsCommand(Guid CandidateId, List<PanelistScheduleDto> Panelists, Guid AddedBy) : IRequest<Result<string>>;
+public record AddInterviewPanelistsCommand(Guid CandidateId, List<PanelistScheduleDto> Panelists, Guid AddedBy, IFormFile? AcknowledgementFile = null) : IRequest<Result<string>>;
 
 public class AddInterviewPanelistsCommandValidator : AbstractValidator<AddInterviewPanelistsCommand>
 {
@@ -29,7 +30,7 @@ public class AddInterviewPanelistsCommandValidator : AbstractValidator<AddInterv
     }
 }
 
-internal sealed class AddInterviewPanelistsCommandHandler(IInterviewPanelRepository panelRepository, ICandidateRepository candidateRepository, IUnitOfWork unitOfWork) : IRequestHandler<AddInterviewPanelistsCommand, Result<string>>
+internal sealed class AddInterviewPanelistsCommandHandler(IInterviewPanelRepository panelRepository, ICandidateRepository candidateRepository, IUnitOfWork unitOfWork, IPanelInvitationMailer panelInvitationMailer) : IRequestHandler<AddInterviewPanelistsCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(AddInterviewPanelistsCommand request, CancellationToken cancellationToken)
     {
@@ -83,6 +84,20 @@ internal sealed class AddInterviewPanelistsCommandHandler(IInterviewPanelReposit
 
         await panelRepository.AddRangeAsync(newPanelists, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // The panel is already saved - a mail failure is reported in the message rather than failing the request.
+        try
+        {
+            var missingEmail = await panelInvitationMailer.SendInvitationsAsync(candidate, request.Panelists, request.AcknowledgementFile, cancellationToken);
+            if (missingEmail > 0)
+            {
+                return Result.Ok($"Panelist(s) added successfully. Invitation mail was not sent to {missingEmail} panelist(s) without an email address.");
+            }
+        }
+        catch (Exception)
+        {
+            return Result.Ok("Panelist(s) added successfully. However, the invitation mail could not be sent to the panelists.");
+        }
 
         return Result.Ok("Panelist(s) added successfully.");
     }

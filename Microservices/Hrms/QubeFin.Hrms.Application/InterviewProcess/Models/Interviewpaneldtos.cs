@@ -1,6 +1,26 @@
-﻿namespace QubeFin.Hrms.Application.InterviewProcess.Models;
+﻿using Microsoft.AspNetCore.Http;
+
+namespace QubeFin.Hrms.Application.InterviewProcess.Models;
 
 public record PanelistScheduleDto(Guid EmployeeId, DateOnly ScheduledDate, TimeOnly ScheduledTime);
+
+/// <summary>Multipart body for scheduling / adding panelists: the panelists plus the interview panel acknowledgement
+/// PDF emailed to each of them.</summary>
+public class InterviewPanelScheduleRequest
+{
+    public Guid CandidateId { get; set; }
+    public List<PanelistScheduleFormDto> Panelists { get; set; } = [];
+    public IFormFile? File { get; set; }
+
+    public List<PanelistScheduleDto> ToPanelists() => Panelists.Select(p => new PanelistScheduleDto(p.EmployeeId, p.ScheduledDate, p.ScheduledTime)).ToList();
+}
+
+public class PanelistScheduleFormDto
+{
+    public Guid EmployeeId { get; set; }
+    public DateOnly ScheduledDate { get; set; }
+    public TimeOnly ScheduledTime { get; set; }
+}
 
 public record AssessmentSubmitDto(
     int? AppearanceAttitudeRating,

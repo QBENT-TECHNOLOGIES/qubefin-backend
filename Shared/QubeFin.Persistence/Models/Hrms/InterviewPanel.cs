@@ -233,6 +233,15 @@ public class InterviewPanel
         ModifiedOn = DateTime.UtcNow;
     }
 
+    /// <summary>Moves the panelist's slot when the candidate's interview date/time changes.</summary>
+    public void Reschedule(DateOnly scheduledDate, TimeOnly scheduledTime, Guid modifiedBy)
+    {
+        ScheduledDate = scheduledDate;
+        ScheduledTime = scheduledTime;
+        ModifiedBy = modifiedBy;
+        ModifiedOn = DateTime.UtcNow;
+    }
+
     /// <summary>Marks whether the panelist actually showed up on interview day.</summary>
     public void MarkAttendance(bool attended, Guid modifiedBy)
     {
