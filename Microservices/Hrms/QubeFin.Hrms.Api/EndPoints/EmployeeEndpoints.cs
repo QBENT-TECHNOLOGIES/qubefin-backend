@@ -456,6 +456,20 @@ public class EmployeeEndpoints : IEndpoint
         })
         .WithSummary("Save Employee Gross Salary")
         .RequireAuthorization();
+
+        app.MapPost("employees/get-salary-structure-by-gross", async (ClaimsPrincipal principal, [FromBody] GetSalaryStructureByGrossRequest request, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+
+            var query = new GetSalaryStructureByGrossQuery(request.EmployeeId, request.SalaryGradeId, request.GrossSalary, request.FixedPFamount);
+            var result = await sender.Send(query);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get Salary Structure By Gross")
+        .RequireAuthorization();
         #endregion
     }
 }
