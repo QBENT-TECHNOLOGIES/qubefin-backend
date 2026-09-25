@@ -32,6 +32,11 @@ namespace QubeFin.Hrms.Application.Employees.Models
     }
     public class EmployeeGrossSalaryStructureResponse
     {
+        public string? EmployeeName { get; set; }
+        public string? EmployeeCode { get; set; }
+        public string? OrganizationUnitName { get; set; }
+        public string? DesignationTitle { get; set; }
+        public string? SalaryGradeName { get; set; }
         public List<EmployeeGrossSalaryComponent> EarningHeads { get; set; } = new List<EmployeeGrossSalaryComponent>();
         public List<EmployeeGrossSalaryComponent> DeductionHeads { get; set; } = new List<EmployeeGrossSalaryComponent>();
     }

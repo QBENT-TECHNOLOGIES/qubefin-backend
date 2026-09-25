@@ -464,7 +464,7 @@ public class EmployeeEndpoints : IEndpoint
                 return Results.Forbid();
             }
 
-            var query = new GetSalaryStructureByGrossQuery(request.EmployeeId, request.SalaryGradeId, request.GrossSalary, request.FixedPFamount);
+            var query = new GetSalaryStructureByGrossQuery(request.EmployeeId, request.SalaryGradeId, request.GrossSalary, request.PfAmount);
             var result = await sender.Send(query);
             return result.ToHttpResult();
         })

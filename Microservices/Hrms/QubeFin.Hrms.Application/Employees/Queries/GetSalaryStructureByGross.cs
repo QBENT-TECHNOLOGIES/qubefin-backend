@@ -41,21 +41,27 @@ internal sealed class GetSalaryStructureByGrossQueryHandler(IEmployeeRepository 
             .Where(c => string.Equals(c.Category, DeductionCategory, StringComparison.OrdinalIgnoreCase))
             .OrderBy(o => o.DisplayOrder)
             .ToList();
+        var employeeDetails = salaryStructure != null && salaryStructure.Any() ? salaryStructure.First() : null;
         var response = new EmployeeGrossSalaryStructureResponse
         {
+            EmployeeName = employeeDetails?.EmployeeName,
+            EmployeeCode = employeeDetails?.EmployeeCode,
+            OrganizationUnitName = employeeDetails?.OrganizationUnitName,
+            DesignationTitle = employeeDetails?.DesignationTitle,
+            SalaryGradeName = employeeDetails?.SalaryGradeName,
             EarningHeads = earnings.Select(c => new EmployeeGrossSalaryComponent
             {
                 CategoryName = c.Category,
                 SalaryComponentName = c.SalaryComponentName,
                 Percentage = c.Percentage,
-                Amount = c.Percentage
+                Amount = c.MonthlyAmount
             }).ToList(),
             DeductionHeads = deductions.Select(c => new EmployeeGrossSalaryComponent
             {
                 CategoryName = c.Category,
                 SalaryComponentName = c.SalaryComponentName,
                 Percentage = c.Percentage,
-                Amount = c.Percentage
+                Amount = c.MonthlyAmount
             }).ToList()
         };
         return Result.Ok(response);

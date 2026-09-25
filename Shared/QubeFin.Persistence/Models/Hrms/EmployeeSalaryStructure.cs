@@ -6,6 +6,11 @@ namespace QubeFin.Persistence.Models.Hrms
 {
     public class EmployeeSalaryStructure
     {
+        public string? EmployeeName { get; set; }
+        public string? EmployeeCode { get; set; }
+        public string? OrganizationUnitName { get; set; }
+        public string? DesignationTitle { get; set; }
+        public string? SalaryGradeName { get; set; }
         public Guid SalaryComponentId { get; set; }
         public string SalaryComponentName { get; set; } = string.Empty;
         public decimal Percentage { get; set; }
