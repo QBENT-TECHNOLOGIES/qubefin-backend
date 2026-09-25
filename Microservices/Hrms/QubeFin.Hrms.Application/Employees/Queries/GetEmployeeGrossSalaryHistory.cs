@@ -76,6 +76,7 @@ internal sealed class GetEmployeeGrossSalaryHistoryQueryHandler(QubeFinDataConte
             Id = currentGrossSalary?.Id,
             SalaryGradeId = salaryGradeId,
             GrossSalary = currentGrossSalary?.GrossSalary,
+            //PfAmount = currentGrossSalary?.PfAmount,
             EffectiveFrom = currentGrossSalary?.EffectiveFrom,
             EffectiveTill = currentGrossSalary?.EffectiveTill
         };

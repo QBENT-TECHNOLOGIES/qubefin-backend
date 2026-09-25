@@ -24,7 +24,7 @@ public interface IEmployeeRepository
     Task TransferEntry(Guid employeeId, Guid organisationUnitId, Guid designationId, Guid salaryGradeId, decimal grossSalary, CancellationToken cancellationToken);
     Task<AddressUnit?> GetAdressUnit(Guid administrativeUnitId);
     Task TransferEmployee(Guid EmployeeId, Guid OrganisationUnitId, Guid DesignationId, Guid SalaryGradeId, decimal GrossSalary, CancellationToken cancellationToken);
-    Task SaveGrossSalary(Guid EmployeeId, Guid SalaryGradeId, decimal GrossSalary, DateOnly EffectiveFrom, CancellationToken cancellationToken);
+    Task SaveGrossSalary(Guid EmployeeId, Guid SalaryGradeId, decimal GrossSalary, decimal PfAmount, DateOnly EffectiveFrom, CancellationToken cancellationToken);
 }
 public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepository
 {
@@ -317,7 +317,7 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
             cancellationToken);
     }
 
-    public async Task SaveGrossSalary(Guid employeeId, Guid salaryGradeId, decimal grossSalary, DateOnly effectiveFrom, CancellationToken cancellationToken)
+    public async Task SaveGrossSalary(Guid employeeId, Guid salaryGradeId, decimal grossSalary, decimal pfAmount, DateOnly effectiveFrom, CancellationToken cancellationToken)
     {
         var employee = await context.TblEmployees.AsNoTracking().FirstOrDefaultAsync(e => e.Id == employeeId, cancellationToken);
 
@@ -366,6 +366,7 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
                         Id = Guid.NewGuid(),
                         EmployeeId = employeeId,
                         GrossSalary = grossSalary,
+                        //PfAmount = pfAmount,
                         EffectiveFrom = effectiveFrom,
                         EffectiveTill = null
                     },
