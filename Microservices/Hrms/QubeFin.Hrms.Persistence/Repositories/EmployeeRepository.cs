@@ -1,8 +1,4 @@
-﻿using FluentResults;
-using Microsoft.AspNetCore.Connections;
-using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
-using QubeFin.Core.Results;
+﻿using Microsoft.EntityFrameworkCore;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Mappers.App;
@@ -24,7 +20,8 @@ public interface IEmployeeRepository
     Task TransferEntry(Guid employeeId, Guid organisationUnitId, Guid designationId, Guid salaryGradeId, decimal grossSalary, CancellationToken cancellationToken);
     Task<AddressUnit?> GetAdressUnit(Guid administrativeUnitId);
     Task TransferEmployee(Guid EmployeeId, Guid OrganisationUnitId, Guid DesignationId, Guid SalaryGradeId, decimal GrossSalary, CancellationToken cancellationToken);
-    Task SaveGrossSalary(Guid EmployeeId, Guid SalaryGradeId, decimal GrossSalary, DateOnly EffectiveFrom, CancellationToken cancellationToken);
+    Task SaveGrossSalary(Guid EmployeeId, Guid SalaryGradeId, decimal GrossSalary, decimal? PfAmount, DateOnly EffectiveFrom, CancellationToken cancellationToken);
+    Task<List<EmployeeSalaryStructure>> GetSalaryStructureByGrossAsync(Guid employeeId, Guid salaryGradeId, decimal grossSalary, decimal? fixedPFAmount, CancellationToken cancellationToken);
 }
 public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepository
 {
@@ -317,7 +314,7 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
             cancellationToken);
     }
 
-    public async Task SaveGrossSalary(Guid employeeId, Guid salaryGradeId, decimal grossSalary, DateOnly effectiveFrom, CancellationToken cancellationToken)
+    public async Task SaveGrossSalary(Guid employeeId, Guid salaryGradeId, decimal grossSalary, decimal? pfAmount, DateOnly effectiveFrom, CancellationToken cancellationToken)
     {
         var employee = await context.TblEmployees.AsNoTracking().FirstOrDefaultAsync(e => e.Id == employeeId, cancellationToken);
 
@@ -366,6 +363,7 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
                         Id = Guid.NewGuid(),
                         EmployeeId = employeeId,
                         GrossSalary = grossSalary,
+                        PfAmount = pfAmount,
                         EffectiveFrom = effectiveFrom,
                         EffectiveTill = null
                     },
@@ -395,6 +393,19 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
             await transaction.RollbackAsync(cancellationToken);
             throw;
         }
+    }
+
+    public async Task<List<EmployeeSalaryStructure>> GetSalaryStructureByGrossAsync(Guid employeeId, Guid salaryGradeId, decimal grossSalary, decimal? fixedPFAmount, CancellationToken cancellationToken)
+    {
+        var result = await context.Database.SqlQuery<EmployeeSalaryStructure>($"""
+            EXEC [Payroll].[USP_GetSalaryStructure]
+                @EmployeeId = {employeeId},
+                @SalaryGradeId = {salaryGradeId},
+                @GrossSalary = {grossSalary},
+                @FixedPFamount = {fixedPFAmount}
+            """).ToListAsync(cancellationToken);
+
+        return result;
     }
 
 }

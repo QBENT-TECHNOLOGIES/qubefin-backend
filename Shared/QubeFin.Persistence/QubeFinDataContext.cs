@@ -228,6 +228,7 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<WegrowConsolidateEmployee> WegrowConsolidateEmployees { get; set; }
 
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<DboTempEmpBranch>(entity =>
@@ -1176,6 +1177,7 @@ public partial class QubeFinDataContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.GrossSalary).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.PfAmount).HasColumnType("numeric(18, 2)");
 
             entity.HasOne(d => d.Employee).WithMany(p => p.TblEmployeeGrossSalaries)
                 .HasForeignKey(d => d.EmployeeId)

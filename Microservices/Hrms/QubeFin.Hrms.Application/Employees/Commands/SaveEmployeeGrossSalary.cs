@@ -34,7 +34,7 @@ internal sealed class SaveEmployeeGrossSalaryCommandHandler(IEmployeeRepository 
     {
         try
         {
-            await employeeRepository.SaveGrossSalary(request.employeeGrossSalary.EmployeeId, request.employeeGrossSalary.SalaryGradeId, request.employeeGrossSalary.GrossSalary, request.employeeGrossSalary.EffectiveFrom, cancellationToken);
+            await employeeRepository.SaveGrossSalary(request.employeeGrossSalary.EmployeeId, request.employeeGrossSalary.SalaryGradeId, request.employeeGrossSalary.GrossSalary, request.employeeGrossSalary.PfAmount, request.employeeGrossSalary.EffectiveFrom, cancellationToken);
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
             return Result.Ok($"Employee gross salary saved successfully.");
