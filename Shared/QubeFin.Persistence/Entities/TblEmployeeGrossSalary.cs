@@ -15,5 +15,7 @@ public partial class TblEmployeeGrossSalary
 
     public decimal GrossSalary { get; set; }
 
+    public decimal? PfAmount { get; set; }
+
     public virtual TblEmployee Employee { get; set; } = null!;
 }
