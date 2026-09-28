@@ -151,6 +151,8 @@ public partial class TblInterviewCandidate
 
     public virtual TblOrganizationUnit? PostedOrganizationUnit { get; set; }
 
+    public virtual ICollection<TblEmployee> TblEmployees { get; set; } = new List<TblEmployee>();
+
     public virtual ICollection<TblInterviewPanel> TblInterviewPanels { get; set; } = new List<TblInterviewPanel>();
 
     public virtual TblOrganizationUnit? VenueOrganizationUnit { get; set; }

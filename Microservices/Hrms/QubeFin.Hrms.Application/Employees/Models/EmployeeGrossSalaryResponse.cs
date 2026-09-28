@@ -27,6 +27,24 @@ namespace QubeFin.Hrms.Application.Employees.Models
         public Guid EmployeeId { get; set; }
         public Guid SalaryGradeId { get; set; }
         public decimal GrossSalary { get; set; } = 0;
+        public decimal? PfAmount { get; set; }
         public DateOnly EffectiveFrom { get; set; }
+    }
+    public class EmployeeGrossSalaryStructureResponse
+    {
+        public string? EmployeeName { get; set; }
+        public string? EmployeeCode { get; set; }
+        public string? OrganizationUnitName { get; set; }
+        public string? DesignationTitle { get; set; }
+        public string? SalaryGradeName { get; set; }
+        public List<EmployeeGrossSalaryComponent> EarningHeads { get; set; } = new List<EmployeeGrossSalaryComponent>();
+        public List<EmployeeGrossSalaryComponent> DeductionHeads { get; set; } = new List<EmployeeGrossSalaryComponent>();
+    }
+    public class EmployeeGrossSalaryComponent
+    {
+        public string CategoryName { get; set; } = string.Empty;
+        public string SalaryComponentName { get; set; } = string.Empty;
+        public decimal Percentage { get; set; }
+        public decimal Amount { get; set; }
     }
 }

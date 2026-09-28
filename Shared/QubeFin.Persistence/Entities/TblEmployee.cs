@@ -139,6 +139,8 @@ public partial class TblEmployee
 
     public bool IsPayrollActive { get; set; }
 
+    public Guid? CandidateId { get; set; }
+
     public Guid? CreatedBy { get; set; }
 
     public DateTime? CreatedDate { get; set; }
@@ -148,6 +150,8 @@ public partial class TblEmployee
     public Guid? LastModifiedBy { get; set; }
 
     public virtual TblFinancialInstitute? Bank { get; set; }
+
+    public virtual TblInterviewCandidate? Candidate { get; set; }
 
     public virtual TblCompany? Company { get; set; }
 

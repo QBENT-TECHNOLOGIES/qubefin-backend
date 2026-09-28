@@ -228,6 +228,7 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<WegrowConsolidateEmployee> WegrowConsolidateEmployees { get; set; }
 
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<DboTempEmpBranch>(entity =>
@@ -1035,6 +1036,10 @@ public partial class QubeFinDataContext : DbContext
                 .HasForeignKey(d => d.BankId)
                 .HasConstraintName("FK_Tbl_Employee_Tbl_FinancialInstitute");
 
+            entity.HasOne(d => d.Candidate).WithMany(p => p.TblEmployees)
+                .HasForeignKey(d => d.CandidateId)
+                .HasConstraintName("FK_Tbl_Employee_Tbl_InterviewCandidate");
+
             entity.HasOne(d => d.Company).WithMany(p => p.TblEmployees)
                 .HasForeignKey(d => d.CompanyId)
                 .HasConstraintName("FK_Tbl_Employee_Tbl_Company");
@@ -1172,6 +1177,7 @@ public partial class QubeFinDataContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.GrossSalary).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.PfAmount).HasColumnType("numeric(18, 2)");
 
             entity.HasOne(d => d.Employee).WithMany(p => p.TblEmployeeGrossSalaries)
                 .HasForeignKey(d => d.EmployeeId)
