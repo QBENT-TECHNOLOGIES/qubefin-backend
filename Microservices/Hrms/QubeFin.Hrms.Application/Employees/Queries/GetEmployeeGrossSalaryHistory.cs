@@ -76,6 +76,7 @@ internal sealed class GetEmployeeGrossSalaryHistoryQueryHandler(QubeFinDataConte
             Id = currentGrossSalary?.Id,
             SalaryGradeId = salaryGradeId,
             GrossSalary = currentGrossSalary?.GrossSalary,
+            PfAmount = currentGrossSalary?.PfAmount,
             EffectiveFrom = currentGrossSalary?.EffectiveFrom,
             EffectiveTill = currentGrossSalary?.EffectiveTill
         };
@@ -86,6 +87,7 @@ internal sealed class GetEmployeeGrossSalaryHistoryQueryHandler(QubeFinDataConte
             Id = m.Id,
             SalaryGradeId = salaryGradeId,
             GrossSalary = m.GrossSalary,
+            PfAmount = m.PfAmount,
             EffectiveFrom = m.EffectiveFrom,
             EffectiveTill = m.EffectiveTill
         }).OrderByDescending(m => m.EffectiveFrom).ToList();
