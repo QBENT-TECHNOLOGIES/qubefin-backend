@@ -8,7 +8,7 @@ namespace QubeFin.Persistence.Mappers.Global
         public static Company ToDomain(this Entity entity)
         {
             return new Company
-            (entity.Id, entity.Name);
+            (entity.Id, entity.Name.Trim());
         }
     }
 }
