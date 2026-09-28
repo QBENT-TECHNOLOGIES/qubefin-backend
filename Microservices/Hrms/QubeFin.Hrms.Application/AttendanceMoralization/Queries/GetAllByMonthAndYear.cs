@@ -39,6 +39,7 @@ internal sealed class GetAllByMonthAndYearQueryHandler(QubeFinDataContext contex
             .Include(e => e.OrganizationUnit)
             .ThenInclude(e => e.Company)
             .Include(e => e.Employee)
+            .Where(e => e.LopYear == request.SearchParam.Year && e.LopMonth == request.SearchParam.Month)
         .AsNoTracking().AsQueryable();
 
         if (request.SearchParam.CompanyId != null && request.SearchParam.CompanyId != Guid.Empty)
