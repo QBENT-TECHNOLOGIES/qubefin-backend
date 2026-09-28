@@ -72,7 +72,7 @@ public class InterviewPanelEndpoint : IEndpoint
         #endregion
 
 
-        app.MapPost("interview-panels/{candidateId:guid}/acknowledge", async (Guid candidateId, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        app.MapGet("interview-panels/acknowledge/{candidateId:guid}", async (Guid candidateId, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)
             {
