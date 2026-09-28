@@ -77,6 +77,18 @@ public class CandidateEndpoints : IEndpoint
             return result.ToHttpResult();
         }).WithSummary("Set whether the candidate's interview was Online or Offline").WithTags("Candidates").RequireAuthorization();
 
+        // HR only - checked in the handler against the caller's employee (403 otherwise).
+        app.MapPost("candidates/{id:guid}/reject", async (Guid id, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Forbid();
+            }
+
+            var result = await sender.Send(new RejectCandidateCommand(id, principal.Identity.GetEmployeeId(), principal.Identity.GetUserId()), cancellationToken);
+            return result.ToHttpResult();
+        }).WithSummary("Reject the candidate (HR only) - stops the interview workflow").WithTags("Candidates").RequireAuthorization();
+
         #endregion
 
         #region SEND MAIL & RECEIVE FLAG UPDATE

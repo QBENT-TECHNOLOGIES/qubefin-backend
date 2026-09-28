@@ -4,11 +4,12 @@ using MediatR;
 using QubeFin.Core.Results;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
+using QubeFin.Hrms.Application.InterviewProcess.Services;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
 /// <summary>Removes an existing panelist from a candidate's interview panel.</summary>
-public record RemoveInterviewPanelistCommand(Guid CandidateId, Guid EmployeeId, Guid RemovedBy) : IRequest<Result<string>>;
+public record RemoveInterviewPanelistCommand(Guid CandidateId, Guid EmployeeId, Guid RemovedBy) : IRequest<Result<string>>, ICandidateWorkflowCommand;
 
 public class RemoveInterviewPanelistCommandValidator : AbstractValidator<RemoveInterviewPanelistCommand>
 {

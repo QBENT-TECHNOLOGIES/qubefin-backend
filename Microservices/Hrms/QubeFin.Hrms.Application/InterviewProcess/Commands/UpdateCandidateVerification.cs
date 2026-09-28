@@ -6,6 +6,7 @@ using QubeFin.Hrms.Application.InterviewProcess.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Hrms;
+using QubeFin.Hrms.Application.InterviewProcess.Services;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
@@ -24,7 +25,7 @@ public record UpdateCandidateVerificationCommand(
     bool IsUanVerified,
     bool IsCreditBureauChecked,
     string? CreditBureauReportLink,
-    Guid ModifiedBy) : IRequest<Result<CandidateVerificationDto>>;
+    Guid ModifiedBy) : IRequest<Result<CandidateVerificationDto>>, ICandidateWorkflowCommand;
 
 public class UpdateCandidateVerificationCommandValidator : AbstractValidator<UpdateCandidateVerificationCommand>
 {

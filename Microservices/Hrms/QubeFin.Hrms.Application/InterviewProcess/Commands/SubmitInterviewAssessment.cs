@@ -5,11 +5,12 @@ using QubeFin.Core.Results;
 using QubeFin.Hrms.Application.InterviewProcess.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
-using QubeFin.Persistence.Models.Hrms;
+using QubeFin.Persistence.Models.Hrms;
+using QubeFin.Hrms.Application.InterviewProcess.Services;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
-public record SubmitInterviewAssessmentCommand(Guid CandidateId, Guid EmployeeId, AssessmentSubmitDto Assessment, Guid SubmittedBy) : IRequest<Result<string>>;
+public record SubmitInterviewAssessmentCommand(Guid CandidateId, Guid EmployeeId, AssessmentSubmitDto Assessment, Guid SubmittedBy) : IRequest<Result<string>>, ICandidateWorkflowCommand;
 
 public class SubmitInterviewAssessmentCommandValidator : AbstractValidator<SubmitInterviewAssessmentCommand>
 {

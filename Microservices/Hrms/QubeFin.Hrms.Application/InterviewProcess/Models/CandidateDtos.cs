@@ -34,12 +34,14 @@ public class CandidateDownloadFileDto
 }
 
 /// <summary>Stages shown in the candidate list. Each opens once the previous one is done: the HR assessment is
-/// submitted, then the offer letter is received, then the signed joining letter is uploaded. A candidate HR did
-/// not recommend stops at <see cref="Rejected"/>.</summary>
+/// submitted, then the offer letter is received, then the signed joining letter is uploaded. The workflow stops
+/// at <see cref="Rejected"/> when HR rejects the candidate, or at <see cref="NotRecommended"/> when HR submits
+/// the assessment as 'Not Recommended'.</summary>
 public static class CandidateInterviewStatus
 {
     public const string InterviewInProgress = "Interview in Progress";
     public const string Rejected = "Rejected";
+    public const string NotRecommended = "Not Recommended";
     public const string VerificationInProgress = "Candidate Verification in Progress";
     public const string JoiningInProgress = "Joining in Progress";
     public const string Joined = "Joined";

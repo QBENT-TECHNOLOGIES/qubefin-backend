@@ -12,7 +12,7 @@ using QubeFin.Persistence.Models.Hrms;
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
 /// <summary>Adds one or more panelists to a candidate's existing interview panel.</summary>
-public record AddInterviewPanelistsCommand(Guid CandidateId, List<PanelistScheduleDto> Panelists, Guid AddedBy, IFormFile? AcknowledgementFile = null) : IRequest<Result<string>>;
+public record AddInterviewPanelistsCommand(Guid CandidateId, List<PanelistScheduleDto> Panelists, Guid AddedBy, IFormFile? AcknowledgementFile = null) : IRequest<Result<string>>, ICandidateWorkflowCommand;
 
 public class AddInterviewPanelistsCommandValidator : AbstractValidator<AddInterviewPanelistsCommand>
 {

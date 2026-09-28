@@ -5,7 +5,8 @@ using QubeFin.Core.Results;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Hrms;
-using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
+using QubeFin.Hrms.Application.InterviewProcess.Services;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
@@ -13,7 +14,7 @@ namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 /// Verifies one check from the Candidate Verification form ("Verify" button on that row). There is no external
 /// verification API yet, so this sets the check's flag on the candidate and saves the value HR entered.
 /// </summary>
-public record VerifyCandidateCheckCommand(Guid CandidateId, CandidateVerificationCheck Check, string? Value, Guid ModifiedBy) : IRequest<Result<CandidateVerificationDto>>;
+public record VerifyCandidateCheckCommand(Guid CandidateId, CandidateVerificationCheck Check, string? Value, Guid ModifiedBy) : IRequest<Result<CandidateVerificationDto>>, ICandidateWorkflowCommand;
 
 public record VerifyCandidateCheckRequest(CandidateVerificationCheck Check, string? Value);
 

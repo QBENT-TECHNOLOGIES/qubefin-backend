@@ -10,7 +10,10 @@ using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
-public record UpdateCandidateCommand(Guid Id, CandidateCreateUpdateDto Candidate, Guid ModifiedBy) : IRequest<Result<string>>;
+public record UpdateCandidateCommand(Guid Id, CandidateCreateUpdateDto Candidate, Guid ModifiedBy) : IRequest<Result<string>>, ICandidateWorkflowCommand
+{
+    Guid ICandidateWorkflowCommand.CandidateId => Id;
+}
 
 public class UpdateCandidateCommandValidator : AbstractValidator<UpdateCandidateCommand>
 {

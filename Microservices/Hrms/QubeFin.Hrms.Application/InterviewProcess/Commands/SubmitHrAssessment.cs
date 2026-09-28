@@ -14,7 +14,7 @@ namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 /// have already submitted their own assessment (mirrors the "IsShowHrAssessmentButton" gate computed by
 /// USP_GetInterviewCandidateById). TotalRatingPoint/RatingStatus are computed here from the average of the
 /// panelists' ratings - HR does not type these in.</summary>
-public record SubmitHrAssessmentCommand(Guid CandidateId, Guid HrEmployeeId, HrAssessmentDecisionDto Decision, Guid SubmittedBy) : IRequest<Result<string>>;
+public record SubmitHrAssessmentCommand(Guid CandidateId, Guid HrEmployeeId, HrAssessmentDecisionDto Decision, Guid SubmittedBy) : IRequest<Result<string>>, ICandidateWorkflowCommand;
 
 public class SubmitHrAssessmentCommandValidator : AbstractValidator<SubmitHrAssessmentCommand>
 {

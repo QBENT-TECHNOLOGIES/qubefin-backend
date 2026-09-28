@@ -6,6 +6,7 @@ using QubeFin.Core.Results;
 using QubeFin.Hrms.Application.InterviewProcess.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
+using QubeFin.Hrms.Application.InterviewProcess.Services;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
@@ -13,7 +14,7 @@ namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 /// Uploads the candidate's signed/returned joining letter and stores the returned file reference on the
 /// candidate record. Mirrors <see cref="UploadCandidateInterviewFormatCommand"/>.
 /// </summary>
-public record UploadJoiningLetterCommand(Guid CandidateId, CandidateJoiningLetterUploadRequest Upload, Guid ModifiedBy) : IRequest<Result<string>>;
+public record UploadJoiningLetterCommand(Guid CandidateId, CandidateJoiningLetterUploadRequest Upload, Guid ModifiedBy) : IRequest<Result<string>>, ICandidateWorkflowCommand;
 
 public class UploadJoiningLetterCommandValidator : AbstractValidator<UploadJoiningLetterCommand>
 {

@@ -9,7 +9,8 @@ using QubeFin.Hrms.Application.InterviewProcess.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Entities;
-using QubeFin.Persistence.Models.Hrms;
+using QubeFin.Persistence.Models.Hrms;
+using QubeFin.Hrms.Application.InterviewProcess.Services;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
@@ -18,7 +19,7 @@ namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 /// information and links it to the candidate (Tbl_Employee.CandidateId); later saves update that
 /// employee. The photo and signature are stored as Tbl_EmployeeDocument rows.</summary>
 public record SaveCandidateJoiningPersonalCommand(Guid CandidateId, CandidateJoiningPersonalRequest Personal, Guid UserId)
-    : IRequest<Result<SaveCandidateJoiningPersonalResponse>>;
+    : IRequest<Result<SaveCandidateJoiningPersonalResponse>>, ICandidateWorkflowCommand;
 #endregion
 
 #region --- VALIDATION ---

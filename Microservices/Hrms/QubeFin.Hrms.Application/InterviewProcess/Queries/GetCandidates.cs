@@ -3,8 +3,10 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using QubeFin.Hrms.Application.InterviewProcess.Models;
+using QubeFin.Hrms.Application.InterviewProcess.Services;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Models.Hrms;
 using System.Globalization;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Queries;
@@ -21,14 +23,7 @@ internal sealed class GetCandidatesQueryHandler(QubeFinDataContext context, ICon
         var hrPostId = Guid.Parse(configuration["HrPost"]!);
 
         // Check whether logged-in employee is HR
-        var isHrEmployee = await context.TblDesignations
-            .AnyAsync(d =>
-                d.PostId == hrPostId &&
-                d.TblEmployeeDesignations.Any(ed =>
-                    ed.EmployeeId == request.employeeId &&
-                    ed.EffectiveTo == null
-                )
-            );
+        var isHrEmployee = await context.IsHrEmployeeAsync(hrPostId, request.employeeId, cancellationToken);
 
         var pageIndex = request.SearchParam.PageIndex < 0
             ? 0
@@ -111,9 +106,16 @@ internal sealed class GetCandidatesQueryHandler(QubeFinDataContext context, ICon
                 RecommendationStatus = c.RecommendationStatus ?? "Pending",
                 ReferenceNo = c.ReferenceNo,
                 // HR assessment counts as submitted once RecommendationStatus leaves 'Pending' - the same signal
-                // the HR Assessment form and USP_GetInterviewCandidateById use.
+                // the HR Assessment form and USP_GetInterviewCandidateById use. A stopped workflow (rejected, or
+                // submitted as 'Not Recommended') shows as stopped at whatever stage it had reached - the same
+                // rule as CandidateWorkflow.GetStoppedStatusAsync.
                 InterviewStatus = c.SignedJoiningLetterFile != null && c.SignedJoiningLetterFile != "" && c.TblEmployees.Any()
                     ? CandidateInterviewStatus.Joined
+                    : c.RecommendationStatus == CandidateWorkflow.Rejected
+                        ? CandidateInterviewStatus.Rejected
+                    : c.RecommendationStatus == CandidateWorkflow.NotRecommended &&
+                        c.TblInterviewPanels.Any(p => p.AssessmentType == InterviewPanel.HrAssessmentType && p.IsSubmitted)
+                        ? CandidateInterviewStatus.NotRecommended
                     : c.IsOfferLetterReceived
                         ? CandidateInterviewStatus.JoiningInProgress
                         : c.RecommendationStatus != null && c.RecommendationStatus != "" && c.RecommendationStatus != "Pending"

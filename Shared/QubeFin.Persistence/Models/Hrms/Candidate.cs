@@ -308,6 +308,17 @@ public class Candidate
         ModifiedOn = DateTime.UtcNow;
     }
 
+    /// <summary>HR rejects the candidate: the workflow stops here for good. Recorded as the 'Rejected'
+    /// RecommendationStatus (replacing whatever HR had recommended), with ModifiedBy/On as who and when.</summary>
+    public void Reject(Guid rejectedBy)
+    {
+        RecommendationStatus = RejectedRecommendationStatus;
+        ModifiedBy = rejectedBy;
+        ModifiedOn = DateTime.UtcNow;
+    }
+
+    public const string RejectedRecommendationStatus = "Rejected";
+
     /// <summary>Sets whether the interview was conducted Online or Offline. Editable on its own (e.g. from the
     /// HR Assessment form) rather than only via the full candidate update.</summary>
     public void SetInterviewMode(string interviewMode, Guid modifiedBy)

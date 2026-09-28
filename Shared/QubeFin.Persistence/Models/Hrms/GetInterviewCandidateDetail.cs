@@ -1,4 +1,6 @@
-﻿namespace QubeFin.Persistence.Models.Hrms
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace QubeFin.Persistence.Models.Hrms
 {
     public class GetInterviewCandidateDetail
     {
@@ -165,5 +167,18 @@
 
         /// <summary>How many interviewers (excluding HR's assessment row) have submitted their assessment.</summary>
         public int? InterviewerSubmittedCount { get; set; }
+
+        // Not returned by USP_GetInterviewCandidateById - GetCandidateById fills these from the candidate
+        // table after the procedure runs, so the procedure needs no change.
+
+        /// <summary>HR rejected the candidate (RecommendationStatus 'Rejected'). The workflow is stopped: no
+        /// further action is allowed.</summary>
+        [NotMapped]
+        public bool IsRejected { get; set; }
+
+        /// <summary>HR submitted the assessment as 'Not Recommended'. The workflow is stopped: no further
+        /// action is allowed.</summary>
+        [NotMapped]
+        public bool IsNotRecommended { get; set; }
     }
 }

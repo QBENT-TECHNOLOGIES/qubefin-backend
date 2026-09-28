@@ -6,6 +6,7 @@ using QubeFin.Hrms.Application.InterviewProcess.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Hrms;
+using QubeFin.Hrms.Application.InterviewProcess.Services;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
@@ -13,7 +14,7 @@ namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 /// record and does not require a recommendation yet. Saving a draft marks the panelist as attended.
 /// Looked up by CandidateId + EmployeeId rather than a client-supplied PanelId - the endpoint overrides
 /// EmployeeId from the authenticated user's claims, so a panelist can only ever save their own assessment.</summary>
-public record SaveInterviewAssessmentDraftCommand(Guid CandidateId, Guid EmployeeId, AssessmentSubmitDto Assessment, Guid SavedBy) : IRequest<Result<string>>;
+public record SaveInterviewAssessmentDraftCommand(Guid CandidateId, Guid EmployeeId, AssessmentSubmitDto Assessment, Guid SavedBy) : IRequest<Result<string>>, ICandidateWorkflowCommand;
 
 public class SaveInterviewAssessmentDraftCommandValidator : AbstractValidator<SaveInterviewAssessmentDraftCommand>
 {

@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Hrms.Application.InterviewProcess.Models;
+using QubeFin.Hrms.Application.InterviewProcess.Services;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Hrms;
@@ -30,6 +31,10 @@ internal sealed class GetCandidateByIdQueryHandler(QubeFinDataContext context, I
             var result = candidateInterviewInfo.First();
             result.WrittenInterviewFIleUrl = !string.IsNullOrEmpty(result.WrittenInterviewFIle) ? await fileStorageRepository.GetFileUrlAsync(result.WrittenInterviewFIle, cancellationToken) : null;
             result.SignedJoiningLetterFileUrl = !string.IsNullOrEmpty(result.SignedJoiningLetterFile) ? await fileStorageRepository.GetFileUrlAsync(result.SignedJoiningLetterFile, cancellationToken) : null;
+
+            var stoppedStatus = await context.GetStoppedStatusAsync(request.CandidateId, cancellationToken);
+            result.IsRejected = stoppedStatus == CandidateInterviewStatus.Rejected;
+            result.IsNotRecommended = stoppedStatus == CandidateInterviewStatus.NotRecommended;
 
             return Result.Ok(result);
         }

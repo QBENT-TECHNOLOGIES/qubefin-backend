@@ -9,7 +9,7 @@ using QubeFin.Persistence;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
-public record UpdateCandidateLetterStatusCommand(Guid CandidateId, CandidateLetterStatusRequest LetterStatus, Guid ModifiedBy) : IRequest<Result<string>>;
+public record UpdateCandidateLetterStatusCommand(Guid CandidateId, CandidateLetterStatusRequest LetterStatus, Guid ModifiedBy) : IRequest<Result<string>>, ICandidateWorkflowCommand;
 
 public class UpdateCandidateLetterStatusCommandValidator : AbstractValidator<UpdateCandidateLetterStatusCommand>
 {

@@ -6,6 +6,7 @@ using QubeFin.Core.Results;
 using QubeFin.Hrms.Application.InterviewProcess.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
+using QubeFin.Hrms.Application.InterviewProcess.Services;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
@@ -14,7 +15,7 @@ namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 /// file reference on the candidate record. Mirrors the Leave Prayer attachment upload pattern
 /// (<see cref="LeavePrayers.Commands.ApplyLeavePrayerCommand"/>).
 /// </summary>
-public record UploadCandidateInterviewFormatCommand(Guid CandidateId, CandidateInterviewUploadRequest Upload, Guid ModifiedBy) : IRequest<Result<string>>;
+public record UploadCandidateInterviewFormatCommand(Guid CandidateId, CandidateInterviewUploadRequest Upload, Guid ModifiedBy) : IRequest<Result<string>>, ICandidateWorkflowCommand;
 
 public class UploadCandidateInterviewFormatCommandValidator : AbstractValidator<UploadCandidateInterviewFormatCommand>
 {

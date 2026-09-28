@@ -14,7 +14,7 @@ namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 /// (re-)computed average of the submitted panelists - HR never edits them directly. Unlike Submit, this
 /// does not touch Candidate.RecommendationStatus/TotalRatingPoint/RatingStatus, so the workflow does not
 /// treat HR Assessment as complete until Submit is called.</summary>
-public record SaveHrAssessmentDraftCommand(Guid CandidateId, Guid HrEmployeeId, HrAssessmentDecisionDto Decision, Guid SavedBy) : IRequest<Result<string>>;
+public record SaveHrAssessmentDraftCommand(Guid CandidateId, Guid HrEmployeeId, HrAssessmentDecisionDto Decision, Guid SavedBy) : IRequest<Result<string>>, ICandidateWorkflowCommand;
 
 public class SaveHrAssessmentDraftCommandValidator : AbstractValidator<SaveHrAssessmentDraftCommand>
 {

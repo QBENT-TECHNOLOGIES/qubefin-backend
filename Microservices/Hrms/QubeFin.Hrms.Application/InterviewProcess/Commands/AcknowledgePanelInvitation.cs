@@ -3,11 +3,12 @@ using FluentValidation;
 using MediatR;
 using QubeFin.Core.Results;
 using QubeFin.Hrms.Persistence.Repositories;
-using QubeFin.Persistence;
+using QubeFin.Persistence;
+using QubeFin.Hrms.Application.InterviewProcess.Services;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
-public record AcknowledgePanelInvitationCommand(Guid CandidateId, Guid EmployeeId, Guid AcknowledgedBy) : IRequest<Result<string>>;
+public record AcknowledgePanelInvitationCommand(Guid CandidateId, Guid EmployeeId, Guid AcknowledgedBy) : IRequest<Result<string>>, ICandidateWorkflowCommand;
 
 public class AcknowledgePanelInvitationCommandValidator : AbstractValidator<AcknowledgePanelInvitationCommand>
 {
