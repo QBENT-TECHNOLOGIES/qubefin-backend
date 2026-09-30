@@ -24,8 +24,8 @@ public class UpdateEmployeePayrollCommandValidator : AbstractValidator<UpdateEmp
         RuleFor(x => x.bankDetail.BankId).NotEmpty().WithMessage("Bank Id is required.");
         RuleFor(x => x.bankDetail.BankAccountNo)
             .NotEmpty().WithMessage("Bank account number is required.")
-            .Must(accountNo => Regex.IsMatch(accountNo.ToString(), @"^\d{9,15}$"))
-            .WithMessage("Account number must be between 9 and 15 digits.");
+            .Must(accountNo => Regex.IsMatch(accountNo.ToString(), @"^\d{9,25}$"))
+            .WithMessage("Account number must be between 9 and 25 digits.");
         RuleFor(x => x.bankDetail.IfscCode)
             .NotEmpty().WithMessage("IFSC Code is required.")
             .Matches(@"^[A-Z]{4}0[A-Z0-9]{6}$")
