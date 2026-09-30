@@ -67,15 +67,7 @@ namespace QubeFin.Hrms.Application.Attendances.Commands
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Ok($"{(todayAttendance is null ? "Checked In Success" : "Checked Out Success")}");
         }
-        //private async Task<string?> UploadAsync(Microsoft.AspNetCore.Http.IFormFile? file, CancellationToken ct)
-        //{
-        //    if (file is null || file.Length == 0) return null;
-
-        //    await using var stream = file.OpenReadStream();
-        //    return await fileStorageRepository
-        //        .UploadFileAsync(stream, file.FileName, file.ContentType ?? "application/octet-stream", ct)
-        //        .ConfigureAwait(false);
-        //}
+       
     }
     #endregion
 }
