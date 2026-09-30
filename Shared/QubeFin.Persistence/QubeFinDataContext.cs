@@ -504,10 +504,15 @@ public partial class QubeFinDataContext : DbContext
             entity.ToTable("Tbl_Attendance", "Hrms");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.EndMileage).HasColumnType("decimal(10, 1)");
+            entity.Property(e => e.EndMileagePhoto).HasMaxLength(200);
             entity.Property(e => e.InTimeLatitude).HasColumnType("numeric(9, 6)");
             entity.Property(e => e.InTimeLongitude).HasColumnType("numeric(9, 6)");
             entity.Property(e => e.OutTimeLatitude).HasColumnType("numeric(9, 6)");
             entity.Property(e => e.OutTimeLongitude).HasColumnType("numeric(9, 6)");
+            entity.Property(e => e.PersonalUseKm).HasColumnType("decimal(10, 1)");
+            entity.Property(e => e.StartMileage).HasColumnType("decimal(10, 1)");
+            entity.Property(e => e.StartMileagePhoto).HasMaxLength(200);
 
             entity.HasOne(d => d.CheckinOrganizationUnit).WithMany(p => p.TblAttendanceCheckinOrganizationUnits)
                 .HasForeignKey(d => d.CheckinOrganizationUnitId)
