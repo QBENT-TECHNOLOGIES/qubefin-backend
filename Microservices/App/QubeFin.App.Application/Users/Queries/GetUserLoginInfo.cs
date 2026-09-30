@@ -61,6 +61,7 @@ internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context) :
             EmployeeCode = user.Employee?.Code ?? string.Empty,
             Designation = designationName ?? string.Empty,
             CompanyLogoUrl = user.Employee?.Company?.LogoUrl,
+            IsMileageEnabled = user?.Employee?.OrganizationUnit?.OrganizationUnitType.Name != "HeadOffice" ? true : false,
             AccessOrganizationUnits = accessOrganizationUnits
         };
         return Result.Ok(response);
