@@ -28,7 +28,7 @@ public class TokenGenerator(IOptions<JwtSettings> jwtSettings) : ITokenGenerator
         {
             Audience = _jwtSettings.Audience,
             Issuer = _jwtSettings.Issuer,
-            Expires = DateTime.UtcNow.AddDays(7),
+            Expires = DateTime.UtcNow.AddMinutes(1),
             Claims = claims.GroupBy(i => i.Type).ToDictionary(i => i.Key, i => (object)(i.Count() == 1 ? i.First().Value : i.Select(i => i.Value).ToArray())),
             SigningCredentials = credsSigning,
         };

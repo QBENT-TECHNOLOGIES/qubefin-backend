@@ -8,17 +8,17 @@ namespace QubeFin.Hrms.Persistence.Repositories;
 
 public interface IFileStorageRepository
 {
-    Task<string> UploadFileAsync(Stream stream, string key, string contentType, CancellationToken cancellationToken = default);
+    Task<string> UploadFileAsync(Stream stream, string key, string contentType, CancellationToken cancellationToken = default, string? folder = null);
     Task<string> GetFileUrlAsync(string key, CancellationToken cancellationToken = default);
 }
 
 public class FileStorageRepository(IConfiguration configuration) : IFileStorageRepository
 {
-    public async Task<string> UploadFileAsync(Stream stream, string key, string contentType, CancellationToken cancellationToken = default)
+    public async Task<string> UploadFileAsync(Stream stream, string key, string contentType, CancellationToken cancellationToken = default, string? folder = null)
     {
         try
         {
-            var uploadName = DateTime.Now.Ticks.ToString() + "_" + key;
+            var uploadName = $"{DateTime.Now.Ticks.ToString()}_{key}";
 
             using (var client = new AmazonS3Client($@"{configuration["aws:awsAccessKeyId"]}", $@"{configuration["aws:awsSecretAccessKey"]}", RegionEndpoint.GetBySystemName($@"{configuration["aws:region"]}")))
             {
@@ -27,7 +27,7 @@ public class FileStorageRepository(IConfiguration configuration) : IFileStorageR
                     var uploadRequest = new TransferUtilityUploadRequest
                     {
                         InputStream = stream,
-                        Key = "WeGrow/" + uploadName,
+                        Key = "WeGrow/" + (!string.IsNullOrEmpty(folder) ? $"{folder}/" : "") + uploadName,
                         BucketName = $@"{configuration["aws:bucket"]}",
                         CannedACL = S3CannedACL.PublicRead
                     };
