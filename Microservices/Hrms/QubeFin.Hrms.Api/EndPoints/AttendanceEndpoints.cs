@@ -14,19 +14,20 @@ public class AttendanceEndpoints : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("attendances/punch", async (ClaimsPrincipal principal, CreateAttendanceCommand command, ISender sender) =>
+        app.MapPost("attendances/punch", async (ClaimsPrincipal principal, [FromForm] AttendancePunchRequest request, ISender sender) =>
         {
             if (principal.Identity is null)
             {
                 return Results.Forbid();
             }
             var empId = principal.Identity.GetEmployeeId();
-            var result = await sender.Send(new CreateAttendanceCommand(empId, command.OrganizationUnitId, command.time, command.Lat, command.Long));
+            var result = await sender.Send(new CreateAttendanceCommand(empId, request));
             return result.ToHttpResult();
         })
         .WithSummary("Attendance Check in and Check out Saved")
         .WithTags("Attendance")
-        .RequireAuthorization();
+        .RequireAuthorization()
+        .DisableAntiforgery();
 
         app.MapGet("attendances", async (ClaimsPrincipal principal, ISender sender) =>
         {
