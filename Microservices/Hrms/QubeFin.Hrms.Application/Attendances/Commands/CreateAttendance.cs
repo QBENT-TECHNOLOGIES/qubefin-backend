@@ -5,7 +5,6 @@ using QubeFin.Hrms.Application.Attendances.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Hrms;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 
 namespace QubeFin.Hrms.Application.Attendances.Commands
@@ -47,17 +46,27 @@ namespace QubeFin.Hrms.Application.Attendances.Commands
             var actualTime = new TimeOnly(request.Time.Hour, request.Time.Minute);
             if (todayAttendance is null)
             {
-                var file = request.StartMileagePhoto;
-                await using var stream = file.OpenReadStream();
-                var startPhoto = await fileStorageRepository.UploadFileAsync(stream, file.FileName, file.ContentType ?? "application/octet-stream", cancellationToken).ConfigureAwait(false);
+                var startPhoto = (string?)null;
+                if (request.StartMileagePhoto != null && request.StartMileagePhoto.Length > 0)
+                {
+                    var file = request.StartMileagePhoto;
+                    await using var stream = file.OpenReadStream();
+                    startPhoto = await fileStorageRepository.UploadFileAsync(stream, "Mileage/" + file.FileName, file.ContentType ?? "application/octet-stream", cancellationToken).ConfigureAwait(false);
+                }
+
                 var attendance = Attendance.MarkCheckIn(Guid.NewGuid(), command.EmployeeId, actualTime, null, request.OrganizationUnitId, expectedInTime, expectedOutTime, request.Lat, request.Long, null, null, DateOnly.FromDateTime(DateTime.Now), startMileage: request.StartMileage, startMileagePhoto: startPhoto);
                 await attendanceRepository.Create(attendance);
             }
             else
             {
-                var file = request.EndMileagePhoto;
-                await using var stream = file.OpenReadStream();
-                var endPhoto = await fileStorageRepository.UploadFileAsync(stream, file.FileName, file.ContentType ?? "application/octet-stream", cancellationToken).ConfigureAwait(false);
+                var endPhoto = (string?)null;
+                if (request.EndMileagePhoto != null && request.EndMileagePhoto.Length > 0)
+                {
+                    var file = request.EndMileagePhoto;
+                    await using var stream = file.OpenReadStream();
+                    endPhoto = await fileStorageRepository.UploadFileAsync(stream, "Mileage/" + file.FileName, file.ContentType ?? "application/octet-stream", cancellationToken).ConfigureAwait(false);
+                }
+
                 todayAttendance.MarchCheckOut(actualTime, expectedOutTime, request.Lat, request.Long, request.OrganizationUnitId, endMileage: request.EndMileage,
                     endMileagePhoto: endPhoto,
                     personalUseKm: request.PersonalUseKm);
