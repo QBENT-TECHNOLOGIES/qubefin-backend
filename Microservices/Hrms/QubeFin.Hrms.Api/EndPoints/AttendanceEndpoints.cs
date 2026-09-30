@@ -24,10 +24,10 @@ public class AttendanceEndpoints : IEndpoint
             var result = await sender.Send(new CreateAttendanceCommand(empId, request));
             return result.ToHttpResult();
         })
-.DisableAntiforgery()
         .WithSummary("Attendance Check in and Check out Saved")
         .WithTags("Attendance")
-        .RequireAuthorization();
+        .RequireAuthorization()
+        .DisableAntiforgery();
 
         app.MapGet("attendances", async (ClaimsPrincipal principal, ISender sender) =>
         {
