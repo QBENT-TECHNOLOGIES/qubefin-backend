@@ -17,10 +17,17 @@ public class Attendance
     public decimal? InTimeLongitude { get; private set; }
     public decimal? OutTimeLatitude { get; private set; }
     public decimal? OutTimeLongitude { get; private set; }
+    public decimal? StartMileage { get; private set; }
+    public string? StartMileagePhoto { get; private set; }
+    public decimal? EndMileage { get; private set; }
+    public string? EndMileagePhoto { get; private set; }
+    public decimal? PersonalUseKm { get; private set; }
     public Attendance() { }
     public Attendance(Guid id, Guid employeeId, DateOnly attendanceDate, TimeOnly? expectedInTime, TimeOnly? expectedOutTime, TimeOnly actualInTime, 
         TimeOnly? actualOutTime, Guid? checkinOrganizationUnitId, Guid? checkoutOrganizationUnitId, bool isEarlyLeave, bool isLateEntry, decimal? intimeLat, 
-        decimal? intimeLong, decimal? outTimeLat, decimal? outTimeLong)
+        decimal? intimeLong, decimal? outTimeLat, decimal? outTimeLong, decimal? startMileage = null, string? startMileagePhoto = null,
+        decimal? endMileage = null, string? endMileagePhoto = null,
+        decimal? personalUseKm = null)
     {
         Id = id;
         EmployeeId = employeeId;
@@ -37,8 +44,13 @@ public class Attendance
         InTimeLongitude = intimeLong;
         OutTimeLatitude = outTimeLat;
         OutTimeLongitude = outTimeLong;
+        StartMileage = startMileage;
+        StartMileagePhoto = startMileagePhoto;
+        EndMileage = endMileage;
+        EndMileagePhoto = endMileagePhoto;
+        PersonalUseKm = personalUseKm;
     }
-    public static Attendance MarkCheckIn(Guid id, Guid employeeId, TimeOnly InTime, TimeOnly? OutTime, Guid? checkinOrganizationUnitId, TimeOnly? expectedInTime, TimeOnly? expectedOutTime, decimal? InTimeLat, decimal? InTimeLong, decimal? OutTimeLat, decimal? OutTimeLong, DateOnly attendanceDate)
+    public static Attendance MarkCheckIn(Guid id, Guid employeeId, TimeOnly InTime, TimeOnly? OutTime, Guid? checkinOrganizationUnitId, TimeOnly? expectedInTime, TimeOnly? expectedOutTime, decimal? InTimeLat, decimal? InTimeLong, decimal? OutTimeLat, decimal? OutTimeLong, DateOnly attendanceDate, decimal? startMileage = null, string? startMileagePhoto = null)
     {
         var attendance = new Attendance()
         {
@@ -51,16 +63,21 @@ public class Attendance
             CheckinOrganizationUnitId = checkinOrganizationUnitId,
             IsLateEntry = expectedInTime.HasValue && InTime > expectedInTime.Value,
             InTimeLatitude = InTimeLat,
-            InTimeLongitude = InTimeLong
+            InTimeLongitude = InTimeLong,
+            StartMileage = startMileage,
+            StartMileagePhoto = startMileagePhoto
         };
         return attendance;
     }
-    public void MarchCheckOut(TimeOnly? outTime, TimeOnly? expectedOutTime, decimal? outTimeLat, decimal? outTimeLong, Guid? checkoutOrganizationUnitId)
+    public void MarchCheckOut(TimeOnly? outTime, TimeOnly? expectedOutTime, decimal? outTimeLat, decimal? outTimeLong, Guid? checkoutOrganizationUnitId, decimal? endMileage = null, string? endMileagePhoto = null, decimal? personalUseKm = null)
     {
         ActualOutTime = outTime;
         IsEarlyLeave = expectedOutTime.HasValue && outTime.HasValue && outTime.Value < expectedOutTime.Value;
         OutTimeLatitude = outTimeLat;
         OutTimeLongitude = outTimeLong;
         CheckoutOrganizationUnitId = checkoutOrganizationUnitId;
+        EndMileage = endMileage;
+        EndMileagePhoto = endMileagePhoto;
+        PersonalUseKm = personalUseKm;
     }
 }
