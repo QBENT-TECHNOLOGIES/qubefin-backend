@@ -22,7 +22,13 @@ public static class AttendanceMapper
             entity.InTimeLatitude,
             entity.InTimeLongitude,
             entity.OutTimeLatitude,
-            entity.OutTimeLongitude
+            entity.OutTimeLongitude,
+            entity.StartMileage,
+            entity.StartMileagePhoto,
+            entity.EndMileage,
+            entity.EndMileagePhoto,
+            entity.PersonalUseKm
+
         );
     }
 
@@ -45,6 +51,11 @@ public static class AttendanceMapper
             InTimeLongitude = domain.InTimeLongitude,
             OutTimeLatitude = domain.OutTimeLatitude,
             OutTimeLongitude = domain.OutTimeLongitude,
+            StartMileage = domain.StartMileage,
+            StartMileagePhoto = domain.StartMileagePhoto,
+            EndMileage = domain.EndMileage,
+            EndMileagePhoto = domain.EndMileagePhoto,
+            PersonalUseKm = domain.PersonalUseKm,
         };
     }
 }
