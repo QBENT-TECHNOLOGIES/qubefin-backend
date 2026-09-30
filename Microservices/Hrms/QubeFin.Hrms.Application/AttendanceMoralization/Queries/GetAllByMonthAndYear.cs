@@ -99,7 +99,7 @@ internal sealed class GetAllByMonthAndYearQueryHandler(QubeFinDataContext contex
                 AttendanceDays = m.AttendanceDays,
                 AbsentDays = m.AbsentDays,
                 AttendanceIrregularDays = m.AttendanceIrregularDays,
-                IrregularLopDays = m.IrregularLopDays + (m.TblEmployeeLopDetails.Where(l => l.LeaveType.Alias == "LOP").Count()),
+                IrregularLopDays = m.IrregularLopDays, //+ (m.TblEmployeeLopDetails.Where(l => l.LeaveType.Alias == "LOP").Count()),
                 IsLocked = m.IsLocked,
                 Remarks = m.Remarks
             }).ToListAsync(cancellationToken: cancellationToken).ConfigureAwait(false);

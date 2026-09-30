@@ -39,6 +39,16 @@ public partial class TblAttendance
 
     public bool IsOnDuty { get; set; }
 
+    public decimal? StartMileage { get; set; }
+
+    public string? StartMileagePhoto { get; set; }
+
+    public decimal? EndMileage { get; set; }
+
+    public string? EndMileagePhoto { get; set; }
+
+    public decimal? PersonalUseKm { get; set; }
+
     public virtual TblOrganizationUnit? CheckinOrganizationUnit { get; set; }
 
     public virtual TblOrganizationUnit? CheckoutOrganizationUnit { get; set; }
