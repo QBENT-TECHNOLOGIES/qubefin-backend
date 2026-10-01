@@ -22,9 +22,9 @@ public class UserEndpoints : IEndpoint
         //.RequireAuthorization("Permission:Users.View")
         .WithSummary("Get All Users");
 
-        app.MapGet("users/search", async (ISender sender, string? searchText, string sortOn, string sortDirection, int pageIndex, int pageSize) =>
+        app.MapGet("users/search", async (ISender sender, Guid? organizationUnitId, Guid? companyId, string? searchText, string sortOn, string sortDirection, int pageIndex, int pageSize) =>
         {
-            var result = await sender.Send(new GetUsersBySearchQuery(searchText, sortOn, sortDirection, pageIndex, pageSize));
+            var result = await sender.Send(new GetUsersBySearchQuery(organizationUnitId, companyId, searchText, sortOn, sortDirection, pageIndex, pageSize));
             return result.ToHttpResult();
         })
         .RequireAuthorization()
@@ -90,5 +90,25 @@ public class UserEndpoints : IEndpoint
             var result = await sender.Send(new UnbindUserDeviceCommand(userName));
             return result.ToHttpResult();
         });
+
+        #region --- Devices ---
+        app.MapGet("user-device/{id}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new GetDevicesByIdQuery(id));
+            return result.ToHttpResult();
+        })
+            .RequireAuthorization()
+        .WithSummary("Get User Devices");
+        
+        app.MapGet("user-device-unbind/{id}", async (Guid id, ClaimsPrincipal principal, ISender sender) =>
+        {
+            var userId = principal.Identity.GetUserId();
+            var result = await sender.Send(new UnbindUserDeviceByIdCommand(id, userId));
+            return result.ToHttpResult();
+        })
+            .RequireAuthorization()
+            .WithSummary("Unbind User Device");
+
+        #endregion
     }
 }

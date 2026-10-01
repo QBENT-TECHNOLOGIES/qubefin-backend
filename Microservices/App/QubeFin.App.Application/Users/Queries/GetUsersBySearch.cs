@@ -6,11 +6,11 @@ using QubeFin.Persistence;
 namespace QubeFin.App.Application.Users.Queries;
 
 #region --- QUERY ---
-public record GetUsersBySearchQuery(string? SearchText, string? SortOn, string? SortDirection, int PageIndex, int PageSize) : IRequest<Result<GetUsersBySearchResponse>>;
+public record GetUsersBySearchQuery(Guid? organizationUitId, Guid? companyId, string? SearchText, string? SortOn, string? SortDirection, int PageIndex, int PageSize) : IRequest<Result<GetUsersBySearchResponse>>;
 #endregion
 
 #region --- RESPONSE ---
-public record UsersBySearchResult(Guid Id, string UserName, string Employee, string MfaSecret, bool HasMfaEnabled, bool IsActive);
+public record UsersBySearchResult(Guid Id, string organizationUnitName, string UserName, string Employee, string MfaSecret, bool HasMfaEnabled, bool IsActive);
 public record GetUsersBySearchResponse(IReadOnlyList<UsersBySearchResult> Users, int TotalCount);
 #endregion
 
@@ -21,11 +21,19 @@ internal sealed class GetUsersBySearchQueryHandler(QubeFinDataContext context)
     public async Task<Result<GetUsersBySearchResponse>> Handle(GetUsersBySearchQuery request, CancellationToken cancellationToken)
     {
         var skipRecordCount = request.PageIndex * request.PageSize;
-        var filterEntitiesQuery = context.TblUsers.Include(m => m.Employee).AsNoTracking().AsQueryable();
+        var filterEntitiesQuery = context.TblUsers.Include(m => m.Employee).ThenInclude(m=>m.OrganizationUnit).ThenInclude(m=>m.Company).AsNoTracking().AsQueryable();
 
         if (!string.IsNullOrEmpty(request.SearchText))
         {
             filterEntitiesQuery = filterEntitiesQuery.Where(m => m.UserName.Contains(request.SearchText.Trim()) || m.Employee.FullName.Contains(request.SearchText.Trim()));
+        }
+        if(request.organizationUitId != null && request.organizationUitId!= Guid.Empty)
+        {
+            filterEntitiesQuery = filterEntitiesQuery.Where(m => m.Employee.OrganizationUnitId == request.organizationUitId.Value);
+        }
+        if(request.companyId != null && request.companyId != Guid.Empty)
+        {
+            filterEntitiesQuery = filterEntitiesQuery.Where(m => m.Employee.CompanyId == request.companyId.Value);
         }
 
         if (request.SortOn is not null && request.SortDirection is not null)
@@ -39,7 +47,7 @@ internal sealed class GetUsersBySearchQueryHandler(QubeFinDataContext context)
 
         var totalCount = await filterEntitiesQuery.CountAsync(cancellationToken);
         var Users = await filterEntitiesQuery.Skip(skipRecordCount).Take(request.PageSize)
-            .Select(m => new UsersBySearchResult(m.Id, m.UserName, m.Employee.FullName, m.MfaSecret, m.HasMfaEnabled, m.IsActive))
+            .Select(m => new UsersBySearchResult(m.Id, m.Employee.OrganizationUnit.Name, m.UserName, m.Employee.FullName, m.MfaSecret, m.HasMfaEnabled, m.IsActive))
             .ToListAsync(cancellationToken: cancellationToken);
 
         return Result.Ok(new GetUsersBySearchResponse(Users, totalCount));
