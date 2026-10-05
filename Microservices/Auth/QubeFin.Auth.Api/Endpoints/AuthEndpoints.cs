@@ -75,5 +75,14 @@ public class AuthEndpoints : IEndpoint
             return result.ToHttpResult();
         });
         #endregion
+
+        #region RESET PASSWORD 
+        app.MapPut("reset-password/{UserId}", async (Guid UserId,ResetPassword request, ISender sender) =>
+        {
+            var result = await sender.Send(new PasswordResetCommand(request, UserId));
+            return result.ToHttpResult();
+        });
+
+        #endregion
     }
 }
