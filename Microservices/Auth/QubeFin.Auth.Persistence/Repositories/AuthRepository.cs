@@ -140,21 +140,16 @@ public class AuthRepository(QubeFinDataContext context) : IAuthRepository
 
     public async Task<bool?> ValidateDevice(Guid UserId, string DeviceId)
     {
-        var userDeviceEntity = await context.TblUserDevices.AsNoTracking()
-            .Where(m => m.DeviceId == DeviceId && !m.IsReleased).FirstOrDefaultAsync();
-
+        var userDeviceEntity = await context.TblUserDevices.AsNoTracking().Where(m => m.UserId == UserId && !m.IsReleased).FirstOrDefaultAsync();
         if (userDeviceEntity is null)
         {
             return null;
         }
-        if (userDeviceEntity.UserId == UserId)
-        {
-            return true;
-        }
-        else
+        if (userDeviceEntity.DeviceId.Trim() != DeviceId.Trim())
         {
             return false;
         }
+        return true;
     }
 
     public async void RegisterDevice(UserDevice userDevice)

@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using QubeFin.App.Api.Requests;
 using QubeFin.App.Application.Users.Commands;
 using QubeFin.App.Application.Users.Queries;
@@ -39,7 +40,7 @@ public class UserEndpoints : IEndpoint
         //.RequireAuthorization("Permission:Users.View")
         .WithSummary("Get User By Id");
 
-        app.MapGet("users/login-info", async (ClaimsPrincipal principal, ISender sender) =>
+        app.MapGet("users/login-info", async (ClaimsPrincipal principal, [FromHeader(Name = "X-Device-Id")] string? deviceId, ISender sender) =>
         {
             if (principal.Identity is null)
             {
@@ -48,7 +49,7 @@ public class UserEndpoints : IEndpoint
             var userId = principal.Identity.GetUserId();
             var employeeId = principal.Identity.GetEmployeeId();
 
-            var result = await sender.Send(new GetUserLoginInfoQuery(userId, employeeId));
+            var result = await sender.Send(new GetUserLoginInfoQuery(userId, employeeId, deviceId));
             return result.ToHttpResult();
         })
         .RequireAuthorization()

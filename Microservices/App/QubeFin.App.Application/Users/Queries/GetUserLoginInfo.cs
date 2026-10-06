@@ -5,15 +5,16 @@ using QubeFin.App.Application.Users.Models;
 using QubeFin.Core.Results;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Entities;
+using QubeFin.Persistence.Models.App;
 
 namespace QubeFin.App.Application.Users.Queries;
 
 #region --- QUERY ---
-public record GetUserLoginInfoQuery(Guid Id, Guid EmployeeId) : IRequest<Result<UserLoginInfoResponse>>;
+public record GetUserLoginInfoQuery(Guid Id, Guid EmployeeId, string? DeviceId) : IRequest<Result<UserLoginInfoResponse>>;
 #endregion
 
 #region --- HANDLER ---
-internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context) : IRequestHandler<GetUserLoginInfoQuery, Result<UserLoginInfoResponse>>
+internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context, IUnitOfWork unitOfWork) : IRequestHandler<GetUserLoginInfoQuery, Result<UserLoginInfoResponse>>
 {
     public async Task<Result<UserLoginInfoResponse>> Handle(GetUserLoginInfoQuery request, CancellationToken cancellationToken)
     {
@@ -64,6 +65,27 @@ internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context) :
             IsMileageEnabled = user?.Employee?.OrganizationUnit?.OrganizationUnitType.Name != "HeadOffice" ? true : false,
             AccessOrganizationUnits = accessOrganizationUnits
         };
+
+        #region --- LOGGING DEVICE ID ---
+        if (!string.IsNullOrEmpty(request.DeviceId) && user != null)
+        {
+            var userDeviceEntity = await context.TblUserDevices.AsNoTracking().Where(m => m.UserId == user.Id).FirstOrDefaultAsync();
+            if(userDeviceEntity is null)
+            {
+                var newDevice = new TblUserDevice
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = user.Id,
+                    DeviceId = request.DeviceId,
+                    AssignDate = DateTime.UtcNow,
+                    IsReleased = false
+                };
+                await context.TblUserDevices.AddAsync(newDevice, cancellationToken);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
+            }
+        }
+        #endregion
+
         return Result.Ok(response);
     }
     private async Task<List<UserAccessOrganizationUnit>> GetUserOrganizationUnits(Guid orgUnitId, CancellationToken cancellationToken)
