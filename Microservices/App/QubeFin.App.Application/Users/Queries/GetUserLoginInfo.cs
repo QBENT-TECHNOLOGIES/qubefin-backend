@@ -1,11 +1,8 @@
 ﻿using FluentResults;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using QubeFin.App.Application.Users.Models;
 using QubeFin.Core.Results;
 using QubeFin.Persistence;
-using QubeFin.Persistence.Entities;
-using QubeFin.Persistence.Models.App;
 
 namespace QubeFin.App.Application.Users.Queries;
 
@@ -14,107 +11,42 @@ public record GetUserLoginInfoQuery(Guid Id, Guid EmployeeId, string? DeviceId) 
 #endregion
 
 #region --- HANDLER ---
-internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context, IUnitOfWork unitOfWork) : IRequestHandler<GetUserLoginInfoQuery, Result<UserLoginInfoResponse>>
+internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context) : IRequestHandler<GetUserLoginInfoQuery, Result<UserLoginInfoResponse>>
 {
     public async Task<Result<UserLoginInfoResponse>> Handle(GetUserLoginInfoQuery request, CancellationToken cancellationToken)
     {
-        var user = await context.TblUsers
-          .AsNoTracking()
-          .Include(m => m.Employee!.Company)
-          .Include(m => m.Employee!.OrganizationUnit!.OrganizationUnitType)
-          .FirstOrDefaultAsync(m => m.Id == request.Id, cancellationToken);
-
+        var rows = await context.SP_GetUserLoginInfo(request.Id, request.EmployeeId, request.DeviceId);
+        var user = rows.FirstOrDefault();
         if (user is null)
         {
             return new RecordNotFoundError($"User not found");
         }
-
-        var designationName = await context.TblEmployeeDesignations
-            .AsNoTracking()
-            .Where(m => m.EmployeeId == request.EmployeeId)
-            .OrderByDescending(m => m.EffectiveFrom)
-            .Select(m => m.Designation!.Name)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        var accessOrganizationUnits = user.Employee?.OrganizationUnit?.Latitude != null ?
-             new List<UserAccessOrganizationUnit>
-           {
-              new UserAccessOrganizationUnit
-              {
-                  Id = user.Employee.OrganizationUnit.Id,
-                  Name = user.Employee.OrganizationUnit.Name,
-                  Latitude = user.Employee.OrganizationUnit.Latitude,
-                  Longitude = user.Employee.OrganizationUnit.Longitude,
-                  AttendanceInTime = user.Employee.OrganizationUnit.AttendanceInTime,
-                  AttendanceOutTime = user.Employee.OrganizationUnit.AttendanceOutTime,
-                  CheckRadiusInMeter = user.Employee.OrganizationUnit.CheckRadiusInMeter ?? 100
-              }
-           }
-         : await GetUserOrganizationUnits(user.Employee?.OrganizationUnitId ?? Guid.Empty, cancellationToken);
-
         var response = new UserLoginInfoResponse
         {
             Id = user.Id,
             UserName = user.UserName,
             EmployeeId = user.EmployeeId,
-            Employee = user.Employee?.FullName ?? string.Empty,
-            Gender = user.Employee?.Gender ?? string.Empty,
-            EmployeeCode = user.Employee?.Code ?? string.Empty,
-            Designation = designationName ?? string.Empty,
-            CompanyLogoUrl = user.Employee?.Company?.LogoUrl,
-            IsMileageEnabled = user?.Employee?.OrganizationUnit?.OrganizationUnitType.Name != "HeadOffice" ? true : false,
-            AccessOrganizationUnits = accessOrganizationUnits
-        };
-
-        #region --- LOGGING DEVICE ID ---
-        if (!string.IsNullOrEmpty(request.DeviceId) && user != null)
-        {
-            var userDeviceEntity = await context.TblUserDevices.AsNoTracking().Where(m => m.UserId == user.Id).FirstOrDefaultAsync();
-            if(userDeviceEntity is null)
-            {
-                var newDevice = new TblUserDevice
+            Employee = user.Employee,
+            Gender = user.Gender,
+            EmployeeCode = user.EmployeeCode,
+            Designation = user.Designation,
+            CompanyLogoUrl = user.CompanyLogoUrl,
+            IsMileageEnabled = user.IsMileageEnabled,
+            AccessOrganizationUnits = rows
+                .Where(m => m.OrganizationUnitId.HasValue)
+                .Select(m => new UserAccessOrganizationUnit
                 {
-                    Id = Guid.NewGuid(),
-                    UserId = user.Id,
-                    DeviceId = request.DeviceId,
-                    AssignDate = DateTime.UtcNow,
-                    IsReleased = false
-                };
-                await context.TblUserDevices.AddAsync(newDevice, cancellationToken);
-                await unitOfWork.SaveChangesAsync(cancellationToken);
-            }
-        }
-        #endregion
-
+                    Id = m.OrganizationUnitId!.Value,
+                    Name = m.OrganizationUnitName ?? string.Empty,
+                    Latitude = m.Latitude,
+                    Longitude = m.Longitude,
+                    AttendanceInTime = m.AttendanceInTime,
+                    AttendanceOutTime = m.AttendanceOutTime,
+                    CheckRadiusInMeter = m.CheckRadiusInMeter
+                })
+                .ToList()
+        };
         return Result.Ok(response);
-    }
-    private async Task<List<UserAccessOrganizationUnit>> GetUserOrganizationUnits(Guid orgUnitId, CancellationToken cancellationToken)
-    {
-        var units = await context.TblOrganizationUnits.Include(u => u.OrganizationUnitType).ToListAsync(cancellationToken);
-        IEnumerable<TblOrganizationUnit> Traverse(Guid id)
-        {
-            var current = units.FirstOrDefault(u => u.Id == id);
-            if (current == null) yield break;
-
-            if (current.OrganizationUnitType.Name == "Branch")
-                yield return current;
-
-            foreach (var child in units.Where(u => u.ParentId == id))
-                foreach (var descendant in Traverse(child.Id))
-                    yield return descendant;
-        }
-        return Traverse(orgUnitId)
-        .Distinct()
-        .Select(b => new UserAccessOrganizationUnit
-        {
-            Id = b.Id,
-            Name = b.Name,
-            Latitude = b.Latitude,
-            Longitude = b.Longitude,
-            AttendanceInTime = b.AttendanceInTime,
-            AttendanceOutTime = b.AttendanceOutTime,
-            CheckRadiusInMeter = b.CheckRadiusInMeter ?? 100
-        }).ToList();
     }
 }
 #endregion

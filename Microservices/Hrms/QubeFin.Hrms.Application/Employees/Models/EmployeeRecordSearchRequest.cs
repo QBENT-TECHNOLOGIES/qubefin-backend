@@ -94,4 +94,27 @@ namespace QubeFin.Hrms.Application.Employees.Models
         public const string Cancelled = "Cancelled";
         public const string Lapsed = "Lapsed";
     }
+
+    public static class AttendanceStatuses
+    {
+        public const string OnTime = "On Time";
+        public const string LateEntry = "Late Entry";
+        public const string EarlyExit = "Early Exit";
+        public const string LateEntryAndEarlyExit = "Late Entry & Early Exit";
+        public const string Msp = "MSP";
+        public const string Absent = "Absent";
+        public const string NotPunched = "Not Punched";
+        public const string OnLeave = "On Leave";
+
+        public static readonly string[] All = [OnTime, LateEntry, EarlyExit, LateEntryAndEarlyExit, Msp, Absent, NotPunched, OnLeave];
+
+        /// <summary>
+        /// Attendance still to be recorded: no row for the day. An employee on approved leave is not pending.
+        /// </summary>
+        public static bool IsPending(string? status) => status is Absent or NotPunched;
+
+        public static bool IsFilter(string? status) =>
+            !string.IsNullOrWhiteSpace(status) &&
+            All.Contains(status.Trim(), StringComparer.OrdinalIgnoreCase);
+    }
 }
