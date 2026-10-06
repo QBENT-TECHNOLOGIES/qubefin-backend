@@ -9,7 +9,7 @@ namespace QubeFin.Hrms.Application.Holidays.Queries;
 
 public record GetCalendarDaysByEmployeeQuery(Guid employeeId, int year, int month) : IRequest<Result<List<GetCalendarDaysByEmployeeResponse>>>;
 
-public record GetCalendarDaysByEmployeeResponse(DateOnly? CalendarDate, string? DayName, string? Status);
+public record GetCalendarDaysByEmployeeResponse(DateOnly? CalendarDate, string? DayName, string? Status, string? Description, TimeOnly? ActualInTime, TimeOnly? ActualOutTime);
 internal sealed class GetCalendarDaysByEmployeeQueryHandler(QubeFinDataContext context) : IRequestHandler<GetCalendarDaysByEmployeeQuery, Result<List<GetCalendarDaysByEmployeeResponse>>>
 {
     public async Task<Result<List<GetCalendarDaysByEmployeeResponse>>> Handle(GetCalendarDaysByEmployeeQuery request, CancellationToken cancellationToken)
@@ -21,6 +21,6 @@ internal sealed class GetCalendarDaysByEmployeeQueryHandler(QubeFinDataContext c
         )
        .AsNoTracking()
        .ToListAsync(cancellationToken);
-        return Result.Ok(employeeMonthlyCalendarResponse.Select(m => new GetCalendarDaysByEmployeeResponse(m.CalendarDate, m.DayName, m.Status)).OrderBy(m => m.CalendarDate).ToList());
+        return Result.Ok(employeeMonthlyCalendarResponse.Select(m => new GetCalendarDaysByEmployeeResponse(m.CalendarDate, m.DayName, m.Status, m.Description, m.ActualInTime, m.ActualOutTime)).OrderBy(m => m.CalendarDate).ToList());
     }
 }
