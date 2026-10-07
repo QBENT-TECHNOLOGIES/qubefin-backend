@@ -3,6 +3,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Hrms.Application.Attendances.Models;
+using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Entities;
 
@@ -23,9 +24,9 @@ public class GetAttendanceByEmployeeQueryValidator : AbstractValidator<GetAttend
 #endregion
 
 #region --- HANDLER ---
-internal sealed class GetAttendanceByEmployeeQueryHandler(QubeFinDataContext context) :  IRequestHandler<GetAttendanceByEmployeeQuery, Result<AttendanceResponse>>
+internal sealed class GetAttendanceByEmployeeQueryHandler(QubeFinDataContext context, IFileStorageRepository fileStorageRepository) : IRequestHandler<GetAttendanceByEmployeeQuery, Result<AttendanceResponse>>
 {
-    public async Task<Result<AttendanceResponse>> Handle(GetAttendanceByEmployeeQuery request,CancellationToken cancellationToken)
+    public async Task<Result<AttendanceResponse>> Handle(GetAttendanceByEmployeeQuery request, CancellationToken cancellationToken)
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
 
@@ -79,6 +80,16 @@ internal sealed class GetAttendanceByEmployeeQueryHandler(QubeFinDataContext con
 
             result.OutTimeLatitude = attendanceEntity.OutTimeLatitude;
             result.OutTimeLongitude = attendanceEntity.OutTimeLongitude;
+
+            result.StartMileage = attendanceEntity.StartMileage;
+            result.StartMileagePhoto = attendanceEntity.StartMileagePhoto != null
+                ? await fileStorageRepository.GetFileUrlAsync("Mileage/" + attendanceEntity.StartMileagePhoto, cancellationToken)
+                : null;
+            result.EndMileage = attendanceEntity.EndMileage;
+            result.EndMileagePhoto = attendanceEntity.EndMileagePhoto != null
+                ? await fileStorageRepository.GetFileUrlAsync("Mileage/" + attendanceEntity.EndMileagePhoto, cancellationToken)
+                : null;
+            result.PersonalUseKm = attendanceEntity.PersonalUseKm;
         }
 
         return Result.Ok(result);
