@@ -228,7 +228,6 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<WegrowConsolidateEmployee> WegrowConsolidateEmployees { get; set; }
 
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<DboTempEmpBranch>(entity =>
@@ -1368,9 +1367,11 @@ public partial class QubeFinDataContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.AadharNumber).HasMaxLength(12);
+            entity.Property(e => e.Address).HasMaxLength(200);
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.CreditBureauReportLink).HasMaxLength(200);
             entity.Property(e => e.CurrentSalary).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.CvFile).HasMaxLength(250);
             entity.Property(e => e.Email).HasMaxLength(100);
             entity.Property(e => e.ExpectedSalary).HasColumnType("numeric(18, 2)");
             entity.Property(e => e.FatherName).HasMaxLength(50);
@@ -1378,6 +1379,8 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Gender).HasMaxLength(10);
             entity.Property(e => e.HouseNo).HasMaxLength(20);
             entity.Property(e => e.InterviewMode).HasMaxLength(10);
+            entity.Property(e => e.IsSelectedForOffer).HasDefaultValue(false, "DF_Tbl_InterviewCandidate_IsSelectedForOffer");
+            entity.Property(e => e.JobApplicationFile).HasMaxLength(250);
             entity.Property(e => e.LandMark).HasMaxLength(100);
             entity.Property(e => e.LastName).HasMaxLength(50);
             entity.Property(e => e.MiddleName).HasMaxLength(50);
@@ -1463,6 +1466,7 @@ public partial class QubeFinDataContext : DbContext
                 .HasMaxLength(20)
                 .IsUnicode(false)
                 .HasDefaultValue("INTERVIEWER", "DF_Tbl_InterviewPanel_AssessmentType");
+            entity.Property(e => e.AttenedRemarks).HasMaxLength(100);
             entity.Property(e => e.CommunicationRemarks).HasMaxLength(100);
             entity.Property(e => e.EducationRemarks).HasMaxLength(100);
             entity.Property(e => e.FlexibilityRemarks).HasMaxLength(100);
@@ -2606,6 +2610,11 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.AssignDate).HasColumnType("datetime");
             entity.Property(e => e.DeviceId).HasMaxLength(100);
             entity.Property(e => e.ReleaseDate).HasColumnType("datetime");
+
+            entity.HasOne(d => d.User).WithMany(p => p.TblUserDevices)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_UserDevice_Tbl_User");
         });
 
         modelBuilder.Entity<TblUserMenuPermission>(entity =>

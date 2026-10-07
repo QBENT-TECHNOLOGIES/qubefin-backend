@@ -300,79 +300,206 @@ internal sealed class GetEmployeeRecordsBySearchQueryHandler(QubeFinDataContext 
     }
 
     // ---- Attendance history ---------------------------------------------------
+    // Attendance lists every active employee for every day in the window, not only the
+    // people who punched, so a missing attendance row is reported instead of hidden.
 
-    private IQueryable<TblAttendance> AttendanceQuery(EmployeeRecordSearchRequest param, List<Guid> scope)
+    private const int MaxAttendanceDays = 31;
+
+    private sealed record AttendanceEmployee(
+        Guid Id, string FullName, string Code, string? OrganizationUnit, DateOnly? JoiningDate, DateOnly? SeparationDate)
     {
-        var query = context.TblAttendances
-            .Include(m => m.Employee).ThenInclude(e => e.OrganizationUnit)
+        // Employed on a day from joining through the separation date, both inclusive.
+        public bool IsEmployedOn(DateOnly day) =>
+            (JoiningDate is null || JoiningDate <= day) && (SeparationDate is null || SeparationDate >= day);
+    }
+
+    private sealed record AttendanceEntry(
+        Guid Id, Guid EmployeeId, DateOnly AttendanceDate, TimeOnly? ActualInTime, TimeOnly? ActualOutTime,
+        bool IsLateEntry, bool IsEarlyLeave, bool IsRegularization);
+
+    private sealed record AttendanceLeave(Guid EmployeeId, DateOnly FromDate, DateOnly ToDate, string LeaveType);
+
+    private sealed record AttendanceRow(AttendanceEmployee Employee, DateOnly Date, AttendanceEntry? Entry, string? LeaveType, string Status);
+
+    // One row per employee per day, so the window defaults to today and is capped to keep a page cheap.
+    private static (DateOnly From, DateOnly To) ResolveAttendanceWindow(EmployeeRecordSearchRequest param)
+    {
+        var today = DateOnly.FromDateTime(DateTime.Now.Date);
+        var from = param.FromDate ?? param.ToDate ?? today;
+        var to = param.ToDate ?? param.FromDate ?? today;
+
+        if (to < from) (from, to) = (to, from);
+        if (to.DayNumber - from.DayNumber + 1 > MaxAttendanceDays) from = to.AddDays(-(MaxAttendanceDays - 1));
+
+        return (from, to);
+    }
+
+    private IQueryable<TblEmployee> AttendanceEmployeeQuery(EmployeeRecordSearchRequest param, List<Guid> scope, DateOnly from, DateOnly to)
+    {
+        var query = context.TblEmployees
             .AsNoTracking()
-            .Where(m => m.Employee.OrganizationUnitId != null && scope.Contains(m.Employee.OrganizationUnitId.Value));
+            .Where(m => m.IsActive
+                        && m.OrganizationUnitId != null
+                        && scope.Contains(m.OrganizationUnitId.Value)
+                        && (m.JoiningDate == null || m.JoiningDate <= to)
+                        && (m.SeparationDate == null || m.SeparationDate >= from));
 
         if (param.CompanyId.HasValue)
-            query = query.Where(m => m.Employee.CompanyId == param.CompanyId.Value);
+            query = query.Where(m => m.CompanyId == param.CompanyId.Value);
 
         if (param.SearchEmployeeId.HasValue)
-            query = query.Where(m => m.EmployeeId == param.SearchEmployeeId.Value);
-
-        if (param.FromDate.HasValue)
-            query = query.Where(m => m.AttendanceDate >= param.FromDate.Value);
-
-        if (param.ToDate.HasValue)
-            query = query.Where(m => m.AttendanceDate <= param.ToDate.Value);
+            query = query.Where(m => m.Id == param.SearchEmployeeId.Value);
 
         if (!string.IsNullOrWhiteSpace(param.SearchText))
         {
             var text = param.SearchText.Trim();
-            query = query.Where(m => m.Employee.FullName.Contains(text)
-                                     || m.Employee.Code.Contains(text)
-                                     || (m.Employee.OrganizationUnit != null && m.Employee.OrganizationUnit.Name.Contains(text)));
+            query = query.Where(m => m.FullName.Contains(text)
+                                     || m.Code.Contains(text)
+                                     || (m.OrganizationUnit != null && m.OrganizationUnit.Name.Contains(text)));
         }
 
-        return param.Status?.Trim().ToLowerInvariant() switch
-        {
-            "on time" => query.Where(m => !m.IsLateEntry && !m.IsEarlyLeave),
-            "late entry" => query.Where(m => m.IsLateEntry && !m.IsEarlyLeave),
-            "early exit" => query.Where(m => !m.IsLateEntry && m.IsEarlyLeave),
-            "late entry & early exit" => query.Where(m => m.IsLateEntry && m.IsEarlyLeave),
-            _ => query
-        };
+        return query;
     }
 
     private async Task<(IReadOnlyList<EmployeeRecordItem>, int, EmployeeRecordStatusCounts)> LoadAttendanceAsync(
         EmployeeRecordSearchRequest param, List<Guid> scope, CancellationToken cancellationToken)
     {
-        var query = AttendanceQuery(param, scope);
-        var total = await query.CountAsync(cancellationToken);
+        var (from, to) = ResolveAttendanceWindow(param);
+        var employeeQuery = AttendanceEmployeeQuery(param, scope, from, to);
+
+        var employees = await employeeQuery
+            .Select(m => new AttendanceEmployee(
+                m.Id, m.FullName, m.Code,
+                m.OrganizationUnit != null ? m.OrganizationUnit.Name : null,
+                m.JoiningDate, m.SeparationDate))
+            .ToListAsync(cancellationToken);
+
+        var entries = await context.TblAttendances
+            .AsNoTracking()
+            .Where(a => a.AttendanceDate >= from && a.AttendanceDate <= to
+                        && employeeQuery.Select(m => m.Id).Contains(a.EmployeeId))
+            .Select(a => new AttendanceEntry(
+                a.Id, a.EmployeeId, a.AttendanceDate, a.ActualInTime, a.ActualOutTime,
+                a.IsLateEntry, a.IsEarlyLeave, a.IsRegularization))
+            .ToListAsync(cancellationToken);
+
+        var entryLookup = entries
+            .GroupBy(a => (a.EmployeeId, a.AttendanceDate))
+            .ToDictionary(g => g.Key, g => g.First());
+
+        // Approved leave covering a day turns a day without punches into "On Leave".
+        var leaves = await context.TblLeaveRequests
+            .AsNoTracking()
+            .Where(l => l.CurrentStatus == EmployeeRecordStatuses.Approved
+                        && l.FromDate <= to && l.ToDate >= from
+                        && employeeQuery.Select(m => m.Id).Contains(l.EmployeeId))
+            .Select(l => new AttendanceLeave(l.EmployeeId, l.FromDate, l.ToDate, l.LeaveType.Title))
+            .ToListAsync(cancellationToken);
+
+        var leaveLookup = leaves.ToLookup(l => l.EmployeeId);
+
+        var days = Enumerable.Range(0, to.DayNumber - from.DayNumber + 1).Select(from.AddDays).ToList();
+
+        var rows = employees
+            .SelectMany(e => days
+                .Where(e.IsEmployedOn)
+                .Select(d =>
+                {
+                    entryLookup.TryGetValue((e.Id, d), out var entry);
+                    var leave = leaveLookup[e.Id].FirstOrDefault(l => l.FromDate <= d && l.ToDate >= d);
+                    return new AttendanceRow(e, d, entry, leave?.LeaveType, DeriveAttendanceRowStatus(d, entry, leave is not null));
+                }))
+            .ToList();
+
+        var statusCounts = new EmployeeRecordStatusCounts
+        {
+            All = rows.Count,
+            Pending = rows.Count(r => AttendanceStatuses.IsPending(r.Status))
+        };
+
+        if (ParseStatus(param.Status) == EmployeeRecordStatusFilter.Pending)
+        {
+            rows = rows.Where(r => AttendanceStatuses.IsPending(r.Status)).ToList();
+        }
+        else if (AttendanceStatuses.IsFilter(param.Status))
+        {
+            var wanted = param.Status!.Trim();
+            rows = rows.Where(r => r.Status.Equals(wanted, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+
+        var total = rows.Count;
 
         var sorted = (param.SortOn?.Trim().ToLowerInvariant()) switch
         {
-            "employeename" => Order(query, m => m.Employee.FullName, param.SortDirection),
-            "organizationunit" => Order(query, m => m.Employee.OrganizationUnit!.Name, param.SortDirection),
-            "employeecode" => Order(query, m => m.Employee.Code, param.SortDirection),
-            _ => Order(query, m => m.AttendanceDate, param.SortDirection)
+            "employeename" => OrderRows(rows, r => r.Employee.FullName, param.SortDirection).ThenBy(r => r.Date),
+            "organizationunit" => OrderRows(rows, r => r.Employee.OrganizationUnit ?? string.Empty, param.SortDirection).ThenBy(r => r.Employee.FullName),
+            "employeecode" => OrderRows(rows, r => r.Employee.Code, param.SortDirection).ThenBy(r => r.Date),
+            "status" => OrderRows(rows, r => r.Status, param.SortDirection).ThenBy(r => r.Employee.FullName),
+            _ => OrderRows(rows, r => r.Date, param.SortDirection).ThenBy(r => r.Employee.FullName)
         };
 
-        var rows = await Page(sorted, param).ToListAsync(cancellationToken);
+        var items = sorted
+            .Skip(param.PageIndex * param.PageSize)
+            .Take(param.PageSize)
+            .Select(r => new EmployeeRecordItem
+            {
+                // An employee with no attendance row has nothing to open, so the id stays empty.
+                Id = r.Entry?.Id ?? Guid.Empty,
+                RecordType = EmployeeRecordTypes.Attendance,
+                EmployeeName = r.Employee.FullName,
+                EmployeeCode = r.Employee.Code,
+                OrganizationUnit = r.Employee.OrganizationUnit,
+                Category = r.Status == AttendanceStatuses.OnLeave ? r.LeaveType : null,
+                Period = r.Date.ToString(DateFormat),
+                Quantity = r.Entry is null ? null : FormatTimeRange(r.Entry.ActualInTime, r.Entry.ActualOutTime),
+                Status = r.Status,
+                Stage = r.Entry is { IsRegularization: true } ? "Yes" : "-",
+                FromDate = r.Date,
+                ToDate = r.Date,
+                WorkingHours = r.Entry is null ? null : FormatWorkingHours(r.Entry.ActualInTime, r.Entry.ActualOutTime)
+            })
+            .ToList();
 
-        var items = rows.Select(m => new EmployeeRecordItem
-        {
-            Id = m.Id,
-            RecordType = EmployeeRecordTypes.Attendance,
-            EmployeeName = m.Employee.FullName,
-            EmployeeCode = m.Employee.Code,
-            OrganizationUnit = m.Employee.OrganizationUnit != null ? m.Employee.OrganizationUnit.Name : null,
-            Category = null,
-            Period = m.AttendanceDate.ToString(DateFormat),
-            Quantity = FormatTimeRange(m.ActualInTime, m.ActualOutTime),
-            Status = DeriveAttendanceStatus(m.AttendanceDate, m.ActualInTime, m.ActualOutTime, m.IsLateEntry, m.IsEarlyLeave),
-            Stage = m.IsRegularization ? "Yes" : "-",
-            FromDate = m.AttendanceDate,
-            ToDate = m.AttendanceDate,
-            WorkingHours = FormatWorkingHours(m.ActualInTime, m.ActualOutTime)
-        }).ToList();
+        // Attendance status is derived from punch and leave data rather than a workflow column.
+        return (items, total, statusCounts);
+    }
 
-        // Attendance status is derived from punch data rather than a workflow column.
-        return (items, total, new EmployeeRecordStatusCounts { All = total });
+    private async Task<int> CountAttendanceAsync(
+        EmployeeRecordSearchRequest param, List<Guid> scope, CancellationToken cancellationToken)
+    {
+        var (from, to) = ResolveAttendanceWindow(param);
+
+        var employees = await AttendanceEmployeeQuery(param, scope, from, to)
+            .Select(m => new AttendanceEmployee(m.Id, m.FullName, m.Code, null, m.JoiningDate, m.SeparationDate))
+            .ToListAsync(cancellationToken);
+
+        var days = Enumerable.Range(0, to.DayNumber - from.DayNumber + 1).Select(from.AddDays);
+
+        return days.Sum(d => employees.Count(e => e.IsEmployedOn(d)));
+    }
+
+    private static IOrderedEnumerable<T> OrderRows<T, TKey>(IEnumerable<T> rows, Func<T, TKey> keySelector, string? sortDirection)
+    {
+        var ascending = !string.IsNullOrWhiteSpace(sortDirection)
+                        && sortDirection.Equals("asc", StringComparison.OrdinalIgnoreCase);
+
+        return ascending ? rows.OrderBy(keySelector) : rows.OrderByDescending(keySelector);
+    }
+
+    private static string DeriveAttendanceRowStatus(DateOnly date, AttendanceEntry? entry, bool onLeave)
+    {
+        // Someone who punched in or out worked that day, whatever leave is on file.
+        var hasPunch = entry is { ActualInTime: not null } or { ActualOutTime: not null };
+        if (onLeave && !hasPunch)
+            return AttendanceStatuses.OnLeave;
+
+        if (entry is not null)
+            return DeriveAttendanceStatus(entry.AttendanceDate, entry.ActualInTime, entry.ActualOutTime, entry.IsLateEntry, entry.IsEarlyLeave);
+
+        // No row at all: a finished day is an absence, today (or later) simply has no punch yet.
+        return date < DateOnly.FromDateTime(DateTime.Now.Date)
+            ? AttendanceStatuses.Absent
+            : AttendanceStatuses.NotPunched;
     }
 
     // ---- Medical fitness -------------------------------------------------------
@@ -446,7 +573,7 @@ internal sealed class GetEmployeeRecordsBySearchQueryHandler(QubeFinDataContext 
             Leave = await FilterStatus(LeaveQuery(param, scope), param.Status).CountAsync(cancellationToken),
             Regularization = await FilterStatus(RegularizationQuery(param, scope), param.Status).CountAsync(cancellationToken),
             Prayer = await FilterStatus(PrayerQuery(param, scope), param.Status).CountAsync(cancellationToken),
-            Attendance = await AttendanceQuery(param, scope).CountAsync(cancellationToken),
+            Attendance = await CountAttendanceAsync(param, scope, cancellationToken),
             Fitness = await FitnessQuery(param, scope).CountAsync(cancellationToken)
         };
 

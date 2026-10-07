@@ -21,6 +21,8 @@ public partial class TblInterviewPanel
 
     public bool IsAttened { get; set; }
 
+    public string? AttenedRemarks { get; set; }
+
     public int AppearanceAttitudeRating { get; set; }
 
     public string? AppearanceAttitudeRemarks { get; set; }
@@ -71,13 +73,13 @@ public partial class TblInterviewPanel
 
     public bool IsSubmitted { get; set; }
 
+    public string AssessmentType { get; set; } = null!;
+
     public DateTime? SubmissionDate { get; set; }
 
     public Guid ModifiedBy { get; set; }
 
     public DateTime ModifiedOn { get; set; }
-
-    public string AssessmentType { get; set; } = null!;
 
     public virtual TblInterviewCandidate Candidate { get; set; } = null!;
 

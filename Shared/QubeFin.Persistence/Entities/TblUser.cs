@@ -71,6 +71,8 @@ public partial class TblUser
 
     public virtual ICollection<TblRole> TblRoleLastModifiedByNavigations { get; set; } = new List<TblRole>();
 
+    public virtual ICollection<TblUserDevice> TblUserDevices { get; set; } = new List<TblUserDevice>();
+
     public virtual ICollection<TblUserMenuPermission> TblUserMenuPermissions { get; set; } = new List<TblUserMenuPermission>();
 
     public virtual ICollection<TblUserSession> TblUserSessions { get; set; } = new List<TblUserSession>();
