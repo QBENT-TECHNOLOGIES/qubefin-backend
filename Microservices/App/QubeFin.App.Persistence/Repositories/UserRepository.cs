@@ -96,15 +96,16 @@ public class UserRepository(QubeFinDataContext context) : IUserRepository
         return entity.ToDomain();
     }
 
-    public async Task UnbindDeviceAsync(Guid DeviceId, Guid UserId)
+    public async Task UnbindDeviceAsync(Guid UserDeviceId, Guid UserId)
     {
-        var userDeviceEntity = await context.TblUserDevices.FirstOrDefaultAsync(m => m.Id == DeviceId);
-        if (userDeviceEntity != null)
+        var userDeviceEntity = await context.TblUserDevices.FirstOrDefaultAsync(m => m.Id == UserDeviceId);
+        if (userDeviceEntity == null)
         {
-            userDeviceEntity.IsReleased = true;
-            userDeviceEntity.ReleaseDate = DateTime.Now;
-            userDeviceEntity.ReleaseBy = UserId;
+            throw new Exception("User device not found.");
         }
+        userDeviceEntity.IsReleased = true;
+        userDeviceEntity.ReleaseDate = DateTime.Now;
+        userDeviceEntity.ReleaseBy = UserId;
         context.TblUserDevices.Update(userDeviceEntity);
     }
 }

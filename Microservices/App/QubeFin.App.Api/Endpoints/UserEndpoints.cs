@@ -20,7 +20,8 @@ public class UserEndpoints : IEndpoint
         })
         .RequireAuthorization()
         //.RequireAuthorization("Permission:Users.View")
-        .WithSummary("Get All Users");
+        .WithSummary("Get All Users")
+        .WithTags("Users");
 
         app.MapGet("users/search", async (ISender sender, Guid? organizationUnitId, Guid? companyId, string? searchText, string sortOn, string sortDirection, int pageIndex, int pageSize) =>
         {
@@ -28,7 +29,8 @@ public class UserEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         .RequireAuthorization()
-        .WithSummary("Search Users by User Name or Employee Name");
+        .WithSummary("Search Users by User Name or Employee Name")
+        .WithTags("Users");
 
         app.MapGet("users/{id:guid}", async (Guid id, ISender sender) =>
         {
@@ -37,7 +39,8 @@ public class UserEndpoints : IEndpoint
         })
         .RequireAuthorization()
         //.RequireAuthorization("Permission:Users.View")
-        .WithSummary("Get User By Id");
+        .WithSummary("Get User By Id")
+        .WithTags("Users");
 
         app.MapGet("users/login-info", async (ClaimsPrincipal principal, ISender sender) =>
         {
@@ -53,7 +56,8 @@ public class UserEndpoints : IEndpoint
         })
         .RequireAuthorization()
         //.RequireAuthorization("Permission:Users.View")
-        .WithSummary("Get Logeedin User Info");
+        .WithSummary("Get Logeedin User Info")
+        .WithTags("Users");
 
         app.MapPost("users", async (ClaimsPrincipal principal, UserCreateRequest request, ISender sender) =>
         {
@@ -62,7 +66,8 @@ public class UserEndpoints : IEndpoint
         })
         .RequireAuthorization()
         //.RequireAuthorization("Permission:Users.Add")
-        .WithSummary("Create User");
+        .WithSummary("Create User")
+        .WithTags("Users");
 
         app.MapPut("users/{id:guid}", async (ClaimsPrincipal principal, UserUpdateRequest request, ISender sender,Guid id) =>
         {
@@ -71,7 +76,8 @@ public class UserEndpoints : IEndpoint
         })
         .RequireAuthorization()
         //.RequireAuthorization("Permission:Users.Add")
-        .WithSummary("Update User");
+        .WithSummary("Update User")
+        .WithTags("Users");
 
         app.MapPost("register-mfa", async (RegisterMfaCommand request, ISender sender, IPublisher publisher) =>
         {
@@ -85,11 +91,11 @@ public class UserEndpoints : IEndpoint
             return result.ToHttpResult();
         });
 
-        app.MapGet("un-bind-user/{userName}", async (ISender sender, string userName) =>
-        {
-            var result = await sender.Send(new UnbindUserDeviceCommand(userName));
-            return result.ToHttpResult();
-        });
+        //app.MapGet("un-bind-user/{userName}", async (ISender sender, string userName) =>
+        //{
+        //    var result = await sender.Send(new UnbindUserDeviceCommand(userName));
+        //    return result.ToHttpResult();
+        //});
 
         #region --- Devices ---
         app.MapGet("user-device/{id}", async (Guid id, ISender sender) =>
@@ -97,17 +103,19 @@ public class UserEndpoints : IEndpoint
             var result = await sender.Send(new GetDevicesByIdQuery(id));
             return result.ToHttpResult();
         })
-            .RequireAuthorization()
-        .WithSummary("Get User Devices");
-        
-        app.MapGet("user-device-unbind/{id}", async (Guid id, ClaimsPrincipal principal, ISender sender) =>
+        .RequireAuthorization()
+        .WithSummary("Get User Devices")
+        .WithTags("Users Devices");
+
+        app.MapGet("user-device-unbind/{userDeviceId}", async (Guid userDeviceId, ClaimsPrincipal principal, ISender sender) =>
         {
             var userId = principal.Identity.GetUserId();
-            var result = await sender.Send(new UnbindUserDeviceByIdCommand(id, userId));
+            var result = await sender.Send(new UnbindUserDeviceByIdCommand(userDeviceId, userId));
             return result.ToHttpResult();
         })
-            .RequireAuthorization()
-            .WithSummary("Unbind User Device");
+        .RequireAuthorization()
+        .WithSummary("Unbind User Device")
+        .WithTags("Users Devices");
 
         #endregion
     }
