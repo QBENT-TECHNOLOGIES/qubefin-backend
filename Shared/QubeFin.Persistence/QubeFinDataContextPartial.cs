@@ -35,6 +35,8 @@ public partial class QubeFinDataContext : DbContext, IUnitOfWork
         modelBuilder.Entity<EmployeeMonthlyCalendarResponse>().HasNoKey().ToView(null);
         modelBuilder.Entity<EmployeeLeaveMonthlyCalendarResponse>().HasNoKey().ToView(null);
         modelBuilder.Entity<GetInterviewCandidateDetail>().HasNoKey().ToView(null);
+        modelBuilder.Entity<CandidateListResult>().HasNoKey().ToView(null);
+        modelBuilder.Entity<InterviewerCandidateListResult>().HasNoKey().ToView(null);
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

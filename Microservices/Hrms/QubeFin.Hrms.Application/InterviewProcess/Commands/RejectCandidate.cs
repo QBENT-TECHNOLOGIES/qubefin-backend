@@ -10,7 +10,8 @@ using QubeFin.Persistence;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
-/// <summary>HR rejects the candidate, at any stage until an employee has been created from them. Stops the
+/// <summary>HR rejects the candidate at any stage until an employee has been created from them; the candidate's
+/// Admin (its creator) can reject only until HR saves the HR Assessment draft. Stops the
 /// workflow for good: every <see cref="ICandidateWorkflowCommand"/> on the candidate is refused from then on.
 /// Deliberately not an ICandidateWorkflowCommand itself - it checks the stopped state on its own so it can
 /// say why.</summary>
@@ -37,16 +38,24 @@ internal sealed class RejectCandidateCommandHandler(
             return new ValidationError("Authenticated user is required.");
         }
 
-        var hrPostId = Guid.Parse(configuration["HrPost"]!);
-        if (!await context.IsHrEmployeeAsync(hrPostId, request.EmployeeId, cancellationToken))
-        {
-            return new ForbiddenError("Only HR can reject a candidate.");
-        }
-
         var candidate = await candidateRepository.GetByIdAsync(request.CandidateId);
         if (candidate is null)
         {
             return new RecordNotFoundError("Candidate not found.");
+        }
+
+        var hrPostId = Guid.Parse(configuration["HrPost"]!);
+        if (!await context.IsHrEmployeeAsync(hrPostId, request.EmployeeId, cancellationToken))
+        {
+            if (!await context.IsCandidateCreatorAsync(request.CandidateId, request.EmployeeId, cancellationToken))
+            {
+                return new ForbiddenError("Only HR or the candidate's creator can reject a candidate.");
+            }
+
+            if (candidate.RecommendationStatus != CandidateWorkflow.Pending || candidate.IsHrAssessmentCompleted)
+            {
+                return new ForbiddenError("The HR Assessment has started - only HR can reject this candidate now.");
+            }
         }
 
         var stoppedStatus = await context.GetStoppedStatusAsync(request.CandidateId, cancellationToken);
@@ -55,9 +64,9 @@ internal sealed class RejectCandidateCommandHandler(
             return new ValidationError("This candidate has already been rejected.");
         }
 
-        if (stoppedStatus == CandidateInterviewStatus.NotRecommended)
+        if (stoppedStatus == CandidateInterviewStatus.NotSelected)
         {
-            return new ValidationError("This candidate was not recommended by HR. The workflow has already stopped.");
+            return new ValidationError("This candidate was not selected. The workflow has already stopped.");
         }
 
         if (await candidateRepository.GetEmployeeIdAsync(request.CandidateId, cancellationToken) is not null)

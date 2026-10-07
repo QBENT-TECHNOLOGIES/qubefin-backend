@@ -19,30 +19,20 @@ public record PanelistRatingSummaryDto(
     int? TotalRatingPoint,
     bool? IsRecommendedForPosition);
 
+/// <summary>An interviewer whose assessment is still outstanding when HR opens the HR Assessment. HR is warned
+/// and may proceed anyway - the outstanding assessment is left out of the averages.</summary>
+public record PendingPanelistDto(Guid EmployeeId, string EmployeeCode, string EmployeeName, bool IsAcknowledged);
+
 /// <summary>
-/// Returned when HR opens the HR Assessment form for a candidate. The ten category ratings are the
-/// average of every panelist's submitted score for that category - shown read-only in the form. Below
-/// that, OverallPerformance/SuitableRoleDepartment/RecommendedGradeId/IsTrainingRequired/RecommendationStatus
-/// are HR's own editable decision fields (pre-filled from a previous draft, if any).
+/// Returned when HR opens the HR Assessment form for a candidate. The ten category ratings are the average of
+/// every submitted interviewer's score for that category - shown read-only. Below that are HR's own decision
+/// fields (pre-filled from a saved draft, if any). Nothing here is stored in Hrms.Tbl_InterviewPanel.
 /// </summary>
 public record HrAssessmentFormDto(
     Guid CandidateId,
+
+    // IsHrAssessmentCompleted - the form is read-only once true.
     bool IsSubmitted,
-
-    // True when HR has already submitted their own individual interviewer assessment (genuinely scheduled
-    // on the panel, not just holding the administrative HR row). The fields shared with the interviewer
-    // assessment form (the rating block, IsRecommendedForPosition, PositiveRemarks, NegativeRemarks,
-    // AnyOtherJobsSuitedRemarks) are sourced from HR's own submission below and are never re-asked or
-    // overwritten by the HR Assessment save/submit endpoints in either case; whether the frontend should
-    // render them disabled or editable is IsHrOnlyInterviewer, right below.
-    bool HrIsInterviewer,
-
-    // True when HrIsInterviewer is true AND no other panelist is scheduled on this candidate's panel - HR
-    // is literally the sole interviewer. In that case the shared fields should render disabled (HR's own
-    // single score is definitive, nothing else to reconcile it against). When false but HrIsInterviewer is
-    // true, HR is one of several interviewers - the shared fields (the live average of everyone including
-    // HR) keep updating as other panelists submit, so the frontend should leave them enabled.
-    bool IsHrOnlyInterviewer,
 
     // Read-only: average of the submitted panelists' ratings per category.
     int? AverageAppearanceAttitudeRating,
@@ -57,19 +47,14 @@ public record HrAssessmentFormDto(
     int? AverageOthersRating,
     int? AverageTotalRatingPoint,
 
-    // Editable by HR (pre-filled with whatever was last saved, if a draft/submission exists).
+    // Editable by HR (pre-filled with whatever was last saved).
     string? OverallPerformance,
     string? SuitableRoleDepartment,
     Guid? RecommendedGradeId,
     bool IsTrainingRequired,
     string? RecommendationStatus,
-    string? AnyOtherJobsSuitedRemarks,
-    bool? IsRecommendedForPosition,
-    string? PositiveRemarks,
-    string? NegativeRemarks,
 
-    // Salary & joining expectations. These live on the candidate rather than the HR row - they may already
-    // have been captured when the candidate was created, and HR confirms/corrects them here.
+    // Salary & joining expectations - stored on the candidate; HR confirms/corrects them here.
     decimal? CurrentSalary,
     decimal? ExpectedSalary,
     int? NoticePeriodInDays,
@@ -77,12 +62,15 @@ public record HrAssessmentFormDto(
     bool IsWillingRelocate,
     string? PreferredLocation,
 
-    // For reference - the individual panelists these averages were computed from.
-    IReadOnlyList<PanelistRatingSummaryDto> Panelists);
+    // For reference - the submitted panelists these averages were computed from.
+    IReadOnlyList<PanelistRatingSummaryDto> Panelists,
+
+    // Panelists who have not submitted (and did not record the candidate absent). Non-empty -> warn HR.
+    IReadOnlyList<PendingPanelistDto> PendingPanelists);
 
 /// <summary>Body for both the HR Assessment draft-save and submit endpoints. The ten category ratings are
 /// never sent here - the server always (re)computes them as the average of the submitted panelists'
-/// ratings, since they're read-only/disabled in the HR Assessment form.</summary>
+/// ratings, since they're read-only in the HR Assessment form.</summary>
 public record HrAssessmentDecisionDto(
     string? interviewMode,
     string? OverallPerformance,
@@ -90,10 +78,6 @@ public record HrAssessmentDecisionDto(
     Guid? RecommendedGradeId,
     bool IsTrainingRequired,
     string? RecommendationStatus,
-    string? AnyOtherJobsSuitedRemarks,
-    bool? IsRecommendedForPosition,
-    string? PositiveRemarks,
-    string? NegativeRemarks,
 
     // Salary & joining expectations, written straight to the candidate by both the draft and the submit.
     decimal? CurrentSalary,

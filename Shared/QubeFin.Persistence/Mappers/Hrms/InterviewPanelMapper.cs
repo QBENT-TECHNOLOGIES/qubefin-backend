@@ -11,7 +11,6 @@ public static class InterviewPanelMapper
         var employeeCode = entity.Employee?.Code;
         var employeeName = entity.Employee?.FullName;
         string? designation = null;
-        Guid? designationPostId = null;
         if (entity.Employee?.TblEmployeeDesignations != null && entity.Employee.TblEmployeeDesignations.Any())
         {
             var current = entity.Employee.TblEmployeeDesignations
@@ -20,7 +19,6 @@ public static class InterviewPanelMapper
                 .FirstOrDefault();
 
             designation = current?.Designation?.Name;
-            designationPostId = current?.Designation?.PostId;
         }
 
         return new InterviewPanel(
@@ -32,6 +30,7 @@ public static class InterviewPanelMapper
             entity.IsAcknowledged,
             entity.AcknowledgedDate,
             entity.IsAttened,
+            entity.AttenedRemarks,
             entity.AppearanceAttitudeRating,
             entity.AppearanceAttitudeRemarks,
             entity.PersonalityRating,
@@ -62,9 +61,7 @@ public static class InterviewPanelMapper
             entity.ModifiedOn,
             employeeCode,
             designation,
-            employeeName,
-            designationPostId,
-            entity.AssessmentType);
+            employeeName);
     }
 
     public static TblInterviewPanel ToEntity(this InterviewPanel panel)
@@ -79,6 +76,7 @@ public static class InterviewPanelMapper
             IsAcknowledged = panel.IsAcknowledged,
             AcknowledgedDate = panel.AcknowledgedDate,
             IsAttened = panel.IsAttened,
+            AttenedRemarks = panel.AttenedRemarks,
             AppearanceAttitudeRating = panel.AppearanceAttitudeRating ?? 0,
             AppearanceAttitudeRemarks = panel.AppearanceAttitudeRemarks,
             PersonalityRating = panel.PersonalityRating ?? 0,
@@ -106,8 +104,7 @@ public static class InterviewPanelMapper
             IsSubmitted = panel.IsSubmitted,
             SubmissionDate = panel.SubmissionDate,
             ModifiedBy = panel.ModifiedBy,
-            ModifiedOn = panel.ModifiedOn,
-            AssessmentType = panel.AssessmentType
+            ModifiedOn = panel.ModifiedOn
         };
     }
 }

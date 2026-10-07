@@ -1,4 +1,4 @@
-using QubeFin.Persistence.Models.Hrms;
+﻿using QubeFin.Persistence.Models.Hrms;
 using Entity = QubeFin.Persistence.Entities.TblInterviewCandidate;
 
 namespace QubeFin.Persistence.Mappers.Hrms;
@@ -72,7 +72,13 @@ public static class CandidateMapper
             entity.CreatedBy,
             entity.CreatedOn,
             entity.ModifiedBy,
-            entity.ModifiedOn);
+            entity.ModifiedOn,
+            entity.Address,
+            entity.ApplicationDate,
+            entity.CvFile,
+            entity.JobApplicationFile,
+            entity.IsSelectedForOffer ?? false,
+            entity.IsHrAssessmentCompleted);
     }
 
     public static Entity ToEntity(this Candidate candidate)
@@ -95,6 +101,12 @@ public static class CandidateMapper
             PoliceStationId = candidate.PoliceStationId,
             PostOfficeId = candidate.PostOfficeId,
             PinCode = candidate.PinCode,
+            Address = candidate.Address,
+            ApplicationDate = candidate.ApplicationDate,
+            CvFile = candidate.CvFile,
+            JobApplicationFile = candidate.JobApplicationFile,
+            IsSelectedForOffer = candidate.IsSelectedForOffer,
+            IsHrAssessmentCompleted = candidate.IsHrAssessmentCompleted,
             ReferenceNo = candidate.ReferenceNo,
             InterviewDate = candidate.InterviewDate,
             InterviewTime = candidate.InterviewTime,

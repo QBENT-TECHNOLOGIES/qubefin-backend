@@ -3,6 +3,7 @@ using FluentValidation;
 using MediatR;
 using QubeFin.Core.Results;
 using QubeFin.Hrms.Application.InterviewProcess.Models;
+using QubeFin.Hrms.Application.InterviewProcess.Services;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Hrms;
@@ -45,9 +46,12 @@ public class CreateCandidateCommandValidator : AbstractValidator<CreateCandidate
             .Matches(@"^\d{10}$")
             .WithMessage("Mobile number must contain digits only.");
 
-        RuleFor(x => x.Candidate.InterviewDate)
-            .NotEmpty()
-            .WithMessage("Interview date is required.");
+        RuleFor(x => x.Candidate.Address)
+            .MaximumLength(200)
+            .WithMessage("Address cannot exceed 200 characters.");
+
+        RuleFor(x => x.Candidate.CvFile).CandidateDocument("CV", required: true);
+        RuleFor(x => x.Candidate.JobApplicationFile).CandidateDocument("Job Application", required: true);
 
         RuleFor(x => x.Candidate.InterviewPost)
             .NotEmpty()
@@ -55,7 +59,7 @@ public class CreateCandidateCommandValidator : AbstractValidator<CreateCandidate
     }
 }
 
-internal sealed class CreateCandidateCommandHandler(ICandidateRepository candidateRepository, IUnitOfWork unitOfWork) : IRequestHandler<CreateCandidateCommand, Result<string>>
+internal sealed class CreateCandidateCommandHandler(ICandidateRepository candidateRepository, IFileStorageRepository fileStorageRepository, IUnitOfWork unitOfWork) : IRequestHandler<CreateCandidateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(CreateCandidateCommand request, CancellationToken cancellationToken)
     {
@@ -65,6 +69,17 @@ internal sealed class CreateCandidateCommandHandler(ICandidateRepository candida
         }
 
         var candidate = request.Candidate;
+
+        string cvFile, jobApplicationFile;
+        try
+        {
+            cvFile = (await fileStorageRepository.UploadIfPresentAsync(candidate.CvFile, cancellationToken))!;
+            jobApplicationFile = (await fileStorageRepository.UploadIfPresentAsync(candidate.JobApplicationFile, cancellationToken))!;
+        }
+        catch (Exception)
+        {
+            return new ValidationError("Unable to upload the CV / Job Application. Please try again.");
+        }
 
         var referenceNo = await GenerateReferenceNoAsync(cancellationToken);
 
@@ -83,8 +98,8 @@ internal sealed class CreateCandidateCommandHandler(ICandidateRepository candida
             candidate.PoliceStationId,
             candidate.PostOfficeId,
             candidate.PinCode,
-            candidate.InterviewDate,
-            candidate.InterviewTime,
+            null,
+            null,
             candidate.DepartmentId,
             candidate.InterviewPost,
             null,
@@ -111,10 +126,11 @@ internal sealed class CreateCandidateCommandHandler(ICandidateRepository candida
             candidate.AadharNumber,
             candidate.VoterNumber,
             candidate.Pan,
-            candidate.Uan
+            candidate.Uan,
+            candidate.Address
         );
 
-        var entity = Candidate.Create(candidate.CompanyId, referenceNo, request.CreatedBy, candidateDetails);
+        var entity = Candidate.Create(candidate.CompanyId, referenceNo, request.CreatedBy, candidateDetails, cvFile, jobApplicationFile);
 
         await candidateRepository.AddAsync(entity);
         await unitOfWork.SaveChangesAsync(cancellationToken);

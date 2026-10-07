@@ -5,7 +5,8 @@ using QubeFin.Core.Results;
 using QubeFin.Hrms.Application.InterviewProcess.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
-using QubeFin.Persistence.Models.Hrms;
+using QubeFin.Persistence.Models.Hrms;
+
 using QubeFin.Hrms.Application.InterviewProcess.Services;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
@@ -30,7 +31,7 @@ public class SubmitInterviewAssessmentCommandValidator : AbstractValidator<Submi
     }
 }
 
-internal sealed class SubmitInterviewAssessmentCommandHandler(IInterviewPanelRepository panelRepository, IUnitOfWork unitOfWork) : IRequestHandler<SubmitInterviewAssessmentCommand, Result<string>>
+internal sealed class SubmitInterviewAssessmentCommandHandler(IInterviewPanelRepository panelRepository, QubeFinDataContext context, IUnitOfWork unitOfWork) : IRequestHandler<SubmitInterviewAssessmentCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(SubmitInterviewAssessmentCommand request, CancellationToken cancellationToken)
     {
@@ -43,6 +44,18 @@ internal sealed class SubmitInterviewAssessmentCommandHandler(IInterviewPanelRep
         if (panel is null)
         {
             return Result.Fail("Interview panel entry not found.");
+        }
+
+        if (!panel.IsAttened)
+        {
+            return new ValidationError(panel.IsCandidateAbsent
+                ? "The candidate was marked absent - there is no assessment to fill in."
+                : "Record the candidate's attendance before filling in the assessment.");
+        }
+
+        if (!panel.IsSubmitted && await context.GetAssessmentBlockerAsync(panel, cancellationToken) is { } blocker)
+        {
+            return new ValidationError(blocker);
         }
 
         var dto = request.Assessment;

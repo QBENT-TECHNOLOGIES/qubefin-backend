@@ -53,9 +53,12 @@ public class UpdateCandidateCommandValidator : AbstractValidator<UpdateCandidate
             .Matches(@"^\d{10}$")
             .WithMessage("Mobile number must contain digits only.");
 
-        RuleFor(x => x.Candidate.InterviewDate)
-            .NotEmpty()
-            .WithMessage("Interview date is required.");
+        RuleFor(x => x.Candidate.Address)
+            .MaximumLength(200)
+            .WithMessage("Address cannot exceed 200 characters.");
+
+        RuleFor(x => x.Candidate.CvFile).CandidateDocument("CV", required: false);
+        RuleFor(x => x.Candidate.JobApplicationFile).CandidateDocument("Job Application", required: false);
 
         RuleFor(x => x.Candidate.InterviewPost)
             .NotEmpty()
@@ -67,7 +70,7 @@ public class UpdateCandidateCommandValidator : AbstractValidator<UpdateCandidate
     }
 }
 
-internal sealed class UpdateCandidateCommandHandler(ICandidateRepository candidateRepository, IInterviewPanelRepository panelRepository, IUnitOfWork unitOfWork) : IRequestHandler<UpdateCandidateCommand, Result<string>>
+internal sealed class UpdateCandidateCommandHandler(ICandidateRepository candidateRepository, IFileStorageRepository fileStorageRepository, IUnitOfWork unitOfWork) : IRequestHandler<UpdateCandidateCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(UpdateCandidateCommand request, CancellationToken cancellationToken)
     {
@@ -89,9 +92,21 @@ internal sealed class UpdateCandidateCommandHandler(ICandidateRepository candida
             return new ValidationError("Candidate details cannot be edited once the offer letter has been received.");
         }
 
+        // A replaced CV / job application is uploaded first; files not sent are kept.
+        string? cvFile, jobApplicationFile;
+        try
+        {
+            cvFile = await fileStorageRepository.UploadIfPresentAsync(request.Candidate.CvFile, cancellationToken);
+            jobApplicationFile = await fileStorageRepository.UploadIfPresentAsync(request.Candidate.JobApplicationFile, cancellationToken);
+        }
+        catch (Exception)
+        {
+            return new ValidationError("Unable to upload the CV / Job Application. Please try again.");
+        }
+
         // Only what the candidate form edits is taken from the request: the basic details plus the joining details
         // (posted unit, joining date, reporting time, monthly CTC). Everything filled in elsewhere (HR assessment,
-        // salary expectations, KYC numbers) is kept as it is, so an edit cannot wipe it.
+        // salary expectations, KYC numbers, the interview slot set by Schedule) is kept as it is, so an edit cannot wipe it.
         var details = request.Candidate;
         var candidateDetails = new CandidateDetails(
             details.FirstName,
@@ -108,8 +123,8 @@ internal sealed class UpdateCandidateCommandHandler(ICandidateRepository candida
             details.PoliceStationId,
             details.PostOfficeId,
             details.PinCode,
-            details.InterviewDate,
-            details.InterviewTime,
+            candidate.InterviewDate,
+            candidate.InterviewTime,
             details.DepartmentId,
             details.InterviewPost,
             candidate.InterviewPostName,
@@ -136,27 +151,18 @@ internal sealed class UpdateCandidateCommandHandler(ICandidateRepository candida
             candidate.AadharNumber,
             candidate.VoterNumber,
             candidate.Pan,
-            candidate.Uan
+            candidate.Uan,
+            details.Address
         );
-
-        var interviewRescheduled = candidate.InterviewDate != details.InterviewDate || candidate.InterviewTime != details.InterviewTime;
 
         candidate.Update(candidateDetails, request.ModifiedBy);
 
-        await candidateRepository.UpdateAsync(candidate);
-
-        // Keep the panel on the candidate's interview slot. Panelists who already attended keep the slot they
-        // interviewed in; the HR Assessment row is not an interview slot and is left alone.
-        if (interviewRescheduled && details.InterviewTime is { } interviewTime)
+        if (cvFile is not null || jobApplicationFile is not null)
         {
-            var panelists = (await panelRepository.GetByCandidateIdAsync(candidate.Id)).Interviewers().Where(p => !p.IsAttened);
-            foreach (var panelist in panelists)
-            {
-                panelist.Reschedule(details.InterviewDate, interviewTime, request.ModifiedBy);
-                await panelRepository.UpdateAsync(panelist);
-            }
+            candidate.SetDocuments(cvFile, jobApplicationFile, request.ModifiedBy);
         }
 
+        await candidateRepository.UpdateAsync(candidate);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Ok("Candidate updated successfully.");

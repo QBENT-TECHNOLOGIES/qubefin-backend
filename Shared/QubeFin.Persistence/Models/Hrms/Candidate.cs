@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace QubeFin.Persistence.Models.Hrms;
 
@@ -20,8 +20,24 @@ public class Candidate
     public Guid? PoliceStationId { get; private set; }
     public Guid? PostOfficeId { get; private set; }
     public string? PinCode { get; private set; }
+    public string? Address { get; private set; }
     public string? ReferenceNo { get; private set; }
-    public DateOnly InterviewDate { get; private set; }
+
+    /// <summary>The day the candidate was created - set once, never edited.</summary>
+    public DateOnly? ApplicationDate { get; private set; }
+
+    /// <summary>Storage keys of the candidate's CV and job application. Both are mandatory at creation.</summary>
+    public string? CvFile { get; private set; }
+    public string? JobApplicationFile { get; private set; }
+
+    /// <summary>HR picked the candidate for an offer after the HR Assessment. Candidate Verification opens only
+    /// once this is set, and it is never reverted.</summary>
+    public bool IsSelectedForOffer { get; private set; }
+
+    /// <summary>HR has submitted (finalised) the HR Assessment. A saved draft leaves this false while
+    /// RecommendationStatus moves off 'Pending'.</summary>
+    public bool IsHrAssessmentCompleted { get; private set; }
+    public DateOnly? InterviewDate { get; private set; }
     public TimeOnly? InterviewTime { get; private set; }
     public Guid? DepartmentId { get; private set; }
     public Guid InterviewPost { get; private set; }
@@ -94,7 +110,7 @@ public class Candidate
         Guid? postOfficeId,
         string? pinCode,
         string? referenceNo,
-        DateOnly interviewDate,
+        DateOnly? interviewDate,
         TimeOnly? interviewTime,
         Guid? departmentId,
         Guid interviewPost,
@@ -141,7 +157,13 @@ public class Candidate
         Guid createdBy,
         DateTime createdOn,
         Guid? modifiedBy,
-        DateTime? modifiedOn)
+        DateTime? modifiedOn,
+        string? address = null,
+        DateOnly? applicationDate = null,
+        string? cvFile = null,
+        string? jobApplicationFile = null,
+        bool isSelectedForOffer = false,
+        bool isHrAssessmentCompleted = false)
     {
         Id = id;
         CompanyId = companyId;
@@ -165,6 +187,11 @@ public class Candidate
         IsWelcomeLetterRecieved = isWelcomeLetterRecieved;
         WrittenInterviewFile = writtenInterviewFile;
         SignedJoiningLetterFile = signedJoiningLetterFile;
+        ApplicationDate = applicationDate;
+        CvFile = cvFile;
+        JobApplicationFile = jobApplicationFile;
+        IsSelectedForOffer = isSelectedForOffer;
+        IsHrAssessmentCompleted = isHrAssessmentCompleted;
 
         Apply(firstName, middleName, lastName, gender, fatherName, mobileNo, email, houseNo, roadName, landMark,
             administrativeUnitId, policeStationId, postOfficeId, pinCode, interviewDate, interviewTime, departmentId,
@@ -172,10 +199,10 @@ public class Candidate
             currentSalary, expectedSalary, noticePeriodInDays, earliestJoiningDate, isWillingRelocate,
             preferredLocation, postedOrganizationUnitId, dateOfJoining, reportingTime, monthlyCostCompany,
             overallPerformance, suitableRoleDepartment, recommendedGradeId, isTrainingRequired, recommendationStatus,
-            aadharNumber, voterNumber, pan, uan);
+            aadharNumber, voterNumber, pan, uan, address);
     }
 
-    public static Candidate Create(Guid companyId, string referenceNo, Guid createdBy, CandidateDetails details)
+    public static Candidate Create(Guid companyId, string referenceNo, Guid createdBy, CandidateDetails details, string cvFile, string jobApplicationFile)
     {
         return new Candidate
         {
@@ -184,6 +211,9 @@ public class Candidate
             ReferenceNo = referenceNo,
             CreatedBy = createdBy,
             CreatedOn = DateTime.UtcNow,
+            ApplicationDate = DateOnly.FromDateTime(DateTime.Now),
+            CvFile = cvFile,
+            JobApplicationFile = jobApplicationFile,
 
             // Initial values
             RecommendationStatus = "Pending",
@@ -194,6 +224,33 @@ public class Candidate
     public void Update(CandidateDetails details, Guid modifiedBy)
     {
         Apply(details);
+        ModifiedBy = modifiedBy;
+        ModifiedOn = DateTime.UtcNow;
+    }
+
+    /// <summary>Adds or moves the candidate's interview slot (the Schedule action). Touches nothing else - the
+    /// panel, interview letter and the rest of the workflow are separate.</summary>
+    public void Schedule(DateOnly interviewDate, TimeOnly interviewTime, Guid modifiedBy)
+    {
+        InterviewDate = interviewDate;
+        InterviewTime = interviewTime;
+        ModifiedBy = modifiedBy;
+        ModifiedOn = DateTime.UtcNow;
+    }
+
+    /// <summary>Replaces the CV and/or job application. A null key keeps the file already on record.</summary>
+    public void SetDocuments(string? cvFile, string? jobApplicationFile, Guid modifiedBy)
+    {
+        CvFile = cvFile ?? CvFile;
+        JobApplicationFile = jobApplicationFile ?? JobApplicationFile;
+        ModifiedBy = modifiedBy;
+        ModifiedOn = DateTime.UtcNow;
+    }
+
+    /// <summary>HR selects the candidate for an offer. One-way: there is no un-select.</summary>
+    public void SelectForOffer(Guid modifiedBy)
+    {
+        IsSelectedForOffer = true;
         ModifiedBy = modifiedBy;
         ModifiedOn = DateTime.UtcNow;
     }
@@ -331,7 +388,8 @@ public class Candidate
     /// <summary>Stores HR's in-progress assessment decision. Deliberately leaves RecommendationStatus,
     /// TotalRatingPoint and RatingStatus untouched: the workflow reads RecommendationStatus = 'Pending' as
     /// "HR Assessment not finished yet", and that is what keeps the HR Assessment button visible so HR can
-    /// come back to the draft. The averaged category ratings live on HR's own Tbl_InterviewPanel row.</summary>
+    /// come back to the draft. A draft is told apart by RecommendationStatus no longer being 'Pending' while
+    /// IsHrAssessmentCompleted is still false.</summary>
     public void SaveHrAssessmentDraft(
         string? recommendationStatus,
         string? overallPerformance,
@@ -350,9 +408,8 @@ public class Candidate
         ModifiedOn = DateTime.UtcNow;
     }
 
-    /// <summary>Finalizes HR's assessment. Unlike the draft this also writes RecommendationStatus, which moves
-    /// the candidate out of the HR_ASSESSMENT stage, plus the total and status derived from the average of the
-    /// interviewers' ratings - HR never types those in, they are computed from Tbl_InterviewPanel.</summary>
+    /// <summary>Finalizes HR's assessment: sets IsHrAssessmentCompleted and stores the total and status derived
+    /// from the average of the submitted interviewers' ratings - HR never types those in.</summary>
     public void SubmitHrAssessment(
         string? overallPerformance,
         string? suitableRoleDepartment,
@@ -370,6 +427,7 @@ public class Candidate
         RecommendationStatus = recommendationStatus;
         TotalRatingPoint = totalRatingPoint;
         RatingStatus = ratingStatus;
+        IsHrAssessmentCompleted = true;
 
         ModifiedBy = modifiedBy;
         ModifiedOn = DateTime.UtcNow;
@@ -410,7 +468,7 @@ public class Candidate
             details.PostedOrganizationUnitId, details.DateOfJoining, details.ReportingTime,
             details.MonthlyCostCompany, details.OverallPerformance, details.SuitableRoleDepartment,
             details.RecommendedGradeId, details.IsTrainingRequired, details.RecommendationStatus,
-            details.AadharNumber, details.VoterNumber, details.Pan, details.Uan);
+            details.AadharNumber, details.VoterNumber, details.Pan, details.Uan, details.Address);
 
         return this;
     }
@@ -430,7 +488,7 @@ public class Candidate
         Guid? policeStationId,
         Guid? postOfficeId,
         string? pinCode,
-        DateOnly interviewDate,
+        DateOnly? interviewDate,
         TimeOnly? interviewTime,
         Guid? departmentId,
         Guid interviewPost,
@@ -458,7 +516,8 @@ public class Candidate
         string? aadharNumber,
         string? voterNumber,
         string? pan,
-        string? uan)
+        string? uan,
+        string? address)
     {
         FirstName = firstName;
         MiddleName = middleName;
@@ -474,6 +533,7 @@ public class Candidate
         PoliceStationId = policeStationId;
         PostOfficeId = postOfficeId;
         PinCode = pinCode;
+        Address = address;
         InterviewDate = interviewDate;
         InterviewTime = interviewTime;
         DepartmentId = departmentId;
@@ -524,7 +584,7 @@ public record CandidateDetails(
     Guid? PoliceStationId,
     Guid? PostOfficeId,
     string? PinCode,
-    DateOnly InterviewDate,
+    DateOnly? InterviewDate,
     TimeOnly? InterviewTime,
     Guid? DepartmentId,
     Guid InterviewPost,
@@ -552,7 +612,8 @@ public record CandidateDetails(
     string? AadharNumber,
     string? VoterNumber,
     string? Pan,
-    string? Uan);
+    string? Uan,
+    string? Address = null);
 
 /// <summary>A single candidate verification check, verified one at a time from the Candidate Verification form.</summary>
 [JsonConverter(typeof(JsonStringEnumConverter<CandidateVerificationCheck>))]

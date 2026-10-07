@@ -24,8 +24,6 @@ public class AddInterviewPanelistsCommandValidator : AbstractValidator<AddInterv
         RuleForEach(x => x.Panelists).ChildRules(panelist =>
         {
             panelist.RuleFor(p => p.EmployeeId).NotEmpty().WithMessage("Panelist is required.");
-            panelist.RuleFor(p => p.ScheduledDate).NotEmpty().WithMessage("Scheduled date is required.");
-            panelist.RuleFor(p => p.ScheduledTime).NotEmpty().WithMessage("Scheduled time is required.");
         });
     }
 }
@@ -56,10 +54,18 @@ internal sealed class AddInterviewPanelistsCommandHandler(IInterviewPanelReposit
             return new ValidationError("The same panelist cannot be added to a candidate more than once.");
         }
 
-        // Only INTERVIEWER rows count as "the panel". Without this filter, an HR employee holding the HR
-        // Assessment row would be rejected as "already on the panel", and the IsAttened gate below would
-        // trip on that row (the HR Assessment marks itself attended).
-        var existingPanelists = (await panelRepository.GetByCandidateIdAsync(request.CandidateId)).Interviewers().ToList();
+        if (candidate.InterviewDate is not { } interviewDate || candidate.InterviewTime is not { } interviewTime)
+        {
+            return new ValidationError("Schedule the interview date and time before adding panelists.");
+        }
+
+        // The panel stays editable until HR completes the HR Assessment.
+        if (candidate.IsHrAssessmentCompleted)
+        {
+            return new ValidationError("Panelists cannot be added once the HR Assessment is completed.");
+        }
+
+        var existingPanelists = await panelRepository.GetByCandidateIdAsync(request.CandidateId, includeEmployee: false);
         var alreadyScheduledEmployeeIds = existingPanelists.Select(p => p.EmployeeId).ToHashSet();
 
         var alreadyOnPanel = request.Panelists.Any(p => alreadyScheduledEmployeeIds.Contains(p.EmployeeId));
@@ -68,17 +74,12 @@ internal sealed class AddInterviewPanelistsCommandHandler(IInterviewPanelReposit
             return new ValidationError("One or more selected panelists are already on this candidate's interview panel.");
         }
 
-        if (existingPanelists.Any(p => p.IsAttened))
-        {
-            return new ValidationError("Panelists cannot be added once the interview has started for this candidate.");
-        }
-
         var newPanelists = request.Panelists
             .Select(p => InterviewPanel.Schedule(
                 request.CandidateId,
                 p.EmployeeId,
-                p.ScheduledDate,
-                p.ScheduledTime,
+                interviewDate,
+                interviewTime,
                 request.AddedBy))
             .ToList();
 

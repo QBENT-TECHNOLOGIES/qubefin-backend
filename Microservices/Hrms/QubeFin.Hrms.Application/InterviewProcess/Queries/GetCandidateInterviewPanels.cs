@@ -15,9 +15,7 @@ internal sealed class GetCandidateInterviewPanelsQueryHandler(IInterviewPanelRep
     {
         var panels = await panelRepository.GetByCandidateIdAsync(request.CandidateId);
 
-        // View Panel is the admin's window onto the interviewers and their responses, so HR's own assessment
-        // row - which lives in the same table purely to hold the averaged ratings - is filtered out here.
-        var dtos = panels.Interviewers().Select(p => new InterviewPanelDto(
+        var dtos = panels.Select(p => new InterviewPanelDto(
             p.Id,
             p.CandidateId,
             p.EmployeeId,
@@ -29,6 +27,7 @@ internal sealed class GetCandidateInterviewPanelsQueryHandler(IInterviewPanelRep
             p.IsAcknowledged,
             p.AcknowledgedDate,
             p.IsAttened,
+            p.AttenedRemarks,
             p.IsSubmitted,
             p.SubmissionDate,
             p.TotalRatingPoint,

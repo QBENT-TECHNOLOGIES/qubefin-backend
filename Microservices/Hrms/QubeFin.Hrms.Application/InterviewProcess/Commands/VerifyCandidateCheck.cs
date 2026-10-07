@@ -5,7 +5,8 @@ using QubeFin.Core.Results;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Hrms;
-using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
+
 using QubeFin.Hrms.Application.InterviewProcess.Services;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
@@ -59,6 +60,11 @@ internal sealed class VerifyCandidateCheckCommandHandler(
         if (candidate is null)
         {
             return new RecordNotFoundError("Candidate not found.");
+        }
+
+        if (!candidate.IsSelectedForOffer)
+        {
+            return new ValidationError("Select the candidate for an offer before Candidate Verification.");
         }
 
         candidate.VerifyCheck(request.Check, request.Value, request.ModifiedBy);

@@ -23,8 +23,6 @@ public class ScheduleInterviewPanelCommandValidator : AbstractValidator<Schedule
         RuleForEach(x => x.Panelists).ChildRules(panelist =>
         {
             panelist.RuleFor(p => p.EmployeeId).NotEmpty().WithMessage("Panelist is required.");
-            panelist.RuleFor(p => p.ScheduledDate).NotEmpty().WithMessage("Scheduled date is required.");
-            panelist.RuleFor(p => p.ScheduledTime).NotEmpty().WithMessage("Scheduled time is required.");
         });
     }
 }
@@ -55,8 +53,18 @@ internal sealed class ScheduleInterviewPanelCommandHandler(IInterviewPanelReposi
             return new ValidationError("The same panelist cannot be added to a candidate more than once.");
         }
 
-        // Only INTERVIEWER rows count as "the panel" - the HR Assessment row lives in the same table.
-        var existingPanelists = (await panelRepository.GetByCandidateIdAsync(request.CandidateId)).Interviewers().ToList();
+        // Every panelist sits in the candidate's own interview slot, set by the Schedule action.
+        if (candidate.InterviewDate is not { } interviewDate || candidate.InterviewTime is not { } interviewTime)
+        {
+            return new ValidationError("Schedule the interview date and time before creating the panel.");
+        }
+
+        if (candidate.IsHrAssessmentCompleted)
+        {
+            return new ValidationError("The HR Assessment is already completed for this candidate.");
+        }
+
+        var existingPanelists = await panelRepository.GetByCandidateIdAsync(request.CandidateId, includeEmployee: false);
         if (existingPanelists.Count > 0)
         {
             return new ValidationError("This candidate already has an interview panel. Use \"Add Panelists\" to add more.");
@@ -66,8 +74,8 @@ internal sealed class ScheduleInterviewPanelCommandHandler(IInterviewPanelReposi
             .Select(p => InterviewPanel.Schedule(
                 request.CandidateId,
                 p.EmployeeId,
-                p.ScheduledDate,
-                p.ScheduledTime,
+                interviewDate,
+                interviewTime,
                 request.ScheduledBy))
             .ToList();
 

@@ -44,7 +44,8 @@ public class CandidateEndpoints : IEndpoint
             return result.ToHttpResult();
         }).WithSummary("Get interview candidate by ID").WithTags("Candidates").RequireAuthorization();
 
-        app.MapPost("candidates", async ([FromBody] CandidateCreateUpdateDto request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        // Multipart: the candidate fields plus the mandatory CV and job application (image or PDF).
+        app.MapPost("candidates", async ([FromForm] CandidateCreateUpdateDto request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)
             {
@@ -53,9 +54,10 @@ public class CandidateEndpoints : IEndpoint
 
             var result = await sender.Send(new CreateCandidateCommand(request, principal.Identity.GetUserId()), cancellationToken);
             return result.ToHttpResult();
-        }).WithSummary("Create interview candidate").WithTags("Candidates").RequireAuthorization();
+        }).DisableAntiforgery().WithSummary("Create interview candidate (with CV and job application)").WithTags("Candidates").RequireAuthorization();
 
-        app.MapPut("candidates/{id:guid}", async (Guid id, [FromBody] CandidateCreateUpdateDto request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        // Multipart: a CV / job application is only sent when it is being replaced.
+        app.MapPut("candidates/{id:guid}", async (Guid id, [FromForm] CandidateCreateUpdateDto request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)
             {
@@ -64,7 +66,31 @@ public class CandidateEndpoints : IEndpoint
 
             var result = await sender.Send(new UpdateCandidateCommand(id, request, principal.Identity.GetUserId()), cancellationToken);
             return result.ToHttpResult();
-        }).WithSummary("Update interview candidate").WithTags("Candidates").RequireAuthorization();
+        }).DisableAntiforgery().WithSummary("Update interview candidate").WithTags("Candidates").RequireAuthorization();
+
+        // HR, or the candidate's creator (Admin) - checked in the handler. Only sets the interview date/time.
+        app.MapPost("candidates/{id:guid}/schedule", async (Guid id, [FromBody] CandidateScheduleRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Forbid();
+            }
+
+            var result = await sender.Send(new ScheduleCandidateInterviewCommand(id, request.InterviewDate, request.InterviewTime, principal.Identity.GetEmployeeId(), principal.Identity.GetUserId()), cancellationToken);
+            return result.ToHttpResult();
+        }).WithSummary("Add or update the candidate's interview date and time").WithTags("Candidates").RequireAuthorization();
+
+        // HR only - checked in the handler.
+        app.MapPost("candidates/{id:guid}/select-for-offer", async (Guid id, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Forbid();
+            }
+
+            var result = await sender.Send(new SelectCandidateForOfferCommand(id, principal.Identity.GetEmployeeId(), principal.Identity.GetUserId()), cancellationToken);
+            return result.ToHttpResult();
+        }).WithSummary("Select the candidate for an offer after the HR Assessment (opens Candidate Verification)").WithTags("Candidates").RequireAuthorization();
 
         app.MapPost("candidates/{id:guid}/interview-mode", async (Guid id, [FromBody] CandidateInterviewModeUpdateRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
@@ -77,7 +103,7 @@ public class CandidateEndpoints : IEndpoint
             return result.ToHttpResult();
         }).WithSummary("Set whether the candidate's interview was Online or Offline").WithTags("Candidates").RequireAuthorization();
 
-        // HR only - checked in the handler against the caller's employee (403 otherwise).
+        // HR, or the candidate's creator until HR starts the HR Assessment - checked in the handler (403 otherwise).
         app.MapPost("candidates/{id:guid}/reject", async (Guid id, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)
@@ -87,7 +113,7 @@ public class CandidateEndpoints : IEndpoint
 
             var result = await sender.Send(new RejectCandidateCommand(id, principal.Identity.GetEmployeeId(), principal.Identity.GetUserId()), cancellationToken);
             return result.ToHttpResult();
-        }).WithSummary("Reject the candidate (HR only) - stops the interview workflow").WithTags("Candidates").RequireAuthorization();
+        }).WithSummary("Reject the candidate (HR / Admin) - stops the interview workflow").WithTags("Candidates").RequireAuthorization();
 
         #endregion
 

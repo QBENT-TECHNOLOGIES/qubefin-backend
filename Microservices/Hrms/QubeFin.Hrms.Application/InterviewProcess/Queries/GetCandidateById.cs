@@ -2,14 +2,14 @@ using FluentResults;
 using MediatR;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using QubeFin.Hrms.Application.InterviewProcess.Models;
-using QubeFin.Hrms.Application.InterviewProcess.Services;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Queries;
 
+/// <summary>Candidate detail for the Candidate page: one call to Hrms.USP_GetInterviewCandidateById, which also
+/// returns the roles, the stopped state and every action flag. Only the stored file keys are turned into URLs here.</summary>
 public record GetCandidateByIdQuery(Guid CandidateId, Guid employeeId) : IRequest<Result<GetInterviewCandidateDetail>>;
 
 internal sealed class GetCandidateByIdQueryHandler(QubeFinDataContext context, IFileStorageRepository fileStorageRepository) : IRequestHandler<GetCandidateByIdQuery, Result<GetInterviewCandidateDetail>>
@@ -25,22 +25,23 @@ internal sealed class GetCandidateByIdQueryHandler(QubeFinDataContext context, I
                                             new SqlParameter("@EmployeeId", request.employeeId)
                                         ).AsNoTracking().ToListAsync(cancellationToken);
 
-            if (candidateInterviewInfo == null || !candidateInterviewInfo.Any())
+            var result = candidateInterviewInfo.FirstOrDefault();
+            if (result is null)
                 return Result.Fail("Something went wrong. Please try again later.");
 
-            var result = candidateInterviewInfo.First();
-            result.WrittenInterviewFIleUrl = !string.IsNullOrEmpty(result.WrittenInterviewFIle) ? await fileStorageRepository.GetFileUrlAsync(result.WrittenInterviewFIle, cancellationToken) : null;
-            result.SignedJoiningLetterFileUrl = !string.IsNullOrEmpty(result.SignedJoiningLetterFile) ? await fileStorageRepository.GetFileUrlAsync(result.SignedJoiningLetterFile, cancellationToken) : null;
-
-            var stoppedStatus = await context.GetStoppedStatusAsync(request.CandidateId, cancellationToken);
-            result.IsRejected = stoppedStatus == CandidateInterviewStatus.Rejected;
-            result.IsNotRecommended = stoppedStatus == CandidateInterviewStatus.NotRecommended;
+            result.CvFileUrl = await UrlOrNullAsync(result.CvFile, cancellationToken);
+            result.JobApplicationFileUrl = await UrlOrNullAsync(result.JobApplicationFile, cancellationToken);
+            result.WrittenInterviewFIleUrl = await UrlOrNullAsync(result.WrittenInterviewFIle, cancellationToken);
+            result.SignedJoiningLetterFileUrl = await UrlOrNullAsync(result.SignedJoiningLetterFile, cancellationToken);
 
             return Result.Ok(result);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return Result.Fail("Something went wrong while fetching candidate details.");
         }
     }
+
+    private async Task<string?> UrlOrNullAsync(string? key, CancellationToken cancellationToken) =>
+        string.IsNullOrEmpty(key) ? null : await fileStorageRepository.GetFileUrlAsync(key, cancellationToken);
 }

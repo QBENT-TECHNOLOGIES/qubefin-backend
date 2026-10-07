@@ -52,6 +52,11 @@ internal sealed class UpdateCandidateVerificationCommandHandler(
             return new RecordNotFoundError("Candidate not found.");
         }
 
+        if (!candidate.IsSelectedForOffer)
+        {
+            return new ValidationError("Select the candidate for an offer before Candidate Verification.");
+        }
+
         candidate.UpdateVerification(
             request.IsAadharValidated,
             request.IsVoterValited,

@@ -1,13 +1,11 @@
 using FluentResults;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using QubeFin.Hrms.Application.InterviewProcess.Models;
 using QubeFin.Hrms.Application.InterviewProcess.Services;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Hrms;
-using System.Globalization;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Queries;
 
@@ -15,133 +13,63 @@ public record GetCandidatesQuery(CandidateSearchParam SearchParam, Guid employee
 
 public record GetCandidatesResponse(IReadOnlyList<CandidateListDto> candidates, int TotalRecords);
 
-
-internal sealed class GetCandidatesQueryHandler(QubeFinDataContext context, IConfiguration configuration, IFileStorageRepository fileStorageRepository) : IRequestHandler<GetCandidatesQuery, Result<GetCandidatesResponse>>
+/// <summary>The Candidate page list. Hrms.USP_GetCandidateList does the access filter (HR sees everyone, anyone
+/// else the candidates they created), the filters, the workflow status and the paging in one round trip.</summary>
+internal sealed class GetCandidatesQueryHandler(QubeFinDataContext context, IFileStorageRepository fileStorageRepository) : IRequestHandler<GetCandidatesQuery, Result<GetCandidatesResponse>>
 {
     public async Task<Result<GetCandidatesResponse>> Handle(GetCandidatesQuery request, CancellationToken cancellationToken)
     {
-        var hrPostId = Guid.Parse(configuration["HrPost"]!);
+        var search = request.SearchParam;
 
-        // Check whether logged-in employee is HR
-        var isHrEmployee = await context.IsHrEmployeeAsync(hrPostId, request.employeeId, cancellationToken);
-
-        var pageIndex = request.SearchParam.PageIndex < 0
-            ? 0
-            : request.SearchParam.PageIndex;
-
-        var pageSize = request.SearchParam.PageSize <= 0
-            ? 10
-            : request.SearchParam.PageSize;
-
-        var query = context.TblInterviewCandidates
-            .Include(c => c.CreatedByNavigation)
-            .Include(m => m.InterviewPostNavigation)
-            .Include(m => m.TblInterviewPanels)
-            .Include(e => e.TblEmployees)
-            .AsNoTracking();
-
-        // Access filter
-        if (!isHrEmployee)
-        {
-            query = query.Where(c =>
-                // Employee who created the candidate
-                c.CreatedByNavigation.EmployeeId == request.employeeId
-
-                ||
-
-                // Employee is part of the interview panel
-                c.TblInterviewPanels.Any(p =>
-                    p.EmployeeId == request.employeeId
-                )
-            );
-        }
-
-        // Search filter
-        if (!string.IsNullOrWhiteSpace(request.SearchParam.SearchText))
-        {
-            var term = request.SearchParam.SearchText.Trim();
-
-            query = query.Where(c =>
-                c.FirstName.Contains(term) ||
-                c.LastName.Contains(term) ||
-                c.MobileNo.Contains(term) ||
-                (c.Email != null && c.Email.Contains(term)) ||
-                (c.ReferenceNo != null && c.ReferenceNo.Contains(term))
-            );
-        }
-        // Search filter
-        if (request.SearchParam.CompanyId != null)
-        {
-
-            query = query.Where(c =>c.CompanyId == request.SearchParam.CompanyId);
-        }
-
-        query = request.SearchParam.SortOn switch
-        {
-            "name" => request.SearchParam.SortDirection.Equals("DESC", StringComparison.CurrentCultureIgnoreCase)
-                ? query.OrderByDescending(c => c.FirstName).ThenByDescending(c => c.LastName)
-                : query.OrderBy(c => c.FirstName).ThenBy(c => c.LastName),
-            "interviewDate" => request.SearchParam.SortDirection.Equals("DESC", StringComparison.CurrentCultureIgnoreCase)
-                ? query.OrderByDescending(c => c.InterviewDate)
-                : query.OrderBy(c => c.InterviewDate),
-            _ => query.OrderByDescending(c => c.CreatedOn)
-        };
-
-        var totalCount = await query.CountAsync(cancellationToken);
-        var rows = await query
-        .Skip(pageIndex * pageSize)
-        .Take(pageSize)
-        .Select(c => new
-        {
-            c.WrittenInterviewFile,
-            c.SignedJoiningLetterFile,
-            c.CreditBureauReportLink,
-            Candidate = new CandidateListDto
-            {
-                Id = c.Id,
-                FullName = ((c.FirstName + " " + (c.MiddleName ?? string.Empty) + " " + c.LastName).Replace("  ", " ").Trim()),
-                InterviewPost = c.InterviewPostNavigation.Name,
-                InterviewDate = c.InterviewDate,
-                InterviewTime = c.InterviewTime != null ? c.InterviewTime.Value.ToString("h.mm tt", CultureInfo.InvariantCulture).ToLowerInvariant() : string.Empty,
-                RecommendationStatus = c.RecommendationStatus ?? "Pending",
-                ReferenceNo = c.ReferenceNo,
-                // HR assessment counts as submitted once RecommendationStatus leaves 'Pending' - the same signal
-                // the HR Assessment form and USP_GetInterviewCandidateById use. A stopped workflow (rejected, or
-                // submitted as 'Not Recommended') shows as stopped at whatever stage it had reached - the same
-                // rule as CandidateWorkflow.GetStoppedStatusAsync.
-                InterviewStatus = c.SignedJoiningLetterFile != null && c.SignedJoiningLetterFile != "" && c.TblEmployees.Any()
-                    ? CandidateInterviewStatus.Joined
-                    : c.RecommendationStatus == CandidateWorkflow.Rejected
-                        ? CandidateInterviewStatus.Rejected
-                    : c.RecommendationStatus == CandidateWorkflow.NotRecommended &&
-                        c.TblInterviewPanels.Any(p => p.AssessmentType == InterviewPanel.HrAssessmentType && p.IsSubmitted)
-                        ? CandidateInterviewStatus.NotRecommended
-                    : c.IsOfferLetterReceived
-                        ? CandidateInterviewStatus.JoiningInProgress
-                        : c.RecommendationStatus != null && c.RecommendationStatus != "" && c.RecommendationStatus != "Pending"
-                            ? CandidateInterviewStatus.VerificationInProgress
-                            : CandidateInterviewStatus.InterviewInProgress
-            }
-        })
-        .ToListAsync(cancellationToken);
+        var rows = await context.Set<CandidateListResult>()
+            .FromSqlRaw(
+                "EXEC [Hrms].[USP_GetCandidateList] @EmployeeId, @SearchText, @ApplicationDateFrom, @ApplicationDateTo, @CompanyId, @InterviewDate, @RecommendationStatus, @Status, @SortOn, @SortDirection, @PageIndex, @PageSize",
+                SqlParameters.Value("@EmployeeId", request.employeeId),
+                SqlParameters.Text("@SearchText", search.SearchText),
+                SqlParameters.Date("@ApplicationDateFrom", search.ApplicationDateFrom),
+                SqlParameters.Date("@ApplicationDateTo", search.ApplicationDateTo),
+                SqlParameters.Value("@CompanyId", search.CompanyId),
+                SqlParameters.Date("@InterviewDate", search.InterviewDate),
+                SqlParameters.Text("@RecommendationStatus", search.RecommendationStatus),
+                SqlParameters.Text("@Status", search.Status),
+                SqlParameters.Text("@SortOn", search.SortOn),
+                SqlParameters.Value("@SortDirection", string.Equals(search.SortDirection, "ASC", StringComparison.OrdinalIgnoreCase) ? "ASC" : "DESC"),
+                SqlParameters.Value("@PageIndex", Math.Max(search.PageIndex, 0)),
+                SqlParameters.Value("@PageSize", search.PageSize <= 0 ? 10 : search.PageSize))
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
 
         var items = new List<CandidateListDto>(rows.Count);
         foreach (var row in rows)
         {
-            var candidate = row.Candidate;
-            candidate.Downloads = await BuildDownloadsAsync(candidate.InterviewStatus, row.WrittenInterviewFile, row.CreditBureauReportLink, row.SignedJoiningLetterFile, cancellationToken);
-            items.Add(candidate);
+            var status = row.Status ?? CandidateInterviewStatus.SchedulePending;
+            items.Add(new CandidateListDto
+            {
+                Id = row.Id,
+                FullName = row.FullName ?? string.Empty,
+                ReferenceNo = row.ReferenceNo,
+                InterviewPost = row.InterviewPost,
+                CompanyName = row.CompanyName,
+                ApplicationDate = row.ApplicationDate,
+                InterviewDate = row.InterviewDate,
+                InterviewTime = row.InterviewTime,
+                RecommendationStatus = row.RecommendationStatus ?? "Pending",
+                Status = status,
+                CanSchedule = row.CanSchedule,
+                Downloads = await BuildDownloadsAsync(status, row, cancellationToken)
+            });
         }
 
-        return Result.Ok(new GetCandidatesResponse(items, totalCount));
+        return Result.Ok(new GetCandidatesResponse(items, rows.FirstOrDefault()?.TotalRecords ?? 0));
     }
 
-    /// <summary>Each stage unlocks the files produced in it, and keeps the earlier stages' files available:
-    /// the written interview form from the interview, the credit bureau report once verification starts and
-    /// the signed joining letter once joining starts. A file that was never uploaded is left out.</summary>
-    private async Task<List<CandidateDownloadFileDto>> BuildDownloadsAsync(string interviewStatus, string? writtenInterviewFile, string? creditBureauReportLink, string? signedJoiningLetterFile, CancellationToken cancellationToken)
+    /// <summary>The CV and job application are always offered. Each later stage unlocks the files produced in it
+    /// and keeps the earlier ones: the written interview form, the credit bureau report once verification starts
+    /// and the signed joining letter once joining starts. A file that was never uploaded is left out. The URLs
+    /// are pre-signed locally - no storage round trip.</summary>
+    private async Task<List<CandidateDownloadFileDto>> BuildDownloadsAsync(string status, CandidateListResult row, CancellationToken cancellationToken)
     {
-        var stage = interviewStatus switch
+        var stage = status switch
         {
             CandidateInterviewStatus.Joined => 3,
             CandidateInterviewStatus.JoiningInProgress => 2,
@@ -151,20 +79,27 @@ internal sealed class GetCandidatesQueryHandler(QubeFinDataContext context, ICon
 
         var downloads = new List<CandidateDownloadFileDto>();
 
-        if (!string.IsNullOrWhiteSpace(writtenInterviewFile))
+        async Task AddFileAsync(string name, string? key)
         {
-            downloads.Add(new CandidateDownloadFileDto { Name = "Written Interview Form", Url = await fileStorageRepository.GetFileUrlAsync(writtenInterviewFile, cancellationToken) });
+            if (!string.IsNullOrWhiteSpace(key))
+            {
+                downloads.Add(new CandidateDownloadFileDto { Name = name, Url = await fileStorageRepository.GetFileUrlAsync(key, cancellationToken) });
+            }
         }
+
+        await AddFileAsync("CV", row.CvFile);
+        await AddFileAsync("Job Application", row.JobApplicationFile);
+        await AddFileAsync("Written Interview Form", row.WrittenInterviewFile);
 
         // Entered as a link on the verification form, not uploaded to storage.
-        if (stage >= 1 && !string.IsNullOrWhiteSpace(creditBureauReportLink))
+        if (stage >= 1 && !string.IsNullOrWhiteSpace(row.CreditBureauReportLink))
         {
-            downloads.Add(new CandidateDownloadFileDto { Name = "Credit Bureau Report", Url = creditBureauReportLink });
+            downloads.Add(new CandidateDownloadFileDto { Name = "Credit Bureau Report", Url = row.CreditBureauReportLink });
         }
 
-        if (stage >= 2 && !string.IsNullOrWhiteSpace(signedJoiningLetterFile))
+        if (stage >= 2)
         {
-            downloads.Add(new CandidateDownloadFileDto { Name = "Signed Joining Letter", Url = await fileStorageRepository.GetFileUrlAsync(signedJoiningLetterFile, cancellationToken) });
+            await AddFileAsync("Signed Joining Letter", row.SignedJoiningLetterFile);
         }
 
         return downloads;

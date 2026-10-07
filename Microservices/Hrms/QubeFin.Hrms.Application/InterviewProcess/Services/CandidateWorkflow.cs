@@ -9,8 +9,9 @@ using QubeFin.Persistence.Models.Hrms;
 namespace QubeFin.Hrms.Application.InterviewProcess.Services;
 
 /// <summary>A command that acts on a candidate's interview workflow. Once the workflow is stopped - HR
-/// rejected the candidate (RecommendationStatus 'Rejected'), or submitted the HR Assessment as 'Not Recommended' - <see cref="CandidateWorkflowGuardBehavior{TRequest, TResponse}"/>
-/// refuses every such command before its handler runs.</summary>
+/// rejected the candidate (RecommendationStatus 'Rejected'), or submitted the HR Assessment with a status that does
+/// not qualify (Not Selected) - <see cref="CandidateWorkflowGuardBehavior{TRequest, TResponse}"/> refuses every
+/// such command before its handler runs.</summary>
 public interface ICandidateWorkflowCommand
 {
     Guid CandidateId { get; }
@@ -22,24 +23,28 @@ public static class CandidateWorkflow
     /// workflow as soon as it is set.</summary>
     public const string Rejected = Candidate.RejectedRecommendationStatus;
 
-    /// <summary>The HR Assessment's final recommendation that stops the workflow. Only counts once HR has
-    /// submitted: a draft can hold it too, and a draft is still HR's to change.</summary>
-    public const string NotRecommended = "Not Recommended";
+    /// <summary>RecommendationStatus of a candidate whose HR Assessment has not been started.</summary>
+    public const string Pending = "Pending";
+
+    /// <summary>The HR Assessment outcomes that let the candidate go on to selection. Any other submitted outcome
+    /// (Hold for Future Opportunity, Not Recommended) stops the workflow as Not Selected.</summary>
+    public static readonly string[] QualifiedStatuses = ["Strongly Recommended", "Recommended", "Recommended with Training"];
+
+    public static bool IsQualified(string? recommendationStatus) =>
+        recommendationStatus is not null && QualifiedStatuses.Contains(recommendationStatus);
+
+    /// <summary>The interview is held - and can be acknowledged/assessed - on its date only; afterwards it is closed.</summary>
+    public static DateOnly Today => DateOnly.FromDateTime(DateTime.Now);
 
     /// <summary>Why the candidate's workflow is stopped - <see cref="CandidateInterviewStatus.Rejected"/> or
-    /// <see cref="CandidateInterviewStatus.NotRecommended"/> - or null while it is still running (or the
-    /// candidate does not exist). Rejected wins when both apply.</summary>
+    /// <see cref="CandidateInterviewStatus.NotSelected"/> - or null while it is still running (or the candidate
+    /// does not exist). Rejected wins when both apply.</summary>
     public static async Task<string?> GetStoppedStatusAsync(this QubeFinDataContext context, Guid candidateId, CancellationToken cancellationToken)
     {
         var state = await context.TblInterviewCandidates
             .AsNoTracking()
             .Where(c => c.Id == candidateId)
-            .Select(c => new
-            {
-                IsRejected = c.RecommendationStatus == Rejected,
-                IsNotRecommended = c.RecommendationStatus == NotRecommended &&
-                    c.TblInterviewPanels.Any(p => p.AssessmentType == InterviewPanel.HrAssessmentType && p.IsSubmitted)
-            })
+            .Select(c => new { c.RecommendationStatus, c.IsHrAssessmentCompleted })
             .FirstOrDefaultAsync(cancellationToken);
 
         if (state is null)
@@ -47,11 +52,14 @@ public static class CandidateWorkflow
             return null;
         }
 
-        return state.IsRejected
-            ? CandidateInterviewStatus.Rejected
-            : state.IsNotRecommended
-                ? CandidateInterviewStatus.NotRecommended
-                : null;
+        if (state.RecommendationStatus == Rejected)
+        {
+            return CandidateInterviewStatus.Rejected;
+        }
+
+        return state.IsHrAssessmentCompleted && !IsQualified(state.RecommendationStatus)
+            ? CandidateInterviewStatus.NotSelected
+            : null;
     }
 
     /// <summary>The employee currently holds the HR post (the "HrPost" setting) - the same test the
@@ -61,6 +69,10 @@ public static class CandidateWorkflow
             d.PostId == hrPostId &&
             d.TblEmployeeDesignations.Any(ed => ed.EmployeeId == employeeId && ed.EffectiveTo == null),
             cancellationToken);
+
+    /// <summary>The employee created the candidate - which makes them the candidate's Admin (when not HR).</summary>
+    public static Task<bool> IsCandidateCreatorAsync(this QubeFinDataContext context, Guid candidateId, Guid employeeId, CancellationToken cancellationToken) =>
+        context.TblInterviewCandidates.AnyAsync(c => c.Id == candidateId && c.CreatedByNavigation.EmployeeId == employeeId, cancellationToken);
 }
 
 /// <summary>Stops any <see cref="ICandidateWorkflowCommand"/> on a candidate whose workflow is stopped, so the
@@ -86,7 +98,7 @@ public class CandidateWorkflowGuardBehavior<TRequest, TResponse>(QubeFinDataCont
         ((IResultBase)response).Reasons.Add(new ValidationError(
             stoppedStatus == CandidateInterviewStatus.Rejected
                 ? "This candidate has been rejected. No further action can be taken."
-                : "This candidate was not recommended by HR. No further action can be taken."));
+                : "This candidate was not selected. No further action can be taken."));
 
         return response;
     }

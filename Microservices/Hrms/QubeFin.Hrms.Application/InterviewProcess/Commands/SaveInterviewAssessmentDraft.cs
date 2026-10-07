@@ -11,7 +11,7 @@ using QubeFin.Hrms.Application.InterviewProcess.Services;
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
 /// <summary>Saves a panelist's in-progress assessment as a draft. Unlike submit, this does not lock the
-/// record and does not require a recommendation yet. Saving a draft marks the panelist as attended.
+/// record and does not require a recommendation yet. Only once the candidate is recorded present, on the interview date.
 /// Looked up by CandidateId + EmployeeId rather than a client-supplied PanelId - the endpoint overrides
 /// EmployeeId from the authenticated user's claims, so a panelist can only ever save their own assessment.</summary>
 public record SaveInterviewAssessmentDraftCommand(Guid CandidateId, Guid EmployeeId, AssessmentSubmitDto Assessment, Guid SavedBy) : IRequest<Result<string>>, ICandidateWorkflowCommand;
@@ -35,7 +35,7 @@ public class SaveInterviewAssessmentDraftCommandValidator : AbstractValidator<Sa
     }
 }
 
-internal sealed class SaveInterviewAssessmentDraftCommandHandler(IInterviewPanelRepository panelRepository, IUnitOfWork unitOfWork) : IRequestHandler<SaveInterviewAssessmentDraftCommand, Result<string>>
+internal sealed class SaveInterviewAssessmentDraftCommandHandler(IInterviewPanelRepository panelRepository, QubeFinDataContext context, IUnitOfWork unitOfWork) : IRequestHandler<SaveInterviewAssessmentDraftCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(SaveInterviewAssessmentDraftCommand request, CancellationToken cancellationToken)
     {
@@ -48,6 +48,18 @@ internal sealed class SaveInterviewAssessmentDraftCommandHandler(IInterviewPanel
         if (panel is null)
         {
             return new RecordNotFoundError("Interview panel entry not found for the given candidate and employee.");
+        }
+
+        if (!panel.IsAttened)
+        {
+            return new ValidationError(panel.IsCandidateAbsent
+                ? "The candidate was marked absent - there is no assessment to fill in."
+                : "Record the candidate's attendance before filling in the assessment.");
+        }
+
+        if (!panel.IsSubmitted && await context.GetAssessmentBlockerAsync(panel, cancellationToken) is { } blocker)
+        {
+            return new ValidationError(blocker);
         }
 
         var dto = request.Assessment;

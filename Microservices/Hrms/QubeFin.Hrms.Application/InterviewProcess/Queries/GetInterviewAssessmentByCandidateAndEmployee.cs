@@ -30,6 +30,7 @@ internal sealed class GetInterviewAssessmentByCandidateAndEmployeeQueryHandler(I
             panel.IsAcknowledged,
             panel.AcknowledgedDate,
             panel.IsAttened,
+            panel.AttenedRemarks,
             panel.IsSubmitted,
             panel.SubmissionDate,
             panel.AppearanceAttitudeRating, panel.AppearanceAttitudeRemarks,

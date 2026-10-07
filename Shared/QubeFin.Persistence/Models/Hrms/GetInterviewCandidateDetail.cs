@@ -1,7 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-
 namespace QubeFin.Persistence.Models.Hrms
 {
+    /// <summary>Result of Hrms.USP_GetInterviewCandidateById - the Candidate page's detail for HR / Admin.
+    /// Every Show*/Can* flag is decided by the procedure so the UI never derives the workflow order itself.</summary>
     public class GetInterviewCandidateDetail
     {
         public Guid? Id { get; set; }
@@ -14,6 +14,7 @@ namespace QubeFin.Persistence.Models.Hrms
         public string? FatherName { get; set; }
         public string? MobileNo { get; set; }
         public string? Email { get; set; }
+        public string? Address { get; set; }
         public string? HouseNo { get; set; }
         public string? RoadName { get; set; }
         public string? LandMark { get; set; }
@@ -24,12 +25,19 @@ namespace QubeFin.Persistence.Models.Hrms
         public string? Location { get; set; }
         public Guid? CompanyId { get; set; }
         public string? CompanyName { get; set; }
+        public DateOnly? ApplicationDate { get; set; }
         public DateOnly? InterviewDate { get; set; }
         public TimeOnly? InterviewTime { get; set; }
+
+        public string? CvFile { get; set; }
+        public string? JobApplicationFile { get; set; }
         public string? WrittenInterviewFIle { get; set; }
         public string? SignedJoiningLetterFile { get; set; }
+        public string? CvFileUrl { get; set; }
+        public string? JobApplicationFileUrl { get; set; }
         public string? WrittenInterviewFIleUrl { get; set; }
         public string? SignedJoiningLetterFileUrl { get; set; }
+
         public Guid? DepartmentId { get; set; }
         public string? DepartmentName { get; set; }
         public Guid? InterviewPost { get; set; }
@@ -38,6 +46,8 @@ namespace QubeFin.Persistence.Models.Hrms
         public string? Venue { get; set; }
         public string? InterviewMode { get; set; }
         public string? ReferedBy { get; set; }
+        public string? RecruitmentSource { get; set; }
+        public string? VacancyReference { get; set; }
         public decimal? CurrentSalary { get; set; }
         public decimal? ExpectedSalary { get; set; }
         public int? NoticePeriodInDays { get; set; }
@@ -52,8 +62,6 @@ namespace QubeFin.Persistence.Models.Hrms
         public string? RecommendationStatus { get; set; }
         public int? TotalRatingPoint { get; set; }
         public string? RatingStatus { get; set; }
-        public string? RecruitmentSource { get; set; }
-        public string? VacancyReference { get; set; }
         public string? AadharNumber { get; set; }
         public bool? IsAadharValidated { get; set; }
         public string? VoterNumber { get; set; }
@@ -70,115 +78,72 @@ namespace QubeFin.Persistence.Models.Hrms
         public DateOnly? DateOfJoining { get; set; }
         public TimeOnly? ReportingTime { get; set; }
         public decimal? MonthlyCostCompany { get; set; }
+        public bool? IsInterviewLetterReceived { get; set; }
         public bool? IsOfferLetterReceived { get; set; }
         public bool? IsAppointmentLetterReceived { get; set; }
         public bool? IsWelcomeLetterRecieved { get; set; }
-        public string? CreatedBy { get; set; }
-        public DateTime? CreatedOn { get; set; }
-        public string? ModifiedBy { get; set; }
-        public DateTime? ModifiedOn { get; set; }
+        public bool? IsSelectedForOffer { get; set; }
+        public bool? IsHrAssessmentCompleted { get; set; }
+
+        // ---- Roles / stopped state ----
+
+        /// <summary>The caller holds the HR post.</summary>
         public bool? IsHR { get; set; }
-        public bool? IsInterviewLetterReceived { get; set; }
-        public bool? IsInterviewerAcknowledged { get; set; }
+
+        /// <summary>The caller created the candidate (and is not HR) - Admin for this candidate only.</summary>
+        public bool? IsAdmin { get; set; }
+
+        /// <summary>The caller may act on the candidate right now: HR until the workflow stops, Admin only until
+        /// HR saves the HR Assessment draft.</summary>
+        public bool? CanAct { get; set; }
+
+        /// <summary>RecommendationStatus 'Rejected'. No further action is allowed.</summary>
+        public bool? IsRejected { get; set; }
+
+        /// <summary>HR submitted the HR Assessment with a status outside the qualified list. No further action.</summary>
+        public bool? IsNotSelected { get; set; }
+
+        public bool? CanEditDetails { get; set; }
+
+        // ---- Interview ----
+        public bool? ShowInterviewLetterActions { get; set; }
         public bool? ShowCreatePanelButton { get; set; }
         public bool? IsPanelCreated { get; set; }
         public int? PanelMemberCount { get; set; }
-        public bool? IsCurrentEmployeePanelMember { get; set; }
-        public bool? CanAcknowledgePanel { get; set; }
-        public bool? IsCurrentEmployeeAttended { get; set; }
-        public bool? IsCurrentEmployeeAssessmentSubmitted { get; set; }
-        public bool? IsAllPanelAcknowledged { get; set; }
-        public bool? IsAllPanelAssessmentSubmitted { get; set; }
-        public bool? IsShowHrAssessmentButton { get; set; }
-        public bool? IsHrAssessmentCompleted { get; set; }
-        public bool? IsCandidateQualified { get; set; }
-        public bool? IsShowCandidateVerificationButton { get; set; }
-        public bool? IsCandidateVerificationCompleted { get; set; }
-        public string? CurrentWorkflowStage { get; set; }
         public bool? ShowViewPanelButton { get; set; }
-        public bool? IsAssessmentDate { get; set; }
+        public bool? CanModifyPanel { get; set; }
+        public bool? IsAllPanelAcknowledged { get; set; }
 
-        /// <summary>HR has started the HR Assessment and saved it as a draft, but has not submitted it yet.
-        /// IsShowHrAssessmentButton stays true in this state so the form can be reopened.</summary>
-        public bool? IsHrAssessmentDraftSaved { get; set; }
-
-        /// <summary>The candidate's AssessmentType = 'HR' row in Hrms.Tbl_InterviewPanel has been finalised.
-        /// Separate from any interviewer submission by the same HR employee.</summary>
-        public bool? IsHrAssessmentSubmitted { get; set; }
-
-        /// <summary>The calling employee owns the candidate's AssessmentType = 'HR' row. Independent of
-        /// IsCurrentEmployeePanelMember - an HR employee can be both.</summary>
-        public bool? IsCurrentEmployeeHrAssessor { get; set; }
-
-        /// <summary>What the calling employee is on this candidate: 'INTERVIEWER', 'HR', 'BOTH', or null
-        /// when they hold no row at all. The UI must use this rather than inferring from IsHR.</summary>
-        public string? CurrentEmployeeAssessmentType { get; set; }
-
-        // ============================================================
-        // POST-OFFER DOCUMENT CHAIN
-        //
-        // One flag per step, each opening only once the previous step's letter
-        // has been received:
-        //   verification done -> offer -> (additional info + appointment)
-        //   -> joining letter -> welcome letter.
-        // ============================================================
-
-        /// <summary>The candidate's signed joining letter is on file
-        /// (Tbl_InterviewCandidate.SignedJoiningLetterFile is set).</summary>
-        public bool? IsJoiningLetterUploaded { get; set; }
-
-        /// <summary>HR may view/print, send and mark received the interview letter.</summary>
-        public bool? ShowInterviewLetterActions { get; set; }
-
-        /// <summary>The filled-in written interview form is on file (WrittenInterviewFIle is set).</summary>
-        public bool? IsWrittenAssessmentUploaded { get; set; }
-
-        /// <summary>Show the interview format download/upload pair: every interviewer has acknowledged,
-        /// the form is not on file yet, and the HR Assessment has not been completed.</summary>
-        public bool? ShowInterviewFormatActions { get; set; }
-
-        /// <summary>Candidate verification is complete and the offer letter has not been
-        /// received yet - show view/print, send and receive.</summary>
-        public bool? ShowOfferLetterActions { get; set; }
-
-        /// <summary>The offer letter is with the candidate - show "Add Additional Info".</summary>
-        public bool? ShowAddAdditionalInfoButton { get; set; }
-
-        /// <summary>The offer letter is received and the appointment letter is not - show
-        /// view/print, send and receive.</summary>
-        public bool? ShowAppointmentLetterActions { get; set; }
-
-        /// <summary>The appointment letter is received - show joining letter download and upload.</summary>
-        public bool? ShowJoiningLetterActions { get; set; }
-
-        /// <summary>The signed joining letter is uploaded and the welcome letter is not received -
-        /// show view/print, send and receive.</summary>
-        public bool? ShowWelcomeLetterActions { get; set; }
-
-        /// <summary>An employee has been created from this candidate's joining information
-        /// (a Tbl_Employee row has CandidateId = this candidate). The welcome letter opens only then.</summary>
-        public bool? IsEmployeeCreated { get; set; }
-
-        /// <summary>Total of the ten averaged category ratings stored on HR's assessment row.</summary>
-        public int? HrAssessmentTotalRatingPoint { get; set; }
-
-        /// <summary>How many interviewers (excluding HR's assessment row) have acknowledged.</summary>
+        /// <summary>Every panelist is finished - submitted, recorded the candidate absent, or the interview day passed.</summary>
+        public bool? IsAllPanelAssessmentSubmitted { get; set; }
         public int? InterviewerAcknowledgedCount { get; set; }
-
-        /// <summary>How many interviewers (excluding HR's assessment row) have submitted their assessment.</summary>
         public int? InterviewerSubmittedCount { get; set; }
 
-        // Not returned by USP_GetInterviewCandidateById - GetCandidateById fills these from the candidate
-        // table after the procedure runs, so the procedure needs no change.
+        /// <summary>Panelists who have neither submitted nor recorded the candidate absent. HR is warned about them
+        /// when opening the HR Assessment; their assessment is left out of the average.</summary>
+        public int? PendingPanelAssessmentCount { get; set; }
+        public bool? IsWrittenAssessmentUploaded { get; set; }
+        public bool? ShowInterviewFormatActions { get; set; }
 
-        /// <summary>HR rejected the candidate (RecommendationStatus 'Rejected'). The workflow is stopped: no
-        /// further action is allowed.</summary>
-        [NotMapped]
-        public bool IsRejected { get; set; }
+        // ---- HR Assessment -> selection ----
+        public bool? IsShowHrAssessmentButton { get; set; }
+        public bool? IsHrAssessmentDraftSaved { get; set; }
+        public bool? IsHrAssessmentSubmitted { get; set; }
+        public bool? IsCandidateQualified { get; set; }
+        public bool? ShowSelectForOfferButton { get; set; }
 
-        /// <summary>HR submitted the assessment as 'Not Recommended'. The workflow is stopped: no further
-        /// action is allowed.</summary>
-        [NotMapped]
-        public bool IsNotRecommended { get; set; }
+        // ---- Verification -> post-offer document chain ----
+        public bool? IsShowCandidateVerificationButton { get; set; }
+        public bool? IsCandidateVerificationCompleted { get; set; }
+        public bool? IsJoiningLetterUploaded { get; set; }
+        public bool? ShowOfferLetterActions { get; set; }
+        public bool? ShowAddAdditionalInfoButton { get; set; }
+        public bool? ShowAppointmentLetterActions { get; set; }
+        public bool? ShowJoiningLetterActions { get; set; }
+        public bool? ShowWelcomeLetterActions { get; set; }
+        public bool? IsEmployeeCreated { get; set; }
+        public bool? ShowRejectButton { get; set; }
+
+        public string? CurrentWorkflowStage { get; set; }
     }
 }

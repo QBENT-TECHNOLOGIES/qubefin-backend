@@ -8,7 +8,8 @@ using QubeFin.Hrms.Application.InterviewProcess.Services;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
-/// <summary>Removes an existing panelist from a candidate's interview panel.</summary>
+/// <summary>Removes a panelist from a candidate's interview panel. Allowed until that panelist submits their
+/// assessment - acknowledging does not lock them in.</summary>
 public record RemoveInterviewPanelistCommand(Guid CandidateId, Guid EmployeeId, Guid RemovedBy) : IRequest<Result<string>>, ICandidateWorkflowCommand;
 
 public class RemoveInterviewPanelistCommandValidator : AbstractValidator<RemoveInterviewPanelistCommand>
@@ -29,7 +30,7 @@ internal sealed class RemoveInterviewPanelistCommandHandler(IInterviewPanelRepos
             return new ValidationError("Authenticated user is required.");
         }
 
-        var panel = await panelRepository.GetByCandidateAndEmployeeAsync(request.CandidateId, request.EmployeeId);
+        var panel = await panelRepository.GetByCandidateAndEmployeeAsync(request.CandidateId, request.EmployeeId, includeEmployee: false);
         if (panel is null)
         {
             return new RecordNotFoundError("Interview panel entry not found for the given candidate and employee.");
@@ -38,11 +39,6 @@ internal sealed class RemoveInterviewPanelistCommandHandler(IInterviewPanelRepos
         if (panel.IsSubmitted)
         {
             return new ValidationError("This panelist has already submitted an assessment and cannot be removed.");
-        }
-
-        if (panel.IsAcknowledged)
-        {
-            return new ValidationError("This panelist has already acknowledged the interview invitation and cannot be removed.");
         }
 
         await panelRepository.DeleteAsync(panel.Id);

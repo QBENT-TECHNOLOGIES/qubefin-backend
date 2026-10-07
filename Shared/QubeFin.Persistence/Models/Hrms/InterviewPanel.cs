@@ -1,24 +1,27 @@
-﻿namespace QubeFin.Persistence.Models.Hrms;
+namespace QubeFin.Persistence.Models.Hrms;
 
+/// <summary>One interviewer scheduled on a candidate's interview panel (Hrms.Tbl_InterviewPanel). Every row is an
+/// interviewer row - the HR Assessment lives on the candidate itself and never writes here.</summary>
 public class InterviewPanel
 {
+    /// <summary>AttenedRemarks written when the interviewer marks the candidate present.</summary>
+    public const string PresentRemarks = "Present";
+
     public Guid Id { get; private set; }
     public Guid CandidateId { get; private set; }
     public Guid EmployeeId { get; private set; }
-
-    /// <summary>Which kind of row this is: <see cref="InterviewerAssessmentType"/> for a scheduled panel
-    /// interviewer, <see cref="HrAssessmentType"/> for the single row the HR Assessment writes to. This is
-    /// the ONLY source of truth for the distinction - never the employee's HR designation, because an HR
-    /// employee can also be scheduled as a genuine panel interviewer.</summary>
-    public string AssessmentType { get; private set; } = InterviewerAssessmentType;
-
-    public const string InterviewerAssessmentType = "INTERVIEWER";
-    public const string HrAssessmentType = "HR";
     public DateOnly ScheduledDate { get; private set; }
     public TimeOnly ScheduledTime { get; private set; }
     public bool IsAcknowledged { get; private set; }
     public DateTime? AcknowledgedDate { get; private set; }
+
+    /// <summary>Whether the CANDIDATE attended the interview - recorded by this interviewer when they start the
+    /// assessment. Not the interviewer's own attendance.</summary>
     public bool IsAttened { get; private set; }
+
+    /// <summary>"Present" when the candidate attended, otherwise the interviewer's reason for the absence. Null
+    /// until the interviewer has recorded the candidate's attendance.</summary>
+    public string? AttenedRemarks { get; private set; }
 
     public int? AppearanceAttitudeRating { get; private set; }
     public string? AppearanceAttitudeRemarks { get; private set; }
@@ -54,10 +57,11 @@ public class InterviewPanel
     public string? EmployeeName { get; private set; } = null;
     public string? EmployeeCode { get; private set; } = null;
 
-    /// <summary>PostId behind this panel member's current designation. Lets the application layer tell an HR
-    /// row apart from an interviewer row using exactly the same test USP_GetInterviewCandidateById uses,
-    /// without needing a new column on Hrms.Tbl_InterviewPanel.</summary>
-    public Guid? DesignationPostId { get; private set; } = null;
+    /// <summary>The interviewer has recorded whether the candidate attended.</summary>
+    public bool IsAttendanceMarked => !string.IsNullOrEmpty(AttenedRemarks);
+
+    /// <summary>The interviewer recorded the candidate as absent - there is no assessment to fill in.</summary>
+    public bool IsCandidateAbsent => IsAttendanceMarked && !IsAttened;
 
     /// <summary>Sum of the ten scored parameters. Null until at least one has been rated.</summary>
     public int? TotalRatingPoint
@@ -89,6 +93,7 @@ public class InterviewPanel
         bool isAcknowledged,
         DateTime? acknowledgedDate,
         bool isAttened,
+        string? attenedRemarks,
         int? appearanceAttitudeRating,
         string? appearanceAttitudeRemarks,
         int? personalityRating,
@@ -117,11 +122,9 @@ public class InterviewPanel
         DateTime? submissionDate,
         Guid modifiedBy,
         DateTime modifiedOn,
-         string? employeeCode = null,
-         string? designation = null,
-         string? employeeName = null,
-         Guid? designationPostId = null,
-         string? assessmentType = null)
+        string? employeeCode = null,
+        string? designation = null,
+        string? employeeName = null)
     {
         Id = id;
         CandidateId = candidateId;
@@ -131,6 +134,7 @@ public class InterviewPanel
         IsAcknowledged = isAcknowledged;
         AcknowledgedDate = acknowledgedDate;
         IsAttened = isAttened;
+        AttenedRemarks = attenedRemarks;
         AppearanceAttitudeRating = appearanceAttitudeRating;
         AppearanceAttitudeRemarks = appearanceAttitudeRemarks;
         PersonalityRating = personalityRating;
@@ -162,14 +166,9 @@ public class InterviewPanel
         EmployeeCode = employeeCode;
         EmployeeName = employeeName;
         Designation = designation;
-        DesignationPostId = designationPostId;
-        AssessmentType = string.IsNullOrWhiteSpace(assessmentType)
-            ? InterviewerAssessmentType
-            : assessmentType.Trim().ToUpperInvariant();
     }
 
-    /// <summary>HR schedules a panelist against a candidate's interview. Always an INTERVIEWER row - the
-    /// HR Assessment row is created by <see cref="CreateHrAssessmentRow"/> instead.</summary>
+    /// <summary>HR schedules a panelist against a candidate's interview.</summary>
     public static InterviewPanel Schedule(
         Guid candidateId,
         Guid employeeId,
@@ -187,34 +186,7 @@ public class InterviewPanel
             IsAcknowledged = false,
             IsAttened = false,
             IsSubmitted = false,
-            AssessmentType = InterviewerAssessmentType,
             ModifiedBy = scheduledBy,
-            ModifiedOn = DateTime.UtcNow
-        };
-    }
-
-    /// <summary>The single row the HR Assessment writes to for a candidate. Separate from any INTERVIEWER
-    /// row the same HR employee may hold, so the HR decision's state (IsAcknowledged / IsAttened /
-    /// IsSubmitted) never collides with their own interviewer submission state.</summary>
-    public static InterviewPanel CreateHrAssessmentRow(
-        Guid candidateId,
-        Guid hrEmployeeId,
-        DateOnly scheduledDate,
-        TimeOnly scheduledTime,
-        Guid createdBy)
-    {
-        return new InterviewPanel
-        {
-            Id = Guid.NewGuid(),
-            CandidateId = candidateId,
-            EmployeeId = hrEmployeeId,
-            ScheduledDate = scheduledDate,
-            ScheduledTime = scheduledTime,
-            IsAcknowledged = false,
-            IsAttened = false,
-            IsSubmitted = false,
-            AssessmentType = HrAssessmentType,
-            ModifiedBy = createdBy,
             ModifiedOn = DateTime.UtcNow
         };
     }
@@ -242,10 +214,12 @@ public class InterviewPanel
         ModifiedOn = DateTime.UtcNow;
     }
 
-    /// <summary>Marks whether the panelist actually showed up on interview day.</summary>
-    public void MarkAttendance(bool attended, Guid modifiedBy)
+    /// <summary>The interviewer records whether the candidate turned up, when starting the assessment. Present
+    /// stores "Present" as the remark; absent stores the interviewer's reason.</summary>
+    public void MarkCandidateAttendance(bool isPresent, string? absentRemarks, Guid modifiedBy)
     {
-        IsAttened = attended;
+        IsAttened = isPresent;
+        AttenedRemarks = isPresent ? PresentRemarks : absentRemarks?.Trim();
         ModifiedBy = modifiedBy;
         ModifiedOn = DateTime.UtcNow;
     }
@@ -258,32 +232,8 @@ public class InterviewPanel
             return false;
         }
 
-        AppearanceAttitudeRating = details.AppearanceAttitudeRating;
-        AppearanceAttitudeRemarks = details.AppearanceAttitudeRemarks;
-        PersonalityRating = details.PersonalityRating;
-        PersonalityRemarks = details.PersonalityRemarks;
-        CommunicationRating = details.CommunicationRating;
-        CommunicationRemarks = details.CommunicationRemarks;
-        EducationRating = details.EducationRating;
-        EducationRemarks = details.EducationRemarks;
-        WorkExperienceRating = details.WorkExperienceRating;
-        WorkExperienceRemarks = details.WorkExperienceRemarks;
-        TechnicalCompetenceRating = details.TechnicalCompetenceRating;
-        TechnicalCompetenceRemarks = details.TechnicalCompetenceRemarks;
-        FlexibilityRating = details.FlexibilityRating;
-        FlexibilityRemarks = details.FlexibilityRemarks;
-        AmbitionRating = details.AmbitionRating;
-        AmbitionRemarks = details.AmbitionRemarks;
-        PotentialRating = details.PotentialRating;
-        PotentialRemarks = details.PotentialRemarks;
-        OthersRating = details.OthersRating;
-        OthersRemarks = details.OthersRemarks;
-        AnyOtherJobsSuitedRemarks = details.AnyOtherJobsSuitedRemarks;
-        IsRecommendedForPosition = details.IsRecommendedForPosition;
-        PositiveRemarks = details.PositiveRemarks;
-        NegativeRemarks = details.NegativeRemarks;
+        ApplyDetails(details);
 
-        IsAttened = true;
         IsSubmitted = true;
         SubmissionDate = DateTime.UtcNow;
         ModifiedBy = submittedBy;
@@ -293,8 +243,8 @@ public class InterviewPanel
     }
 
     /// <summary>Panelist saves in-progress assessment as a draft. Unlike SubmitAssessment, this does not
-    /// lock the record - it can be saved again later. Saving a draft implies the panelist attended, so
-    /// IsAttened is set to true. Fails only if the assessment has already been finally submitted.</summary>
+    /// lock the record - it can be saved again later. Fails only if the assessment has already been finally
+    /// submitted.</summary>
     public bool SaveAssessmentDraft(AssessmentDetails details, Guid savedBy)
     {
         if (IsSubmitted)
@@ -302,6 +252,16 @@ public class InterviewPanel
             return false;
         }
 
+        ApplyDetails(details);
+
+        ModifiedBy = savedBy;
+        ModifiedOn = DateTime.UtcNow;
+
+        return true;
+    }
+
+    private void ApplyDetails(AssessmentDetails details)
+    {
         AppearanceAttitudeRating = details.AppearanceAttitudeRating;
         AppearanceAttitudeRemarks = details.AppearanceAttitudeRemarks;
         PersonalityRating = details.PersonalityRating;
@@ -326,12 +286,6 @@ public class InterviewPanel
         IsRecommendedForPosition = details.IsRecommendedForPosition;
         PositiveRemarks = details.PositiveRemarks;
         NegativeRemarks = details.NegativeRemarks;
-
-        IsAttened = true;
-        ModifiedBy = savedBy;
-        ModifiedOn = DateTime.UtcNow;
-
-        return true;
     }
 }
 

@@ -72,19 +72,52 @@ public class InterviewPanelEndpoint : IEndpoint
         #endregion
 
 
-        app.MapGet("interview-panels/acknowledge/{candidateId:guid}", async (Guid candidateId, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        #region INTERVIEWER (Interview page)
+
+        // The caller's own interviews only - EmployeeId always comes from the claims.
+        app.MapPost("interviews/filter", async ([FromBody] InterviewerCandidateSearchParam searchParam, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)
             {
                 return Results.Forbid();
             }
 
-            var result = await sender.Send(new AcknowledgePanelInvitationCommand(candidateId, principal.Identity.GetEmployeeId(), principal.Identity.GetUserId()), cancellationToken);
+            var result = await sender.Send(new GetInterviewerCandidatesQuery(searchParam, principal.Identity.GetEmployeeId()), cancellationToken);
             return result.ToHttpResult();
         })
-        .WithSummary("Acknowledge interview panel invitation")
-        .WithTags("Interview Panels")
+        .WithSummary("The signed-in interviewer's interviews")
+        .WithTags("Interviews")
         .RequireAuthorization();
+
+        app.MapPost("interviews/acknowledge", async ([FromBody] AcknowledgeInterviewsRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Forbid();
+            }
+
+            var result = await sender.Send(new AcknowledgeInterviewsCommand(request.CandidateIds ?? [], principal.Identity.GetEmployeeId(), principal.Identity.GetUserId()), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Acknowledge one or more of the signed-in interviewer's interviews in one call")
+        .WithTags("Interviews")
+        .RequireAuthorization();
+
+        app.MapPost("interviews/attendance", async ([FromBody] MarkCandidateAttendanceRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Forbid();
+            }
+
+            var result = await sender.Send(new MarkCandidateAttendanceCommand(request.CandidateId, request.IsPresent, request.Remarks, principal.Identity.GetEmployeeId(), principal.Identity.GetUserId()), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Start Assessment: record whether the candidate attended (Present / Absent with remarks)")
+        .WithTags("Interviews")
+        .RequireAuthorization();
+
+        #endregion
 
         #region INTERVIEW ASSESSMENT
         app.MapGet("interview-panels/assessment/{candidateId:guid}/{employeeId:guid}", async (Guid candidateId, Guid employeeId, ISender sender, CancellationToken cancellationToken) =>
@@ -106,7 +139,7 @@ public class InterviewPanelEndpoint : IEndpoint
             var result = await sender.Send(command with { EmployeeId = principal.Identity.GetEmployeeId(), SavedBy = principal.Identity.GetUserId() }, cancellationToken);
             return result.ToHttpResult();
         })
-        .WithSummary("Save interview assessment as draft (marks the panelist as attended)")
+        .WithSummary("Save interview assessment as draft")
         .WithTags("Interview Panels")
         .RequireAuthorization();
 
