@@ -18,6 +18,7 @@ public interface IUserRepository
     Task<bool> GetExsitingUserByUserName(Guid? id, string userName);
     Task<User> GetExistingUser(Guid? id, CancellationToken cancellation);
     Task<bool> GetExsitingEmployeeById(Guid? employeeId);
+    Task UnbindDeviceAsync(Guid DeviceId, Guid UserId);
 }
 
 public class UserRepository(QubeFinDataContext context) : IUserRepository
@@ -93,5 +94,18 @@ public class UserRepository(QubeFinDataContext context) : IUserRepository
     {
         var entity = await context.TblUsers.AsNoTracking().Include(m => m.Employee).Where(m => m.Id == id).FirstOrDefaultAsync(cancellation) ?? throw new Exception($"User not found for the given Id");
         return entity.ToDomain();
+    }
+
+    public async Task UnbindDeviceAsync(Guid UserDeviceId, Guid UserId)
+    {
+        var userDeviceEntity = await context.TblUserDevices.FirstOrDefaultAsync(m => m.Id == UserDeviceId);
+        if (userDeviceEntity == null)
+        {
+            throw new Exception("User device not found.");
+        }
+        userDeviceEntity.IsReleased = true;
+        userDeviceEntity.ReleaseDate = DateTime.Now;
+        userDeviceEntity.ReleaseBy = UserId;
+        context.TblUserDevices.Update(userDeviceEntity);
     }
 }
