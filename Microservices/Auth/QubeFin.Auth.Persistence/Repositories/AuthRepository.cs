@@ -17,6 +17,7 @@ public interface IAuthRepository
     Task<List<string>> GetPermissionsAsync(Guid userId);
     void UpdateSession(UserSession userSession);
     Task<bool?> ValidateDevice(Guid UserId, string DeviceId);
+    Task<string?> DeviceTagUsername(string DeviceId);
     void RegisterDevice(UserDevice userDevice);
     Task<TblUser?> GetUserByUserNameAsync(string userName);
 }
@@ -133,7 +134,7 @@ public class AuthRepository(QubeFinDataContext context) : IAuthRepository
 
         if (result == PasswordVerificationResult.Failed)
         {
-           throw new Exception($"Invalid password for username: {userName}");
+            throw new Exception($"Invalid password for username: {userName}");
         }
         return userEntity.ToDomain();
     }
@@ -150,6 +151,18 @@ public class AuthRepository(QubeFinDataContext context) : IAuthRepository
             return false;
         }
         return true;
+    }
+
+    public async Task<string?> DeviceTagUsername(string DeviceId)
+    {
+        var userDeviceEntity = await context.TblUserDevices.Include(u => u.User).AsNoTracking().
+            Where(m => m.DeviceId.Trim() == DeviceId.Trim() && !m.IsReleased).
+            FirstOrDefaultAsync();
+        if (userDeviceEntity is null)
+        {
+            return null;
+        }
+        return userDeviceEntity.User.UserName;
     }
 
     public async void RegisterDevice(UserDevice userDevice)

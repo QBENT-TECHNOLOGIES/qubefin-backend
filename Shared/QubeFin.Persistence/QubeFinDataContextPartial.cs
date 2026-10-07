@@ -10,6 +10,7 @@ public partial class QubeFinDataContext : DbContext, IUnitOfWork
     public virtual DbSet<EmployeeLeaveRequest> EmployeeLeaveRequest { get; set; }
     public virtual DbSet<ApprovalWorkflowEventGroupItem> ApprovalWorkflowEventGroupItem { get; set; }
     public virtual DbSet<Payslip> Payslips { get; set; }
+    public virtual DbSet<UserLoginInfoResult> UserLoginInfoResults { get; set; }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder)
     {
@@ -28,6 +29,7 @@ public partial class QubeFinDataContext : DbContext, IUnitOfWork
         modelBuilder.Entity<LeavePrayerResponse>().HasNoKey().ToView(null);
         modelBuilder.Entity<LeavePrayerApprovalSearchResult>().HasNoKey().ToView(null);
         modelBuilder.Entity<Payslip>().HasNoKey().ToView(null);
+        modelBuilder.Entity<UserLoginInfoResult>().HasNoKey().ToView(null);
         modelBuilder.Entity<LeaveTypeWiseBalanceResponse>().HasNoKey().ToView(null);
         modelBuilder.Entity<LastWorkingDateResult>().HasNoKey().ToView(null);
         modelBuilder.Entity<EmployeeMonthlyCalendarResponse>().HasNoKey().ToView(null);
@@ -56,6 +58,13 @@ public partial class QubeFinDataContext : DbContext, IUnitOfWork
     {
         return await Payslips
             .FromSqlInterpolated($"[Payroll].[USP_GetEmployeePayslip] @EmployeeId = {employeeId}")
+            .ToListAsync();
+    }
+    public async Task<List<UserLoginInfoResult>> SP_GetUserLoginInfo(Guid userId, Guid employeeId, string? deviceId)
+    {
+        return await UserLoginInfoResults
+            .FromSqlInterpolated($"[Auth].[USP_GetUserLoginInfo] @p_UserId = {userId}, @p_EmployeeId = {employeeId}, @p_DeviceId = {deviceId}")
+            .AsNoTracking()
             .ToListAsync();
     }
 }
