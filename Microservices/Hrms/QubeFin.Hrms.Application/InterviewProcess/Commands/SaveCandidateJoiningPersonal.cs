@@ -9,15 +9,13 @@ using QubeFin.Hrms.Application.InterviewProcess.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Entities;
-using QubeFin.Persistence.Models.Hrms;
+using QubeFin.Persistence.Models.Hrms;
+
 using QubeFin.Hrms.Application.InterviewProcess.Services;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
 #region --- COMMAND ---
-/// <summary>Personal step of the candidate joining form. The first save creates the employee from the joining
-/// information and links it to the candidate (Tbl_Employee.CandidateId); later saves update that
-/// employee. The photo and signature are stored as Tbl_EmployeeDocument rows.</summary>
 public record SaveCandidateJoiningPersonalCommand(Guid CandidateId, CandidateJoiningPersonalRequest Personal, Guid UserId)
     : IRequest<Result<SaveCandidateJoiningPersonalResponse>>, ICandidateWorkflowCommand;
 #endregion
@@ -95,7 +93,6 @@ internal sealed class SaveCandidateJoiningPersonalCommandHandler(
                 request.UserId,
                 request.CandidateId);
 
-            // Saved together with the photo/signature rows below.
             await employeeRepository.AddAsync(employee);
             message = $"Employee created successfully with Name : {p.FirstName} {p.LastName}";
         }
@@ -110,7 +107,6 @@ internal sealed class SaveCandidateJoiningPersonalCommandHandler(
             }
 
             message = updated.Value;
-            // UpdateEmployeePersonalCommand saved through the same context - drop what it left tracked.
             context.ChangeTracker.Clear();
         }
 
@@ -122,7 +118,6 @@ internal sealed class SaveCandidateJoiningPersonalCommandHandler(
         return Result.Ok(new SaveCandidateJoiningPersonalResponse(employeeId, message));
     }
 
-    /// <summary>Stores a newly picked photo/signature, replacing the previous one. Nothing changes when no file is sent.</summary>
     private async Task ReplaceDocument(Guid employeeId, string category, string documentName, IFormFile? file, Guid userId, CancellationToken cancellationToken)
     {
         if (file is null || file.Length == 0)

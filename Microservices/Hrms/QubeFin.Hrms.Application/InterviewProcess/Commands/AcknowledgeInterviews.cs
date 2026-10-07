@@ -7,9 +7,6 @@ using QubeFin.Hrms.Persistence.Repositories;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
-/// <summary>The interviewer acknowledges one or more of their own interviews in a single UPDATE. Interviews that
-/// are already acknowledged or closed (day passed, candidate rejected, HR Assessment completed) are skipped.
-/// EmployeeId always comes from the caller's claims, so only the caller's own panel rows can be touched.</summary>
 public record AcknowledgeInterviewsCommand(IReadOnlyList<Guid> CandidateIds, Guid EmployeeId, Guid AcknowledgedBy) : IRequest<Result<string>>;
 
 public record AcknowledgeInterviewsRequest(List<Guid> CandidateIds);

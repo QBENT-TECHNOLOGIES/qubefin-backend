@@ -11,10 +11,6 @@ using QubeFin.Hrms.Application.InterviewProcess.Services;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
-/// <summary>
-/// Verifies one check from the Candidate Verification form ("Verify" button on that row). There is no external
-/// verification API yet, so this sets the check's flag on the candidate and saves the value HR entered.
-/// </summary>
 public record VerifyCandidateCheckCommand(Guid CandidateId, CandidateVerificationCheck Check, string? Value, Guid ModifiedBy) : IRequest<Result<CandidateVerificationDto>>, ICandidateWorkflowCommand;
 
 public record VerifyCandidateCheckRequest(CandidateVerificationCheck Check, string? Value);
@@ -38,7 +34,7 @@ public class VerifyCandidateCheckCommandValidator : AbstractValidator<VerifyCand
     {
         [CandidateVerificationCheck.Aadhar] = (new Regex(@"^\d{12}$"), "Aadhaar number must be exactly 12 digits."),
         [CandidateVerificationCheck.Pan] = (new Regex(@"^[A-Z]{5}\d{4}[A-Z]$", RegexOptions.IgnoreCase), "PAN must be in the format ABCDE1234F."),
-        [CandidateVerificationCheck.Voter] = (new Regex(@"^[A-Z]{3}\d{7}$", RegexOptions.IgnoreCase), "Voter ID must be 3 letters followed by 7 digits."),
+        [CandidateVerificationCheck.Voter] = (new Regex(@"^[A-Z]{3}[0-9]{7}$"), "Voter ID must be 3 capital letters followed by 7 digits."),
         [CandidateVerificationCheck.Mobile] = (new Regex(@"^[6-9]\d{9}$"), "Enter a valid 10-digit mobile number."),
         [CandidateVerificationCheck.Uan] = (new Regex(@"^\d{12}$"), "UAN must be exactly 12 digits."),
         [CandidateVerificationCheck.CreditBureau] = (new Regex(@"^https?://\S+$", RegexOptions.IgnoreCase), "Enter a valid link starting with http:// or https://."),

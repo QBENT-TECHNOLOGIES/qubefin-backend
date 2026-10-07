@@ -4,8 +4,6 @@ namespace QubeFin.Hrms.Application.InterviewProcess.Models;
 
 public record PanelistScheduleDto(Guid EmployeeId, DateOnly ScheduledDate, TimeOnly ScheduledTime);
 
-/// <summary>Multipart body for scheduling / adding panelists: the panelists plus the interview panel acknowledgement
-/// PDF emailed to each of them.</summary>
 public class InterviewPanelScheduleRequest
 {
     public Guid CandidateId { get; set; }
@@ -66,7 +64,6 @@ public record InterviewPanelDto(
     int? TotalRatingPoint,
     bool? IsRecommendedForPosition);
 
-/// <summary>Full assessment detail for a single panelist against a candidate, returned by CandidateId + EmployeeId.</summary>
 public record InterviewAssessmentDto(
     Guid Id,
     Guid CandidateId,

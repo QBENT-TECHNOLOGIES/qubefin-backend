@@ -9,10 +9,11 @@ using QubeFin.Persistence;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
-/// <summary>"Is Candidate Selected" after the HR Assessment: HR sets IsSelectedForOffer, which opens Candidate
-/// Verification and the rest of the joining workflow. Only a qualified outcome can be selected, and the selection
-/// is never reverted.</summary>
-public record SelectCandidateForOfferCommand(Guid CandidateId, Guid EmployeeId, Guid ModifiedBy) : IRequest<Result<string>>, ICandidateWorkflowCommand;
+/// <summary>"Is Candidate Selected" after the HR Assessment. Selected opens Candidate Verification; not selected stops
+/// the workflow and records "... but not selected" on the recommendation. Either way the decision is final.</summary>
+public record SelectCandidateForOfferCommand(Guid CandidateId, bool IsSelected, Guid EmployeeId, Guid ModifiedBy) : IRequest<Result<string>>, ICandidateWorkflowCommand;
+
+public record SelectCandidateForOfferRequest(bool IsSelected);
 
 public class SelectCandidateForOfferCommandValidator : AbstractValidator<SelectCandidateForOfferCommand>
 {
@@ -49,12 +50,12 @@ internal sealed class SelectCandidateForOfferCommandHandler(
 
         if (!candidate.IsHrAssessmentCompleted)
         {
-            return new ValidationError("Submit the HR Assessment before selecting the candidate.");
+            return new ValidationError("Submit the HR Assessment before deciding on the selection.");
         }
 
         if (!CandidateWorkflow.IsQualified(candidate.RecommendationStatus))
         {
-            return new ValidationError("Only a recommended candidate can be selected.");
+            return new ValidationError("Only a recommended candidate can be selected or not selected.");
         }
 
         if (candidate.IsSelectedForOffer)
@@ -62,11 +63,20 @@ internal sealed class SelectCandidateForOfferCommandHandler(
             return new ValidationError("This candidate has already been selected.");
         }
 
-        candidate.SelectForOffer(request.ModifiedBy);
+        if (request.IsSelected)
+        {
+            candidate.SelectForOffer(request.ModifiedBy);
+        }
+        else
+        {
+            candidate.MarkNotSelected(request.ModifiedBy);
+        }
 
         await candidateRepository.UpdateAsync(candidate);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Ok($"Candidate {candidate.FirstName} {candidate.LastName} has been selected. Candidate Verification is now open.");
+        return Result.Ok(request.IsSelected
+            ? $"Candidate {candidate.FirstName} {candidate.LastName} has been selected. Candidate Verification is now open."
+            : $"Candidate {candidate.FirstName} {candidate.LastName} has been marked as not selected.");
     }
 }

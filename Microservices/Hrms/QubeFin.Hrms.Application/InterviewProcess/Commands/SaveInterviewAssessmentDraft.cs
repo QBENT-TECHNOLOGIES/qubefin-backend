@@ -10,10 +10,6 @@ using QubeFin.Hrms.Application.InterviewProcess.Services;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
-/// <summary>Saves a panelist's in-progress assessment as a draft. Unlike submit, this does not lock the
-/// record and does not require a recommendation yet. Only once the candidate is recorded present, on the interview date.
-/// Looked up by CandidateId + EmployeeId rather than a client-supplied PanelId - the endpoint overrides
-/// EmployeeId from the authenticated user's claims, so a panelist can only ever save their own assessment.</summary>
 public record SaveInterviewAssessmentDraftCommand(Guid CandidateId, Guid EmployeeId, AssessmentSubmitDto Assessment, Guid SavedBy) : IRequest<Result<string>>, ICandidateWorkflowCommand;
 
 public class SaveInterviewAssessmentDraftCommandValidator : AbstractValidator<SaveInterviewAssessmentDraftCommand>

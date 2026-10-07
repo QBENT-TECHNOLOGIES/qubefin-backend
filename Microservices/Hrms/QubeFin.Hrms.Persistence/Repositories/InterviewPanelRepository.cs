@@ -24,9 +24,6 @@ public class InterviewPanelRepository(QubeFinDataContext context) : IInterviewPa
         var entity = await context.TblInterviewPanels.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
         return entity?.ToDomain();
     }
-
-    /// <summary>Every panelist on a candidate. The employee name/code/designation is only loaded when the caller
-    /// shows it - the rating averages need none of it.</summary>
     public async Task<List<InterviewPanel>> GetByCandidateIdAsync(Guid candidateId, bool includeEmployee = true)
     {
         var entities = await WithEmployee(includeEmployee)
@@ -43,10 +40,6 @@ public class InterviewPanelRepository(QubeFinDataContext context) : IInterviewPa
 
         return entity?.ToDomain();
     }
-
-    /// <summary>Acknowledges the employee's own panel rows for the given candidates in one UPDATE. Only rows that
-    /// are still open are touched: not yet acknowledged, the interview day not passed, the candidate neither
-    /// rejected nor already through the HR Assessment. Returns how many rows were acknowledged.</summary>
     public Task<int> AcknowledgeAsync(Guid employeeId, IReadOnlyCollection<Guid> candidateIds, DateOnly today, Guid acknowledgedBy, CancellationToken cancellationToken = default)
     {
         var now = DateTime.UtcNow;

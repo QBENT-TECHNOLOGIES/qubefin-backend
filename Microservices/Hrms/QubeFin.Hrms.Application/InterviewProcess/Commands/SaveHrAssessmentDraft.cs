@@ -8,10 +8,6 @@ using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
-
-/// <summary>Saves HR's in-progress assessment as a draft, on the candidate only - nothing is written to
-/// Hrms.Tbl_InterviewPanel. The draft moves RecommendationStatus off 'Pending' (which is what ends the Admin's
-/// ability to act) but leaves IsHrAssessmentCompleted false, so HR can come back to it.</summary>
 public record SaveHrAssessmentDraftCommand(Guid CandidateId, Guid HrEmployeeId, HrAssessmentDecisionDto Decision, Guid SavedBy) : IRequest<Result<string>>, ICandidateWorkflowCommand;
 
 public class SaveHrAssessmentDraftCommandValidator : AbstractValidator<SaveHrAssessmentDraftCommand>

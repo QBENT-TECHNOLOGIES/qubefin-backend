@@ -13,8 +13,6 @@ public record GetCandidatesQuery(CandidateSearchParam SearchParam, Guid employee
 
 public record GetCandidatesResponse(IReadOnlyList<CandidateListDto> candidates, int TotalRecords);
 
-/// <summary>The Candidate page list. Hrms.USP_GetCandidateList does the access filter (HR sees everyone, anyone
-/// else the candidates they created), the filters, the workflow status and the paging in one round trip.</summary>
 internal sealed class GetCandidatesQueryHandler(QubeFinDataContext context, IFileStorageRepository fileStorageRepository) : IRequestHandler<GetCandidatesQuery, Result<GetCandidatesResponse>>
 {
     public async Task<Result<GetCandidatesResponse>> Handle(GetCandidatesQuery request, CancellationToken cancellationToken)
@@ -62,11 +60,6 @@ internal sealed class GetCandidatesQueryHandler(QubeFinDataContext context, IFil
 
         return Result.Ok(new GetCandidatesResponse(items, rows.FirstOrDefault()?.TotalRecords ?? 0));
     }
-
-    /// <summary>The CV and job application are always offered. Each later stage unlocks the files produced in it
-    /// and keeps the earlier ones: the written interview form, the credit bureau report once verification starts
-    /// and the signed joining letter once joining starts. A file that was never uploaded is left out. The URLs
-    /// are pre-signed locally - no storage round trip.</summary>
     private async Task<List<CandidateDownloadFileDto>> BuildDownloadsAsync(string status, CandidateListResult row, CancellationToken cancellationToken)
     {
         var stage = status switch
@@ -91,7 +84,6 @@ internal sealed class GetCandidatesQueryHandler(QubeFinDataContext context, IFil
         await AddFileAsync("Job Application", row.JobApplicationFile);
         await AddFileAsync("Written Interview Form", row.WrittenInterviewFile);
 
-        // Entered as a link on the verification form, not uploaded to storage.
         if (stage >= 1 && !string.IsNullOrWhiteSpace(row.CreditBureauReportLink))
         {
             downloads.Add(new CandidateDownloadFileDto { Name = "Credit Bureau Report", Url = row.CreditBureauReportLink });

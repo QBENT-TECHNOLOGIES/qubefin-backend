@@ -9,10 +9,8 @@ using System.Net.Mail;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Services;
 
-/// <summary>Emails newly scheduled panelists their interview invitation, with the panel acknowledgement attached.</summary>
 public interface IPanelInvitationMailer
 {
-    /// <summary>Sends one email per panelist and returns how many panelists had no email address to send to.</summary>
     Task<int> SendInvitationsAsync(Candidate candidate, IReadOnlyList<PanelistScheduleDto> panelists, IFormFile? acknowledgementFile, CancellationToken cancellationToken = default);
 }
 

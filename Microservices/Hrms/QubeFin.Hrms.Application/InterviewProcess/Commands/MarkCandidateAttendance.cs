@@ -8,9 +8,6 @@ using QubeFin.Persistence;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
-/// <summary>Start Assessment: the interviewer records whether the CANDIDATE attended, on their own panel row
-/// (IsAttened / AttenedRemarks). Present opens the assessment; Absent needs a reason and finishes this
-/// interviewer's part - there is no assessment to fill in. Recorded once.</summary>
 public record MarkCandidateAttendanceCommand(Guid CandidateId, bool IsPresent, string? Remarks, Guid EmployeeId, Guid ModifiedBy) : IRequest<Result<string>>, ICandidateWorkflowCommand;
 
 public record MarkCandidateAttendanceRequest(Guid CandidateId, bool IsPresent, string? Remarks);

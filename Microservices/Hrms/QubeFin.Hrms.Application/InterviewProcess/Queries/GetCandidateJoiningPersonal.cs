@@ -8,8 +8,6 @@ using QubeFin.Persistence;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Queries;
 
-/// <summary>Personal step of the joining form. Reads the linked employee's personal info, photo and signature;
-/// before the employee exists it falls back to what the candidate record already holds.</summary>
 public record GetCandidateJoiningPersonalQuery(Guid CandidateId) : IRequest<Result<CandidateJoiningPersonalResponse>>;
 
 internal sealed class GetCandidateJoiningPersonalQueryHandler(QubeFinDataContext context, IFileStorageRepository fileStorageRepository)

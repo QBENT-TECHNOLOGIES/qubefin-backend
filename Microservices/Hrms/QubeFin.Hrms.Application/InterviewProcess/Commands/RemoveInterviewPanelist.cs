@@ -7,9 +7,6 @@ using QubeFin.Persistence;
 using QubeFin.Hrms.Application.InterviewProcess.Services;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
-
-/// <summary>Removes a panelist from a candidate's interview panel. Allowed until that panelist submits their
-/// assessment - acknowledging does not lock them in.</summary>
 public record RemoveInterviewPanelistCommand(Guid CandidateId, Guid EmployeeId, Guid RemovedBy) : IRequest<Result<string>>, ICandidateWorkflowCommand;
 
 public class RemoveInterviewPanelistCommandValidator : AbstractValidator<RemoveInterviewPanelistCommand>

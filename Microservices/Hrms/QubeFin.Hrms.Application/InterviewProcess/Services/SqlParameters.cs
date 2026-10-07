@@ -3,7 +3,6 @@ using Microsoft.Data.SqlClient;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Services;
 
-/// <summary>Stored-procedure parameters for the optional list filters - a missing value goes to the SP as NULL.</summary>
 internal static class SqlParameters
 {
     public static SqlParameter Value(string name, object? value) => new(name, value ?? DBNull.Value);

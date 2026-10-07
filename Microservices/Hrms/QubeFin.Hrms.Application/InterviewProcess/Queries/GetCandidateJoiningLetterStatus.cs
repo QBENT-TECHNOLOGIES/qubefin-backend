@@ -6,11 +6,6 @@ using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Queries;
-
-/// <summary>Whether the candidate's signed joining letter has been uploaded yet - drives the frontend's
-/// "show Welcome Letter once Joining Letter is uploaded" gate. Reads straight off Tbl_InterviewCandidate via
-/// EF rather than through USP_GetInterviewCandidateById, since that stored procedure isn't touched by this
-/// feature.</summary>
 public record GetCandidateJoiningLetterStatusQuery(Guid CandidateId) : IRequest<Result<CandidateJoiningLetterStatusDto>>;
 
 internal sealed class GetCandidateJoiningLetterStatusQueryHandler(

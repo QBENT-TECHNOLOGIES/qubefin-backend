@@ -137,6 +137,10 @@ namespace QubeFin.Persistence.Models.Hrms
         public bool? IsCandidateVerificationCompleted { get; set; }
         public bool? IsJoiningLetterUploaded { get; set; }
         public bool? ShowOfferLetterActions { get; set; }
+        /// <summary>Place of posting, date of joining, reporting time and a monthly CTC above zero are all filled in -
+        /// required before the offer letter. Not returned by the SP; GetCandidateById fills it.</summary>
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public bool IsJoiningDetailsComplete { get; set; }
         public bool? ShowAddAdditionalInfoButton { get; set; }
         public bool? ShowAppointmentLetterActions { get; set; }
         public bool? ShowJoiningLetterActions { get; set; }

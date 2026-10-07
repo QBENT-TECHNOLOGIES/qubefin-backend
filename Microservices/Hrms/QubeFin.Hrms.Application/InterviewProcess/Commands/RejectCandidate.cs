@@ -10,11 +10,6 @@ using QubeFin.Persistence;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
-/// <summary>HR rejects the candidate at any stage until an employee has been created from them; the candidate's
-/// Admin (its creator) can reject only until HR saves the HR Assessment draft. Stops the
-/// workflow for good: every <see cref="ICandidateWorkflowCommand"/> on the candidate is refused from then on.
-/// Deliberately not an ICandidateWorkflowCommand itself - it checks the stopped state on its own so it can
-/// say why.</summary>
 public record RejectCandidateCommand(Guid CandidateId, Guid EmployeeId, Guid RejectedBy) : IRequest<Result<string>>;
 
 public class RejectCandidateCommandValidator : AbstractValidator<RejectCandidateCommand>

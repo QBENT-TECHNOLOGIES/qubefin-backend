@@ -10,11 +10,6 @@ using QubeFin.Hrms.Application.InterviewProcess.Services;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
-/// <summary>
-/// Uploads the candidate's filled written-interview / personality form and stores the returned
-/// file reference on the candidate record. Mirrors the Leave Prayer attachment upload pattern
-/// (<see cref="LeavePrayers.Commands.ApplyLeavePrayerCommand"/>).
-/// </summary>
 public record UploadCandidateInterviewFormatCommand(Guid CandidateId, CandidateInterviewUploadRequest Upload, Guid ModifiedBy) : IRequest<Result<string>>, ICandidateWorkflowCommand;
 
 public class UploadCandidateInterviewFormatCommandValidator : AbstractValidator<UploadCandidateInterviewFormatCommand>

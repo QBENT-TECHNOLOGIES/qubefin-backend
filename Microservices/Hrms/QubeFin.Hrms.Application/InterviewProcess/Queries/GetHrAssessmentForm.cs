@@ -7,9 +7,6 @@ using QubeFin.Hrms.Persistence.Repositories;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Queries;
 
-/// <summary>Called when HR opens the HR Assessment form for a candidate. Returns the average of every
-/// submitted panelist's ratings (read-only in the form), HR's saved decision (if any), and the panelists whose
-/// assessment is still outstanding so the form can warn HR before they proceed.</summary>
 public record GetHrAssessmentFormQuery(Guid CandidateId, Guid HrEmployeeId) : IRequest<Result<HrAssessmentFormDto>>;
 
 internal sealed class GetHrAssessmentFormQueryHandler(
@@ -54,13 +51,11 @@ internal sealed class GetHrAssessmentFormQueryHandler(
                 p.IsRecommendedForPosition))
             .ToList();
 
-        // Outstanding = not submitted and the candidate not recorded absent by that interviewer.
         var pendingPanelists = panel
             .Where(p => !p.IsSubmitted && !p.IsCandidateAbsent)
             .Select(p => new PendingPanelistDto(p.EmployeeId, p.EmployeeCode ?? string.Empty, p.EmployeeName ?? string.Empty, p.IsAcknowledged))
             .ToList();
 
-        // Submitted interviewer assessments are locked, so the live average is also the submitted one.
         var dto = new HrAssessmentFormDto(
             request.CandidateId,
             candidate.IsHrAssessmentCompleted,

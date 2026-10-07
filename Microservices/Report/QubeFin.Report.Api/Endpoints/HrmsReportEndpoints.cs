@@ -351,6 +351,33 @@ namespace QubeFin.Report.Api.Endpoints
                 }
             }).WithSummary("Generate job application form.");
 
+            // Blank job application form for a company - handed to a candidate before they are created, so there is
+            // no candidate yet. The same report runs with an empty CandidateId.
+            app.MapGet("/interview/jobapplication-form/blank/{companyId:guid}", [Authorize] async (Guid companyId, ISender sender, IConfiguration configuration) =>
+            {
+                string? reportName = null;
+                if (companyId == Guid.Parse(configuration["Company:Wegrow"]!))
+                    reportName = "Rpt_Wegrow_JobApplication";
+                else if (companyId == Guid.Parse(configuration["Company:WegroBC"]!))
+                    reportName = "Rpt_WeegroBC_JobApplication";
+
+                if (reportName is null)
+                    return Results.NotFound("No job application form is set up for this company.");
+
+                var command = new GenerateSSRSReportsCommand(
+                    reportName,
+                    "PDF",
+                    new Dictionary<string, string>
+                    {
+                        ["CandidateId"] = Guid.Empty.ToString()
+                    });
+                var result = await sender.Send(command);
+                if (result.IsFailed)
+                    return result.ToHttpResult();
+                var file = result.Value;
+                return Results.File(file.FileStream, file.ContentType, file.FileName);
+            }).WithSummary("Generate a blank job application form for a company.");
+
             #endregion
         }
     }

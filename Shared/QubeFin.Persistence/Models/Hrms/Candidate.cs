@@ -228,14 +228,24 @@ public class Candidate
         ModifiedOn = DateTime.UtcNow;
     }
 
-    /// <summary>Adds or moves the candidate's interview slot (the Schedule action). Touches nothing else - the
-    /// panel, interview letter and the rest of the workflow are separate.</summary>
-    public void Schedule(DateOnly interviewDate, TimeOnly interviewTime, Guid modifiedBy)
+    /// <summary>Adds or moves the candidate's interview slot (the Schedule action). Moving an existing slot makes the
+    /// interview letter already sent out of date, so it is marked not sent - the Interview Letter actions come back
+    /// for HR to send the new date. Returns whether the slot was moved.</summary>
+    public bool Schedule(DateOnly interviewDate, TimeOnly interviewTime, Guid modifiedBy)
     {
+        var isMoved = InterviewDate is not null && (InterviewDate != interviewDate || InterviewTime != interviewTime);
+
         InterviewDate = interviewDate;
         InterviewTime = interviewTime;
+        if (isMoved)
+        {
+            IsInterviewLetterRecieved = false;
+        }
+
         ModifiedBy = modifiedBy;
         ModifiedOn = DateTime.UtcNow;
+
+        return isMoved;
     }
 
     /// <summary>Replaces the CV and/or job application. A null key keeps the file already on record.</summary>
@@ -251,6 +261,32 @@ public class Candidate
     public void SelectForOffer(Guid modifiedBy)
     {
         IsSelectedForOffer = true;
+        ModifiedBy = modifiedBy;
+        ModifiedOn = DateTime.UtcNow;
+    }
+
+    /// <summary>The joining details the offer letter prints - place of posting, date of joining, reporting time and a
+    /// monthly CTC above zero. HR must fill them in before the offer letter can be sent or marked received.</summary>
+    public IReadOnlyList<string> MissingJoiningDetails()
+    {
+        var missing = new List<string>();
+        if (PostedOrganizationUnitId is null) missing.Add("Place of Posting");
+        if (DateOfJoining is null) missing.Add("Date of Joining");
+        if (ReportingTime is null) missing.Add("Reporting Time");
+        if (MonthlyCostCompany is not > 0) missing.Add("Monthly Cost to Company (CTC)");
+        return missing;
+    }
+
+    /// <summary>Suffix HR's decision adds to a recommended candidate's RecommendationStatus when they are not selected.</summary>
+    public const string NotSelectedSuffix = " but not selected";
+
+    /// <summary>HR decides not to select a recommended candidate: IsSelectedForOffer stays false and the outcome is
+    /// recorded on RecommendationStatus ("Recommended with Training but not selected"). That status no longer
+    /// qualifies, so the workflow stops as Not Selected. One-way, like the selection.</summary>
+    public void MarkNotSelected(Guid modifiedBy)
+    {
+        IsSelectedForOffer = false;
+        RecommendationStatus = $"{RecommendationStatus}{NotSelectedSuffix}";
         ModifiedBy = modifiedBy;
         ModifiedOn = DateTime.UtcNow;
     }

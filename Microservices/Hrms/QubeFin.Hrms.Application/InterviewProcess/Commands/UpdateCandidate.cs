@@ -86,13 +86,11 @@ internal sealed class UpdateCandidateCommandHandler(ICandidateRepository candida
             return new RecordNotFoundError("Candidate not found for the given Id.");
         }
 
-        // Details are editable only until the offer letter is received - the same point the Edit button hides.
         if (candidate.IsOfferLetterReceived)
         {
             return new ValidationError("Candidate details cannot be edited once the offer letter has been received.");
         }
 
-        // A replaced CV / job application is uploaded first; files not sent are kept.
         string? cvFile, jobApplicationFile;
         try
         {
@@ -104,9 +102,6 @@ internal sealed class UpdateCandidateCommandHandler(ICandidateRepository candida
             return new ValidationError("Unable to upload the CV / Job Application. Please try again.");
         }
 
-        // Only what the candidate form edits is taken from the request: the basic details plus the joining details
-        // (posted unit, joining date, reporting time, monthly CTC). Everything filled in elsewhere (HR assessment,
-        // salary expectations, KYC numbers, the interview slot set by Schedule) is kept as it is, so an edit cannot wipe it.
         var details = request.Candidate;
         var candidateDetails = new CandidateDetails(
             details.FirstName,

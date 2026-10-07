@@ -9,11 +9,6 @@ using QubeFin.Persistence;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
-/// <summary>Finalizes HR's assessment on the candidate (IsHrAssessmentCompleted) - nothing is written to
-/// Hrms.Tbl_InterviewPanel. Needs at least one submitted interviewer; any interviewer still outstanding is
-/// ignored (the form warns HR about them first). TotalRatingPoint/RatingStatus come from the average of the
-/// submitted interviewers' ratings - HR does not type these in. A qualified outcome moves on to selection;
-/// any other outcome stops the workflow as Not Selected.</summary>
 public record SubmitHrAssessmentCommand(Guid CandidateId, Guid HrEmployeeId, HrAssessmentDecisionDto Decision, Guid SubmittedBy) : IRequest<Result<string>>, ICandidateWorkflowCommand;
 
 public class SubmitHrAssessmentCommandValidator : AbstractValidator<SubmitHrAssessmentCommand>

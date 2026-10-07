@@ -11,7 +11,6 @@ using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
-/// <summary>Adds one or more panelists to a candidate's existing interview panel.</summary>
 public record AddInterviewPanelistsCommand(Guid CandidateId, List<PanelistScheduleDto> Panelists, Guid AddedBy, IFormFile? AcknowledgementFile = null) : IRequest<Result<string>>, ICandidateWorkflowCommand;
 
 public class AddInterviewPanelistsCommandValidator : AbstractValidator<AddInterviewPanelistsCommand>
@@ -59,7 +58,6 @@ internal sealed class AddInterviewPanelistsCommandHandler(IInterviewPanelReposit
             return new ValidationError("Schedule the interview date and time before adding panelists.");
         }
 
-        // The panel stays editable until HR completes the HR Assessment.
         if (candidate.IsHrAssessmentCompleted)
         {
             return new ValidationError("Panelists cannot be added once the HR Assessment is completed.");
@@ -86,7 +84,6 @@ internal sealed class AddInterviewPanelistsCommandHandler(IInterviewPanelReposit
         await panelRepository.AddRangeAsync(newPanelists, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // The panel is already saved - a mail failure is reported in the message rather than failing the request.
         try
         {
             var missingEmail = await panelInvitationMailer.SendInvitationsAsync(candidate, request.Panelists, request.AcknowledgementFile, cancellationToken);

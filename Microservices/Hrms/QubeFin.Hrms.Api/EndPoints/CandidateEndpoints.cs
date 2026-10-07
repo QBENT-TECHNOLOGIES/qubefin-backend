@@ -81,16 +81,16 @@ public class CandidateEndpoints : IEndpoint
         }).WithSummary("Add or update the candidate's interview date and time").WithTags("Candidates").RequireAuthorization();
 
         // HR only - checked in the handler.
-        app.MapPost("candidates/{id:guid}/select-for-offer", async (Guid id, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        app.MapPost("candidates/{id:guid}/select-for-offer", async (Guid id, [FromBody] SelectCandidateForOfferRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)
             {
                 return Results.Forbid();
             }
 
-            var result = await sender.Send(new SelectCandidateForOfferCommand(id, principal.Identity.GetEmployeeId(), principal.Identity.GetUserId()), cancellationToken);
+            var result = await sender.Send(new SelectCandidateForOfferCommand(id, request.IsSelected, principal.Identity.GetEmployeeId(), principal.Identity.GetUserId()), cancellationToken);
             return result.ToHttpResult();
-        }).WithSummary("Select the candidate for an offer after the HR Assessment (opens Candidate Verification)").WithTags("Candidates").RequireAuthorization();
+        }).WithSummary("Selected / not selected after the HR Assessment (selected opens Candidate Verification)").WithTags("Candidates").RequireAuthorization();
 
         app.MapPost("candidates/{id:guid}/interview-mode", async (Guid id, [FromBody] CandidateInterviewModeUpdateRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {

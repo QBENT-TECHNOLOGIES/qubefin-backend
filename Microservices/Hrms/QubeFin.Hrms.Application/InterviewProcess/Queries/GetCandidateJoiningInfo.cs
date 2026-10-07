@@ -9,9 +9,6 @@ using QubeFin.Persistence;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Queries;
 
-/// <summary>Which employee the candidate's joining information has been saved into, with what the candidate record
-/// already holds. The joining form uses it to unlock the steps after Personal Info, resume where HR left off, and
-/// prefill (and lock what Candidate Verification confirmed) on the employee steps.</summary>
 public record GetCandidateJoiningInfoQuery(Guid CandidateId) : IRequest<Result<CandidateJoiningInfoResponse>>;
 
 internal sealed class GetCandidateJoiningInfoQueryHandler(QubeFinDataContext context, IEmployeeRepository employeeRepository)

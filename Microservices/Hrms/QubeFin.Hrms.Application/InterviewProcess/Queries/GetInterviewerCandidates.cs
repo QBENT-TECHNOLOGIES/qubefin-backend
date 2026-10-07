@@ -8,10 +8,8 @@ using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Queries;
 
-/// <summary>Filters of the Interview page list.</summary>
 public class InterviewerCandidateSearchParam
 {
-    /// <summary>Candidate name or reference no. Searching also brings back completed assessments.</summary>
     public string? SearchText { get; set; }
     public string? Status { get; set; }
     public DateOnly? InterviewDate { get; set; }
@@ -38,12 +36,10 @@ public record InterviewerCandidateDto(
     bool CanViewAssessment,
     string? CvFileUrl);
 
-/// <summary>Counts behind the Interview page's quick tabs. They follow the search / date filters, not the tab.</summary>
 public record InterviewerTabCounts(int AllOpen, int Today, int AcknowledgementPending, int Completed);
 
 public record GetInterviewerCandidatesResponse(IReadOnlyList<InterviewerCandidateDto> Interviews, int TotalRecords, InterviewerTabCounts Counts);
 
-/// <summary>Statuses of the Interview page, decided by Hrms.USP_GetInterviewerCandidateList.</summary>
 public static class InterviewerInterviewStatus
 {
     public const string AcknowledgementPending = "Acknowledgement Pending";
@@ -51,13 +47,8 @@ public static class InterviewerInterviewStatus
     public const string StartedAssessment = "Started Assessment";
     public const string AssessmentCompleted = "Assessment Completed";
     public const string InterviewClosed = "Interview Closed";
-
-    /// <summary>Tab filter, not a row status: today's interviews that are not completed yet.</summary>
     public const string Today = "Today";
 }
-
-/// <summary>The Interview page list - only the interviews the calling employee sits on the panel for. EmployeeId
-/// always comes from the caller's claims.</summary>
 public record GetInterviewerCandidatesQuery(InterviewerCandidateSearchParam SearchParam, Guid EmployeeId) : IRequest<Result<GetInterviewerCandidatesResponse>>;
 
 internal sealed class GetInterviewerCandidatesQueryHandler(QubeFinDataContext context, IFileStorageRepository fileStorageRepository)
@@ -111,9 +102,6 @@ internal sealed class GetInterviewerCandidatesQueryHandler(QubeFinDataContext co
 
         return Result.Ok(new GetInterviewerCandidatesResponse(items, rows.FirstOrDefault()?.TotalRecords ?? 0, counts));
     }
-
-    /// <summary>One aggregate over the interviewer's own panel rows. Same rules as the SP's Status column:
-    /// completed = submitted or the candidate recorded absent; closed = day passed, rejected or HR completed.</summary>
     private async Task<InterviewerTabCounts> GetTabCountsAsync(Guid employeeId, InterviewerCandidateSearchParam search, CancellationToken cancellationToken)
     {
         var today = CandidateWorkflow.Today;

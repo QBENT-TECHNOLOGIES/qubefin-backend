@@ -10,12 +10,6 @@ using QubeFin.Hrms.Application.InterviewProcess.Services;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
-/// <summary>
-/// Manually records the outcome of the candidate's background/identity verification checks. There is no
-/// external verification API wired up yet (Aadhar/Voter/PAN/UAN/credit-bureau are all just booleans in the
-/// database), so this is a straightforward "HR/Admin ticks the boxes they've personally checked" update -
-/// all six flags are sent together in one call, unlike the one-flag-per-call letter-status endpoint.
-/// </summary>
 public record UpdateCandidateVerificationCommand(
     Guid CandidateId,
     bool IsAadharValidated,

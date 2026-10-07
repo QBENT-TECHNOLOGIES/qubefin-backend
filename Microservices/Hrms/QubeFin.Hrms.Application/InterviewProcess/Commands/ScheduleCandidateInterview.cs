@@ -8,11 +8,6 @@ using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
-
-/// <summary>The Schedule action on the candidate list: adds or moves the candidate's interview date and time.
-/// HR, or the candidate's Admin (its creator), until the HR Assessment is completed. It creates nothing - no
-/// panel, no interviewer, no interview letter. Panelists already on the panel who have not submitted are moved
-/// to the new slot, so the Interview page keeps showing the candidate's interview date.</summary>
 public record ScheduleCandidateInterviewCommand(Guid CandidateId, DateOnly InterviewDate, TimeOnly InterviewTime, Guid EmployeeId, Guid ModifiedBy) : IRequest<Result<string>>, ICandidateWorkflowCommand;
 
 public class ScheduleCandidateInterviewCommandValidator : AbstractValidator<ScheduleCandidateInterviewCommand>
@@ -60,8 +55,9 @@ internal sealed class ScheduleCandidateInterviewCommandHandler(
         }
 
         var isReschedule = candidate.InterviewDate is not null;
+        var hadLetterSent = candidate.IsInterviewLetterRecieved;
 
-        candidate.Schedule(request.InterviewDate, request.InterviewTime, request.ModifiedBy);
+        var isMoved = candidate.Schedule(request.InterviewDate, request.InterviewTime, request.ModifiedBy);
         await candidateRepository.UpdateAsync(candidate);
 
         var panelists = (await panelRepository.GetByCandidateIdAsync(candidate.Id, includeEmployee: false)).Where(p => !p.IsSubmitted);
@@ -73,6 +69,13 @@ internal sealed class ScheduleCandidateInterviewCommandHandler(
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Ok(isReschedule ? "Interview rescheduled successfully." : "Interview scheduled successfully.");
+        if (!isReschedule)
+        {
+            return Result.Ok("Interview scheduled successfully.");
+        }
+
+        return Result.Ok(isMoved && hadLetterSent
+            ? "Interview rescheduled. Send the interview letter again with the new date and time."
+            : "Interview rescheduled successfully.");
     }
 }

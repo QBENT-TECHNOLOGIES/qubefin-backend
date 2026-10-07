@@ -1,4 +1,5 @@
-﻿using FluentResults;
+﻿using QubeFin.Core.Results;
+using FluentResults;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -53,6 +54,15 @@ internal sealed class SendLetterToCandidateCommandHandler(QubeFinDataContext con
         if (string.IsNullOrWhiteSpace(candidate.Email))
         {
             return Result.Fail("Candidate email address is not available.");
+        }
+
+        if (letterType == CandidateLetterType.OfferLetter)
+        {
+            var missing = candidate.MissingJoiningDetails();
+            if (missing.Count > 0)
+            {
+                return new ValidationError($"Update the joining details before the offer letter: {string.Join(", ", missing)}.");
+            }
         }
 
         if (letterStatus.File == null || letterStatus.File.Length == 0)

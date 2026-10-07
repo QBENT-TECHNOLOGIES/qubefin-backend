@@ -8,8 +8,6 @@ using QubeFin.Hrms.Application.InterviewProcess.Services;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
-/// <summary>Sets whether the candidate's interview was conducted Online or Offline. Editable on its own
-/// (e.g. from the HR Assessment form) rather than only via the full candidate update.</summary>
 public record UpdateCandidateInterviewModeCommand(Guid CandidateId, string InterviewMode, Guid ModifiedBy) : IRequest<Result<string>>, ICandidateWorkflowCommand;
 
 public class UpdateCandidateInterviewModeCommandValidator : AbstractValidator<UpdateCandidateInterviewModeCommand>

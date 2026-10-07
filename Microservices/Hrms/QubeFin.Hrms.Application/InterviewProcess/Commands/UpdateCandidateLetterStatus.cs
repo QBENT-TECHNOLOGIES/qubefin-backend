@@ -50,6 +50,15 @@ internal sealed class UpdateCandidateLetterStatusCommandHandler(ICandidateReposi
 
         var letterStatus = request.LetterStatus;
 
+        if (letterStatus.IsOfferLetterReceived == true)
+        {
+            var missing = candidate.MissingJoiningDetails();
+            if (missing.Count > 0)
+            {
+                return new ValidationError($"Update the joining details before the offer letter: {string.Join(", ", missing)}.");
+            }
+        }
+
         candidate.UpdateLetterStatus(
             letterStatus.IsInterviewLetterReceived,
             letterStatus.IsOfferLetterReceived,

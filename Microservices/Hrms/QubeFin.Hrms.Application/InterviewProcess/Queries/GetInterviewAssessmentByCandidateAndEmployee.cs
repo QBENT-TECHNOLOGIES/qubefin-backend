@@ -6,7 +6,6 @@ using QubeFin.Hrms.Persistence.Repositories;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Queries;
 
-/// <summary>Returns a single panelist's interview assessment for a candidate.</summary>
 public record GetInterviewAssessmentByCandidateAndEmployeeQuery(Guid CandidateId, Guid EmployeeId) : IRequest<Result<InterviewAssessmentDto>>;
 
 internal sealed class GetInterviewAssessmentByCandidateAndEmployeeQueryHandler(IInterviewPanelRepository panelRepository)

@@ -8,8 +8,6 @@ using QubeFin.Hrms.Application.InterviewProcess.Services;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Commands;
 
-/// <summary>Saves the free-text "Additional Info" note (flow doc step 7) - shown after the candidate has
-/// accepted/received the Offer Letter and required before the Appointment Letter can be generated.</summary>
 public record UpdateCandidateAdditionalInfoCommand(Guid CandidateId, string? AdditionalInfo, Guid ModifiedBy) : IRequest<Result<string>>, ICandidateWorkflowCommand;
 
 public class UpdateCandidateAdditionalInfoCommandValidator : AbstractValidator<UpdateCandidateAdditionalInfoCommand>
