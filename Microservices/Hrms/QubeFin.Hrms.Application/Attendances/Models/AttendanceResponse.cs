@@ -19,5 +19,10 @@
         public decimal? InTimeLongitude { get; set; }
         public decimal? OutTimeLatitude { get; set; }
         public decimal? OutTimeLongitude { get; set; }
+        public decimal? StartMileage { get; set; }
+        public string? StartMileagePhoto { get; set; }
+        public decimal? EndMileage { get; set; }
+        public string? EndMileagePhoto { get; set; }
+        public decimal? PersonalUseKm { get; set; }
     }
 }
