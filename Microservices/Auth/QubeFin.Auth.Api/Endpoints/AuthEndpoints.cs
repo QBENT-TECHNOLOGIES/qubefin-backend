@@ -7,7 +7,6 @@ using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
 using QubeFin.Core.Results;
 using System.Security.Claims;
-using System.Security.Principal;
 
 namespace QubeFin.Auth.Api.Endpoints;
 
@@ -26,19 +25,25 @@ public class AuthEndpoints : IEndpoint
 
             var result = await sender.Send(request);
             return result.ToHttpResult();
-        });
+        })
+        .WithSummary("Validate Login")
+        .WithTags("Authentication"); ;
 
         app.MapPost("verify-mfa", async (VerifyMfaCommand request, ISender sender) =>
         {
             var result = await sender.Send(request);
             return result.ToHttpResult();
-        });
+        })
+        .WithSummary("Verify MFA")
+        .WithTags("Authentication");
 
         app.MapGet("refresh-token", async ([FromHeader(Name = "Refresh-Token")] string refreshToken, ISender sender) =>
         {
             var result = await sender.Send(new ValidateRefreshTokenQuery(refreshToken));
             return result.ToHttpResult();
-        });
+        })
+        .WithSummary("Refresh Token")
+        .WithTags("Authentication");
 
         app.MapPost("change-password", async (ClaimsPrincipal principal, ChangePasswordRequest request, ISender sender) =>
         {
@@ -49,11 +54,14 @@ public class AuthEndpoints : IEndpoint
             var userId = principal.Identity.GetUserId();
             var result = await sender.Send(new ChangePasswordCommand(request, userId));
             return result.ToHttpResult();
-        }).RequireAuthorization();
+        })
+        .RequireAuthorization()
+        .WithSummary("Change Password")
+        .WithTags("Authentication");
 
         #region FORGOT PASSWORD
 
-        app.MapPost("forgot-password", async (HttpContext httpContext, ForgotPasswordInitiateRequest request, [FromHeader(Name = "X-Device-Id")] string ? deviceId, ISender sender) =>
+        app.MapPost("forgot-password", async (HttpContext httpContext, ForgotPasswordInitiateRequest request, [FromHeader(Name = "X-Device-Id")] string? deviceId, ISender sender) =>
         {
             var userAgent = httpContext.Request.Headers.UserAgent.ToString();
             request.DeviceId = deviceId;
@@ -61,28 +69,36 @@ public class AuthEndpoints : IEndpoint
 
             var result = await sender.Send(new ForgotPasswordCommand(request));
             return result.ToHttpResult();
-        });
+        })
+        .WithSummary("Forgot Password")
+        .WithTags("Authentication"); ;
 
         app.MapPost("forgot-password/verify-mfa", async (ForgotPasswordVerifyMfaRequest request, ISender sender) =>
         {
             var result = await sender.Send(new VerifyForgotPasswordMfaCommand(request));
             return result.ToHttpResult();
-        });
+        })
+        .WithSummary("Forgot Password Verify MFA")
+        .WithTags("Authentication"); ;
 
         app.MapPost("forgot-password/reset", async (ResetPasswordRequest request, ISender sender) =>
         {
             var result = await sender.Send(new ResetPasswordCommand(request));
             return result.ToHttpResult();
-        });
+        })
+        .WithSummary("Forgot Password Reset")
+        .WithTags("Authentication"); ;
         #endregion
 
         #region RESET PASSWORD 
-        app.MapPut("reset-password/{UserId}", async (Guid UserId,ResetPassword request, ISender sender) =>
+        app.MapPut("reset-password/{UserId}", async (Guid UserId, ResetPassword request, ISender sender) =>
         {
             var result = await sender.Send(new PasswordResetCommand(request, UserId));
             return result.ToHttpResult();
-        });
-
+        })
+        .RequireAuthorization()
+        .WithSummary("Reset Password")
+        .WithTags("Authentication");
         #endregion
     }
 }
