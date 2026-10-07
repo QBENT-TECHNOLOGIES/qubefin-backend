@@ -47,7 +47,7 @@ public partial class TblInterviewCandidate
 
     public string? JobApplicationFile { get; set; }
 
-    public DateOnly InterviewDate { get; set; }
+    public DateOnly? InterviewDate { get; set; }
 
     public TimeOnly? InterviewTime { get; set; }
 
