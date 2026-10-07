@@ -51,7 +51,7 @@ namespace QubeFin.Hrms.Application.Attendances.Commands
                 {
                     var file = request.StartMileagePhoto;
                     await using var stream = file.OpenReadStream();
-                    startPhoto = await fileStorageRepository.UploadFileAsync(stream, "Mileage/" + file.FileName, file.ContentType ?? "application/octet-stream", cancellationToken).ConfigureAwait(false);
+                    startPhoto = await fileStorageRepository.UploadFileAsync(stream, file.FileName, file.ContentType ?? "application/octet-stream", cancellationToken, "Mileage").ConfigureAwait(false);
                 }
 
                 var attendance = Attendance.MarkCheckIn(Guid.NewGuid(), command.EmployeeId, actualTime, null, request.OrganizationUnitId, expectedInTime, expectedOutTime, request.Lat, request.Long, null, null, DateOnly.FromDateTime(DateTime.Now), startMileage: request.StartMileage, startMileagePhoto: startPhoto);
@@ -64,7 +64,7 @@ namespace QubeFin.Hrms.Application.Attendances.Commands
                 {
                     var file = request.EndMileagePhoto;
                     await using var stream = file.OpenReadStream();
-                    endPhoto = await fileStorageRepository.UploadFileAsync(stream, "Mileage/" + file.FileName, file.ContentType ?? "application/octet-stream", cancellationToken).ConfigureAwait(false);
+                    endPhoto = await fileStorageRepository.UploadFileAsync(stream, file.FileName, file.ContentType ?? "application/octet-stream", cancellationToken, "Mileage").ConfigureAwait(false);
                 }
 
                 todayAttendance.MarchCheckOut(actualTime, expectedOutTime, request.Lat, request.Long, request.OrganizationUnitId, endMileage: request.EndMileage,
