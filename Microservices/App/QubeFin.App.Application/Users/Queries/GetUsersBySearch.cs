@@ -6,11 +6,11 @@ using QubeFin.Persistence;
 namespace QubeFin.App.Application.Users.Queries;
 
 #region --- QUERY ---
-public record GetUsersBySearchQuery(Guid? organizationUitId, Guid? companyId, string? SearchText, string? SortOn, string? SortDirection, int PageIndex, int PageSize) : IRequest<Result<GetUsersBySearchResponse>>;
+public record GetUsersBySearchQuery(Guid? organizationUnitId, Guid? companyId, string? SearchText, string? SortOn, string? SortDirection, int PageIndex, int PageSize) : IRequest<Result<GetUsersBySearchResponse>>;
 #endregion
 
 #region --- RESPONSE ---
-public record UsersBySearchResult(Guid Id, string organizationUnitName, string UserName, string Employee, string MfaSecret, bool HasMfaEnabled, bool IsActive);
+public record UsersBySearchResult(Guid Id, string OrganizationUnitName, string UserName, string Employee, string MfaSecret, bool HasMfaEnabled, bool IsActive);
 public record GetUsersBySearchResponse(IReadOnlyList<UsersBySearchResult> Users, int TotalCount);
 #endregion
 
@@ -21,19 +21,19 @@ internal sealed class GetUsersBySearchQueryHandler(QubeFinDataContext context)
     public async Task<Result<GetUsersBySearchResponse>> Handle(GetUsersBySearchQuery request, CancellationToken cancellationToken)
     {
         var skipRecordCount = request.PageIndex * request.PageSize;
-        var filterEntitiesQuery = context.TblUsers.Include(m => m.Employee).ThenInclude(m=>m.OrganizationUnit).ThenInclude(m=>m.Company).AsNoTracking().AsQueryable();
+        var filterEntitiesQuery = context.TblUsers.Include(m => m.Employee).ThenInclude(m => m.OrganizationUnit).ThenInclude(m => m.Company).AsNoTracking().AsQueryable();
 
         if (!string.IsNullOrEmpty(request.SearchText))
         {
             filterEntitiesQuery = filterEntitiesQuery.Where(m => m.UserName.Contains(request.SearchText.Trim()) || m.Employee.FullName.Contains(request.SearchText.Trim()));
         }
-        if(request.organizationUitId != null && request.organizationUitId!= Guid.Empty)
+        if (request.organizationUnitId != null && request.organizationUnitId != Guid.Empty)
         {
-            filterEntitiesQuery = filterEntitiesQuery.Where(m => m.Employee.OrganizationUnitId == request.organizationUitId.Value);
+            filterEntitiesQuery = filterEntitiesQuery.Where(m => m.Employee.OrganizationUnitId == request.organizationUnitId);
         }
-        if(request.companyId != null && request.companyId != Guid.Empty)
+        if (request.companyId != null && request.companyId != Guid.Empty)
         {
-            filterEntitiesQuery = filterEntitiesQuery.Where(m => m.Employee.CompanyId == request.companyId.Value);
+            filterEntitiesQuery = filterEntitiesQuery.Where(m => m.Employee.CompanyId == request.companyId);
         }
 
         if (request.SortOn is not null && request.SortDirection is not null)
