@@ -132,7 +132,7 @@ public class InterviewPanelEndpoint : IEndpoint
             var hrEmployeeId = principal.Identity.GetEmployeeId();
             var result = await sender.Send(new GetHrAssessmentFormQuery(candidateId, hrEmployeeId), cancellationToken);
             return result.ToHttpResult();
-        })        .WithSummary("Open the HR Assessment form for a candidate (averages of the submitted panelists' ratings + HR's own draft, if any)")        .WithTags("HR Assessment")        .RequireAuthorization();
+        }).WithSummary("Open the HR Assessment form for a candidate (averages of the submitted panelists' ratings + HR's own draft, if any)").WithTags("HR Assessment").RequireAuthorization();
 
         app.MapPost("hr-assessment/{candidateId:guid}/draft", async (Guid candidateId, [FromBody] HrAssessmentDecisionDto decision, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
@@ -144,7 +144,7 @@ public class InterviewPanelEndpoint : IEndpoint
             var hrEmployeeId = principal.Identity.GetEmployeeId();
             var result = await sender.Send(new SaveHrAssessmentDraftCommand(candidateId, hrEmployeeId, decision, principal.Identity.GetUserId()), cancellationToken);
             return result.ToHttpResult();
-        })        .WithSummary("Save the HR Assessment as a draft")        .WithTags("HR Assessment")        .RequireAuthorization();
+        }).WithSummary("Save the HR Assessment as a draft").WithTags("HR Assessment").RequireAuthorization();
 
         app.MapPost("hr-assessment/{candidateId:guid}/submit", async (Guid candidateId, [FromBody] HrAssessmentDecisionDto decision, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
@@ -156,7 +156,7 @@ public class InterviewPanelEndpoint : IEndpoint
             var hrEmployeeId = principal.Identity.GetEmployeeId();
             var result = await sender.Send(new SubmitHrAssessmentCommand(candidateId, hrEmployeeId, decision, principal.Identity.GetUserId()), cancellationToken);
             return result.ToHttpResult();
-        })        .WithSummary("Submit (finalize) the HR Assessment - requires every panelist to have submitted first")        .WithTags("HR Assessment")        .RequireAuthorization();
+        }).WithSummary("Submit (finalize) the HR Assessment - requires every panelist to have submitted first").WithTags("HR Assessment").RequireAuthorization();
         #endregion
     }
 }
