@@ -18,4 +18,6 @@ public partial class TblUserDevice
     public DateTime? ReleaseDate { get; set; }
 
     public Guid? ReleaseBy { get; set; }
+
+    public virtual TblUser User { get; set; } = null!;
 }

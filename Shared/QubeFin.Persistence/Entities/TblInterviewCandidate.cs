@@ -29,6 +29,8 @@ public partial class TblInterviewCandidate
 
     public string? LandMark { get; set; }
 
+    public string? Address { get; set; }
+
     public Guid? AdministrativeUnitId { get; set; }
 
     public Guid? PoliceStationId { get; set; }
@@ -39,7 +41,13 @@ public partial class TblInterviewCandidate
 
     public string? ReferenceNo { get; set; }
 
-    public DateOnly InterviewDate { get; set; }
+    public DateOnly? ApplicationDate { get; set; }
+
+    public string? CvFile { get; set; }
+
+    public string? JobApplicationFile { get; set; }
+
+    public DateOnly? InterviewDate { get; set; }
 
     public TimeOnly? InterviewTime { get; set; }
 
@@ -86,6 +94,8 @@ public partial class TblInterviewCandidate
     public string? RecruitmentSource { get; set; }
 
     public string? VacancyReference { get; set; }
+
+    public bool? IsSelectedForOffer { get; set; }
 
     public string? AadharNumber { get; set; }
 
