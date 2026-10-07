@@ -50,7 +50,8 @@ internal class ValidtateLoginCommandHandler(IAuthRepository authRepository, IUni
                 }
                 else if (!deviceStatus.Value)
                 {
-                    return new ValidationError("Device is allocated to another user, please contact admin !");
+                    string? assignedUserName = await authRepository.DeviceTagUsername(request.DeviceId);
+                    return new ValidationError($"Device is allocated to {assignedUserName}, please contact admin !");
                 }
             }
 
