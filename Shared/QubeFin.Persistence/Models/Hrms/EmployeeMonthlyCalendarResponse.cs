@@ -14,6 +14,7 @@
         public DateOnly? CalendarDate { get; set; }
         public string? DayName { get; set; }
         public string? Status { get; set; }
+        public string? Description { get; set; }
         public string? LeaveType { get; set; }
 
     }
