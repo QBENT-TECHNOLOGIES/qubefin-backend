@@ -47,7 +47,7 @@ public partial class TblInterviewCandidate
 
     public string? JobApplicationFile { get; set; }
 
-    public DateOnly InterviewDate { get; set; }
+    public DateOnly? InterviewDate { get; set; }
 
     public TimeOnly? InterviewTime { get; set; }
 
@@ -84,6 +84,8 @@ public partial class TblInterviewCandidate
     public Guid? RecommendedGradeId { get; set; }
 
     public bool IsTrainingRequired { get; set; }
+
+    public bool IsHrAssessmentCompleted { get; set; }
 
     public string? RecommendationStatus { get; set; }
 
