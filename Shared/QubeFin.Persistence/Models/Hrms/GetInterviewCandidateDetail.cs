@@ -74,6 +74,7 @@ namespace QubeFin.Persistence.Models.Hrms
         public bool? IsCreditBureauChecked { get; set; }
         public string? CreditBureauReportLink { get; set; }
         public Guid? PostedOrganizationUnitId { get; set; }
+        public Guid? PostedOrganizationUnitTypeId { get; set; }
         public string? PostedOrganizationUnitName { get; set; }
         public DateOnly? DateOfJoining { get; set; }
         public TimeOnly? ReportingTime { get; set; }
