@@ -12,7 +12,7 @@ public record GetOrganizationUnitByIdQuery(Guid Id) : IRequest<Result<GetOrganiz
 #endregion
 
 #region --- RESPONSE ---
-public record GetOrganizationUnitByIdResponse(Guid Id, string Name, Guid OrganizationUnitTypeId, string OrganizationUnitTypeIcon, string OrganizationUnitTypeName, Guid? ParentId, Guid? CompanyId, decimal? Latitude, decimal? Longitude,
+public record GetOrganizationUnitByIdResponse(Guid Id, string Name, Guid OrganizationUnitTypeId, string OrganizationUnitTypeIcon, string OrganizationUnitTypeName, Guid? ParentId, Guid? CompanyId, Guid? DistrictId, decimal? Latitude, decimal? Longitude,
     TimeOnly? AttendanceInTime, TimeOnly? AttendanceOutTime, int? CheckRadiusInMeter,
     string CreatedBy, DateTime CreatedOn, string? LastModifiedBy, DateTime? LastModifiedOn, IReadOnlyList<OrganizationUnitHierarchyItem> Hierarchy,
     IReadOnlyList<OragnizationDesignations> Designations);
@@ -93,7 +93,7 @@ internal sealed class GetOrganizationUnitByIdQueryHandler(QubeFinDataContext con
         var result = new GetOrganizationUnitByIdResponse(
             organizationUnit.Id, organizationUnit.Name,
             organizationUnit.OrganizationUnitTypeId, organizationUnit.OrganizationUnitType.Icon,
-            organizationUnit.OrganizationUnitType.Name, organizationUnit.ParentId, organizationUnit.CompanyId, organizationUnit.Latitude, organizationUnit.Longitude,
+            organizationUnit.OrganizationUnitType.Name, organizationUnit.ParentId, organizationUnit.CompanyId, organizationUnit.DistrictId, organizationUnit.Latitude, organizationUnit.Longitude,
             organizationUnit.AttendanceInTime, organizationUnit.AttendanceOutTime, organizationUnit.CheckRadiusInMeter,
             organizationUnit.CreatedByNavigation.UserName, organizationUnit.CreatedOn,
             organizationUnit.LastModifiedByNavigation?.UserName, organizationUnit.LastModifiedOn, hierarchy, designations);

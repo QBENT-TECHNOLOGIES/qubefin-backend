@@ -11,4 +11,5 @@ public class OrganizationUnitRequest
     public TimeOnly? AttendanceOutTime { get; set; }
     public int? CheckRadiusInMeter { get; set; }
     public Guid? CompanyId { get; set; }
+    public Guid? DistrictId { get; set; }
 }

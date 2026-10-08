@@ -17,6 +17,7 @@ public interface IOrganizationUnitRepository
     Task<int> GetNextCodeValAsync(CancellationToken cancellationToken);
     Task<bool> ExistsByNameAsync(string name, Guid? parentId, Guid? excludedId, CancellationToken cancellationToken);
     Task<bool> IsSelfOrDescendantAsync(Guid candidateParentId, Guid organizationUnitId, CancellationToken cancellationToken);
+    Task<bool> IsDistrictAsync(Guid administrativeUnitId, CancellationToken cancellationToken);
 }
 
 internal class OrganizationUnitRepository(QubeFinDataContext context) : IOrganizationUnitRepository
@@ -100,6 +101,13 @@ internal class OrganizationUnitRepository(QubeFinDataContext context) : IOrganiz
         }
 
         return false;
+    }
+
+    public async Task<bool> IsDistrictAsync(Guid administrativeUnitId, CancellationToken cancellationToken)
+    {
+        return await context.TblAdministrativeUnits
+            .AsNoTracking()
+            .AnyAsync(m => m.Id == administrativeUnitId && m.AdministrativeUnitType.Name == "District", cancellationToken);
     }
 
     public async Task AddDesignationAsync(string name, Guid organizationUnitId, Guid postId, Guid roleId, Guid salaryGradeId, Guid userId)

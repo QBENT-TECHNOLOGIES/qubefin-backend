@@ -9,7 +9,7 @@ namespace QubeFin.Global.Application.OrganizationUnits.Commands;
 
 #region --- COMMAND ---
 public record UpdateOrganizationUnitCommand(Guid Id, Guid OrganizationUnitTypeId, string Name, decimal? Latitude, decimal? Longitude,
-    TimeOnly? AttendanceInTime, TimeOnly? AttendanceOutTime, int? CheckRadiusInMeter, Guid? ParentId, Guid? CompanyId, Guid UserId) : IRequest<Result<string>>;
+    TimeOnly? AttendanceInTime, TimeOnly? AttendanceOutTime, int? CheckRadiusInMeter, Guid? ParentId, Guid? CompanyId, Guid? DistrictId, Guid UserId) : IRequest<Result<string>>;
 #endregion
 
 #region --- VALIDATION ---
@@ -24,6 +24,7 @@ public class UpdateOrganizationUnitCommandValidator : AbstractValidator<UpdateOr
         RuleFor(v => v.CheckRadiusInMeter).GreaterThan(0).When(v => v.CheckRadiusInMeter.HasValue).WithMessage("Check radius must be greater than 0.");
         RuleFor(v => v.Latitude).InclusiveBetween(-90, 90).When(v => v.Latitude.HasValue).WithMessage("Latitude must be between -90 and 90.");
         RuleFor(v => v.Longitude).InclusiveBetween(-180, 180).When(v => v.Longitude.HasValue).WithMessage("Longitude must be between -180 and 180.");
+        RuleFor(v => v.DistrictId).NotEmpty().WithMessage("District is required.");
         RuleFor(v => v.UserId).NotEmpty().WithMessage("User is required.");
     }
 }
@@ -56,7 +57,12 @@ internal sealed class UpdateOrganizationUnitCommandHandler(IOrganizationUnitRepo
             return Result.Fail($"Organization Unit {request.Name} already exists under the selected parent.");
         }
 
-        organizationUnit.Update(request.OrganizationUnitTypeId, request.Name.Trim(), request.Latitude, request.Longitude, request.AttendanceInTime, request.AttendanceOutTime, request.CheckRadiusInMeter, request.ParentId, request.CompanyId, request.UserId);
+        if (!await organizationUnitRepository.IsDistrictAsync(request.DistrictId!.Value, cancellationToken))
+        {
+            return Result.Fail("The selected district is not valid.");
+        }
+
+        organizationUnit.Update(request.OrganizationUnitTypeId, request.Name.Trim(), request.Latitude, request.Longitude, request.AttendanceInTime, request.AttendanceOutTime, request.CheckRadiusInMeter, request.ParentId, request.CompanyId, request.DistrictId, request.UserId);
         organizationUnitRepository.Update(organizationUnit);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Ok($"Organization Unit Updated Successfully");

@@ -25,6 +25,15 @@ public class OrganizationUnitEndpoints : IEndpoint
         .WithTags("OrganizationUnits")
         .RequireAuthorization();
 
+        app.MapGet("organization-units/by-location", async (ISender sender) =>
+        {
+            var result = await sender.Send(new GetOrganizationUnitsByLocationQuery());
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get All Organization Units With Their District And State")
+        .WithTags("OrganizationUnits")
+        .RequireAuthorization();
+
         app.MapGet("organization-units/{id:guid}/types", async (ISender sender, [FromRoute] Guid id) =>
         {
             var result = await sender.Send(new GetOrganizationUnitByUnitTypeQuery(id));
@@ -71,7 +80,7 @@ public class OrganizationUnitEndpoints : IEndpoint
             }
             var userId = principal.Identity.GetUserId();
 
-            var result = await sender.Send(new CreateOrganizationUnitCommand(request.OrganizationUnitTypeId, request.Name, NormalizeId(request.ParentId), NormalizeId(request.CompanyId),
+            var result = await sender.Send(new CreateOrganizationUnitCommand(request.OrganizationUnitTypeId, request.Name, NormalizeId(request.ParentId), NormalizeId(request.CompanyId), NormalizeId(request.DistrictId),
                 request.Latitude, request.Longitude, request.AttendanceInTime, request.AttendanceOutTime, request.CheckRadiusInMeter, userId));
             return result.ToHttpResult();
         })
@@ -89,7 +98,7 @@ public class OrganizationUnitEndpoints : IEndpoint
             var userId = principal.Identity.GetUserId();
 
             var result = await sender.Send(new UpdateOrganizationUnitCommand(id, request.OrganizationUnitTypeId, request.Name, request.Latitude, request.Longitude,
-                request.AttendanceInTime, request.AttendanceOutTime, request.CheckRadiusInMeter, NormalizeId(request.ParentId), NormalizeId(request.CompanyId), userId));
+                request.AttendanceInTime, request.AttendanceOutTime, request.CheckRadiusInMeter, NormalizeId(request.ParentId), NormalizeId(request.CompanyId), NormalizeId(request.DistrictId), userId));
             return result.ToHttpResult();
         })
         .WithSummary("Update Organization Unit")
