@@ -15,6 +15,8 @@ public partial class TblOrganizationUnit
 
     public Guid? ParentId { get; set; }
 
+    public Guid? DistrictId { get; set; }
+
     public DateTime CreatedOn { get; set; }
 
     public Guid CreatedBy { get; set; }
@@ -38,6 +40,8 @@ public partial class TblOrganizationUnit
     public virtual TblCompany? Company { get; set; }
 
     public virtual TblUser CreatedByNavigation { get; set; } = null!;
+
+    public virtual TblAdministrativeUnit? District { get; set; }
 
     public virtual ICollection<TblOrganizationUnit> InverseParent { get; set; } = new List<TblOrganizationUnit>();
 

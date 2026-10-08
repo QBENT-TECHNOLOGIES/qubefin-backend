@@ -63,7 +63,8 @@ public static class EmployeeMapper
             ReferedBy = employee.OfficialInfo.ReferedBy,
             HowYouKnow = employee.OfficialInfo.HowYouKnow,
             OfficialEmail = employee.OfficialInfo.OfficialEmail,
-            IsActive = true,
+            // A separated employee is inactive.
+            IsActive = employee.OfficialInfo.SeparationDate == null,
 
             MobileNo = employee.ContactInfo.MobileNo,
             PersonalEmail = employee.ContactInfo.PersonalEmail,

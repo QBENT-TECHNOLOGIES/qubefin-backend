@@ -8,7 +8,7 @@ using QubeFin.Persistence.Models.Global;
 namespace QubeFin.Global.Application.OrganizationUnis.Commands;
 
 #region --- COMMAND ---
-public record CreateOrganizationUnitCommand(Guid OrganizationUnitTypeId, string Name, Guid? ParentId, Guid? CompanyId, decimal? Latitude, decimal? Longitude,
+public record CreateOrganizationUnitCommand(Guid OrganizationUnitTypeId, string Name, Guid? ParentId, Guid? CompanyId, Guid? DistrictId, decimal? Latitude, decimal? Longitude,
         TimeOnly? AttendanceInTime, TimeOnly? AttendanceOutTime, int? CheckRadiusInMeter, Guid UserId) : IRequest<Result<string>>;
 #endregion
 
@@ -23,6 +23,7 @@ public class CreateOrganizationUnitCommandValidator : AbstractValidator<CreateOr
         RuleFor(v => v.CheckRadiusInMeter).GreaterThan(0).When(v => v.CheckRadiusInMeter.HasValue).WithMessage("Check radius must be greater than 0.");
         RuleFor(v => v.Latitude).InclusiveBetween(-90, 90).When(v => v.Latitude.HasValue).WithMessage("Latitude must be between -90 and 90.");
         RuleFor(v => v.Longitude).InclusiveBetween(-180, 180).When(v => v.Longitude.HasValue).WithMessage("Longitude must be between -180 and 180.");
+        RuleFor(v => v.DistrictId).NotEmpty().WithMessage("District is required.");
         RuleFor(v => v.UserId).NotEmpty().WithMessage("User is required.");
     }
 }
@@ -40,9 +41,14 @@ internal sealed class CreateOrganizationUnitCommandHandler(IOrganizationUnitRepo
             return Result.Fail($"Organization Unit {request.Name} already exists under the selected parent.");
         }
 
+        if (!await organizationUnitRepository.IsDistrictAsync(request.DistrictId!.Value, cancellationToken))
+        {
+            return Result.Fail("The selected district is not valid.");
+        }
+
         var codeVal = await organizationUnitRepository.GetNextCodeValAsync(cancellationToken);
 
-        var organizationUnit = OrganizationUnit.Create(Guid.NewGuid(), request.OrganizationUnitTypeId, request.Name.Trim(), codeVal, request.ParentId, request.CompanyId,
+        var organizationUnit = OrganizationUnit.Create(Guid.NewGuid(), request.OrganizationUnitTypeId, request.Name.Trim(), codeVal, request.ParentId, request.CompanyId, request.DistrictId,
             request.Latitude, request.Longitude, request.AttendanceInTime, request.AttendanceOutTime, request.CheckRadiusInMeter, request.UserId);
         await organizationUnitRepository.AddAsync(organizationUnit);
         await unitOfWork.SaveChangesAsync(cancellationToken);

@@ -85,6 +85,8 @@ public partial class TblInterviewCandidate
 
     public bool IsTrainingRequired { get; set; }
 
+    public bool IsHrAssessmentCompleted { get; set; }
+
     public string? RecommendationStatus { get; set; }
 
     public int? TotalRatingPoint { get; set; }

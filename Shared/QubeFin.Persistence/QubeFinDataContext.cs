@@ -1462,10 +1462,6 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.AmbitionRemarks).HasMaxLength(100);
             entity.Property(e => e.AnyOtherJobsSuitedRemarks).HasMaxLength(100);
             entity.Property(e => e.AppearanceAttitudeRemarks).HasMaxLength(100);
-            entity.Property(e => e.AssessmentType)
-                .HasMaxLength(20)
-                .IsUnicode(false)
-                .HasDefaultValue("INTERVIEWER", "DF_Tbl_InterviewPanel_AssessmentType");
             entity.Property(e => e.AttenedRemarks).HasMaxLength(100);
             entity.Property(e => e.CommunicationRemarks).HasMaxLength(100);
             entity.Property(e => e.EducationRemarks).HasMaxLength(100);
@@ -2198,6 +2194,10 @@ public partial class QubeFinDataContext : DbContext
                 .HasForeignKey(d => d.CreatedBy)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_OrganizationUnit_Tbl_User");
+
+            entity.HasOne(d => d.District).WithMany(p => p.TblOrganizationUnits)
+                .HasForeignKey(d => d.DistrictId)
+                .HasConstraintName("FK_Tbl_OrganizationUnit_Tbl_AdministrativeUnit");
 
             entity.HasOne(d => d.LastModifiedByNavigation).WithMany(p => p.TblOrganizationUnitLastModifiedByNavigations)
                 .HasForeignKey(d => d.LastModifiedBy)
