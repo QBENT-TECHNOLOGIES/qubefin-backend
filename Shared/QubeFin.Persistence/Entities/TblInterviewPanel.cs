@@ -73,8 +73,6 @@ public partial class TblInterviewPanel
 
     public bool IsSubmitted { get; set; }
 
-    public string AssessmentType { get; set; } = null!;
-
     public DateTime? SubmissionDate { get; set; }
 
     public Guid ModifiedBy { get; set; }
