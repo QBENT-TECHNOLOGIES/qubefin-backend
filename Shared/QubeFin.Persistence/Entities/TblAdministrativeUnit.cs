@@ -45,6 +45,8 @@ public partial class TblAdministrativeUnit
 
     public virtual ICollection<TblMemberAddress> TblMemberAddresses { get; set; } = new List<TblMemberAddress>();
 
+    public virtual ICollection<TblOrganizationUnit> TblOrganizationUnits { get; set; } = new List<TblOrganizationUnit>();
+
     public virtual ICollection<TblPoliceStation> TblPoliceStations { get; set; } = new List<TblPoliceStation>();
 
     public virtual ICollection<TblSurvey> TblSurveys { get; set; } = new List<TblSurvey>();

@@ -2195,6 +2195,10 @@ public partial class QubeFinDataContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_OrganizationUnit_Tbl_User");
 
+            entity.HasOne(d => d.District).WithMany(p => p.TblOrganizationUnits)
+                .HasForeignKey(d => d.DistrictId)
+                .HasConstraintName("FK_Tbl_OrganizationUnit_Tbl_AdministrativeUnit");
+
             entity.HasOne(d => d.LastModifiedByNavigation).WithMany(p => p.TblOrganizationUnitLastModifiedByNavigations)
                 .HasForeignKey(d => d.LastModifiedBy)
                 .HasConstraintName("FK_Tbl_OrganizationUnit_Tbl_User1");
