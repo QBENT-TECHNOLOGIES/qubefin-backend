@@ -33,6 +33,10 @@ public class UpdateEmployeeOfficialCommandValidator : AbstractValidator<UpdateEm
            .WithMessage("Enter a valid email address.");
         RuleFor(x => x.OfficialInfo.DateOfJoining).NotEmpty().WithMessage("Date of Joining is required.");
         //RuleFor(x => x.OfficialInfo.DateOfConfirmation).NotEmpty();
+        RuleFor(x => x.OfficialInfo.SeparationDate)
+            .GreaterThanOrEqualTo(x => x.OfficialInfo.DateOfJoining)
+            .When(x => x.OfficialInfo.SeparationDate.HasValue && x.OfficialInfo.DateOfJoining.HasValue)
+            .WithMessage("Separation Date cannot be before Date of Joining.");
         RuleFor(x => x.UserId).NotEmpty().WithMessage("Login User Id is required.");
     }
 }
@@ -71,6 +75,11 @@ internal sealed class UpdateEmployeeOfficialCommandHandler(IEmployeeRepository e
             if ((employee.GrossSalaries == null || !employee.GrossSalaries.Any()) && request.OfficialInfo.GrossSalary > 0 && (employee.Designations == null || !employee.Designations.Any()) && request.OfficialInfo.DesignationId != null)
             {
                 await employeeRepository.TransferEntry(employee.Id, request.OfficialInfo.OrganizationUnitId.Value, request.OfficialInfo.DesignationId.Value, request.OfficialInfo.SalaryGradeId.Value, request.OfficialInfo.GrossSalary.Value, cancellationToken);
+            }
+
+            if (request.OfficialInfo.SeparationDate.HasValue)
+            {
+                await employeeRepository.SeparateAsync(employee.Id, request.OfficialInfo.SeparationDate.Value, request.UserId, cancellationToken);
             }
 
             await unitOfWork.SaveChangesAsync(cancellationToken);

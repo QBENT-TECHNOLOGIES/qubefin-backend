@@ -17,6 +17,7 @@ public interface IEmployeeRepository
     Task<bool> GetExsitingEmployeeByCode(Guid? id, string code);
     Task AddDesignationAsync(Guid employeeId, Guid designationId, DateOnly joiningDate);
     Task AddGrossSalaryAsync(Guid employeeId, decimal grossSalary, DateOnly joiningDate);
+    Task SeparateAsync(Guid employeeId, DateOnly separationDate, Guid modifiedBy, CancellationToken cancellationToken);
     Task TransferEntry(Guid employeeId, Guid organisationUnitId, Guid designationId, Guid salaryGradeId, decimal grossSalary, CancellationToken cancellationToken);
     Task<AddressUnit?> GetAdressUnit(Guid administrativeUnitId);
     Task TransferEmployee(Guid EmployeeId, Guid OrganisationUnitId, Guid DesignationId, Guid SalaryGradeId, decimal GrossSalary, CancellationToken cancellationToken);
@@ -106,6 +107,37 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
             EffectiveTill = null
         };
         await context.TblEmployeeGrossSalaries.AddAsync(employeeGrossSalary);
+    }
+
+    // Closes the employee's running designation, gross salary and transfer on the separation date and deactivates
+    // the employee's login. Rows added earlier in the same unit of work are closed too.
+    public async Task SeparateAsync(Guid employeeId, DateOnly separationDate, Guid modifiedBy, CancellationToken cancellationToken)
+    {
+        await context.TblEmployeeDesignations.Where(d => d.EmployeeId == employeeId && d.EffectiveTo == null).LoadAsync(cancellationToken);
+        foreach (var designation in context.TblEmployeeDesignations.Local.Where(d => d.EmployeeId == employeeId && d.EffectiveTo == null))
+        {
+            designation.EffectiveTo = separationDate.ToDateTime(TimeOnly.MinValue);
+        }
+
+        await context.TblEmployeeGrossSalaries.Where(s => s.EmployeeId == employeeId && s.EffectiveTill == null).LoadAsync(cancellationToken);
+        foreach (var grossSalary in context.TblEmployeeGrossSalaries.Local.Where(s => s.EmployeeId == employeeId && s.EffectiveTill == null))
+        {
+            grossSalary.EffectiveTill = separationDate;
+        }
+
+        await context.TblEmployeeTransfers.Where(t => t.EmployeeId == employeeId && t.ToDate == null).LoadAsync(cancellationToken);
+        foreach (var transfer in context.TblEmployeeTransfers.Local.Where(t => t.EmployeeId == employeeId && t.ToDate == null))
+        {
+            transfer.ToDate = separationDate;
+        }
+
+        var users = await context.TblUsers.Where(u => u.EmployeeId == employeeId && u.IsActive).ToListAsync(cancellationToken);
+        foreach (var user in users)
+        {
+            user.IsActive = false;
+            user.LastModifiedBy = modifiedBy;
+            user.LastModifiedOn = DateTime.Now;
+        }
     }
 
     public async Task<AddressUnit?> GetAdressUnit(Guid administrativeUnitId)
