@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
 using QubeFin.Core.Results;
-using QubeFin.Report.Application.Reports;
 using QubeFin.Report.Application.Reports.Generate.CustomNPOIReports;
 using QubeFin.Report.Application.Reports.Generate.LinqNPOIReport;
 using QubeFin.Report.Application.Reports.Generate.NPOIReports;
@@ -199,6 +198,36 @@ namespace QubeFin.Report.Api.Endpoints
 
                 return Results.File(file.FileStream, file.ContentType, file.FileName);
             }).WithSummary("Generate Attendance History Report.");
+
+            app.MapPost("/generate-lop-finalization-report", [Authorize] async (ClaimsPrincipal principal, LopFinalizationReportSearchRequest request, ISender sender) =>
+            {
+                if (principal.Identity is null)
+                    return Results.Forbid();
+
+                var empId = principal.Identity.GetEmployeeId();
+
+                if(request.CompanyId == null)
+                    return Results.BadRequest("Please select company before export.");
+
+                var lopResult = await sender.Send(new GetLopFinalizationByQueryQuery(request, empId));
+                if (lopResult.IsFailed)
+                    return lopResult.ToHttpResult();
+
+                var command = new GenerateLinqNPOIReportCommand(
+                    Data: lopResult.Value,
+                    CompanyId: request.CompanyId ?? Guid.Empty,
+                    FileName: "LOP_Finalization_Report",
+                    ReportTitle: $"LOP Finalization",
+                    SubHeader: null,
+                    ShowCompanyHeader: false);
+
+                var result = await sender.Send(command);
+                if (result.IsFailed)
+                    return result.ToHttpResult();
+
+                var file = result.Value;
+                return Results.File(file.FileStream, file.ContentType, file.FileName);
+            }).WithSummary("Generate LOP Finalization Report.");
             #endregion
         }
     }

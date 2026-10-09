@@ -14,4 +14,5 @@ namespace QubeFin.Hrms.Application.AttendanceMoralization.Models
         public Guid? EmployeeId { get; set; }
         public int? Status { get; set; }
     }
+
 }
