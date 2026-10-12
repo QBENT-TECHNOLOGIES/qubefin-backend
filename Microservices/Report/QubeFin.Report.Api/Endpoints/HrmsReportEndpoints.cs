@@ -353,19 +353,10 @@ namespace QubeFin.Report.Api.Endpoints
 
             // Blank job application form for a company - handed to a candidate before they are created, so there is
             // no candidate yet. The same report runs with an empty CandidateId.
-            app.MapGet("/interview/jobapplication-form/blank/{companyId:guid}", [Authorize] async (Guid companyId, ISender sender, IConfiguration configuration) =>
+            app.MapGet("/interview/jobapplication-form/blank", [Authorize] async ( ISender sender, IConfiguration configuration) =>
             {
-                string? reportName = null;
-                if (companyId == Guid.Parse(configuration["Company:Wegrow"]!))
-                    reportName = "Rpt_Wegrow_JobApplication";
-                else if (companyId == Guid.Parse(configuration["Company:WegroBC"]!))
-                    reportName = "Rpt_WeegroBC_JobApplication";
-
-                if (reportName is null)
-                    return Results.NotFound("No job application form is set up for this company.");
-
                 var command = new GenerateSSRSReportsCommand(
-                    reportName,
+                    "Rpt_Wegrow_JobApplication",
                     "PDF",
                     new Dictionary<string, string>
                     {
