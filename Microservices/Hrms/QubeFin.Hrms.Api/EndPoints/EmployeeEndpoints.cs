@@ -480,5 +480,17 @@ public class EmployeeEndpoints : IEndpoint
         .WithSummary("Get Salary Structure By Gross")
         .RequireAuthorization();
         #endregion
+
+        #region Employee Documents
+
+        app.MapGet("employees/documents/{id:Guid}", async (ISender sender, Guid id) =>
+        {
+            var result = await sender.Send(new GetEmployeeDocumentsByIdQuery(id));
+            return result.ToHttpResult();
+        })
+    .WithSummary("Get All Documents By Employee Id")
+    .RequireAuthorization();
+
+        #endregion
     }
 }
