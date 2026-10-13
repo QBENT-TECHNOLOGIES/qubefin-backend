@@ -13,7 +13,7 @@ using System.Security.Claims;
 namespace QubeFin.Auth.Application.Accounts.Queries;
 
 #region --- QUERY ---
-public record ValidateRefreshTokenQuery(string RefreshToken) : IRequest<Result<ValidateRefreshTokenResponse>>;
+public record ValidateRefreshTokenQuery(string RefreshToken, string? DeviceId) : IRequest<Result<ValidateRefreshTokenResponse>>;
 #endregion
 
 #region --- RESPONSE ---
@@ -26,7 +26,7 @@ internal class ValidateRefreshTokenQueryHandler(QubeFinDataContext context, IAut
 {
     public async Task<Result<ValidateRefreshTokenResponse>> Handle(ValidateRefreshTokenQuery request, CancellationToken cancellationToken)
     {
-        var userSessionEntity = await context.TblUserSessions.AsNoTracking().FirstOrDefaultAsync(m => m.RefreshToken == request.RefreshToken);
+        var userSessionEntity = await context.TblUserSessions.AsNoTracking().FirstOrDefaultAsync(m => m.RefreshToken == request.RefreshToken || m.DeviceId == request.DeviceId);
         if (userSessionEntity is null)
         {
             return new UnauthorizedError($"User Session not found");
