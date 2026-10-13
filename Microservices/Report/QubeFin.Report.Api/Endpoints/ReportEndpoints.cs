@@ -163,7 +163,8 @@ namespace QubeFin.Report.Api.Endpoints
                 return Results.File(file.FileStream, file.ContentType, $"Salary_Register_Report_{month}_{year}.xlsx");
             }).WithSummary("Generate Salary Register Report.");
 
-            app.MapPost("/generate-attendance-history-report", [Authorize] async (ClaimsPrincipal principal, AttendanceSearchRequest request, ISender sender) =>
+            app.MapPost("/generate-attendance-history-report", [Authorize] async (
+    ClaimsPrincipal principal, AttendanceExportRequest request, ISender sender) =>
             {
                 if (principal.Identity is null)
                 {
@@ -172,7 +173,7 @@ namespace QubeFin.Report.Api.Endpoints
 
                 var empId = principal.Identity.GetEmployeeId();
 
-                var attendanceResult = await sender.Send(new GetAttendanceHistoryByQuery(request, empId));
+                var attendanceResult = await sender.Send(new GetAttendanceExportQuery(request, empId));
 
                 if (attendanceResult.IsFailed)
                 {
@@ -180,12 +181,12 @@ namespace QubeFin.Report.Api.Endpoints
                 }
 
                 var command = new GenerateLinqNPOIReportCommand(
-                        Data: attendanceResult.Value,
-                        CompanyId: request.CompanyId,
-                        FileName: "Attendance_History_Report",
-                        ReportTitle: "Attendance History",
-                        SubHeader: null,
-                        ShowCompanyHeader: false);
+                    Data: attendanceResult.Value,
+                    CompanyId: request.CompanyId,
+                    FileName: "Attendance_History_Report",
+                    ReportTitle: "Attendance History",
+                    SubHeader: null,
+                    ShowCompanyHeader: false);
 
                 var result = await sender.Send(command);
 
@@ -198,6 +199,7 @@ namespace QubeFin.Report.Api.Endpoints
 
                 return Results.File(file.FileStream, file.ContentType, file.FileName);
             }).WithSummary("Generate Attendance History Report.");
+
 
             app.MapPost("/generate-lop-finalization-report", [Authorize] async (ClaimsPrincipal principal, LopFinalizationReportSearchRequest request, ISender sender) =>
             {

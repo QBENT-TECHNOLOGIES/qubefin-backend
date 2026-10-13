@@ -3,152 +3,291 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Entities;
 using QubeFin.Report.Application.Reports.Models;
 
 namespace QubeFin.Report.Application.Reports.Queries;
 
-
 #region --- QUERY ---
-public record GetAttendanceHistoryByQuery(AttendanceSearchRequest searchParam, Guid employeeId) : IRequest<Result<List<AttendanceSearchResult>>>;
+public record GetAttendanceExportQuery(AttendanceExportRequest searchParam, Guid employeeId)
+    : IRequest<Result<List<AttendanceSearchResult>>>;
 #endregion
 
 #region --- VALIDATOR ---
-public class GetAttendanceHistoryByQueryValidator : AbstractValidator<GetAttendanceHistoryByQuery>
+public class GetAttendanceExportQueryValidator : AbstractValidator<GetAttendanceExportQuery>
 {
-    public GetAttendanceHistoryByQueryValidator()
+    public GetAttendanceExportQueryValidator()
     {
-        RuleFor(v => v.searchParam.CompanyId).NotNull().WithMessage("Company Id is required.");
+        RuleFor(v => v.employeeId).NotEmpty().WithMessage("Employee Id is required.");
         RuleFor(v => v.searchParam).NotNull().WithMessage("Search parameters are required.");
-        RuleFor(v => v.searchParam.PageIndex).GreaterThanOrEqualTo(0).WithMessage("PageIndex must be greater than or equal to 0.");
-        RuleFor(v => v.searchParam.PageSize).GreaterThan(0).WithMessage("PageSize must be greater than 0.");
+        RuleFor(v => v.searchParam.CompanyId)
+            .NotEmpty()
+            .When(v => v.searchParam is not null)
+            .WithMessage("Company Id is required.");
+
+      
     }
 }
 #endregion
 
 #region --- HANDLER ---
-internal sealed class GetAttendanceHistoryByQueryHandler(QubeFinDataContext context, IMemoryCache cache) : IRequestHandler<GetAttendanceHistoryByQuery, Result<List<AttendanceSearchResult>>>
+
+internal sealed class GetAttendanceExportQueryHandler(
+    QubeFinDataContext context,
+    IMemoryCache cache,
+    ILogger<GetAttendanceExportQueryHandler> logger)
+    : IRequestHandler<GetAttendanceExportQuery, Result<List<AttendanceSearchResult>>>
 {
     private const string OrgUnitCacheKey = "org-units-flat";
     private static readonly TimeSpan OrgUnitCacheTtl = TimeSpan.FromMinutes(10);
-    public async Task<Result<List<AttendanceSearchResult>>> Handle(GetAttendanceHistoryByQuery request, CancellationToken cancellationToken)
+    private const int MaxAttendanceDays = 31;
+    private const string Dash = "-";
+
+   
+    private static class RowStatus
+    {
+        public const string OnTime = "On Time";
+        public const string LateEntry = "Late Entry";
+        public const string EarlyExit = "Early Exit";
+        public const string LateEntryAndEarlyExit = "Late Entry & Early Exit";
+        public const string Missed = "MSP";
+        public const string OnLeave = "On Leave";
+        public const string Absent = "Absent";
+        public const string NotPunched = "Not Punched";
+
+        private static readonly HashSet<string> Known = new(StringComparer.OrdinalIgnoreCase)
+        {
+            OnTime, LateEntry, EarlyExit, LateEntryAndEarlyExit, Missed, OnLeave, Absent, NotPunched
+        };
+
+        public static bool IsKnown(string? status) => status is not null && Known.Contains(status.Trim());
+
+        public static bool IsPending(string status) =>
+            status is Missed or Absent or NotPunched;
+    }
+
+    private const string ApprovedLeaveStatus = "Approved";
+
+    private sealed record AttendanceEmployee(
+        Guid Id, string FullName, string Code, string? OrganizationUnit, DateOnly? JoiningDate, DateOnly? SeparationDate)
+    {
+        public bool IsEmployedOn(DateOnly day) =>
+            (JoiningDate is null || JoiningDate <= day) && (SeparationDate is null || SeparationDate >= day);
+    }
+
+    private sealed record AttendanceEntry(
+        Guid EmployeeId, DateOnly AttendanceDate, TimeOnly? ActualInTime, TimeOnly? ActualOutTime,
+        bool IsLateEntry, bool IsEarlyLeave, bool IsRegularization);
+
+    private sealed record AttendanceLeave(Guid EmployeeId, DateOnly FromDate, DateOnly ToDate);
+
+    private sealed record AttendanceRow(AttendanceEmployee Employee, DateOnly Date, AttendanceEntry? Entry, string Status);
+
+    public async Task<Result<List<AttendanceSearchResult>>> Handle(
+        GetAttendanceExportQuery request, CancellationToken cancellationToken)
     {
         try
         {
-            var organizationUnitIds = await ResolveOrganizationUnitIdsAsync(request.employeeId, cancellationToken);
+            var param = request.searchParam;
 
-            var query = BuildAttendanceQuery(request.searchParam,organizationUnitIds);
-            query = ApplySearch(query, request.searchParam.SearchText);
-            query = ApplyStatusFilter(query, request.searchParam.Status);
-            query = ApplySort(query, request.searchParam.SortOn, request.searchParam.SortDirection);
+            var scope = await ResolveOrganizationUnitIdsAsync(request.employeeId, cancellationToken);
+            if (scope.Count == 0)
+                return Result.Ok(new List<AttendanceSearchResult>());
 
-            //var skip = request.searchParam.PageIndex * request.searchParam.PageSize;
-            var data = await query
-                //.Skip(skip)
-                //.Take(request.searchParam.PageSize)
+            var (from, to) = ResolveWindow(param);
+            var employeeQuery = BuildEmployeeQuery(param, scope, from, to);
+
+            var employees = await employeeQuery
+                .Select(m => new AttendanceEmployee(
+                    m.Id, m.FullName, m.Code,
+                    m.OrganizationUnit != null ? m.OrganizationUnit.Name : null,
+                    m.JoiningDate, m.SeparationDate))
                 .ToListAsync(cancellationToken);
 
-            var attendances = data.Select(MapToResult).ToList();
+            if (employees.Count == 0)
+                return Result.Ok(new List<AttendanceSearchResult>());
 
-            return Result.Ok(attendances);
+            var entries = await context.TblAttendances
+                .AsNoTracking()
+                .Where(a => a.AttendanceDate >= from && a.AttendanceDate <= to
+                            && employeeQuery.Select(m => m.Id).Contains(a.EmployeeId))
+                .Select(a => new AttendanceEntry(
+                    a.EmployeeId, a.AttendanceDate, a.ActualInTime, a.ActualOutTime,
+                    a.IsLateEntry, a.IsEarlyLeave, a.IsRegularization))
+                .ToListAsync(cancellationToken);
+
+            var entryLookup = entries
+                .GroupBy(a => (a.EmployeeId, a.AttendanceDate))
+                .ToDictionary(g => g.Key, g => g.First());
+
+            var leaves = await context.TblLeaveRequests
+                .AsNoTracking()
+                .Where(l => l.CurrentStatus == ApprovedLeaveStatus
+                            && l.FromDate <= to && l.ToDate >= from
+                            && employeeQuery.Select(m => m.Id).Contains(l.EmployeeId))
+                .Select(l => new AttendanceLeave(l.EmployeeId, l.FromDate, l.ToDate))
+                .ToListAsync(cancellationToken);
+
+            var leaveLookup = leaves.ToLookup(l => l.EmployeeId);
+
+            var days = Enumerable.Range(0, to.DayNumber - from.DayNumber + 1)
+                .Select(from.AddDays)
+                .ToList();
+
+            var rows = employees
+                .SelectMany(e => days
+                    .Where(e.IsEmployedOn)
+                    .Select(d =>
+                    {
+                        entryLookup.TryGetValue((e.Id, d), out var entry);
+                        var onLeave = leaveLookup[e.Id].Any(l => l.FromDate <= d && l.ToDate >= d);
+                        return new AttendanceRow(e, d, entry, DeriveRowStatus(d, entry, onLeave));
+                    }))
+                .ToList();
+
+            rows = ApplyStatusFilter(rows, param.Status);
+
+            var result = ApplySort(rows, param.SortOn, param.SortDirection)
+                .Select(MapToResult)
+                .ToList();
+
+            return Result.Ok(result);
         }
-        catch
+        catch (OperationCanceledException)
         {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to build attendance history for employee {EmployeeId}", request.employeeId);
             return Result.Fail<List<AttendanceSearchResult>>("Something went wrong. Please try again later");
         }
     }
 
-    // ---- Query building -------------------------------------------------
-
-    private IQueryable<TblAttendance> BuildAttendanceQuery(AttendanceSearchRequest searchParam, List<Guid> organizationUnitIds)
+    private static (DateOnly From, DateOnly To) ResolveWindow(AttendanceExportRequest param)
     {
-        var baseQuery = context.TblAttendances
-            .Include(a => a.Employee).ThenInclude(e => e.OrganizationUnit)
-            .Where(a => a.Employee.OrganizationUnitId != null
-                        && organizationUnitIds.Contains(a.Employee.OrganizationUnitId.Value) && a.Employee.CompanyId != null && a.Employee.CompanyId == searchParam.CompanyId)
-            .AsNoTracking();
+        var today = DateOnly.FromDateTime(DateTime.Now.Date);
+        var from = param.FromDate ?? param.ToDate ?? today;
+        var to = param.ToDate ?? param.FromDate ?? today;
 
-        var hasFrom = searchParam.FromDate.HasValue;
-        var hasTo = searchParam.ToDate.HasValue;
+        if (to < from) (from, to) = (to, from);
+        if (to.DayNumber - from.DayNumber + 1 > MaxAttendanceDays)
+            from = to.AddDays(-(MaxAttendanceDays - 1));
 
-        if (!hasFrom && !hasTo)
+        return (from, to);
+    }
+
+    private IQueryable<TblEmployee> BuildEmployeeQuery(
+        AttendanceExportRequest param, List<Guid> scope, DateOnly from, DateOnly to)
+    {
+        var query = context.TblEmployees
+            .AsNoTracking()
+            .Where(m => m.IsActive
+                        && m.CompanyId == param.CompanyId
+                        && m.OrganizationUnitId != null
+                        && scope.Contains(m.OrganizationUnitId.Value)
+                        && (m.JoiningDate == null || m.JoiningDate <= to)
+                        && (m.SeparationDate == null || m.SeparationDate >= from));
+
+        if (param.SearchEmployeeId.HasValue)
+            query = query.Where(m => m.Id == param.SearchEmployeeId.Value);
+
+        if (!string.IsNullOrWhiteSpace(param.SearchText))
         {
-            var today = DateOnly.FromDateTime(DateTime.Today);
-            return baseQuery.Where(a => a.AttendanceDate == today);
+            var text = param.SearchText.Trim();
+            query = query.Where(m => m.FullName.Contains(text)
+                                     || m.Code.Contains(text)
+                                     || (m.OrganizationUnit != null && m.OrganizationUnit.Name.Contains(text)));
         }
 
-        if (hasFrom)
-            baseQuery = baseQuery.Where(a => a.AttendanceDate >= searchParam.FromDate!.Value);
-
-        if (hasTo)
-            baseQuery = baseQuery.Where(a => a.AttendanceDate <= searchParam.ToDate!.Value);
-
-        return baseQuery;
+        return query;
     }
 
-    private static IQueryable<TblAttendance> ApplySearch(IQueryable<TblAttendance> query, string? searchText)
+
+    private static string DeriveRowStatus(DateOnly date, AttendanceEntry? entry, bool onLeave)
     {
-        if (string.IsNullOrWhiteSpace(searchText))
-            return query;
+        var hasPunch = entry is { ActualInTime: not null } or { ActualOutTime: not null };
+        if (onLeave && !hasPunch)
+            return RowStatus.OnLeave;
 
-        var text = searchText.Trim();
-        return query.Where(m =>
-            m.Employee.FullName.Contains(text) ||
-            m.Employee.Code.Contains(text) ||
-            (m.Employee.OrganizationUnit != null && m.Employee.OrganizationUnit.Name.Contains(text)));
+        var today = DateOnly.FromDateTime(DateTime.Now.Date);
+
+        if (entry is not null)
+        {
+            var isPastDay = entry.AttendanceDate < today;
+            if (isPastDay && (entry.ActualInTime is null || entry.ActualOutTime is null))
+                return RowStatus.Missed;
+
+            return (entry.IsLateEntry, entry.IsEarlyLeave) switch
+            {
+                (false, false) => RowStatus.OnTime,
+                (true, false) => RowStatus.LateEntry,
+                (false, true) => RowStatus.EarlyExit,
+                (true, true) => RowStatus.LateEntryAndEarlyExit
+            };
+        }
+
+        return date < today ? RowStatus.Absent : RowStatus.NotPunched;
     }
 
-    private static IQueryable<TblAttendance> ApplyStatusFilter(IQueryable<TblAttendance> query, string? status)
+    private static List<AttendanceRow> ApplyStatusFilter(List<AttendanceRow> rows, string? status)
     {
         if (string.IsNullOrWhiteSpace(status))
-            return query;
+            return rows;
 
-        return status.Trim().ToLowerInvariant() switch
+        var wanted = status.Trim();
+
+        if (wanted.Equals("all", StringComparison.OrdinalIgnoreCase))
+            return rows;
+
+        if (wanted.Equals("pending", StringComparison.OrdinalIgnoreCase))
+            return rows.Where(r => RowStatus.IsPending(r.Status)).ToList();
+
+        if (RowStatus.IsKnown(wanted))
+            return rows.Where(r => r.Status.Equals(wanted, StringComparison.OrdinalIgnoreCase)).ToList();
+
+        return rows;
+    }
+
+
+    private static IOrderedEnumerable<AttendanceRow> ApplySort(
+        IEnumerable<AttendanceRow> rows, string? sortOn, string? sortDirection)
+    {
+        return sortOn?.Trim().ToLowerInvariant() switch
         {
-            "on time" => query.Where(m => !m.IsLateEntry && !m.IsEarlyLeave),
-            "late entry" => query.Where(m => m.IsLateEntry && !m.IsEarlyLeave),
-            "early exit" => query.Where(m => !m.IsLateEntry && m.IsEarlyLeave),
-            "late entry & early exit" => query.Where(m => m.IsLateEntry && m.IsEarlyLeave),
-            _ => query
+            "employeename" => OrderRows(rows, r => r.Employee.FullName, sortDirection).ThenBy(r => r.Date),
+            "organizationunit" => OrderRows(rows, r => r.Employee.OrganizationUnit ?? string.Empty, sortDirection).ThenBy(r => r.Employee.FullName),
+            "employeecode" => OrderRows(rows, r => r.Employee.Code, sortDirection).ThenBy(r => r.Date),
+            "status" => OrderRows(rows, r => r.Status, sortDirection).ThenBy(r => r.Employee.FullName),
+            _ => OrderRows(rows, r => r.Date, sortDirection).ThenBy(r => r.Employee.FullName)
         };
     }
 
-    private static IQueryable<TblAttendance> ApplySort(IQueryable<TblAttendance> query, string? sortOn, string? sortDirection)
+    private static IOrderedEnumerable<T> OrderRows<T, TKey>(
+        IEnumerable<T> rows, Func<T, TKey> keySelector, string? sortDirection)
     {
-        if (string.IsNullOrWhiteSpace(sortOn) || string.IsNullOrWhiteSpace(sortDirection))
-            return query.OrderByDescending(m => m.AttendanceDate); // sensible default
+        var ascending = !string.IsNullOrWhiteSpace(sortDirection)
+                        && sortDirection.Equals("asc", StringComparison.OrdinalIgnoreCase);
 
-        var ascending = sortDirection.Equals("ASC", StringComparison.OrdinalIgnoreCase);
-
-        return sortOn.Trim().ToLowerInvariant() switch
-        {
-            "employeename" => ascending
-                ? query.OrderBy(m => m.Employee.FullName)
-                : query.OrderByDescending(m => m.Employee.FullName),
-            "employeecode" => ascending
-                ? query.OrderBy(m => m.Employee.Code)
-                : query.OrderByDescending(m => m.Employee.Code),
-            "attendancedate" or _ => ascending
-                ? query.OrderBy(m => m.AttendanceDate)
-                : query.OrderByDescending(m => m.AttendanceDate)
-        };
+        return ascending ? rows.OrderBy(keySelector) : rows.OrderByDescending(keySelector);
     }
 
-    // ---- Mapping ----------------------------------------------------------
 
-    private static AttendanceSearchResult MapToResult(TblAttendance m) => new()
+    private static AttendanceSearchResult MapToResult(AttendanceRow r) => new()
     {
-        //Id = m.Id,
-        OrganizationUnit = m.Employee.OrganizationUnit?.Name,
-        EmployeeName = m.Employee.FullName,
-        EmployeeCode = m.Employee.Code,
-        AttendanceDate = m.AttendanceDate,
-        ActualInTime = m.ActualInTime.ToString("h:mm tt"),
-        ActualOutTime = m.ActualOutTime?.ToString("h:mm tt"),
-        WorkingHours = GetWorkingHours(m.ActualInTime, m.ActualOutTime),
-        Status = GetAttendanceStatus(m.AttendanceDate, m.ActualInTime, m.ActualOutTime, m.IsLateEntry, m.IsEarlyLeave),
-        IsRegularized = m.IsRegularization ? "Yes" : "-"
+        OrganizationUnit = r.Employee.OrganizationUnit,
+        EmployeeName = r.Employee.FullName,
+        EmployeeCode = r.Employee.Code,
+        AttendanceDate = r.Date,
+        ActualInTime = r.Entry?.ActualInTime?.ToString("h:mm tt") ?? Dash,
+        ActualOutTime = r.Entry?.ActualOutTime?.ToString("h:mm tt") ?? Dash,
+        WorkingHours = r.Entry is null
+            ? Dash
+            : GetWorkingHours(r.Entry.ActualInTime, r.Entry.ActualOutTime) ?? Dash,
+        Status = r.Status,
+        IsRegularized = r.Entry is { IsRegularization: true } ? "Yes" : Dash
     };
 
     private static string? GetWorkingHours(TimeOnly? inTime, TimeOnly? outTime)
@@ -159,32 +298,11 @@ internal sealed class GetAttendanceHistoryByQueryHandler(QubeFinDataContext cont
         var duration = outTime.Value.ToTimeSpan() - inTime.Value.ToTimeSpan();
 
         if (duration < TimeSpan.Zero)
-            duration += TimeSpan.FromDays(1); // night shift support
+            duration += TimeSpan.FromDays(1); 
 
         return $"{duration.Hours} h {duration.Minutes} m";
     }
 
-    private static string GetAttendanceStatus(
-        DateOnly attendanceDate,
-        TimeOnly? inTime,
-        TimeOnly? outTime,
-        bool isLateEntry,
-        bool isEarlyLeave)
-    {
-        var isPastDay = attendanceDate < DateOnly.FromDateTime(DateTime.Now.Date);
-        if (isPastDay && (inTime == null || outTime == null))
-            return "MSP";
-
-        return (isLateEntry, isEarlyLeave) switch
-        {
-            (false, false) => "On Time",
-            (true, false) => "Late Entry",
-            (false, true) => "Early Exit",
-            (true, true) => "Late Entry & Early Exit"
-        };
-    }
-
-    // ---- Organization unit resolution (cached) -----------------------------
 
     private async Task<List<Guid>> ResolveOrganizationUnitIdsAsync(Guid employeeId, CancellationToken cancellationToken)
     {
@@ -195,38 +313,20 @@ internal sealed class GetAttendanceHistoryByQueryHandler(QubeFinDataContext cont
         if (employee?.OrganizationUnitId is not { } rootUnitId)
             return [];
 
-        var branchIds = await GetBranchIdsUnder(rootUnitId, cancellationToken);
-        branchIds.Add(rootUnitId);
-
-        return branchIds.Distinct().ToList();
-    }
-
-    private async Task<List<Guid>> GetBranchIdsUnder(Guid orgUnitId, CancellationToken cancellationToken)
-    {
         var units = await GetAllOrganizationUnitsCachedAsync(cancellationToken);
-
-        var byParent = units
-            .Where(u => u.ParentId.HasValue)
-            .ToLookup(u => u.ParentId!.Value);
+        var byParent = units.Where(u => u.ParentId.HasValue).ToLookup(u => u.ParentId!.Value);
 
         var result = new List<Guid>();
-        var stack = new Stack<Guid>();
-        stack.Push(orgUnitId);
-
-        // Iterative traversal avoids recursion-depth issues on deep org trees.
         var visited = new HashSet<Guid>();
+        var stack = new Stack<Guid>();
+        stack.Push(rootUnitId);
+
         while (stack.Count > 0)
         {
             var currentId = stack.Pop();
-            if (!visited.Add(currentId))
-                continue;
+            if (!visited.Add(currentId)) continue;
 
-            var current = units.FirstOrDefault(u => u.Id == currentId);
-            if (current == null)
-                continue;
-
-            if (current.OrganizationUnitType.Name == "Branch")
-                result.Add(current.Id);
+            result.Add(currentId);
 
             foreach (var child in byParent[currentId])
                 stack.Push(child.Id);
