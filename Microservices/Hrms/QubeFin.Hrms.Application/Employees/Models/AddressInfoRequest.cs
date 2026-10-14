@@ -13,6 +13,7 @@ public class AddressModel
     public Guid? AdministrativeUnitId { get; set; }
     public Guid? PoliceStationId { get; set; }
     public Guid? PostOfficeId { get; set; }
+    public string? PostOfficeName { get; set; }
     public string? PinCode { get; set; }
     public string? OwnerShipOfHouse { get; set; }
     public int? DurationOfStayInMonths { get; set; }

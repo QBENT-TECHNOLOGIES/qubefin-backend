@@ -10,7 +10,7 @@ public record GetAllByOrganizationUnitQuery(Guid OrganizationUnitId) : IRequest<
 #endregion
 
 #region --- RESPONSE ---
-public record GetAllByOrganizationUnitResponse(Guid Id, string Name, Guid SalaryGradeId, string SalaryGrade, decimal? GrossSalary);
+public record GetAllByOrganizationUnitResponse(Guid Id, string Name, Guid SalaryGradeId, string SalaryGrade, decimal? GrossSalary, string? EmployeeName);
 #endregion
 
 #region --- HANDLER ---
@@ -37,6 +37,10 @@ internal sealed class GetAllByOrganizationUnitQueryHandler(QubeFinDataContext co
               m.Name,
               Mapping = m.TblDesignationGradeMappings
                   .OrderByDescending(dg => dg.IsActive)
+                  .FirstOrDefault(),
+              EmployeeName = m.TblEmployeeDesignations
+                  .Where(ed => ed.EffectiveTo == null)
+                  .Select(ed => ed.Employee.FullName + "(" + ed.Employee.Code + ")")
                   .FirstOrDefault()
           })
           .Select(x => new GetAllByOrganizationUnitResponse(
@@ -49,7 +53,8 @@ internal sealed class GetAllByOrganizationUnitQueryHandler(QubeFinDataContext co
                       .Where(ss => ss.EffectiveToDate == null)
                       .Select(ss => (decimal?)ss.GrossAmount)
                       .FirstOrDefault() ?? 0
-                  : 0
+                  : 0,
+              x.EmployeeName
           ))
           .AsNoTracking()
           .ToListAsync(cancellationToken);

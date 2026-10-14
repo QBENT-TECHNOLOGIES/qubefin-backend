@@ -26,8 +26,8 @@ internal class ValidateRefreshTokenQueryHandler(QubeFinDataContext context, IAut
 {
     public async Task<Result<ValidateRefreshTokenResponse>> Handle(ValidateRefreshTokenQuery request, CancellationToken cancellationToken)
     {
-        var userSessionEntity = await context.TblUserSessions.AsNoTracking().FirstOrDefaultAsync(m => m.RefreshToken == request.RefreshToken || m.DeviceId == request.DeviceId);
-        if (userSessionEntity is null)
+        var userSessionEntity = await context.TblUserSessions.AsNoTracking().OrderByDescending(s => s.LoginTime).FirstOrDefaultAsync(m => m.RefreshToken == request.RefreshToken || m.DeviceId == request.DeviceId);
+        if (userSessionEntity == null || userSessionEntity.LogoutTime != null)
         {
             return new UnauthorizedError($"User Session not found");
         }

@@ -32,5 +32,6 @@ namespace QubeFin.Hrms.Application.Employees.Models
         public Guid DesignationId { get; set; }
         public Guid SalaryGradeId { get; set; }
         public decimal GrossSalary { get; set; } = 0;
+        public DateOnly EffectiveFrom { get; set; }
     }
 }

@@ -15,6 +15,7 @@ namespace QubeFin.App.Application.Users.Models
         public string? Designation { get; set; }
         public string? CompanyLogoUrl { get; set; }
         public bool IsMileageEnabled { get; set; }
+        public bool IsLoginRequired { get; set; }
         public List<UserAccessOrganizationUnit> AccessOrganizationUnits { get; set; } = new List<UserAccessOrganizationUnit>();
     }
     public class UserAccessOrganizationUnit
