@@ -14,6 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Shared\QubeFin.Core\QubeFin.Core.csproj" />
     <ProjectReference Include="..\..\..\Shared\QubeFin.Persistence\QubeFin.Persistence.csproj" />
+    <ProjectReference Include="..\..\Hrms\QubeFin.Hrms.Application\QubeFin.Hrms.Application.csproj" />
     <ProjectReference Include="..\QubeFin.Report.Persistence\QubeFin.Report.Persistence.csproj" />
   </ItemGroup>
 

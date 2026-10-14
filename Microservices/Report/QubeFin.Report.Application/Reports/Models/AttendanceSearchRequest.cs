@@ -23,4 +23,13 @@ namespace QubeFin.Report.Application.Reports.Models
         public string? Status { get; set; }
         public string? IsRegularized { get; set; }
     }
+    public class AttendanceExportRequest : SearchParam
+    {
+        public Guid CompanyId { get; set; }
+
+        public DateOnly? FromDate { get; set; }
+        public DateOnly? ToDate { get; set; }
+        public Guid? SearchEmployeeId { get; set; }
+        public string? Status { get; set; }
+    }
 }
