@@ -23,5 +23,6 @@ namespace QubeFin.Persistence.Models.App
         public TimeOnly? AttendanceInTime { get; set; }
         public TimeOnly? AttendanceOutTime { get; set; }
         public int CheckRadiusInMeter { get; set; }
+        public bool IsLoginRequired { get; set; }
     }
 }

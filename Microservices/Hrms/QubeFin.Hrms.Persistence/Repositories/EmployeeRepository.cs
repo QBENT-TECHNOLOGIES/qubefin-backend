@@ -20,7 +20,7 @@ public interface IEmployeeRepository
     Task SeparateAsync(Guid employeeId, DateOnly separationDate, Guid modifiedBy, CancellationToken cancellationToken);
     Task TransferEntry(Guid employeeId, Guid organisationUnitId, Guid designationId, Guid salaryGradeId, decimal grossSalary, CancellationToken cancellationToken);
     Task<AddressUnit?> GetAdressUnit(Guid administrativeUnitId);
-    Task TransferEmployee(Guid EmployeeId, Guid OrganisationUnitId, Guid DesignationId, Guid SalaryGradeId, decimal GrossSalary, CancellationToken cancellationToken);
+    Task TransferEmployee(Guid EmployeeId, Guid OrganisationUnitId, Guid DesignationId, Guid SalaryGradeId, decimal GrossSalary, DateOnly EffectiveFrom, CancellationToken cancellationToken);
     Task SaveGrossSalary(Guid EmployeeId, Guid SalaryGradeId, decimal GrossSalary, decimal? PfAmount, DateOnly EffectiveFrom, CancellationToken cancellationToken);
     Task<List<EmployeeSalaryStructure>> GetSalaryStructureByGrossAsync(Guid employeeId, Guid salaryGradeId, decimal grossSalary, decimal? fixedPFAmount, CancellationToken cancellationToken);
 }
@@ -138,6 +138,21 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
             user.LastModifiedBy = modifiedBy;
             user.LastModifiedOn = DateTime.Now;
         }
+
+        await CloseUserSessionsAsync(employeeId, cancellationToken);
+    }
+
+    // Log out the employee's active sessions
+    private async Task CloseUserSessionsAsync(Guid employeeId, CancellationToken cancellationToken)
+    {
+        var activeSessions = await context.TblUserSessions
+            .Where(s => s.User.EmployeeId == employeeId && s.LogoutTime == null)
+            .ToListAsync(cancellationToken);
+
+        foreach (var session in activeSessions)
+        {
+            session.LogoutTime = DateTime.Now;
+        }
     }
 
     public async Task<AddressUnit?> GetAdressUnit(Guid administrativeUnitId)
@@ -208,9 +223,10 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
 
         return result;
     }
-    public async Task TransferEmployee(Guid employeeId, Guid organisationUnitId, Guid designationId, Guid salaryGradeId, decimal grossSalary, CancellationToken cancellationToken)
+    public async Task TransferEmployee(Guid employeeId, Guid organisationUnitId, Guid designationId, Guid salaryGradeId, decimal grossSalary, DateOnly effectiveFrom, CancellationToken cancellationToken)
     {
-        var currentDate = DateOnly.FromDateTime(DateTime.UtcNow);
+        // Running records are closed one day before the new effective date
+        var effectiveTill = effectiveFrom.AddDays(-1);
 
         var employee = await context.TblEmployees.FirstOrDefaultAsync(e => e.Id == employeeId, cancellationToken);
 
@@ -246,13 +262,16 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
         if (employee.OrganizationUnitId == organisationUnitId && currentEmployeeDesignation.DesignationId == designationId && designationSalaryGrade.GradeId == salaryGradeId && currentGrossSalary.GrossSalary == grossSalary)
             throw new Exception("No changes found. The employee is already assigned to the selected organisation unit, designation, salary grade, and gross salary.");
 
+        if (effectiveFrom <= currentTransfer.FromDate)
+            throw new InvalidOperationException($"Effective From must be later than the current transfer from date ({currentTransfer.FromDate:dd-MM-yyyy}).");
+
         await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
 
         try
         {
             if (currentEmployeeDesignation.DesignationId != designationId)
             {
-                currentEmployeeDesignation.EffectiveTo = DateTime.Now;
+                currentEmployeeDesignation.EffectiveTo = effectiveTill.ToDateTime(TimeOnly.MinValue);
 
                 await context.TblEmployeeDesignations.AddAsync(
                     new TblEmployeeDesignation
@@ -260,7 +279,7 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
                         Id = Guid.NewGuid(),
                         EmployeeId = employeeId,
                         DesignationId = designationId,
-                        EffectiveFrom = DateTime.Now,
+                        EffectiveFrom = effectiveFrom.ToDateTime(TimeOnly.MinValue),
                         EffectiveTo = null
                     },
                     cancellationToken);
@@ -283,7 +302,7 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
 
             if (currentGrossSalary.GrossSalary != grossSalary)
             {
-                currentGrossSalary.EffectiveTill = currentDate;
+                currentGrossSalary.EffectiveTill = effectiveTill;
 
                 await context.TblEmployeeGrossSalaries.AddAsync(
                     new TblEmployeeGrossSalary
@@ -291,14 +310,14 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
                         Id = Guid.NewGuid(),
                         EmployeeId = employeeId,
                         GrossSalary = grossSalary,
-                        EffectiveFrom = currentDate,
+                        EffectiveFrom = effectiveFrom,
                         EffectiveTill = null
                     },
                     cancellationToken);
             }
 
             // Close current transfer
-            currentTransfer.ToDate = currentDate;
+            currentTransfer.ToDate = effectiveTill;
 
             // Create new transfer
             await context.TblEmployeeTransfers.AddAsync(
@@ -310,13 +329,15 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
                     DesignationId = designationId,
                     SalaryGradeId = salaryGradeId,
                     GrossSalary = grossSalary,
-                    FromDate = currentDate,
+                    FromDate = effectiveFrom,
                     ToDate = null,
                     IsApprove = false
                 },
                 cancellationToken);
 
             employee.OrganizationUnitId = organisationUnitId;
+
+            await CloseUserSessionsAsync(employeeId, cancellationToken);
 
             await context.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);

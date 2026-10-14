@@ -17,7 +17,7 @@ public interface IAuthRepository
     Task<List<string>> GetPermissionsAsync(Guid userId);
     void UpdateSession(UserSession userSession);
     Task<bool?> ValidateDevice(Guid UserId, string DeviceId);
-    Task<string?> DeviceTagUsername(string DeviceId);
+    Task<string?> DeviceTagUsername(Guid UserId, string DeviceId);
     void RegisterDevice(UserDevice userDevice);
     Task<TblUser?> GetUserByUserNameAsync(string userName);
 }
@@ -141,22 +141,23 @@ public class AuthRepository(QubeFinDataContext context) : IAuthRepository
 
     public async Task<bool?> ValidateDevice(Guid UserId, string DeviceId)
     {
-        var userDeviceEntity = await context.TblUserDevices.AsNoTracking().Where(m => m.UserId == UserId && !m.IsReleased).FirstOrDefaultAsync();
-        if (userDeviceEntity is null)
+        // All unreleased devices of the user (normally one)
+        var userDeviceIds = await context.TblUserDevices.AsNoTracking()
+            .Where(m => m.UserId == UserId && !m.IsReleased)
+            .Select(m => m.DeviceId)
+            .ToListAsync();
+        if (userDeviceIds.Count == 0)
         {
             return null;
         }
-        if (userDeviceEntity.DeviceId.Trim() != DeviceId.Trim())
-        {
-            return false;
-        }
-        return true;
+        return userDeviceIds.Any(d => string.Equals(d.Trim(), DeviceId.Trim(), StringComparison.OrdinalIgnoreCase));
     }
 
-    public async Task<string?> DeviceTagUsername(string DeviceId)
+    // Username of another user holding this device unreleased, null if the device is free (or only held by this user)
+    public async Task<string?> DeviceTagUsername(Guid UserId, string DeviceId)
     {
         var userDeviceEntity = await context.TblUserDevices.Include(u => u.User).AsNoTracking().
-            Where(m => m.DeviceId.Trim() == DeviceId.Trim() && !m.IsReleased).
+            Where(m => m.DeviceId.Trim() == DeviceId.Trim() && !m.IsReleased && m.UserId != UserId).
             FirstOrDefaultAsync();
         if (userDeviceEntity is null)
         {
@@ -165,7 +166,7 @@ public class AuthRepository(QubeFinDataContext context) : IAuthRepository
         return userDeviceEntity.User.UserName;
     }
 
-    public async void RegisterDevice(UserDevice userDevice)
+    public void RegisterDevice(UserDevice userDevice)
     {
         context.TblUserDevices.Add(userDevice.ToEntity());
     }
