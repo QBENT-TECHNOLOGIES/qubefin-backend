@@ -22,6 +22,9 @@ namespace QubeFin.Report.Application.Reports.Models
         public string? WorkingHours { get; set; }
         public string? Status { get; set; }
         public string? IsRegularized { get; set; }
+        public string? StartMileage { get; set; }
+        public string? EndMileage { get; set; }
+        public string? PersonalUseKm { get; set; }
     }
     public class AttendanceExportRequest : SearchParam
     {

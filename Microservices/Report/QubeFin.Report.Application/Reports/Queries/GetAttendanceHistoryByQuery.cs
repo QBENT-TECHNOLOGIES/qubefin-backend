@@ -27,13 +27,20 @@ public class GetAttendanceExportQueryValidator : AbstractValidator<GetAttendance
             .When(v => v.searchParam is not null)
             .WithMessage("Company Id is required.");
 
-      
+        // Paging is intentionally not validated: an export always returns the whole window.
     }
 }
 #endregion
 
 #region --- HANDLER ---
-
+/// <summary>
+/// Builds the attendance history EXPORT with the SAME rules as the "Attendance" tab of the
+/// employee records list:
+///  - one row per active employee per day (so absent / not punched / on leave days are included),
+///  - scope = the caller's organization unit and everything below it,
+///  - window defaults to today and is capped at 31 days,
+///  - SearchEmployeeId / SearchText / Status filters and sorting behave the same.
+/// </summary>
 internal sealed class GetAttendanceExportQueryHandler(
     QubeFinDataContext context,
     IMemoryCache cache,
@@ -45,7 +52,8 @@ internal sealed class GetAttendanceExportQueryHandler(
     private const int MaxAttendanceDays = 31;
     private const string Dash = "-";
 
-   
+    // Keep these in sync with AttendanceStatuses / EmployeeRecordStatuses in the Hrms project.
+    // (If the Report project can reference Hrms, use those classes directly instead.)
     private static class RowStatus
     {
         public const string OnTime = "On Time";
@@ -64,11 +72,12 @@ internal sealed class GetAttendanceExportQueryHandler(
 
         public static bool IsKnown(string? status) => status is not null && Known.Contains(status.Trim());
 
+        // Rows that still need attention (copy the exact rule from AttendanceStatuses.IsPending).
         public static bool IsPending(string status) =>
             status is Missed or Absent or NotPunched;
     }
 
-    private const string ApprovedLeaveStatus = "Approved";
+    private const string ApprovedLeaveStatus = "Approved"; // = EmployeeRecordStatuses.Approved
 
     private sealed record AttendanceEmployee(
         Guid Id, string FullName, string Code, string? OrganizationUnit, DateOnly? JoiningDate, DateOnly? SeparationDate)
@@ -79,7 +88,8 @@ internal sealed class GetAttendanceExportQueryHandler(
 
     private sealed record AttendanceEntry(
         Guid EmployeeId, DateOnly AttendanceDate, TimeOnly? ActualInTime, TimeOnly? ActualOutTime,
-        bool IsLateEntry, bool IsEarlyLeave, bool IsRegularization);
+        bool IsLateEntry, bool IsEarlyLeave, bool IsRegularization,
+        decimal? StartMileage, decimal? EndMileage, decimal? PersonalUseKm);
 
     private sealed record AttendanceLeave(Guid EmployeeId, DateOnly FromDate, DateOnly ToDate);
 
@@ -115,7 +125,8 @@ internal sealed class GetAttendanceExportQueryHandler(
                             && employeeQuery.Select(m => m.Id).Contains(a.EmployeeId))
                 .Select(a => new AttendanceEntry(
                     a.EmployeeId, a.AttendanceDate, a.ActualInTime, a.ActualOutTime,
-                    a.IsLateEntry, a.IsEarlyLeave, a.IsRegularization))
+                    a.IsLateEntry, a.IsEarlyLeave, a.IsRegularization,
+                    a.StartMileage, a.EndMileage, a.PersonalUseKm))
                 .ToListAsync(cancellationToken);
 
             var entryLookup = entries
@@ -166,6 +177,9 @@ internal sealed class GetAttendanceExportQueryHandler(
         }
     }
 
+    // ---- Window + employee query ----------------------------------------
+
+    // Default to today and cap the window, exactly like the list tab.
     private static (DateOnly From, DateOnly To) ResolveWindow(AttendanceExportRequest param)
     {
         var today = DateOnly.FromDateTime(DateTime.Now.Date);
@@ -205,9 +219,11 @@ internal sealed class GetAttendanceExportQueryHandler(
         return query;
     }
 
+    // ---- Status ----------------------------------------------------------
 
     private static string DeriveRowStatus(DateOnly date, AttendanceEntry? entry, bool onLeave)
     {
+        // Someone who punched in or out worked that day, whatever leave is on file.
         var hasPunch = entry is { ActualInTime: not null } or { ActualOutTime: not null };
         if (onLeave && !hasPunch)
             return RowStatus.OnLeave;
@@ -229,6 +245,7 @@ internal sealed class GetAttendanceExportQueryHandler(
             };
         }
 
+        // No row at all: a finished day is an absence, today (or later) simply has no punch yet.
         return date < today ? RowStatus.Absent : RowStatus.NotPunched;
     }
 
@@ -251,6 +268,7 @@ internal sealed class GetAttendanceExportQueryHandler(
         return rows;
     }
 
+    // ---- Sorting -----------------------------------------------------------
 
     private static IOrderedEnumerable<AttendanceRow> ApplySort(
         IEnumerable<AttendanceRow> rows, string? sortOn, string? sortDirection)
@@ -274,6 +292,7 @@ internal sealed class GetAttendanceExportQueryHandler(
         return ascending ? rows.OrderBy(keySelector) : rows.OrderByDescending(keySelector);
     }
 
+    // ---- Mapping -------------------------------------------------------------
 
     private static AttendanceSearchResult MapToResult(AttendanceRow r) => new()
     {
@@ -286,6 +305,9 @@ internal sealed class GetAttendanceExportQueryHandler(
         WorkingHours = r.Entry is null
             ? Dash
             : GetWorkingHours(r.Entry.ActualInTime, r.Entry.ActualOutTime) ?? Dash,
+        StartMileage = r.Entry?.StartMileage?.ToString() ?? Dash,
+        EndMileage = r.Entry?.EndMileage?.ToString() ?? Dash,
+        PersonalUseKm = r.Entry?.PersonalUseKm?.ToString() ?? Dash,
         Status = r.Status,
         IsRegularized = r.Entry is { IsRegularization: true } ? "Yes" : Dash
     };
@@ -298,11 +320,12 @@ internal sealed class GetAttendanceExportQueryHandler(
         var duration = outTime.Value.ToTimeSpan() - inTime.Value.ToTimeSpan();
 
         if (duration < TimeSpan.Zero)
-            duration += TimeSpan.FromDays(1); 
+            duration += TimeSpan.FromDays(1); // night shift support
 
         return $"{duration.Hours} h {duration.Minutes} m";
     }
 
+    // ---- Organization unit scope (cached) --------------------------------------
 
     private async Task<List<Guid>> ResolveOrganizationUnitIdsAsync(Guid employeeId, CancellationToken cancellationToken)
     {
@@ -321,6 +344,7 @@ internal sealed class GetAttendanceExportQueryHandler(
         var stack = new Stack<Guid>();
         stack.Push(rootUnitId);
 
+        // Iterative traversal avoids recursion-depth issues on deep org trees.
         while (stack.Count > 0)
         {
             var currentId = stack.Pop();

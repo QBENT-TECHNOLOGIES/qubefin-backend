@@ -113,7 +113,6 @@ internal sealed class GetLopFinalizationByQueryQueryHandler(QubeFinDataContext c
         AbsentDays = m.AbsentDays,
         AttendanceIrregularDays = m.AttendanceIrregularDays,
         IrregularLopDays = m.IrregularLopDays,
-        IsLocked = m.IsLocked ? "Yes" : "-",
         Remarks = m.Remarks,
     };
 
