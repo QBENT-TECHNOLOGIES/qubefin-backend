@@ -21,8 +21,8 @@ public class EmployeeReference
         Guid employeeId,
         string personName,
         string mobile,
-        string email,
-        string address,
+        string? email,
+        string? address,
         string? occupation,
         string? howDoYouKnow)
     {
@@ -30,8 +30,8 @@ public class EmployeeReference
         EmployeeId = employeeId;
         PersonName = personName.Trim();
         Mobile = mobile.Trim();
-        Email = email.Trim();
-        Address = address.Trim();
+        Email = email?.Trim();
+        Address = address?.Trim();
         Occupation = occupation?.Trim();
         HowDoYouKnow = howDoYouKnow?.Trim();
     }
