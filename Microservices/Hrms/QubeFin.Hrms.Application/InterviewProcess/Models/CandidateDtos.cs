@@ -26,6 +26,8 @@ public class CandidateListDto
     public string RecommendationStatus { get; set; } = "Pending";
     public string Status { get; set; } = CandidateInterviewStatus.SchedulePending;
     public bool CanSchedule { get; set; }
+    public string? Venue { get; set; }
+    public List<string> PanelMembers { get; set; } = [];
     public List<CandidateDownloadFileDto> Downloads { get; set; } = [];
 }
 

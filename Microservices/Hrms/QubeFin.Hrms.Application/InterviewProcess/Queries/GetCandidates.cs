@@ -1,6 +1,7 @@
 using FluentResults;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using QubeFin.Hrms.Application.InterviewProcess.Models;
 using QubeFin.Hrms.Application.InterviewProcess.Services;
 using QubeFin.Hrms.Persistence.Repositories;
@@ -11,9 +12,9 @@ namespace QubeFin.Hrms.Application.InterviewProcess.Queries;
 
 public record GetCandidatesQuery(CandidateSearchParam SearchParam, Guid employeeId) : IRequest<Result<GetCandidatesResponse>>;
 
-public record GetCandidatesResponse(IReadOnlyList<CandidateListDto> candidates, int TotalRecords);
+public record GetCandidatesResponse(IReadOnlyList<CandidateListDto> candidates, int TotalRecords, bool IsHr);
 
-internal sealed class GetCandidatesQueryHandler(QubeFinDataContext context, IFileStorageRepository fileStorageRepository) : IRequestHandler<GetCandidatesQuery, Result<GetCandidatesResponse>>
+internal sealed class GetCandidatesQueryHandler(QubeFinDataContext context, IFileStorageRepository fileStorageRepository, IConfiguration configuration) : IRequestHandler<GetCandidatesQuery, Result<GetCandidatesResponse>>
 {
     public async Task<Result<GetCandidatesResponse>> Handle(GetCandidatesQuery request, CancellationToken cancellationToken)
     {
@@ -37,6 +38,19 @@ internal sealed class GetCandidatesQueryHandler(QubeFinDataContext context, IFil
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
+        // Venue and panel members are not returned by the SP - fetched for the current page only.
+        var ids = rows.Select(r => r.Id).ToList();
+        var panelInfo = await context.TblInterviewCandidates
+            .AsNoTracking()
+            .Where(c => ids.Contains(c.Id))
+            .Select(c => new
+            {
+                c.Id,
+                Venue = c.VenueOrganizationUnit != null ? c.VenueOrganizationUnit.Name : null,
+                PanelMembers = c.TblInterviewPanels.OrderBy(p => p.Employee.FullName).Select(p => p.Employee.FullName).ToList()
+            })
+            .ToDictionaryAsync(c => c.Id, cancellationToken);
+
         var items = new List<CandidateListDto>(rows.Count);
         foreach (var row in rows)
         {
@@ -54,11 +68,15 @@ internal sealed class GetCandidatesQueryHandler(QubeFinDataContext context, IFil
                 RecommendationStatus = row.RecommendationStatus ?? "Pending",
                 Status = status,
                 CanSchedule = row.CanSchedule,
+                Venue = panelInfo.GetValueOrDefault(row.Id)?.Venue,
+                PanelMembers = panelInfo.GetValueOrDefault(row.Id)?.PanelMembers ?? [],
                 Downloads = await BuildDownloadsAsync(status, row, cancellationToken)
             });
         }
 
-        return Result.Ok(new GetCandidatesResponse(items, rows.FirstOrDefault()?.TotalRecords ?? 0));
+        var isHr = await context.IsHrEmployeeAsync(Guid.Parse(configuration["HrPost"]!), request.employeeId, cancellationToken);
+
+        return Result.Ok(new GetCandidatesResponse(items, rows.FirstOrDefault()?.TotalRecords ?? 0, isHr));
     }
     private async Task<List<CandidateDownloadFileDto>> BuildDownloadsAsync(string status, CandidateListResult row, CancellationToken cancellationToken)
     {

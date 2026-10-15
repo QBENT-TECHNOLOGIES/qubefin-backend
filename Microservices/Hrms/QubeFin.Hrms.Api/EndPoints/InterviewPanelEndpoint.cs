@@ -71,6 +71,55 @@ public class InterviewPanelEndpoint : IEndpoint
         .RequireAuthorization();
         #endregion
 
+        #region PANEL TAGGING (HR)
+
+        app.MapPost("interview-panels/board", async ([FromBody] InterviewPanelBoardSearchParam searchParam, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Forbid();
+            }
+
+            var result = await sender.Send(new GetInterviewPanelBoardQuery(searchParam, principal.Identity.GetEmployeeId()), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Upcoming interview panels grouped by interview date and venue, with the untagged candidates of each")
+        .WithTags("Panel Tagging")
+        .RequireAuthorization();
+
+        // Multipart: CandidateIds, EmployeeIds and optional acknowledgement PDFs in "Files", each named "{candidateId}.pdf".
+        app.MapPost("interview-panels/assign", async ([FromForm] InterviewPanelAssignRequest request, HttpRequest httpRequest, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Forbid();
+            }
+
+            var files = httpRequest.HasFormContentType ? httpRequest.Form.Files.GetFiles("Files") : [];
+            var result = await sender.Send(new AssignInterviewPanelCommand(request.CandidateIds, request.EmployeeIds, principal.Identity.GetEmployeeId(), principal.Identity.GetUserId(), files), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .DisableAntiforgery()
+        .WithSummary("Set the panel of one or more candidates (same date and venue) to the given panelists and email the new panelists")
+        .WithTags("Panel Tagging")
+        .RequireAuthorization();
+
+        app.MapPost("interview-panels/untag", async ([FromBody] InterviewPanelUntagRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Forbid();
+            }
+
+            var result = await sender.Send(new UntagInterviewPanelCommand(request.CandidateIds ?? [], principal.Identity.GetEmployeeId(), principal.Identity.GetUserId()), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Remove the panel from one or more candidates")
+        .WithTags("Panel Tagging")
+        .RequireAuthorization();
+
+        #endregion
+
 
         #region INTERVIEWER (Interview page)
 
