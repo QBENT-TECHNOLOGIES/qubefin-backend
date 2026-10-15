@@ -121,6 +121,10 @@ public partial class TblInterviewCandidate
 
     public string? CreditBureauReportLink { get; set; }
 
+    public bool IsHrBureauChecked { get; set; }
+
+    public string? HrBureauReportLink { get; set; }
+
     public Guid? PostedOrganizationUnitId { get; set; }
 
     public DateOnly? DateOfJoining { get; set; }

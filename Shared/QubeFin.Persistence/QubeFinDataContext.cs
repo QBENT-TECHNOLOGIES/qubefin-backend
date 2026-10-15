@@ -1378,6 +1378,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.FirstName).HasMaxLength(50);
             entity.Property(e => e.Gender).HasMaxLength(10);
             entity.Property(e => e.HouseNo).HasMaxLength(20);
+            entity.Property(e => e.HrBureauReportLink).HasMaxLength(200);
             entity.Property(e => e.InterviewMode).HasMaxLength(10);
             entity.Property(e => e.IsSelectedForOffer).HasDefaultValue(false, "DF_Tbl_InterviewCandidate_IsSelectedForOffer");
             entity.Property(e => e.JobApplicationFile).HasMaxLength(250);
