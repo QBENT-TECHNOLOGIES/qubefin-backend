@@ -106,6 +106,19 @@ public class UserRepository(QubeFinDataContext context) : IUserRepository
         userDeviceEntity.IsReleased = true;
         userDeviceEntity.ReleaseDate = DateTime.Now;
         userDeviceEntity.ReleaseBy = UserId;
+
+        var userSessionEntities = 
+            await context.TblUserSessions.
+            Where(m => !string.IsNullOrEmpty(m.DeviceId) && m.DeviceId.Trim() == userDeviceEntity.DeviceId.Trim() && m.LogoutTime == null).
+            ToListAsync();
+        if (userSessionEntities.Any())
+        {
+            //foreach (var item in userSessionEntities)
+            //{
+            //    item.LogoutTime = DateTime.Now;
+            //}
+            context.TblUserSessions.RemoveRange(userSessionEntities);
+        }
         context.TblUserDevices.Update(userDeviceEntity);
     }
 }
