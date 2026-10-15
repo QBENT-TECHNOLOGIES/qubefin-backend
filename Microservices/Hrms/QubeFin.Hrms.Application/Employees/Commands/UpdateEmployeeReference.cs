@@ -12,9 +12,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
 {
 
     #region --- COMMAND ---
-    public record UpdateEmployeeReferenceCommand(
-        Guid Id, IReadOnlyList<ReferenceDetailRequest> ReferenceDetail, Guid LastModifiedBy
-        ) : IRequest<Result<string>>;
+    public record UpdateEmployeeReferenceCommand(Guid Id, IReadOnlyList<ReferenceDetailRequest> ReferenceDetail, Guid LastModifiedBy) : IRequest<Result<string>>;
     #endregion
 
     #region --- VALIDATION ---
@@ -24,13 +22,11 @@ namespace QubeFin.Hrms.Application.Employees.Commands
         {
             RuleForEach(x => x.ReferenceDetail).ChildRules(reference =>
             {
-                reference.RuleFor(r => r.Mobile)
-                    .NotEmpty().WithMessage("Mobile number is required.")
-                    .Matches(@"^[6-9]\d{9}$").WithMessage("Enter a valid 10-digit mobile number.");
-                reference.RuleFor(r => r.Email)
-                    .Matches(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
-            .When(r => !string.IsNullOrWhiteSpace(r.Email))
-            .WithMessage("Enter a valid email address.");
+                reference.RuleFor(x => x.EmployeeId).NotEmpty().WithMessage("Employee id is required.");
+                reference.RuleFor(x => x.PersonName).NotEmpty().WithMessage("Person name is required.").MaximumLength(100).WithMessage("Person name must not exceed 100 characters.");
+                reference.RuleFor(r => r.Mobile).NotEmpty().WithMessage("Mobile number is required.").Matches(@"^[6-9]\d{9}$").WithMessage("Enter a valid 10-digit mobile number.");
+
+                reference.RuleFor(r => r.Email).Matches(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").When(r => !string.IsNullOrWhiteSpace(r.Email)).WithMessage("Enter a valid email address.");
             });
         }
     }
