@@ -1,6 +1,7 @@
 using FluentResults;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using QubeFin.Hrms.Application.InterviewProcess.Models;
 using QubeFin.Hrms.Application.InterviewProcess.Services;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
@@ -8,33 +9,6 @@ using QubeFin.Persistence.Models.Hrms;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Queries;
 
-public class InterviewerCandidateSearchParam
-{
-    public string? SearchText { get; set; }
-    public string? Status { get; set; }
-    public DateOnly? InterviewDate { get; set; }
-    public int PageIndex { get; set; }
-    public int PageSize { get; set; }
-}
-
-public record InterviewerCandidateDto(
-    Guid PanelId,
-    Guid CandidateId,
-    string FullName,
-    string? ReferenceNo,
-    string? InterviewPost,
-    string? CompanyName,
-    DateOnly? ApplicationDate,
-    DateOnly? InterviewDate,
-    TimeOnly? InterviewTime,
-    string Status,
-    bool IsCandidateAbsent,
-    string? AttenedRemarks,
-    bool CanAcknowledge,
-    bool CanStartAssessment,
-    bool CanContinueAssessment,
-    bool CanViewAssessment,
-    string? CvFileUrl);
 
 public record InterviewerTabCounts(int AllOpen, int Today, int AcknowledgementPending, int Completed);
 
@@ -95,7 +69,8 @@ internal sealed class GetInterviewerCandidatesQueryHandler(QubeFinDataContext co
                 row.CanStartAssessment,
                 row.CanContinueAssessment,
                 row.CanViewAssessment,
-                string.IsNullOrWhiteSpace(row.CvFile) ? null : await fileStorageRepository.GetFileUrlAsync(row.CvFile, cancellationToken)));
+                string.IsNullOrWhiteSpace(row.CvFile) ? null : await fileStorageRepository.GetFileUrlAsync(row.CvFile, cancellationToken),
+                string.IsNullOrWhiteSpace(row.WrittenInterviewFile) ? null : await fileStorageRepository.GetFileUrlAsync(row.WrittenInterviewFile, cancellationToken)));
         }
 
         var counts = await GetTabCountsAsync(request.EmployeeId, search, cancellationToken);

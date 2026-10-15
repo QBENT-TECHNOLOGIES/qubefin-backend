@@ -35,6 +35,7 @@ public class InterviewerCandidateListResult
     public DateOnly? InterviewDate { get; set; }
     public TimeOnly? InterviewTime { get; set; }
     public string? CvFile { get; set; }
+    public string? WrittenInterviewFile { get; set; }
     public string? Status { get; set; }
     public bool IsCandidateAbsent { get; set; }
     public string? AttenedRemarks { get; set; }
