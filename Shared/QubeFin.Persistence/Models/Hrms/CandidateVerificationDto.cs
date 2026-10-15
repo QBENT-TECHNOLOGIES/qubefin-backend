@@ -26,6 +26,9 @@ namespace QubeFin.Persistence.Models.Hrms;
         public bool IsCreditBureauChecked { get; set; }
         public string? CreditBureauReportLink { get; set; }
 
+        public bool IsHrBureauChecked { get; set; }
+        public string? HrBureauReportLink { get; set; }
+
         public string OverallStatus { get; set; } = "Pending";
     }
 

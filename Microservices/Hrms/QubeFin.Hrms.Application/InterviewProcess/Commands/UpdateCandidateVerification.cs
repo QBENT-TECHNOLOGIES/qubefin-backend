@@ -19,6 +19,8 @@ public record UpdateCandidateVerificationCommand(
     bool IsUanVerified,
     bool IsCreditBureauChecked,
     string? CreditBureauReportLink,
+    bool IsHrBureauChecked,
+    string? HrBureauReportLink,
     Guid ModifiedBy) : IRequest<Result<CandidateVerificationDto>>, ICandidateWorkflowCommand;
 
 public class UpdateCandidateVerificationCommandValidator : AbstractValidator<UpdateCandidateVerificationCommand>
@@ -59,6 +61,8 @@ internal sealed class UpdateCandidateVerificationCommandHandler(
             request.IsUanVerified,
             request.IsCreditBureauChecked,
             request.CreditBureauReportLink,
+            request.IsHrBureauChecked,
+            request.HrBureauReportLink,
             request.ModifiedBy);
 
         await candidateRepository.UpdateAsync(candidate);
@@ -69,7 +73,8 @@ internal sealed class UpdateCandidateVerificationCommandHandler(
             candidate.IsVoterValited &&
             candidate.IsPanValidated &&
             candidate.IsMobileValidated &&
-            candidate.IsCreditBureauChecked
+            candidate.IsCreditBureauChecked &&
+            candidate.IsHrBureauChecked
                 ? "Verified"
                 : "Pending";
 
@@ -88,6 +93,8 @@ internal sealed class UpdateCandidateVerificationCommandHandler(
             IsUanVerified = candidate.IsUanVerified,
             IsCreditBureauChecked = candidate.IsCreditBureauChecked,
             CreditBureauReportLink = candidate.CreditBureauReportLink,
+            IsHrBureauChecked = candidate.IsHrBureauChecked,
+            HrBureauReportLink = candidate.HrBureauReportLink,
             OverallStatus = overallStatus
         };
 

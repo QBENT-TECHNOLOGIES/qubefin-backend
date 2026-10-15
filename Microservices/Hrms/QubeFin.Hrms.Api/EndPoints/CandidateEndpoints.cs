@@ -201,6 +201,8 @@ public class CandidateEndpoints : IEndpoint
                 request.IsUanVerified,
                 request.IsCreditBureauChecked,
                 request.CreditBureauReportLink,
+                request.IsHrBureauChecked,
+                request.HrBureauReportLink,
                 principal.Identity.GetUserId());
 
             var result = await sender.Send(command, cancellationToken);

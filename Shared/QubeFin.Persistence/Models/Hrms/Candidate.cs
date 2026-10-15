@@ -75,6 +75,8 @@ public class Candidate
     public bool IsUanVerified { get; private set; }
     public bool IsCreditBureauChecked { get; private set; }
     public string? CreditBureauReportLink { get; private set; }
+    public bool IsHrBureauChecked { get; private set; }
+    public string? HrBureauReportLink { get; private set; }
     public bool IsInterviewLetterRecieved { get; private set; }
     public bool IsOfferLetterReceived { get; private set; }
     public bool IsAppointmentLetterReceived { get; private set; }
@@ -148,6 +150,8 @@ public class Candidate
         bool isUanVerified,
         bool isCreditBureauChecked,
         string? creditBureauReportLink,
+        bool isHrBureauChecked,
+        string? hrBureauReportLink,
         bool isInterviewLetterRecieved,
         bool isOfferLetterReceived,
         bool isAppointmentLetterReceived,
@@ -181,6 +185,8 @@ public class Candidate
         IsUanVerified = isUanVerified;
         IsCreditBureauChecked = isCreditBureauChecked;
         CreditBureauReportLink = creditBureauReportLink;
+        IsHrBureauChecked = isHrBureauChecked;
+        HrBureauReportLink = hrBureauReportLink;
         IsInterviewLetterRecieved = isInterviewLetterRecieved;
         IsOfferLetterReceived = isOfferLetterReceived;
         IsAppointmentLetterReceived = isAppointmentLetterReceived;
@@ -333,6 +339,8 @@ public class Candidate
         bool isUanVerified,
         bool isCreditBureauChecked,
         string? creditBureauReportLink,
+        bool isHrBureauChecked,
+        string? hrBureauReportLink,
         Guid modifiedBy)
     {
         IsAadharValidated = isAadharValidated;
@@ -342,13 +350,15 @@ public class Candidate
         IsUanVerified = isUanVerified;
         IsCreditBureauChecked = isCreditBureauChecked;
         CreditBureauReportLink = creditBureauReportLink;
+        IsHrBureauChecked = isHrBureauChecked;
+        HrBureauReportLink = hrBureauReportLink;
 
         ModifiedBy = modifiedBy;
         ModifiedOn = DateTime.UtcNow;
     }
 
     /// <summary>Marks one verification check as verified and stores the value that was checked (document
-    /// number, mobile number or credit bureau report link). A blank value keeps what is already on record.</summary>
+    /// number, mobile number or credit/HR bureau report link). A blank value keeps what is already on record.</summary>
     public void VerifyCheck(CandidateVerificationCheck check, string? value, Guid modifiedBy)
     {
         var trimmed = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
@@ -378,6 +388,10 @@ public class Candidate
             case CandidateVerificationCheck.CreditBureau:
                 CreditBureauReportLink = trimmed ?? CreditBureauReportLink;
                 IsCreditBureauChecked = true;
+                break;
+            case CandidateVerificationCheck.HrBureau:
+                HrBureauReportLink = trimmed ?? HrBureauReportLink;
+                IsHrBureauChecked = true;
                 break;
         }
 
@@ -661,4 +675,5 @@ public enum CandidateVerificationCheck
     Mobile,
     Uan,
     CreditBureau,
+    HrBureau,
 }

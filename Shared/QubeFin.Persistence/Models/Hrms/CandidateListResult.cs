@@ -17,6 +17,7 @@ public class CandidateListResult
     public string? JobApplicationFile { get; set; }
     public string? WrittenInterviewFile { get; set; }
     public string? CreditBureauReportLink { get; set; }
+    public string? HrBureauReportLink { get; set; }
     public string? SignedJoiningLetterFile { get; set; }
     public bool CanSchedule { get; set; }
     public int TotalRecords { get; set; }

@@ -75,12 +75,16 @@ public class CandidateRepository(QubeFinDataContext context) : ICandidateReposit
                 IsCreditBureauChecked = x.IsCreditBureauChecked,
                 CreditBureauReportLink = x.CreditBureauReportLink,
 
+                IsHrBureauChecked = x.IsHrBureauChecked,
+                HrBureauReportLink = x.HrBureauReportLink,
+
                 OverallStatus =
                     x.IsAadharValidated &&
                     x.IsVoterValited &&
                     x.IsPanValidated &&
                     x.IsMobileValidated &&
-                    x.IsCreditBureauChecked
+                    x.IsCreditBureauChecked &&
+                    x.IsHrBureauChecked
                         ? "Verified"
                         : "Pending"
             })

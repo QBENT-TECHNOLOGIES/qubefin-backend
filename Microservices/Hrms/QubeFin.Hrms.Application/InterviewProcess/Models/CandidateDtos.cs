@@ -65,7 +65,9 @@ public record CandidateVerificationUpdateRequest(
     bool IsMobileValidated,
     bool IsUanVerified,
     bool IsCreditBureauChecked,
-    string? CreditBureauReportLink);
+    string? CreditBureauReportLink,
+    bool IsHrBureauChecked,
+    string? HrBureauReportLink);
 
 public record CandidateInterviewModeUpdateRequest(string InterviewMode);
 public class CandidateInterviewUploadRequest

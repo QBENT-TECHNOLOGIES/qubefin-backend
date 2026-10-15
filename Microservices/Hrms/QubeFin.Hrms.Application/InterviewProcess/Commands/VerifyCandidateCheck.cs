@@ -38,6 +38,7 @@ public class VerifyCandidateCheckCommandValidator : AbstractValidator<VerifyCand
         [CandidateVerificationCheck.Mobile] = (new Regex(@"^[6-9]\d{9}$"), "Enter a valid 10-digit mobile number."),
         [CandidateVerificationCheck.Uan] = (new Regex(@"^\d{12}$"), "UAN must be exactly 12 digits."),
         [CandidateVerificationCheck.CreditBureau] = (new Regex(@"^https?://\S+$", RegexOptions.IgnoreCase), "Enter a valid link starting with http:// or https://."),
+        [CandidateVerificationCheck.HrBureau] = (new Regex(@"^https?://\S+$", RegexOptions.IgnoreCase), "Enter a valid link starting with http:// or https://."),
     };
 }
 

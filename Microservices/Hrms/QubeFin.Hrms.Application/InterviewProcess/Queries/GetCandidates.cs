@@ -89,6 +89,11 @@ internal sealed class GetCandidatesQueryHandler(QubeFinDataContext context, IFil
             downloads.Add(new CandidateDownloadFileDto { Name = "Credit Bureau Report", Url = row.CreditBureauReportLink });
         }
 
+        if (stage >= 1 && !string.IsNullOrWhiteSpace(row.HrBureauReportLink))
+        {
+            downloads.Add(new CandidateDownloadFileDto { Name = "HR Bureau Report", Url = row.HrBureauReportLink });
+        }
+
         if (stage >= 2)
         {
             await AddFileAsync("Signed Joining Letter", row.SignedJoiningLetterFile);
