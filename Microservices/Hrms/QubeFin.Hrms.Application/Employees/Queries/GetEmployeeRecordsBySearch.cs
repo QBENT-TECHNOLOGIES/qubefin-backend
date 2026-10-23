@@ -439,26 +439,11 @@ internal sealed class GetEmployeeRecordsBySearchQueryHandler(QubeFinDataContext 
             _ => OrderRows(rows, r => r.Date, param.SortDirection).ThenBy(r => r.Employee.FullName)
         };
 
-        var pagedRows = sorted
-             .Skip(param.PageIndex * param.PageSize)
-             .Take(param.PageSize)
-             .ToList();
-
-        var items = new List<EmployeeRecordItem>(pagedRows.Count);
-
-        foreach (var r in pagedRows)
-        {
-            var startMileageUrl = !string.IsNullOrWhiteSpace(r.Entry?.StartMileagePhoto)
-                ? await fileStorageRepository.GetFileUrlAsync("Mileage/" + r.Entry.StartMileagePhoto, cancellationToken)
-                : null;
-
-            var endMileageUrl = !string.IsNullOrWhiteSpace(r.Entry?.EndMileagePhoto)
-                ? await fileStorageRepository.GetFileUrlAsync("Mileage/" + r.Entry.EndMileagePhoto, cancellationToken)
-                : null;
-
-            items.Add(new EmployeeRecordItem
+        var items = await Task.WhenAll(sorted
+            .Skip(param.PageIndex * param.PageSize)
+            .Take(param.PageSize)
+            .Select(async r => new EmployeeRecordItem
             {
-                // An employee with no attendance row has nothing to open, so the id stays empty.
                 Id = r.Entry?.Id ?? Guid.Empty,
                 RecordType = EmployeeRecordTypes.Attendance,
                 EmployeeName = r.Employee.FullName,
@@ -475,12 +460,10 @@ internal sealed class GetEmployeeRecordsBySearchQueryHandler(QubeFinDataContext 
                 StartMileage = r.Entry?.StartMileage?.ToString(),
                 EndMileage = r.Entry?.EndMileage?.ToString(),
                 PersonalUseKm = r.Entry?.PersonalUseKm?.ToString(),
-                StartMileageUrl = startMileageUrl,
-                EndMileageUrl = endMileageUrl
-            });
-        }
+                StartMileageUrl = !string.IsNullOrWhiteSpace(r.Entry?.StartMileagePhoto) ? await fileStorageRepository.GetFileUrlAsync("Mileage/" + r.Entry!.StartMileagePhoto, cancellationToken) : null,
+                EndMileageUrl = !string.IsNullOrWhiteSpace(r.Entry?.EndMileagePhoto) ? await fileStorageRepository.GetFileUrlAsync("Mileage/" + r.Entry!.EndMileagePhoto, cancellationToken) : null
+            }));
 
-        // Attendance status is derived from punch and leave data rather than a workflow column.
         return (items, total, statusCounts);
     }
 
