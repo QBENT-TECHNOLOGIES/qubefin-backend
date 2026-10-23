@@ -4,7 +4,7 @@ namespace QubeFin.Persistence.Models.Hrms;
 
 public class PersonalInfo
 {
-    public string Code { get; private set; } = null!;
+    public string? Code { get; private set; }
     public string? Salutation { get; private set; }
     public string FirstName { get; private set; } = null!;
     public string? MiddleName { get; private set; }
@@ -25,7 +25,7 @@ public class PersonalInfo
     {
     }
 
-    public PersonalInfo(string code, string? salutation, string firstName, string? middleName, string lastName, string? fatherName, string? motherName, string? husbandName,
+    public PersonalInfo(string? code, string? salutation, string firstName, string? middleName, string lastName, string? fatherName, string? motherName, string? husbandName,
         DateOnly dateOfBirth, string gender, string religion, string? caste, string nationality, string bloodGroup, string? disablityType, string? maritalStatus)
     {
         Code = code;

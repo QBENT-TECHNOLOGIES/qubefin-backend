@@ -12,7 +12,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands;
 
 #region --- COMMAND ---
 public record UpdateEmployeePersonalCommand(
-    Guid Id, string Code, string? Salutation, string FirstName, string? MiddleName, string LastName, string? FatherName, string? MotherName, string? HusbandName,
+    Guid Id, /*string Code,*/ string? Salutation, string FirstName, string? MiddleName, string LastName, string? FatherName, string? MotherName, string? HusbandName,
     DateOnly DateOfBirth, string Gender, string Religion, string? Caste, string Nationality, string BloodGroup, string? DisablityType, string? MaritalStatus,
     Guid UserId
     ) : IRequest<Result<string>>;
@@ -54,14 +54,14 @@ internal sealed class UpdateEmployeePersonalCommandHandler(IEmployeeRepository e
             return new ValidationError("Employee does not exist with the given id.");
         }
 
-        var existingEmployee = await employeeRepository.GetExsitingEmployeeByCode(request.Id, request.Code);
-        if (existingEmployee)
-        {
-            return new ValidationError("Employee already exist with same code.");
-        }
+        //var existingEmployee = await employeeRepository.GetExsitingEmployeeByCode(request.Id, request.Code);
+        //if (existingEmployee)
+        //{
+        //    return new ValidationError("Employee already exist with same code.");
+        //}
 
         employee.UpdatePersonalInfo(
-            new PersonalInfo(request.Code, request.Salutation, request.FirstName, request.MiddleName, request.LastName, request.FatherName, request.MotherName, request.HusbandName,
+            new PersonalInfo(employee.Code, request.Salutation, request.FirstName, request.MiddleName, request.LastName, request.FatherName, request.MotherName, request.HusbandName,
                 request.DateOfBirth, request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisablityType, request.MaritalStatus),
             request.UserId
             );

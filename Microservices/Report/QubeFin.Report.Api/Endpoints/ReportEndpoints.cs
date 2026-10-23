@@ -37,6 +37,49 @@ namespace QubeFin.Report.Api.Endpoints
                 var file = result.Value;
                 return Results.File(file.FileStream, file.ContentType, file.FileName);
             }).WithSummary("Generate payslip report.");
+
+
+            app.MapGet("/employee/{employeeId}/{companyId}", [Authorize] async (Guid employeeId, Guid companyId, IConfiguration configuration, ISender sender) =>
+            {
+                if (companyId == Guid.Empty)
+                {
+                    return Results.BadRequest("Invalid company ID.");
+                }
+                else if (companyId == Guid.Parse(configuration["Company:Wegrow"]))
+                {
+                    var command = new GenerateSSRSReportsCommand(
+                    "Rpt_Wegrow_AppointmentLetter_Employee",
+                    "PDF",
+                    new Dictionary<string, string>
+                    {
+                        ["EmployeeId"] = employeeId.ToString()
+                    });
+                    var result = await sender.Send(command);
+                    if (result.IsFailed)
+                        return result.ToHttpResult();
+                    var file = result.Value;
+                    return Results.File(file.FileStream, file.ContentType, file.FileName);
+                }
+                else if (companyId == Guid.Parse(configuration["Company:WegroBC"]))
+                {
+                    var command = new GenerateSSRSReportsCommand(
+                    "Rpt_WegroBc_AppointmentLetter_Employee",
+                    "PDF",
+                    new Dictionary<string, string>
+                    {
+                        ["EmployeeId"] = employeeId.ToString()
+                    });
+                    var result = await sender.Send(command);
+                    if (result.IsFailed)
+                        return result.ToHttpResult();
+                    var file = result.Value;
+                    return Results.File(file.FileStream, file.ContentType, file.FileName);
+                }
+                else
+                {
+                    return Results.NotFound("Company not found for the given employee.");
+                }
+            }).WithSummary("Generate appointment letter after Employee manually Entry.");
             #endregion
 
             #region NPOI REPORTS
@@ -208,7 +251,7 @@ namespace QubeFin.Report.Api.Endpoints
 
                 var empId = principal.Identity.GetEmployeeId();
 
-                if(request.CompanyId == null)
+                if (request.CompanyId == null)
                     return Results.BadRequest("Please select company before export.");
 
                 var lopResult = await sender.Send(new GetLopFinalizationByQueryQuery(request, empId));

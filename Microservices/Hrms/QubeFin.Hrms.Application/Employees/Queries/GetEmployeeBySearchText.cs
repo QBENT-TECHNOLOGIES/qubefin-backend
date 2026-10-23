@@ -22,7 +22,7 @@ internal sealed class GetEmployeeBySearchTextQueryHandler(QubeFinDataContext con
         var employeEntities = await context.TblEmployees.
             Include(m => m.TblUsers).Include(m => m.TblEmployeeDocuments).
             Include(m => m.TblEmployeeDesignations).ThenInclude(e => e.Designation).
-            Where(m => m.IsActive && (m.FullName.StartsWith(request.SearchText) || m.Code.StartsWith(request.SearchText))).
+            Where(m => m.IsActive && (m.FullName.StartsWith(request.SearchText) || m.Code.Contains(request.SearchText))).
             OrderBy(m => m.FirstName).ToListAsync();
         var searchResult = employeEntities == null ? new List<GetEmployeeBySearchTextResponse>() :
                employeEntities.Select(m => new GetEmployeeBySearchTextResponse(

@@ -19,5 +19,6 @@ public class OfficialInfoRequest
     public string? HowYouKnow { get; set; }
     public string? OfficialEmail { get; set; }
     public decimal? GrossSalary { get; set; }
+    public Guid? SupervisorId { get; set; }
     public bool IsActive { get; set; }
 }

@@ -56,11 +56,16 @@ internal sealed class UpdateEmployeeOfficialCommandHandler(IEmployeeRepository e
                 return new ValidationError("Employee does not exist with the given id.");
             }
 
+            if (string.IsNullOrWhiteSpace(employee.Code))
+            {
+                employee.UpdateCode(await employeeRepository.GenerateEmployeeCodeAsync(request.OfficialInfo.CompanyId, cancellationToken), request.UserId);
+            }
+
             employee.UpdateOfficialInfo(
                 new OfficialInfo(
                     request.OfficialInfo.CompanyId, request.OfficialInfo.OrganizationUnitId, request.OfficialInfo.DepartmentId, request.OfficialInfo.EmployementType,
                     request.OfficialInfo.DateOfJoining, request.OfficialInfo.DateOfConfirmation, request.OfficialInfo.SeparationDate, request.OfficialInfo.ReferedBy,
-                    request.OfficialInfo.HowYouKnow, request.OfficialInfo.OfficialEmail), request.UserId
+                    request.OfficialInfo.HowYouKnow, request.OfficialInfo.OfficialEmail, request.OfficialInfo.SupervisorId), request.UserId
                 );
             await employeeRepository.UpdateAsync(employee);
 
@@ -77,7 +82,7 @@ internal sealed class UpdateEmployeeOfficialCommandHandler(IEmployeeRepository e
                 await employeeRepository.TransferEntry(employee.Id, request.OfficialInfo.OrganizationUnitId.Value, request.OfficialInfo.DesignationId.Value, request.OfficialInfo.SalaryGradeId.Value, request.OfficialInfo.GrossSalary.Value, cancellationToken);
             }
 
-            if (request.OfficialInfo.SeparationDate.HasValue)
+            if (request.OfficialInfo.SeparationDate.HasValue && employee.OfficialInfo.SeparationDate == null)
             {
                 await employeeRepository.SeparateAsync(employee.Id, request.OfficialInfo.SeparationDate.Value, request.UserId, cancellationToken);
             }

@@ -65,7 +65,7 @@ public class EmployeeEndpoints : IEndpoint
             }
             var userId = principal.Identity.GetUserId();
 
-            var command = new CreateEmployeeCommand(request.Code, request.Salutation, request.FirstName, request.MiddleName, request.LastName, request.FatherName, request.MotherName,
+            var command = new CreateEmployeeCommand(/*request.Code,*/ request.Salutation, request.FirstName, request.MiddleName, request.LastName, request.FatherName, request.MotherName,
                 request.HusbandName, request.DateOfBirth, request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisablityType, request.MaritalStatus, userId);
             var result = await sender.Send(command);
             return result.ToHttpResult();
@@ -173,7 +173,7 @@ public class EmployeeEndpoints : IEndpoint
             }
             var userId = principal.Identity.GetUserId();
 
-            var command = new UpdateEmployeePersonalCommand(id, request.Code, request.Salutation, request.FirstName, request.MiddleName, request.LastName, request.FatherName, request.MotherName, request.HusbandName,
+            var command = new UpdateEmployeePersonalCommand(id, /*request.Code,*/ request.Salutation, request.FirstName, request.MiddleName, request.LastName, request.FatherName, request.MotherName, request.HusbandName,
                 request.DateOfBirth, request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisablityType, request.MaritalStatus, userId);
             var result = await sender.Send(command);
             return result.ToHttpResult();
@@ -235,7 +235,7 @@ public class EmployeeEndpoints : IEndpoint
             }
             var userId = principal.Identity.GetUserId();
 
-            var command = new UpdateEmployeeAddressCommand(id, request?.PresentAddress, request?.PermanentAddress, userId);
+            var command = new UpdateEmployeeAddressCommand(id, request?.PresentAddress, request?.PermanentAddress, request?.PresentPermanentAddressSame ?? false, userId);
             var result = await sender.Send(command);
             return result.ToHttpResult();
         })

@@ -83,7 +83,7 @@ internal sealed class GetAttendanceExportQueryHandler(
 
     private sealed record AttendanceLeave(Guid EmployeeId, DateOnly FromDate, DateOnly ToDate);
 
-    private sealed record AttendanceRow(AttendanceEmployee Employee, DateOnly Date, AttendanceEntry? Entry, string Status);
+    private sealed record AttendanceRow(AttendanceEmployee Employee, DateOnly Date, AttendanceEntry? Entry, string Status, bool OnLeave);
 
     public async Task<Result<List<AttendanceSearchResult>>> Handle(
         GetAttendanceExportQuery request, CancellationToken cancellationToken)
@@ -143,7 +143,7 @@ internal sealed class GetAttendanceExportQueryHandler(
                     {
                         entryLookup.TryGetValue((e.Id, d), out var entry);
                         var onLeave = leaveLookup[e.Id].Any(l => l.FromDate <= d && l.ToDate >= d);
-                        return new AttendanceRow(e, d, entry, DeriveRowStatus(d, entry, onLeave));
+                        return new AttendanceRow(e, d, entry, DeriveRowStatus(d, entry, onLeave), onLeave);
                     }))
                 .ToList();
 
@@ -243,7 +243,8 @@ internal sealed class GetAttendanceExportQueryHandler(
             return rows;
 
         if (wanted.Equals("pending", StringComparison.OrdinalIgnoreCase))
-            return rows.Where(r => RowStatus.IsPending(r.Status)).ToList();
+            // An employee on approved leave is never pending, even with a half punch (Missed)
+            return rows.Where(r => !r.OnLeave && RowStatus.IsPending(r.Status)).ToList();
 
         if (RowStatus.IsKnown(wanted))
             return rows.Where(r => r.Status.Equals(wanted, StringComparison.OrdinalIgnoreCase)).ToList();

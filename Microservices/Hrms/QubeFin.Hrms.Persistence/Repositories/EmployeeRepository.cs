@@ -15,6 +15,7 @@ public interface IEmployeeRepository
     Task UpdateAsync(Employee employee);
     Task<Employee?> GetEmloyeeOrganization(Guid id);
     Task<bool> GetExsitingEmployeeByCode(Guid? id, string code);
+    Task<string?> GenerateEmployeeCodeAsync(Guid? companyId, CancellationToken cancellationToken);
     Task AddDesignationAsync(Guid employeeId, Guid designationId, DateOnly joiningDate);
     Task AddGrossSalaryAsync(Guid employeeId, decimal grossSalary, DateOnly joiningDate);
     Task SeparateAsync(Guid employeeId, DateOnly separationDate, Guid modifiedBy, CancellationToken cancellationToken);
@@ -76,6 +77,26 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
     {
         return await context.TblEmployees.AsNoTracking().AnyAsync(x => x.Code.ToLower().Trim() == code.ToLower().Trim() && (id == null || id == Guid.Empty || x.Id != id));
     }
+
+    public async Task<string?> GenerateEmployeeCodeAsync(Guid? companyId, CancellationToken cancellationToken)
+    {
+        if (companyId is null)
+        {
+            return null;
+        }
+
+        var company = await context.TblCompanies.FirstOrDefaultAsync(c => c.Id == companyId.Value, cancellationToken);
+        if (company is null || string.IsNullOrWhiteSpace(company.EmpCodeAlias))
+        {
+            return null;
+        }
+
+        var nextSeq = (company.Seq ?? 0) + 1;
+        company.Seq = nextSeq;
+
+        return $"{company.EmpCodeAlias.Trim()}{nextSeq:D4}";
+    }
+
     public async Task AddDesignationAsync(Guid employeeId, Guid designationId, DateOnly joiningDate)
     {
         var existingDesignation = await context.TblEmployeeDesignations

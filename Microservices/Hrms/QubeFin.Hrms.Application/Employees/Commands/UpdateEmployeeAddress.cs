@@ -14,7 +14,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands
 
     #region --- COMMAND ---
     public record UpdateEmployeeAddressCommand(
-        Guid Id, AddressModel? PresentAddress, AddressModel? PermanentAddress,
+        Guid Id, AddressModel? PresentAddress, AddressModel? PermanentAddress, bool PresentPermanentAddressSame,
         Guid UserId
         ) : IRequest<Result<string>>;
     #endregion
@@ -26,6 +26,10 @@ namespace QubeFin.Hrms.Application.Employees.Commands
             RuleFor(x => x.PresentAddress!.PostOfficeName).MaximumLength(50).WithMessage("Present Post Office cannot exceed 50 characters.")
                 .When(x => x.PresentAddress != null);
             RuleFor(x => x.PermanentAddress!.PostOfficeName).MaximumLength(50).WithMessage("Permanent Post Office cannot exceed 50 characters.")
+                .When(x => x.PermanentAddress != null);
+            RuleFor(x => x.PresentAddress!.Address).MaximumLength(250).WithMessage("Present Address cannot exceed 250 characters.")
+                .When(x => x.PresentAddress != null);
+            RuleFor(x => x.PermanentAddress!.Address).MaximumLength(250).WithMessage("Permanent Address cannot exceed 250 characters.")
                 .When(x => x.PermanentAddress != null);
         }
     }
@@ -52,10 +56,11 @@ namespace QubeFin.Hrms.Application.Employees.Commands
                     request.PresentAddress?.HouseNo,
                     request.PresentAddress?.RoadName,
                     request.PresentAddress?.LandMark,
-                    request.PresentAddress?.AdministrativeUnitId,
-                    request.PresentAddress?.PoliceStationId,
+                    //request.PresentAddress?.AdministrativeUnitId,
+                    //request.PresentAddress?.PoliceStationId,
                     presentPostOfficeId,
                     request.PresentAddress?.PinCode,
+                    request.PresentAddress?.Address,
                     request.PresentAddress?.OwnerShipOfHouse,
                     request.PresentAddress?.DurationOfStayInMonths),
 
@@ -64,12 +69,14 @@ namespace QubeFin.Hrms.Application.Employees.Commands
                     request.PermanentAddress?.HouseNo,
                     request.PermanentAddress?.RoadName,
                     request.PermanentAddress?.LandMark,
-                    request.PermanentAddress?.AdministrativeUnitId,
-                    request.PermanentAddress?.PoliceStationId,
+                    //request.PermanentAddress?.AdministrativeUnitId,
+                    //request.PermanentAddress?.PoliceStationId,
                     permanentPostOfficeId,
                     request.PermanentAddress?.PinCode,
+                    request.PermanentAddress?.Address,
                     request.PermanentAddress?.OwnerShipOfHouse,
                     request.PermanentAddress?.DurationOfStayInMonths),
+                request.PresentPermanentAddressSame,
                 request.UserId
                 );
 
