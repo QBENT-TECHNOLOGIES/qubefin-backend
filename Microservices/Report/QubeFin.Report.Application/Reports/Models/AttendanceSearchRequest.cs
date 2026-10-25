@@ -12,7 +12,6 @@ namespace QubeFin.Report.Application.Reports.Models
 
     public class AttendanceSearchResult
     {
-        //public Guid Id { get; set; }
         public string? OrganizationUnit { get; set; }
         public string? EmployeeName { get; set; }
         public string? EmployeeCode { get; set; }
@@ -22,6 +21,9 @@ namespace QubeFin.Report.Application.Reports.Models
         public string? WorkingHours { get; set; }
         public string? Status { get; set; }
         public string? IsRegularized { get; set; }
+        public string? StartMileage { get; set; }
+        public string? EndMileage { get; set; }
+        public string? PersonalUseKm { get; set; }
     }
     public class AttendanceExportRequest : SearchParam
     {

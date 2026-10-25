@@ -163,8 +163,7 @@ namespace QubeFin.Report.Api.Endpoints
                 return Results.File(file.FileStream, file.ContentType, $"Salary_Register_Report_{month}_{year}.xlsx");
             }).WithSummary("Generate Salary Register Report.");
 
-            app.MapPost("/generate-attendance-history-report", [Authorize] async (
-    ClaimsPrincipal principal, AttendanceExportRequest request, ISender sender) =>
+            app.MapPost("/generate-attendance-history-report", [Authorize] async (ClaimsPrincipal principal, AttendanceExportRequest request, ISender sender) =>
             {
                 if (principal.Identity is null)
                 {

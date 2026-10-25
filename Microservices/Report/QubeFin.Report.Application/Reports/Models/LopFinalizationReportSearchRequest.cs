@@ -24,7 +24,6 @@ namespace QubeFin.Report.Application.Reports.Models
         public int AbsentDays { get; set; }
         public int AttendanceIrregularDays { get; set; }
         public int IrregularLopDays { get; set; }
-        public string? IsLocked { get; set; } = string.Empty;
         public string? Remarks { get; set; }
     }
 }

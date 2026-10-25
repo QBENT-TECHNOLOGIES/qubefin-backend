@@ -11,8 +11,7 @@ using QubeFin.Report.Application.Reports.Models;
 namespace QubeFin.Report.Application.Reports.Queries;
 
 #region --- QUERY ---
-public record GetAttendanceExportQuery(AttendanceExportRequest searchParam, Guid employeeId)
-    : IRequest<Result<List<AttendanceSearchResult>>>;
+public record GetAttendanceExportQuery(AttendanceExportRequest searchParam, Guid employeeId) : IRequest<Result<List<AttendanceSearchResult>>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -22,30 +21,19 @@ public class GetAttendanceExportQueryValidator : AbstractValidator<GetAttendance
     {
         RuleFor(v => v.employeeId).NotEmpty().WithMessage("Employee Id is required.");
         RuleFor(v => v.searchParam).NotNull().WithMessage("Search parameters are required.");
-        RuleFor(v => v.searchParam.CompanyId)
-            .NotEmpty()
-            .When(v => v.searchParam is not null)
-            .WithMessage("Company Id is required.");
-
-      
+        RuleFor(v => v.searchParam.CompanyId).NotEmpty().When(v => v.searchParam is not null).WithMessage("Company Id is required.");
     }
 }
 #endregion
 
 #region --- HANDLER ---
-
-internal sealed class GetAttendanceExportQueryHandler(
-    QubeFinDataContext context,
-    IMemoryCache cache,
-    ILogger<GetAttendanceExportQueryHandler> logger)
-    : IRequestHandler<GetAttendanceExportQuery, Result<List<AttendanceSearchResult>>>
+internal sealed class GetAttendanceExportQueryHandler(QubeFinDataContext context, IMemoryCache cache, ILogger<GetAttendanceExportQueryHandler> logger) : IRequestHandler<GetAttendanceExportQuery, Result<List<AttendanceSearchResult>>>
 {
     private const string OrgUnitCacheKey = "org-units-flat";
     private static readonly TimeSpan OrgUnitCacheTtl = TimeSpan.FromMinutes(10);
     private const int MaxAttendanceDays = 31;
     private const string Dash = "-";
 
-   
     private static class RowStatus
     {
         public const string OnTime = "On Time";
@@ -70,23 +58,19 @@ internal sealed class GetAttendanceExportQueryHandler(
 
     private const string ApprovedLeaveStatus = "Approved";
 
-    private sealed record AttendanceEmployee(
-        Guid Id, string FullName, string Code, string? OrganizationUnit, DateOnly? JoiningDate, DateOnly? SeparationDate)
+    private sealed record AttendanceEmployee(Guid Id, string FullName, string Code, string? OrganizationUnit, DateOnly? JoiningDate, DateOnly? SeparationDate)
     {
         public bool IsEmployedOn(DateOnly day) =>
             (JoiningDate is null || JoiningDate <= day) && (SeparationDate is null || SeparationDate >= day);
     }
 
-    private sealed record AttendanceEntry(
-        Guid EmployeeId, DateOnly AttendanceDate, TimeOnly? ActualInTime, TimeOnly? ActualOutTime,
-        bool IsLateEntry, bool IsEarlyLeave, bool IsRegularization);
+    private sealed record AttendanceEntry(Guid EmployeeId, DateOnly AttendanceDate, TimeOnly? ActualInTime, TimeOnly? ActualOutTime, bool IsLateEntry, bool IsEarlyLeave, bool IsRegularization, decimal? StartMileage, decimal? EndMileage, decimal? PersonalUseKm);
 
     private sealed record AttendanceLeave(Guid EmployeeId, DateOnly FromDate, DateOnly ToDate);
 
     private sealed record AttendanceRow(AttendanceEmployee Employee, DateOnly Date, AttendanceEntry? Entry, string Status);
 
-    public async Task<Result<List<AttendanceSearchResult>>> Handle(
-        GetAttendanceExportQuery request, CancellationToken cancellationToken)
+    public async Task<Result<List<AttendanceSearchResult>>> Handle(GetAttendanceExportQuery request, CancellationToken cancellationToken)
     {
         try
         {
@@ -115,7 +99,8 @@ internal sealed class GetAttendanceExportQueryHandler(
                             && employeeQuery.Select(m => m.Id).Contains(a.EmployeeId))
                 .Select(a => new AttendanceEntry(
                     a.EmployeeId, a.AttendanceDate, a.ActualInTime, a.ActualOutTime,
-                    a.IsLateEntry, a.IsEarlyLeave, a.IsRegularization))
+                    a.IsLateEntry, a.IsEarlyLeave, a.IsRegularization,
+                    a.StartMileage, a.EndMileage, a.PersonalUseKm))
                 .ToListAsync(cancellationToken);
 
             var entryLookup = entries
@@ -165,7 +150,6 @@ internal sealed class GetAttendanceExportQueryHandler(
             return Result.Fail<List<AttendanceSearchResult>>("Something went wrong. Please try again later");
         }
     }
-
     private static (DateOnly From, DateOnly To) ResolveWindow(AttendanceExportRequest param)
     {
         var today = DateOnly.FromDateTime(DateTime.Now.Date);
@@ -204,7 +188,6 @@ internal sealed class GetAttendanceExportQueryHandler(
 
         return query;
     }
-
 
     private static string DeriveRowStatus(DateOnly date, AttendanceEntry? entry, bool onLeave)
     {
@@ -251,7 +234,6 @@ internal sealed class GetAttendanceExportQueryHandler(
         return rows;
     }
 
-
     private static IOrderedEnumerable<AttendanceRow> ApplySort(
         IEnumerable<AttendanceRow> rows, string? sortOn, string? sortDirection)
     {
@@ -274,7 +256,6 @@ internal sealed class GetAttendanceExportQueryHandler(
         return ascending ? rows.OrderBy(keySelector) : rows.OrderByDescending(keySelector);
     }
 
-
     private static AttendanceSearchResult MapToResult(AttendanceRow r) => new()
     {
         OrganizationUnit = r.Employee.OrganizationUnit,
@@ -286,6 +267,9 @@ internal sealed class GetAttendanceExportQueryHandler(
         WorkingHours = r.Entry is null
             ? Dash
             : GetWorkingHours(r.Entry.ActualInTime, r.Entry.ActualOutTime) ?? Dash,
+        StartMileage = r.Entry?.StartMileage?.ToString() ?? Dash,
+        EndMileage = r.Entry?.EndMileage?.ToString() ?? Dash,
+        PersonalUseKm = r.Entry?.PersonalUseKm?.ToString() ?? Dash,
         Status = r.Status,
         IsRegularized = r.Entry is { IsRegularization: true } ? "Yes" : Dash
     };
@@ -298,11 +282,10 @@ internal sealed class GetAttendanceExportQueryHandler(
         var duration = outTime.Value.ToTimeSpan() - inTime.Value.ToTimeSpan();
 
         if (duration < TimeSpan.Zero)
-            duration += TimeSpan.FromDays(1); 
+            duration += TimeSpan.FromDays(1); // night shift support
 
         return $"{duration.Hours} h {duration.Minutes} m";
     }
-
 
     private async Task<List<Guid>> ResolveOrganizationUnitIdsAsync(Guid employeeId, CancellationToken cancellationToken)
     {
