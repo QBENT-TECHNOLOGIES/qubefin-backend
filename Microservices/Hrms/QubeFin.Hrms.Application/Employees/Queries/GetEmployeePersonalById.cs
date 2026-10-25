@@ -13,7 +13,7 @@ public record GetEmployeePersonalByIdQuery(Guid Id) : IRequest<Result<GetPersona
 #endregion
 #region --- RESPONSE ---
 public record GetPersonalResponse(Guid Id, 
-        string Code, 
+        string? Code, 
         string? Salutation, 
         string FirstName, 
         string? MiddleName, 

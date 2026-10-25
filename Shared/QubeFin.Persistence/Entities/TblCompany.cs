@@ -11,6 +11,10 @@ public partial class TblCompany
 
     public string? LogoUrl { get; set; }
 
+    public string? EmpCodeAlias { get; set; }
+
+    public long? Seq { get; set; }
+
     public virtual ICollection<TblCompanyBankAccount> TblCompanyBankAccounts { get; set; } = new List<TblCompanyBankAccount>();
 
     public virtual ICollection<TblEmployee> TblEmployees { get; set; } = new List<TblEmployee>();

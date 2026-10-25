@@ -4,17 +4,19 @@ public class AddressInfoRequest
 {
     public AddressModel? PresentAddress { get;  set; }
     public AddressModel? PermanentAddress { get;  set; }
+    public bool PresentPermanentAddressSame { get;  set; }
 }
 public class AddressModel
 {
     public string? HouseNo { get; set; }
     public string? RoadName { get; set; }
     public string? LandMark { get; set; }
-    public Guid? AdministrativeUnitId { get; set; }
-    public Guid? PoliceStationId { get; set; }
+    //public Guid? AdministrativeUnitId { get; set; }
+    //public Guid? PoliceStationId { get; set; }
     public Guid? PostOfficeId { get; set; }
     public string? PostOfficeName { get; set; }
     public string? PinCode { get; set; }
+    public string? Address { get; set; }
     public string? OwnerShipOfHouse { get; set; }
     public int? DurationOfStayInMonths { get; set; }
 }

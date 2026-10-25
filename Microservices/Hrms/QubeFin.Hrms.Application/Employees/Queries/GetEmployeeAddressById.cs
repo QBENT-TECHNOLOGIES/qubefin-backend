@@ -35,39 +35,42 @@ internal sealed class GetEmployeeAddressByIdQueryHandler(QubeFinDataContext cont
         {
             return new RecordNotFoundError($"Employee not found for the given Id");
         }
-        var presentAddressUnit = await AddressUnit(employee.PresentAdministrativeUnitId);
+        //var presentAddressUnit = await AddressUnit(employee.PresentAdministrativeUnitId);
 
-        var permanentAddressUnit = await AddressUnit(employee.PermanentAdministrativeUnitId);
+        //var permanentAddressUnit = await AddressUnit(employee.PermanentAdministrativeUnitId);
 
         return Result.Ok(new GetAddressResponse(
             Id: employee.Id,
             Code: employee.Code,
-            SameAsPresentAddress: employee.PresentAdministrativeUnitId != null && employee.PermanentAdministrativeUnitId != null &&  employee.PresentAdministrativeUnitId == employee.PermanentAdministrativeUnitId,
+            //SameAsPresentAddress: employee.PresentAdministrativeUnitId != null && employee.PermanentAdministrativeUnitId != null &&  employee.PresentAdministrativeUnitId == employee.PermanentAdministrativeUnitId,
+            SameAsPresentAddress: employee.PresentPermanentAddressSame,
             PresentAddressInfo: new AddressInfoResponse
             {
                 HouseNo = employee.PresentHouseNo,
                 RoadName = employee.PresentRoadName,
                 LandMark = employee.PresentLandMark,
-                AdministrativeUnitId = employee.PresentAdministrativeUnitId,
-                PoliceStationId = employee.PresentPoliceStationId,
+                //AdministrativeUnitId = employee.PresentAdministrativeUnitId,
+                //PoliceStationId = employee.PresentPoliceStationId,
                 PostOfficeId = employee.PresentPostOfficeId,
                 PinCode = employee.PresentPinCode,
+                Address = employee.PresentAddress,
                 OwnerShipOfHouse = employee.PresentOwnerShipOfHouse,
                 DurationOfStayInMonths = employee.PresentDurationOfStayInMonths,
-                AddressUnit = presentAddressUnit
+                //AddressUnit = presentAddressUnit
             },
             PermanentAddressInfo: new AddressInfoResponse
             {
                 HouseNo = employee.PermanentHouseNo,
                 RoadName = employee.PermanentRoadName,
                 LandMark = employee.PermanentLandMark,
-                AdministrativeUnitId = employee.PermanentAdministrativeUnitId,
-                PoliceStationId = employee.PermanentPoliceStationId,
+                //AdministrativeUnitId = employee.PermanentAdministrativeUnitId,
+                //PoliceStationId = employee.PermanentPoliceStationId,
                 PostOfficeId = employee.PermanentPostOfficeId,
                 PinCode = employee.PermanentPinCode,
+                Address = employee.PermanentAddress,
                 OwnerShipOfHouse = employee.PermanentOwnerShipOfHouse,
                 DurationOfStayInMonths = employee.PermanentDurationOfStayInMonths,
-                AddressUnit = permanentAddressUnit
+                //AddressUnit = permanentAddressUnit
             }
         ));
     }
