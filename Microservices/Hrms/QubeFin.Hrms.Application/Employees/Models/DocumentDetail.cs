@@ -16,3 +16,10 @@ public class DocumentDetailRequest
     public IFormFile? File { get; set; }
     public string? FileUrl { get; set; }
 }
+public class EmployeeDocumentResponse
+{
+    public Guid Id { get; set; }
+    public string? DocumentName { get; set; }
+    public string? FileName { get; set; }
+    public string? FileUrl { get; set; }
+}

@@ -398,6 +398,15 @@ public class EmployeeEndpoints : IEndpoint
         })
         .WithSummary("Search Employees by Text")
         .RequireAuthorization();
+
+        app.MapGet("employees/by-organization-unit/{id:Guid}", async (ISender sender, Guid id) =>
+        {
+            var result = await sender.Send(new GetOrganizationUnitsWiseEmployeesQuery(id));
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get All Organization Units With Their Employees")
+        .RequireAuthorization();
+
         #region Employee Transfer
 
         app.MapGet("employees/transfer/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, ISender sender) =>
@@ -470,6 +479,18 @@ public class EmployeeEndpoints : IEndpoint
         })
         .WithSummary("Get Salary Structure By Gross")
         .RequireAuthorization();
+        #endregion
+
+        #region Employee Documents
+
+        app.MapGet("employees/documents/{id:Guid}", async (ISender sender, Guid id) =>
+        {
+            var result = await sender.Send(new GetEmployeeDocumentsByIdQuery(id));
+            return result.ToHttpResult();
+        })
+    .WithSummary("Get All Documents By Employee Id")
+    .RequireAuthorization();
+
         #endregion
     }
 }

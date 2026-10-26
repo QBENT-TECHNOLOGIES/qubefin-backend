@@ -17,6 +17,8 @@ namespace QubeFin.Persistence.Models.Hrms
         public DateTime? CreatedDate { get; private set; }
         public DateTime? LastModifiedOn { get; private set; }
         public Guid? LastModifiedBy { get; private set; }
+        /// <summary>The interview candidate this employee was created from through the joining information form.</summary>
+        public Guid? CandidateId { get; private set; }
         public PersonalInfo PersonalInfo { get; private set; } = default!;
         public OfficialInfo OfficialInfo { get; private set; } = default!;
         public ContactInfo ContactInfo { get; private set; } = default!;
@@ -38,7 +40,8 @@ namespace QubeFin.Persistence.Models.Hrms
         public Employee(Guid id, string? code, PersonalInfo personalInfo, OfficialInfo officialInfo, ContactInfo contactInfo,
             AddressInfo presentAddressInfo, AddressInfo permanentAddressInfo, bool presentPermanentAddressSame, PayrollInfo payrollInfo, EmployeeOrganization organizationInfo,
             List<EmployeeDesignation> designations, List<EmployeeQualification> qualifications, List<EmployeeReference> references, List<EmployeeDocument> documents,
-            List<EmployeeEmployment> employments, List<EmployeeGrossSalary> grossSalaries, Guid? createdBy, DateTime? createdOn, Guid? lastModifiedBy, DateTime? lastModifiedOn)
+            List<EmployeeEmployment> employments, List<EmployeeGrossSalary> grossSalaries, Guid? createdBy, DateTime? createdOn, Guid? lastModifiedBy, DateTime? lastModifiedOn,
+            Guid? candidateId = null)
         {
             Id = id;
             Code = code;
@@ -54,6 +57,7 @@ namespace QubeFin.Persistence.Models.Hrms
             CreatedDate = createdOn;
             LastModifiedBy = lastModifiedBy;
             LastModifiedOn = lastModifiedOn;
+            CandidateId = candidateId;
             if (designations != null)
             {
                 _designations.AddRange(designations);
@@ -89,10 +93,12 @@ namespace QubeFin.Persistence.Models.Hrms
             AddressInfo presentAddressInfo,
             AddressInfo permanentAddressInfo,
             PayrollInfo payrollInfo,
-            Guid createdBy)
+            Guid createdBy,
+            Guid? candidateId = null)
         {
             return new Employee
             {
+                CandidateId = candidateId,
                 Id = id,
                 Code = code,
                 PersonalInfo = personalInfo,
