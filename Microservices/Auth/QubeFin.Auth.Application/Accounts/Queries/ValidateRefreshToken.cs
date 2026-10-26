@@ -1,19 +1,17 @@
 ﻿using FluentResults;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using QubeFin.Auth.Application.Accounts.Commands;
 using QubeFin.Auth.Persistence.Repositories;
 using QubeFin.Core.Results;
 using QubeFin.Core.Security;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Mappers.App;
-using QubeFin.Persistence.Models.App;
 using System.Security.Claims;
 
 namespace QubeFin.Auth.Application.Accounts.Queries;
 
 #region --- QUERY ---
-public record ValidateRefreshTokenQuery(string RefreshToken) : IRequest<Result<ValidateRefreshTokenResponse>>;
+public record ValidateRefreshTokenQuery(string RefreshToken, string? DeviceId) : IRequest<Result<ValidateRefreshTokenResponse>>;
 #endregion
 
 #region --- RESPONSE ---
@@ -26,8 +24,10 @@ internal class ValidateRefreshTokenQueryHandler(QubeFinDataContext context, IAut
 {
     public async Task<Result<ValidateRefreshTokenResponse>> Handle(ValidateRefreshTokenQuery request, CancellationToken cancellationToken)
     {
-        var userSessionEntity = await context.TblUserSessions.AsNoTracking().FirstOrDefaultAsync(m => m.RefreshToken == request.RefreshToken);
-        if (userSessionEntity is null)
+        var userSessionEntity = await context.TblUserSessions.AsNoTracking().FirstOrDefaultAsync(m => 
+            m.RefreshToken == request.RefreshToken || 
+            (!string.IsNullOrEmpty(request.DeviceId) && !string.IsNullOrEmpty(m.DeviceId) && m.DeviceId.Trim() == request.DeviceId.Trim()), cancellationToken);
+        if (userSessionEntity == null || userSessionEntity.LogoutTime != null)
         {
             return new UnauthorizedError($"User Session not found");
         }

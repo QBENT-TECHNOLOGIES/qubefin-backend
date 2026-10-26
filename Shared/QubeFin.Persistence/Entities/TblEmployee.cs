@@ -17,7 +17,7 @@ public partial class TblEmployee
 
     public string FullName { get; set; } = null!;
 
-    public string Code { get; set; } = null!;
+    public string? Code { get; set; }
 
     public string? FatherName { get; set; }
 
@@ -87,9 +87,13 @@ public partial class TblEmployee
 
     public string? PermanentPinCode { get; set; }
 
+    public string? PermanentAddress { get; set; }
+
     public string? PermanentOwnerShipOfHouse { get; set; }
 
     public int? PermanentDurationOfStayInMonths { get; set; }
+
+    public bool PresentPermanentAddressSame { get; set; }
 
     public string? PresentHouseNo { get; set; }
 
@@ -104,6 +108,8 @@ public partial class TblEmployee
     public Guid? PresentPostOfficeId { get; set; }
 
     public string? PresentPinCode { get; set; }
+
+    public string? PresentAddress { get; set; }
 
     public string? PresentOwnerShipOfHouse { get; set; }
 
@@ -141,6 +147,8 @@ public partial class TblEmployee
 
     public Guid? CandidateId { get; set; }
 
+    public Guid? SupervisorId { get; set; }
+
     public Guid? CreatedBy { get; set; }
 
     public DateTime? CreatedDate { get; set; }
@@ -157,11 +165,15 @@ public partial class TblEmployee
 
     public virtual TblDepartment? Department { get; set; }
 
+    public virtual ICollection<TblEmployee> InverseSupervisor { get; set; } = new List<TblEmployee>();
+
     public virtual TblOrganizationUnit? OrganizationUnit { get; set; }
 
     public virtual TblAdministrativeUnit? PermanentAdministrativeUnit { get; set; }
 
     public virtual TblAdministrativeUnit? PresentAdministrativeUnit { get; set; }
+
+    public virtual TblEmployee? Supervisor { get; set; }
 
     public virtual ICollection<TblAttendanceRegularization> TblAttendanceRegularizations { get; set; } = new List<TblAttendanceRegularization>();
 

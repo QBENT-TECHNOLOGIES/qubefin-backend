@@ -1,4 +1,6 @@
-﻿namespace QubeFin.Persistence.Models.Hrms
+﻿using QubeFin.Persistence.Models.Global;
+
+namespace QubeFin.Persistence.Models.Hrms
 {
     public class Employee
     {
@@ -10,7 +12,7 @@
         private readonly List<EmployeeGrossSalary> _grossSalaries = [];
 
         public Guid Id { get; private set; }
-        public string Code { get; private set; } = null!;
+        public string? Code { get; private set; }
         public Guid? CreatedBy { get; private set; }
         public DateTime? CreatedDate { get; private set; }
         public DateTime? LastModifiedOn { get; private set; }
@@ -22,8 +24,10 @@
         public ContactInfo ContactInfo { get; private set; } = default!;
         public AddressInfo PresentAddressInfo { get; private set; } = default!;
         public AddressInfo PermanentAddressInfo { get; private set; } = default!;
+        public bool PresentPermanentAddressSame { get; private set; }
         public PayrollInfo PayrollInfo { get; private set; } = default!;
-        public EmployeeOrganization OrganizationInfo { get; private set; } = default!;  
+        public EmployeeOrganization OrganizationInfo { get; private set; } = default!;
+        public AuditInfo? AuditInfo { get; private set; }
         public IReadOnlyCollection<EmployeeDesignation> Designations => _designations;
         public IReadOnlyCollection<EmployeeQualification> Qualifications => _qualifications;
         public IReadOnlyCollection<EmployeeEmployment> Employments => _employments;
@@ -33,9 +37,9 @@
 
         private Employee() { }
 
-        public Employee(Guid id, string code, PersonalInfo personalInfo, OfficialInfo officialInfo, ContactInfo contactInfo,
-            AddressInfo presentAddressInfo, AddressInfo permanentAddressInfo, PayrollInfo payrollInfo, EmployeeOrganization organizationInfo,
-            List<EmployeeDesignation> designations, List<EmployeeQualification> qualifications, List<EmployeeReference> references, List<EmployeeDocument> documents, 
+        public Employee(Guid id, string? code, PersonalInfo personalInfo, OfficialInfo officialInfo, ContactInfo contactInfo,
+            AddressInfo presentAddressInfo, AddressInfo permanentAddressInfo, bool presentPermanentAddressSame, PayrollInfo payrollInfo, EmployeeOrganization organizationInfo,
+            List<EmployeeDesignation> designations, List<EmployeeQualification> qualifications, List<EmployeeReference> references, List<EmployeeDocument> documents,
             List<EmployeeEmployment> employments, List<EmployeeGrossSalary> grossSalaries, Guid? createdBy, DateTime? createdOn, Guid? lastModifiedBy, DateTime? lastModifiedOn,
             Guid? candidateId = null)
         {
@@ -46,6 +50,7 @@
             ContactInfo = contactInfo;
             PresentAddressInfo = presentAddressInfo;
             PermanentAddressInfo = permanentAddressInfo;
+            PresentPermanentAddressSame = presentPermanentAddressSame;
             PayrollInfo = payrollInfo;
             OrganizationInfo = organizationInfo;
             CreatedBy = createdBy;
@@ -81,7 +86,7 @@
 
         public static Employee Create(
             Guid id,
-            string code,
+            string? code,
             PersonalInfo personalInfo,
             OfficialInfo officialInfo,
             ContactInfo contactInfo,
@@ -114,6 +119,12 @@
             SetModified(modifiedBy);
         }
 
+        public void UpdateCode(string? code, Guid modifiedBy)
+        {
+            Code = code;
+            SetModified(modifiedBy);
+        }
+
         public void UpdateOfficialInfo(OfficialInfo official, Guid modifiedBy)
         {
             ArgumentNullException.ThrowIfNull(official);
@@ -128,12 +139,13 @@
             SetModified(modifiedBy);
         }
 
-        public void UpdateAddressInfo(AddressInfo presentAddress, AddressInfo permanentAddress, Guid modifiedBy)
+        public void UpdateAddressInfo(AddressInfo presentAddress, AddressInfo permanentAddress, bool presentPermanentAddressSame, Guid modifiedBy)
         {
             ArgumentNullException.ThrowIfNull(presentAddress);
             ArgumentNullException.ThrowIfNull(permanentAddress);
             PresentAddressInfo = presentAddress;
             PermanentAddressInfo = permanentAddress;
+            PresentPermanentAddressSame = presentPermanentAddressSame;
             SetModified(modifiedBy);
         }
 
@@ -232,6 +244,11 @@
         {
             _designations.Clear();
             _designations.AddRange(designations);
+        }
+
+        public void SetAuditInfo(AuditInfo auditInfo)
+        {
+            AuditInfo = auditInfo;
         }
 
         public void SetModified(Guid userId)

@@ -57,6 +57,11 @@ namespace QubeFin.Hrms.Application.Employees.Models
         public string? WorkingHours { get; set; }
         public string? Reason { get; set; }
         public string? Attachment { get; set; }
+        public string? StartMileage { get; set; }
+        public string? StartMileageUrl { get; set; }
+        public string? EndMileage { get; set; }
+        public string? EndMileageUrl { get; set; }
+        public string? PersonalUseKm { get; set; }
     }
 
     public enum EmployeeRecordStatusFilter

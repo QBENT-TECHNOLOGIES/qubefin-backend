@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
 using QubeFin.Core.Results;
-using QubeFin.Report.Application.Reports;
 using QubeFin.Report.Application.Reports.Generate.CustomNPOIReports;
 using QubeFin.Report.Application.Reports.Generate.LinqNPOIReport;
 using QubeFin.Report.Application.Reports.Generate.NPOIReports;
@@ -38,6 +37,49 @@ namespace QubeFin.Report.Api.Endpoints
                 var file = result.Value;
                 return Results.File(file.FileStream, file.ContentType, file.FileName);
             }).WithSummary("Generate payslip report.");
+
+
+            app.MapGet("/employee/{employeeId}/{companyId}", [Authorize] async (Guid employeeId, Guid companyId, IConfiguration configuration, ISender sender) =>
+            {
+                if (companyId == Guid.Empty)
+                {
+                    return Results.BadRequest("Invalid company ID.");
+                }
+                else if (companyId == Guid.Parse(configuration["Company:Wegrow"]))
+                {
+                    var command = new GenerateSSRSReportsCommand(
+                    "Rpt_Wegrow_AppointmentLetter_Employee",
+                    "PDF",
+                    new Dictionary<string, string>
+                    {
+                        ["EmployeeId"] = employeeId.ToString()
+                    });
+                    var result = await sender.Send(command);
+                    if (result.IsFailed)
+                        return result.ToHttpResult();
+                    var file = result.Value;
+                    return Results.File(file.FileStream, file.ContentType, file.FileName);
+                }
+                else if (companyId == Guid.Parse(configuration["Company:WegroBC"]))
+                {
+                    var command = new GenerateSSRSReportsCommand(
+                    "Rpt_WegroBc_AppointmentLetter_Employee",
+                    "PDF",
+                    new Dictionary<string, string>
+                    {
+                        ["EmployeeId"] = employeeId.ToString()
+                    });
+                    var result = await sender.Send(command);
+                    if (result.IsFailed)
+                        return result.ToHttpResult();
+                    var file = result.Value;
+                    return Results.File(file.FileStream, file.ContentType, file.FileName);
+                }
+                else
+                {
+                    return Results.NotFound("Company not found for the given employee.");
+                }
+            }).WithSummary("Generate appointment letter after Employee manually Entry.");
             #endregion
 
             #region NPOI REPORTS
@@ -164,7 +206,7 @@ namespace QubeFin.Report.Api.Endpoints
                 return Results.File(file.FileStream, file.ContentType, $"Salary_Register_Report_{month}_{year}.xlsx");
             }).WithSummary("Generate Salary Register Report.");
 
-            app.MapPost("/generate-attendance-history-report", [Authorize] async (ClaimsPrincipal principal, AttendanceSearchRequest request, ISender sender) =>
+            app.MapPost("/generate-attendance-history-report", [Authorize] async (ClaimsPrincipal principal, AttendanceExportRequest request, ISender sender) =>
             {
                 if (principal.Identity is null)
                 {
@@ -173,7 +215,7 @@ namespace QubeFin.Report.Api.Endpoints
 
                 var empId = principal.Identity.GetEmployeeId();
 
-                var attendanceResult = await sender.Send(new GetAttendanceHistoryByQuery(request, empId));
+                var attendanceResult = await sender.Send(new GetAttendanceExportQuery(request, empId));
 
                 if (attendanceResult.IsFailed)
                 {
@@ -181,12 +223,12 @@ namespace QubeFin.Report.Api.Endpoints
                 }
 
                 var command = new GenerateLinqNPOIReportCommand(
-                        Data: attendanceResult.Value,
-                        CompanyId: request.CompanyId,
-                        FileName: "Attendance_History_Report",
-                        ReportTitle: "Attendance History",
-                        SubHeader: null,
-                        ShowCompanyHeader: false);
+                    Data: attendanceResult.Value,
+                    CompanyId: request.CompanyId,
+                    FileName: "Attendance_History_Report",
+                    ReportTitle: "Attendance History",
+                    SubHeader: null,
+                    ShowCompanyHeader: false);
 
                 var result = await sender.Send(command);
 
@@ -199,6 +241,37 @@ namespace QubeFin.Report.Api.Endpoints
 
                 return Results.File(file.FileStream, file.ContentType, file.FileName);
             }).WithSummary("Generate Attendance History Report.");
+
+
+            app.MapPost("/generate-lop-finalization-report", [Authorize] async (ClaimsPrincipal principal, LopFinalizationReportSearchRequest request, ISender sender) =>
+            {
+                if (principal.Identity is null)
+                    return Results.Forbid();
+
+                var empId = principal.Identity.GetEmployeeId();
+
+                if (request.CompanyId == null)
+                    return Results.BadRequest("Please select company before export.");
+
+                var lopResult = await sender.Send(new GetLopFinalizationByQueryQuery(request, empId));
+                if (lopResult.IsFailed)
+                    return lopResult.ToHttpResult();
+
+                var command = new GenerateLinqNPOIReportCommand(
+                    Data: lopResult.Value,
+                    CompanyId: request.CompanyId ?? Guid.Empty,
+                    FileName: "LOP_Finalization_Report",
+                    ReportTitle: $"LOP Finalization",
+                    SubHeader: null,
+                    ShowCompanyHeader: false);
+
+                var result = await sender.Send(command);
+                if (result.IsFailed)
+                    return result.ToHttpResult();
+
+                var file = result.Value;
+                return Results.File(file.FileStream, file.ContentType, file.FileName);
+            }).WithSummary("Generate LOP Finalization Report.");
             #endregion
         }
     }

@@ -1,5 +1,6 @@
 ﻿using FluentResults;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using QubeFin.App.Application.Users.Models;
 using QubeFin.Core.Results;
 using QubeFin.Persistence;
@@ -21,6 +22,7 @@ internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context) :
         {
             return new RecordNotFoundError($"User not found");
         }
+
         var response = new UserLoginInfoResponse
         {
             Id = user.Id,
@@ -32,6 +34,7 @@ internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context) :
             Designation = user.Designation,
             CompanyLogoUrl = user.CompanyLogoUrl,
             IsMileageEnabled = user.IsMileageEnabled,
+            IsLoginRequired = user.IsLoginRequired,
             AccessOrganizationUnits = rows
                 .Where(m => m.OrganizationUnitId.HasValue)
                 .Select(m => new UserAccessOrganizationUnit

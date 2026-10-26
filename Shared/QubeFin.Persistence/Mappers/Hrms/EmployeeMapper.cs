@@ -15,6 +15,7 @@ public static class EmployeeMapper
             MapContactInfo(entity),
             MapPresentAddressInfo(entity),
             MapPermanentAddressInfo(entity),
+            entity.PresentPermanentAddressSame,
             MapPayrollInfo(entity),
             MapOrganizationInfo(entity),
             MapDesignationInfo(entity),
@@ -66,6 +67,7 @@ public static class EmployeeMapper
             ReferedBy = employee.OfficialInfo.ReferedBy,
             HowYouKnow = employee.OfficialInfo.HowYouKnow,
             OfficialEmail = employee.OfficialInfo.OfficialEmail,
+            SupervisorId = employee.OfficialInfo.SupervisorId,
             // A separated employee is inactive.
             IsActive = employee.OfficialInfo.SeparationDate == null,
 
@@ -83,22 +85,26 @@ public static class EmployeeMapper
             PresentHouseNo = employee.PresentAddressInfo.HouseNo,
             PresentRoadName = employee.PresentAddressInfo.RoadName,
             PresentLandMark = employee.PresentAddressInfo.LandMark,
-            PresentAdministrativeUnitId = employee.PresentAddressInfo.AdministrativeUnitId,
-            PresentPoliceStationId = employee.PresentAddressInfo.PoliceStationId,
+            //PresentAdministrativeUnitId = employee.PresentAddressInfo.AdministrativeUnitId,
+            //PresentPoliceStationId = employee.PresentAddressInfo.PoliceStationId,
             PresentPostOfficeId = employee.PresentAddressInfo.PostOfficeId,
             PresentPinCode = employee.PresentAddressInfo.PinCode,
+            PresentAddress = employee.PresentAddressInfo.Address,
             PresentOwnerShipOfHouse = employee.PresentAddressInfo.OwnerShipOfHouse,
             PresentDurationOfStayInMonths = employee.PresentAddressInfo.DurationOfStayInMonths,
 
             PermanentHouseNo = employee.PermanentAddressInfo.HouseNo,
             PermanentRoadName = employee.PermanentAddressInfo.RoadName,
             PermanentLandMark = employee.PermanentAddressInfo.LandMark,
-            PermanentAdministrativeUnitId = employee.PermanentAddressInfo.AdministrativeUnitId,
-            PermanentPoliceStationId = employee.PermanentAddressInfo.PoliceStationId,
+            //PermanentAdministrativeUnitId = employee.PermanentAddressInfo.AdministrativeUnitId,
+            //PermanentPoliceStationId = employee.PermanentAddressInfo.PoliceStationId,
             PermanentPostOfficeId = employee.PermanentAddressInfo.PostOfficeId,
             PermanentPinCode = employee.PermanentAddressInfo.PinCode,
+            PermanentAddress = employee.PermanentAddressInfo.Address,
             PermanentOwnerShipOfHouse = employee.PermanentAddressInfo.OwnerShipOfHouse,
             PermanentDurationOfStayInMonths = employee.PermanentAddressInfo.DurationOfStayInMonths,
+
+            PresentPermanentAddressSame = employee.PresentPermanentAddressSame,
 
             BankId = employee.PayrollInfo.BankId,
             BankHolderName = employee.PayrollInfo.BankHolderName,
@@ -112,6 +118,11 @@ public static class EmployeeMapper
             HasEsiEligible = employee.PayrollInfo.HasEsiEligible,
             Esiipno = employee.PayrollInfo.EsiIpNumber,
             IsPayrollActive = employee.PayrollInfo.IsPayrollActive,
+
+            CreatedBy = employee.CreatedBy,
+            CreatedDate = employee.CreatedDate,
+            LastModifiedBy = employee.LastModifiedBy,
+            LastModifiedOn = employee.LastModifiedOn,
         };
     }
 
@@ -149,7 +160,8 @@ public static class EmployeeMapper
             entity.SeparationDate,
             entity.ReferedBy,
             entity.HowYouKnow,
-            entity.OfficialEmail
+            entity.OfficialEmail,
+            entity.SupervisorId
         );
     }
 
@@ -173,10 +185,11 @@ public static class EmployeeMapper
             entity.PresentHouseNo,
             entity.PresentRoadName,
             entity.PresentLandMark,
-            entity.PresentAdministrativeUnitId,
-            entity.PresentPoliceStationId,
+            //entity.PresentAdministrativeUnitId,
+            //entity.PresentPoliceStationId,
             entity.PresentPostOfficeId,
             entity.PresentPinCode,
+            entity.PresentAddress,
             entity.PresentOwnerShipOfHouse,
             entity.PresentDurationOfStayInMonths
         );
@@ -188,10 +201,11 @@ public static class EmployeeMapper
             entity.PermanentHouseNo,
             entity.PermanentRoadName,
             entity.PermanentLandMark,
-            entity.PermanentAdministrativeUnitId,
-            entity.PermanentPoliceStationId,
+            //entity.PermanentAdministrativeUnitId,
+            //entity.PermanentPoliceStationId,
             entity.PermanentPostOfficeId,
             entity.PermanentPinCode,
+            entity.PermanentAddress,
             entity.PermanentOwnerShipOfHouse,
             entity.PermanentDurationOfStayInMonths
         );

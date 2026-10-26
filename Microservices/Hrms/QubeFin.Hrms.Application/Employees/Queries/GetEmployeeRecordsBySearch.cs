@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using QubeFin.Hrms.Application.Employees.Models;
+using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Entities;
 using System.Text.Json;
@@ -39,7 +40,7 @@ public record GetEmployeeRecordsBySearchResponse(
 #endregion
 
 #region --- HANDLER ---
-internal sealed class GetEmployeeRecordsBySearchQueryHandler(QubeFinDataContext context, IMemoryCache cache)
+internal sealed class GetEmployeeRecordsBySearchQueryHandler(QubeFinDataContext context, IMemoryCache cache, IFileStorageRepository fileStorageRepository)
     : IRequestHandler<GetEmployeeRecordsBySearchQuery, GetEmployeeRecordsBySearchResponse>
 {
     private const string OrgUnitCacheKey = "org-units-flat";
@@ -315,7 +316,7 @@ internal sealed class GetEmployeeRecordsBySearchQueryHandler(QubeFinDataContext 
 
     private sealed record AttendanceEntry(
         Guid Id, Guid EmployeeId, DateOnly AttendanceDate, TimeOnly? ActualInTime, TimeOnly? ActualOutTime,
-        bool IsLateEntry, bool IsEarlyLeave, bool IsRegularization);
+        bool IsLateEntry, bool IsEarlyLeave, bool IsRegularization, decimal? StartMileage, decimal? EndMileage, decimal? PersonalUseKm, string? StartMileagePhoto, string? EndMileagePhoto);
 
     private sealed record AttendanceLeave(Guid EmployeeId, DateOnly FromDate, DateOnly ToDate, string LeaveType);
 
@@ -380,7 +381,7 @@ internal sealed class GetEmployeeRecordsBySearchQueryHandler(QubeFinDataContext 
                         && employeeQuery.Select(m => m.Id).Contains(a.EmployeeId))
             .Select(a => new AttendanceEntry(
                 a.Id, a.EmployeeId, a.AttendanceDate, a.ActualInTime, a.ActualOutTime,
-                a.IsLateEntry, a.IsEarlyLeave, a.IsRegularization))
+                a.IsLateEntry, a.IsEarlyLeave, a.IsRegularization, a.StartMileage, a.EndMileage, a.PersonalUseKm, a.StartMileagePhoto, a.EndMileagePhoto))
             .ToListAsync(cancellationToken);
 
         var entryLookup = entries
@@ -438,12 +439,11 @@ internal sealed class GetEmployeeRecordsBySearchQueryHandler(QubeFinDataContext 
             _ => OrderRows(rows, r => r.Date, param.SortDirection).ThenBy(r => r.Employee.FullName)
         };
 
-        var items = sorted
+        var items = await Task.WhenAll(sorted
             .Skip(param.PageIndex * param.PageSize)
             .Take(param.PageSize)
-            .Select(r => new EmployeeRecordItem
+            .Select(async r => new EmployeeRecordItem
             {
-                // An employee with no attendance row has nothing to open, so the id stays empty.
                 Id = r.Entry?.Id ?? Guid.Empty,
                 RecordType = EmployeeRecordTypes.Attendance,
                 EmployeeName = r.Employee.FullName,
@@ -456,11 +456,14 @@ internal sealed class GetEmployeeRecordsBySearchQueryHandler(QubeFinDataContext 
                 Stage = r.Entry is { IsRegularization: true } ? "Yes" : "-",
                 FromDate = r.Date,
                 ToDate = r.Date,
-                WorkingHours = r.Entry is null ? null : FormatWorkingHours(r.Entry.ActualInTime, r.Entry.ActualOutTime)
-            })
-            .ToList();
+                WorkingHours = r.Entry is null ? null : FormatWorkingHours(r.Entry.ActualInTime, r.Entry.ActualOutTime),
+                StartMileage = r.Entry?.StartMileage?.ToString(),
+                EndMileage = r.Entry?.EndMileage?.ToString(),
+                PersonalUseKm = r.Entry?.PersonalUseKm?.ToString(),
+                StartMileageUrl = !string.IsNullOrWhiteSpace(r.Entry?.StartMileagePhoto) ? await fileStorageRepository.GetFileUrlAsync("Mileage/" + r.Entry!.StartMileagePhoto, cancellationToken) : null,
+                EndMileageUrl = !string.IsNullOrWhiteSpace(r.Entry?.EndMileagePhoto) ? await fileStorageRepository.GetFileUrlAsync("Mileage/" + r.Entry!.EndMileagePhoto, cancellationToken) : null
+            }));
 
-        // Attendance status is derived from punch and leave data rather than a workflow column.
         return (items, total, statusCounts);
     }
 

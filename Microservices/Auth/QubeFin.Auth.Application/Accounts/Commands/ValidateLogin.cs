@@ -40,18 +40,28 @@ internal class ValidtateLoginCommandHandler(IAuthRepository authRepository, IUni
             var userSession = UserSession.Create(Guid.NewGuid(), user.Id, sessionToken, request.DeviceId, request.UserAgent);
             await authRepository.CreateUserSessionAsync(userSession);
 
-            if (request.DeviceId is not null)
+            if (!string.IsNullOrWhiteSpace(request.DeviceId))
             {
+                // 1. This device is bound to another user and not yet released
+                string? assignedUserName = await authRepository.DeviceTagUsername(user.Id, request.DeviceId);
+                if (assignedUserName is not null)
+                {
+                    return new ValidationError($"Device is allocated to {assignedUserName}, please contact admin !");
+                }
+
+                // 2. null = user has no unreleased device, true = this device, false = another device
                 var deviceStatus = await authRepository.ValidateDevice(user.Id, request.DeviceId);
+                if (deviceStatus == false)
+                {
+                    // User is bound to a different device that is not yet released
+                    return new ValidationError("Your account is bind to another device, please contact admin !");
+                }
+
+                // 3. Both user and device are free: bind them
                 if (deviceStatus is null)
                 {
                     var newDevice = UserDevice.Create(Guid.NewGuid(), user.Id, request.DeviceId);
                     authRepository.RegisterDevice(newDevice);
-                }
-                else if (!deviceStatus.Value)
-                {
-                    string? assignedUserName = await authRepository.DeviceTagUsername(request.DeviceId);
-                    return new ValidationError($"Device is allocated to {assignedUserName}, please contact admin !");
                 }
             }
 

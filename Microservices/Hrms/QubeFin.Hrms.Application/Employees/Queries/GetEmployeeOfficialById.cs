@@ -33,6 +33,8 @@ public record GetOfficialResponse(
     Guid? ReferedBy,
     string? HowYouKnow,
     string? OfficialEmail,
+    Guid? SupervisorId,
+    string? SupervisorName,
     bool IsActive,
     bool IsDesignationEditable = false
     );
@@ -48,6 +50,7 @@ internal sealed class GetEmployeeOfficialByIdQueryHandler(QubeFinDataContext con
             .TblEmployees
             .Include(e => e.OrganizationUnit).ThenInclude(e => e.OrganizationUnitType)
             .Include(e => e.Company)
+            .Include(e => e.Supervisor)
             //.Include(e => e.Department)
             .Include(e => e.TblEmployeeGrossSalaries)
             .Include(e => e.TblEmployeeDesignations).ThenInclude(e => e.Designation)
@@ -103,6 +106,8 @@ internal sealed class GetEmployeeOfficialByIdQueryHandler(QubeFinDataContext con
             ReferedBy: employee.ReferedBy,
             HowYouKnow: employee.HowYouKnow,
             OfficialEmail: employee.OfficialEmail,
+            SupervisorId: employee.SupervisorId,
+            SupervisorName: employee.Supervisor == null ? null : employee.Supervisor.FullName + "(" + employee.Supervisor.Code + ")",
             IsActive: employee.IsActive,
             IsDesignationEditable: !employee.TblEmployeeDesignations.Any()
         ));

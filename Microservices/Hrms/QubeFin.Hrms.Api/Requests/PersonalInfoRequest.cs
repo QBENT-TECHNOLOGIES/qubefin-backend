@@ -2,7 +2,7 @@
 
 public class PersonalInfoRequest
 {
-    public string Code { get; set; } = null!;
+    //public string Code { get; set; } = null!;
     public string? Salutation { get; set; }
     public string FirstName { get; set; } = null!;
     public string? MiddleName { get; set; }

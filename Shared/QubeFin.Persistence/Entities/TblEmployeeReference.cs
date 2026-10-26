@@ -13,9 +13,9 @@ public partial class TblEmployeeReference
 
     public string Mobile { get; set; } = null!;
 
-    public string Email { get; set; } = null!;
+    public string? Email { get; set; }
 
-    public string Address { get; set; } = null!;
+    public string? Address { get; set; }
 
     public string? Occupation { get; set; }
 

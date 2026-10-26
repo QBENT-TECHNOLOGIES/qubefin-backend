@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 namespace QubeFin.Hrms.Application.Employees.Commands;
 
 #region --- COMMAND ---
-public record CreateEmployeeCommand(string Code, string? Salutation, string FirstName, string? MiddleName, string LastName, string? FatherName, string? MotherName,
+public record CreateEmployeeCommand(/*string Code,*/ string? Salutation, string FirstName, string? MiddleName, string LastName, string? FatherName, string? MotherName,
     string? HusbandName, DateOnly DateOfBirth, string Gender, string? Religion, string? Caste, string Nationality, string? BloodGroup, string? DisablityType, string? MaritalStatus,
     Guid CreatedBy
 ) : IRequest<Result<CreateEmployeeResponse?>>;
@@ -32,10 +32,10 @@ public class CreateEmployeeCommandValidator : AbstractValidator<CreateEmployeeCo
             .NotEmpty()
             .Matches("^[A-Za-z]{1,30}$")
             .WithMessage("Last name must contain only letters and be between 3 and 30 characters long.");
-        RuleFor(x => x.Code)
-            .NotEmpty()
-            .Matches("^[A-Za-z0-9]+$")
-            .WithMessage("Code must contain only numbers (0–9) and 6 digits long.");
+        //RuleFor(x => x.Code)
+        //    .NotEmpty()
+        //    .Matches("^[A-Za-z0-9]+$")
+        //    .WithMessage("Code must contain only numbers (0–9) and 6 digits long.");
         RuleFor(x => x.DateOfBirth)
             .NotEmpty()
             .LessThan(DateOnly.FromDateTime(DateTime.Now))
@@ -63,16 +63,16 @@ internal sealed class CreateEmployeeCommandHandler(IEmployeeRepository employeeR
     {
         try
         {
-            var existingEmployee = await employeeRepository.GetExsitingEmployeeByCode(null, request.Code);
-            if (existingEmployee)
-            {
-                return new ValidationError("Employee already exist with same code.");
-            }
+            //var existingEmployee = await employeeRepository.GetExsitingEmployeeByCode(null, request.Code);
+            //if (existingEmployee)
+            //{
+            //    return new ValidationError("Employee already exist with same code.");
+            //}
             Guid employeeId = Guid.NewGuid();
             var employee = Employee.Create(
                 employeeId,
-                request.Code,
-                new PersonalInfo(request.Code, request.Salutation, request.FirstName, request.MiddleName, request.LastName, request.FatherName, request.MotherName, request.HusbandName,
+                null,
+                new PersonalInfo(null, request.Salutation, request.FirstName, request.MiddleName, request.LastName, request.FatherName, request.MotherName, request.HusbandName,
                     request.DateOfBirth, request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisablityType, request.MaritalStatus),
                 new OfficialInfo(),
                 new ContactInfo(),

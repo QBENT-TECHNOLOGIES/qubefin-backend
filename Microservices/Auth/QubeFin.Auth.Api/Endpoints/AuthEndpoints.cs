@@ -37,9 +37,9 @@ public class AuthEndpoints : IEndpoint
         .WithSummary("Verify MFA")
         .WithTags("Authentication");
 
-        app.MapGet("refresh-token", async ([FromHeader(Name = "Refresh-Token")] string refreshToken, ISender sender) =>
+        app.MapGet("refresh-token", async ([FromHeader(Name = "Refresh-Token")] string refreshToken, [FromHeader(Name = "X-Device-Id")] string? deviceId, ISender sender) =>
         {
-            var result = await sender.Send(new ValidateRefreshTokenQuery(refreshToken));
+            var result = await sender.Send(new ValidateRefreshTokenQuery(refreshToken, deviceId));
             return result.ToHttpResult();
         })
         .WithSummary("Refresh Token")

@@ -228,6 +228,7 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<WegrowConsolidateEmployee> WegrowConsolidateEmployees { get; set; }
 
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<DboTempEmpBranch>(entity =>
@@ -678,6 +679,10 @@ public partial class QubeFinDataContext : DbContext
             entity.ToTable("Tbl_Company", "Global");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.EmpCodeAlias)
+                .HasMaxLength(10)
+                .IsUnicode(false)
+                .IsFixedLength();
             entity.Property(e => e.LogoUrl).HasMaxLength(500);
             entity.Property(e => e.Name).HasMaxLength(200);
         });
@@ -1013,6 +1018,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.MotherName).HasMaxLength(100);
             entity.Property(e => e.Nationality).HasMaxLength(25);
             entity.Property(e => e.OfficialEmail).HasMaxLength(100);
+            entity.Property(e => e.PermanentAddress).HasMaxLength(250);
             entity.Property(e => e.PermanentHouseNo).HasMaxLength(20);
             entity.Property(e => e.PermanentLandMark).HasMaxLength(100);
             entity.Property(e => e.PermanentOwnerShipOfHouse).HasMaxLength(20);
@@ -1024,6 +1030,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.PfaccountNo)
                 .HasMaxLength(50)
                 .HasColumnName("PFAccountNo");
+            entity.Property(e => e.PresentAddress).HasMaxLength(250);
             entity.Property(e => e.PresentHouseNo).HasMaxLength(20);
             entity.Property(e => e.PresentLandMark).HasMaxLength(100);
             entity.Property(e => e.PresentOwnerShipOfHouse).HasMaxLength(10);
@@ -1063,6 +1070,10 @@ public partial class QubeFinDataContext : DbContext
             entity.HasOne(d => d.PresentAdministrativeUnit).WithMany(p => p.TblEmployeePresentAdministrativeUnits)
                 .HasForeignKey(d => d.PresentAdministrativeUnitId)
                 .HasConstraintName("FK_Tbl_Employee_Tbl_AdministrativeUnit1");
+
+            entity.HasOne(d => d.Supervisor).WithMany(p => p.InverseSupervisor)
+                .HasForeignKey(d => d.SupervisorId)
+                .HasConstraintName("FK_Tbl_Employee_Tbl_Employee1");
         });
 
         modelBuilder.Entity<TblEmployeeAttendanceException>(entity =>
@@ -1234,7 +1245,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.AcademicStream).HasMaxLength(50);
             entity.Property(e => e.DocFileName).HasMaxLength(100);
             entity.Property(e => e.DocFileNo).HasMaxLength(50);
-            entity.Property(e => e.GradeOrMarks).HasMaxLength(5);
+            entity.Property(e => e.GradeOrMarks).HasMaxLength(20);
             entity.Property(e => e.SchoolOrCollege).HasMaxLength(100);
             entity.Property(e => e.Specialization).HasMaxLength(50);
             entity.Property(e => e.UniversityOrBoard).HasMaxLength(100);
