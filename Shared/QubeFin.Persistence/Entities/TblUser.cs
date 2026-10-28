@@ -21,6 +21,8 @@ public partial class TblUser
 
     public string MfaSecret { get; set; } = null!;
 
+    public bool IsAttendanceOptional { get; set; }
+
     public DateTime CreatedOn { get; set; }
 
     public Guid CreatedBy { get; set; }

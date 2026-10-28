@@ -5,5 +5,6 @@
         public string UserName { get; set; } = string.Empty;
         public bool IsActive { get; set; }
         public bool HasMfaEnabled { get; set; }
+        public bool IsAttendanceOptional { get; set; }
     }
 }

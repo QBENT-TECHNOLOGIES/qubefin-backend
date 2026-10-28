@@ -12,7 +12,7 @@ public record GetUserByIdQuery(Guid Id) : IRequest<Result<GetUserByIdResponse>>;
 #endregion
 
 #region --- RESPONSE ---
-public record GetUserByIdResponse(Guid Id, string UserName, Guid? EmployeeId, string Employee, string MfaSecret, bool HasMfaEnabled, bool IsActive, bool IsSuperAdmin);
+public record GetUserByIdResponse(Guid Id, string UserName, Guid? EmployeeId, string Employee, string MfaSecret, bool HasMfaEnabled, bool IsActive, bool IsSuperAdmin, bool IsAttendanceOptional);
 #endregion
 
 #region --- HANDLER ---
@@ -24,7 +24,7 @@ internal sealed class GetUserByIdQueryHandler(IUserRepository userRepository, Qu
         var existingUser = await userRepository.GetExistingUser(request.Id, cancellationToken);
         return new GetUserByIdResponse(
             existingUser.Id, existingUser.UserName, 
-            existingUser.EmployeeId, existingUser.EmployeeName == null ? string.Empty : existingUser.EmployeeName, existingUser.MfaSecret, existingUser.HasMfaEnabled, existingUser.IsActive, existingUser.IsSuperAdmin);
+            existingUser.EmployeeId, existingUser.EmployeeName == null ? string.Empty : existingUser.EmployeeName, existingUser.MfaSecret, existingUser.HasMfaEnabled, existingUser.IsActive, existingUser.IsSuperAdmin, existingUser.IsAttendanceOptional);
         
     }
 }

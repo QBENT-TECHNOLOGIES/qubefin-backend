@@ -8,7 +8,7 @@ using QubeFin.Persistence;
 namespace QubeFin.App.Application.Users.Commands;
 
 #region --- COMMAND ---
-public record UpdateUserCommand(Guid id, string UserName, bool isActive, bool hasMfaEnabled, Guid? UserId) : IRequest<Result<string>>;
+public record UpdateUserCommand(Guid id, string UserName, bool isActive, bool hasMfaEnabled, bool isAttendanceOptional, Guid? UserId) : IRequest<Result<string>>;
 #endregion
 
 
@@ -36,7 +36,7 @@ internal sealed class UpdateUserCommandHandler(IUserRepository userRepository, I
 
         var existingUser = await userRepository.GetExistingUser(request.id, cancellationToken);
 
-        existingUser.Update(request.UserName, request.isActive, request.hasMfaEnabled, request.UserId.Value);
+        existingUser.Update(request.UserName, request.isActive, request.hasMfaEnabled, request.isAttendanceOptional, request.UserId.Value);
         userRepository.Update(existingUser);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Ok($"User {request.UserName} updated successfully.");
