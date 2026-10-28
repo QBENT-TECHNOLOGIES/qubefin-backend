@@ -40,11 +40,11 @@ internal sealed class GetCandidateJoiningInfoQueryHandler(QubeFinDataContext con
                 HouseNo = candidate.HouseNo,
                 RoadName = candidate.RoadName,
                 LandMark = candidate.LandMark,
-                AdministrativeUnitId = candidate.AdministrativeUnitId,
-                PoliceStationId = candidate.PoliceStationId,
+                //AdministrativeUnitId = candidate.AdministrativeUnitId,
+                //PoliceStationId = candidate.PoliceStationId,
                 PostOfficeId = candidate.PostOfficeId,
                 PinCode = candidate.PinCode,
-                AddressUnit = await employeeRepository.GetAdressUnit(candidate.AdministrativeUnitId.Value)
+                //AddressUnit = await employeeRepository.GetAdressUnit(candidate.AdministrativeUnitId.Value)
             };
         }
 
