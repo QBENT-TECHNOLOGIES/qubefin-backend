@@ -24,6 +24,9 @@ public interface IEmployeeRepository
     Task TransferEmployee(Guid EmployeeId, Guid OrganisationUnitId, Guid DesignationId, Guid SalaryGradeId, decimal GrossSalary, DateOnly EffectiveFrom, CancellationToken cancellationToken);
     Task SaveGrossSalary(Guid EmployeeId, Guid SalaryGradeId, decimal GrossSalary, decimal? PfAmount, DateOnly EffectiveFrom, CancellationToken cancellationToken);
     Task<List<EmployeeSalaryStructure>> GetSalaryStructureByGrossAsync(Guid employeeId, Guid salaryGradeId, decimal grossSalary, decimal? fixedPFAmount, CancellationToken cancellationToken);
+    Task<string?> GetJoiningInfoReferenceNoAsync(Guid employeeId, CancellationToken cancellationToken);
+    Task<int> CountJoiningInfoCreatedInYearAsync(CancellationToken cancellationToken);
+    Task SaveJoiningInfoAsync(Guid employeeId, string referenceNo, DateOnly offerLetterDate, decimal monthlyCtc, Guid userId, CancellationToken cancellationToken);
 }
 public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepository
 {
@@ -60,6 +63,7 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
             .Include(x => x.TblEmployeeDocuments)
             .Include(x => x.TblEmployeeReferences)
             .Include(x => x.TblEmployeeGrossSalaries)
+            .Include(x => x.TblJoiningInfos)
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id);
 
@@ -480,6 +484,53 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
             """).ToListAsync(cancellationToken);
 
         return result;
+    }
+
+    public Task<string?> GetJoiningInfoReferenceNoAsync(Guid employeeId, CancellationToken cancellationToken)
+    {
+        return context.TblJoiningInfos
+            .AsNoTracking()
+            .Where(j => j.EmployeeId == employeeId)
+            .Select(j => j.ReferenceNo)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public Task<int> CountJoiningInfoCreatedInYearAsync(CancellationToken cancellationToken)
+    {
+        var year = DateTime.UtcNow.Year;
+        return context.TblJoiningInfos.AsNoTracking().CountAsync(j => j.CreatedOn.Year == year, cancellationToken);
+    }
+
+    public async Task SaveJoiningInfoAsync(Guid employeeId, string referenceNo, DateOnly offerLetterDate, decimal monthlyCtc, Guid userId, CancellationToken cancellationToken)
+    {
+        var employeeExists = await context.TblEmployees.AsNoTracking().AnyAsync(e => e.Id == employeeId, cancellationToken);
+
+        if (!employeeExists)
+            throw new Exception("Employee not found.");
+
+        var joiningInfo = await context.TblJoiningInfos.FirstOrDefaultAsync(j => j.EmployeeId == employeeId, cancellationToken);
+
+        if (joiningInfo is null)
+        {
+            await context.TblJoiningInfos.AddAsync(
+                new TblJoiningInfo
+                {
+                    Id = Guid.NewGuid(),
+                    ReferenceNo = referenceNo,
+                    EmployeeId = employeeId,
+                    OfferLetterDate = offerLetterDate,
+                    MonthlyCtc = monthlyCtc,
+                    CreatedBy = userId,
+                    CreatedOn = DateTime.UtcNow
+                },
+                cancellationToken);
+            return;
+        }
+
+        joiningInfo.OfferLetterDate = offerLetterDate;
+        joiningInfo.MonthlyCtc = monthlyCtc;
+        joiningInfo.LastModifiedBy = userId;
+        joiningInfo.LastModifiedOn = DateTime.UtcNow;
     }
 
 }

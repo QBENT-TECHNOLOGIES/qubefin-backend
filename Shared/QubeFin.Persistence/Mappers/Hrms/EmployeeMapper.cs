@@ -24,6 +24,7 @@ public static class EmployeeMapper
             MapDocumntInfo(entity),
             MapEmploymentInfo(entity),
             MapGrossSalaryInfo(entity),
+            entity.TblJoiningInfos.Any(),
             entity.CreatedBy,
             entity.CreatedDate,
             entity.LastModifiedBy,
