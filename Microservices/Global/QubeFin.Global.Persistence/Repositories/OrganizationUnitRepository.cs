@@ -14,6 +14,7 @@ public interface IOrganizationUnitRepository
     void Update(OrganizationUnit organizationUnit);
     Task<List<OrganizationUnit>> GetAllOrganisationUnit(CancellationToken cancellationToken);
     Task AddDesignationAsync(string name, Guid organizationUnitId, Guid postId, Guid roleId, Guid salaryGradeId, Guid userId);
+    Task DesignationStatusUpdateAsync(Guid designationId);
     Task<int> GetNextCodeValAsync(CancellationToken cancellationToken);
     Task<bool> ExistsByNameAsync(string name, Guid? parentId, Guid? excludedId, CancellationToken cancellationToken);
     Task<bool> IsSelfOrDescendantAsync(Guid candidateParentId, Guid organizationUnitId, CancellationToken cancellationToken);
@@ -150,5 +151,15 @@ internal class OrganizationUnitRepository(QubeFinDataContext context) : IOrganiz
             }
         };
         await context.TblDesignations.AddAsync(designation);
+    }
+    public async Task DesignationStatusUpdateAsync(Guid DesignationId)
+    {
+        var desigantionEntity = await context.TblDesignations.FirstOrDefaultAsync(d => d.Id == DesignationId);
+        if(desigantionEntity == null)
+        {
+            throw new InvalidOperationException($"Designation with ID {DesignationId} does not exist.");
+        }
+        desigantionEntity.IsActive = !desigantionEntity.IsActive;
+        context.TblDesignations.Update(desigantionEntity);
     }
 }

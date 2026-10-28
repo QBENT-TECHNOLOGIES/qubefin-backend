@@ -63,7 +63,7 @@ internal sealed class GetEmployeesBySearchQueryHandler(QubeFinDataContext contex
                 Id = m.Id,
                 Code = m.Code,
                 FullName = m.FullName,
-                CompanyName = m.CompanyId != null ? m.Company.Name : null,
+                CompanyName = m.CompanyId != null ? m.Company.EmpCodeAlias : null,
                 OrganizationUnitName = m.OrganizationUnitId != null ? m.OrganizationUnit.Name : null,
                 Email = m.OfficialEmail,
                 Mobile = m.MobileNo,
