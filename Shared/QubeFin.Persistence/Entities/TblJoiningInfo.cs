@@ -15,6 +15,10 @@ public partial class TblJoiningInfo
 
     public Guid EmployeeId { get; set; }
 
+    public string? ApprovalStatus { get; set; }
+
+    public Guid? ApprovedRejectedBy { get; set; }
+
     public Guid CreatedBy { get; set; }
 
     public DateTime CreatedOn { get; set; }
@@ -22,6 +26,8 @@ public partial class TblJoiningInfo
     public Guid? LastModifiedBy { get; set; }
 
     public DateTime? LastModifiedOn { get; set; }
+
+    public virtual TblUser? ApprovedRejectedByNavigation { get; set; }
 
     public virtual TblUser CreatedByNavigation { get; set; } = null!;
 

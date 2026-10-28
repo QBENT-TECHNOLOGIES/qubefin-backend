@@ -479,6 +479,21 @@ public class EmployeeEndpoints : IEndpoint
         })
         .WithSummary("Get Salary Structure By Gross")
         .RequireAuthorization();
+
+        app.MapPost("employees/joining-info", async (ClaimsPrincipal principal, [FromBody] JoiningInfoRequest request, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+            var userId = principal.Identity.GetUserId();
+
+            var command = new AddJoiningInfoCommand(request, userId);
+            var result = await sender.Send(command);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Create / Update Employee Joining Info")
+        .RequireAuthorization();
         #endregion
 
         #region Employee Documents
