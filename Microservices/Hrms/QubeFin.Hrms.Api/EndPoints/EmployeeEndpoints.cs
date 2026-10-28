@@ -480,7 +480,20 @@ public class EmployeeEndpoints : IEndpoint
         .WithSummary("Get Salary Structure By Gross")
         .RequireAuthorization();
 
-        app.MapPost("employees/joining-info", async (ClaimsPrincipal principal, [FromBody] JoiningInfoRequest request, ISender sender) =>
+        app.MapGet("employees/joining-info/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+            var query = new GetJoiningInfoQuery(id);
+            var result = await sender.Send(query);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get Employee Joining Info")
+        .RequireAuthorization();
+
+        app.MapPost("employees/joining-info",async (ClaimsPrincipal principal, [FromBody] JoiningInfoRequest request, ISender sender) =>
         {
             if (principal.Identity is null)
             {
