@@ -1510,12 +1510,17 @@ public partial class QubeFinDataContext : DbContext
             entity.ToTable("Tbl_JoiningInfo", "Hrms");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.ApprovalStatus).HasMaxLength(20);
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
             entity.Property(e => e.MonthlyCtc)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("MonthlyCTC");
             entity.Property(e => e.ReferenceNo).HasMaxLength(50);
+
+            entity.HasOne(d => d.ApprovedRejectedByNavigation).WithMany(p => p.TblJoiningInfoApprovedRejectedByNavigations)
+                .HasForeignKey(d => d.ApprovedRejectedBy)
+                .HasConstraintName("FK_Tbl_JoiningInfo_Tbl_User2");
 
             entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.TblJoiningInfoCreatedByNavigations)
                 .HasForeignKey(d => d.CreatedBy)
