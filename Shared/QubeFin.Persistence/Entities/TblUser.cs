@@ -53,6 +53,10 @@ public partial class TblUser
 
     public virtual ICollection<TblInterviewPanel> TblInterviewPanels { get; set; } = new List<TblInterviewPanel>();
 
+    public virtual ICollection<TblJoiningInfo> TblJoiningInfoCreatedByNavigations { get; set; } = new List<TblJoiningInfo>();
+
+    public virtual ICollection<TblJoiningInfo> TblJoiningInfoLastModifiedByNavigations { get; set; } = new List<TblJoiningInfo>();
+
     public virtual ICollection<TblLeaveType> TblLeaveTypeCreatedByNavigations { get; set; } = new List<TblLeaveType>();
 
     public virtual ICollection<TblLeaveType> TblLeaveTypeLastModifiedByNavigations { get; set; } = new List<TblLeaveType>();
