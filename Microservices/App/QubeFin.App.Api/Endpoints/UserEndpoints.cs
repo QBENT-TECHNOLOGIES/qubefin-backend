@@ -62,7 +62,7 @@ public class UserEndpoints : IEndpoint
 
         app.MapPost("users", async (ClaimsPrincipal principal, UserCreateRequest request, ISender sender) =>
         {
-            var result = await sender.Send(new CreateUserCommand(request.UserName, request.Password, request.EmployeeId, principal.Identity.GetUserId()));
+            var result = await sender.Send(new CreateUserCommand(request.UserName, request.Password, request.EmployeeId, request.IsAttendanceOptional, principal.Identity.GetUserId()));
             return result.ToHttpResult();
         })
         .RequireAuthorization()
@@ -72,7 +72,7 @@ public class UserEndpoints : IEndpoint
 
         app.MapPut("users/{id:guid}", async (ClaimsPrincipal principal, UserUpdateRequest request, ISender sender,Guid id) =>
         {
-            var result = await sender.Send(new UpdateUserCommand(id, request.UserName, request.IsActive, request.HasMfaEnabled, principal.Identity.GetUserId()));
+            var result = await sender.Send(new UpdateUserCommand(id, request.UserName, request.IsActive, request.HasMfaEnabled, request.IsAttendanceOptional, principal.Identity.GetUserId()));
             return result.ToHttpResult();
         })
         .RequireAuthorization()
