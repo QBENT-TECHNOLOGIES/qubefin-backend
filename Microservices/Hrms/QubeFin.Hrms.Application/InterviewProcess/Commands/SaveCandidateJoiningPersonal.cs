@@ -99,7 +99,7 @@ internal sealed class SaveCandidateJoiningPersonalCommandHandler(
         else
         {
             employeeId = existingEmployeeId.Value;
-            var updated = await sender.Send(new UpdateEmployeePersonalCommand(employeeId, p.Code, p.Salutation, p.FirstName, p.MiddleName, p.LastName, p.FatherName, p.MotherName,
+            var updated = await sender.Send(new UpdateEmployeePersonalCommand(employeeId, p.Salutation, p.FirstName, p.MiddleName, p.LastName, p.FatherName, p.MotherName,
                 p.HusbandName, p.DateOfBirth, p.Gender, p.Religion, p.Caste, p.Nationality, p.BloodGroup, p.DisablityType, p.MaritalStatus, request.UserId), cancellationToken);
             if (updated.IsFailed)
             {
