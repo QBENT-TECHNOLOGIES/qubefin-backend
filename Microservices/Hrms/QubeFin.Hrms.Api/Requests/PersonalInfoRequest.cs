@@ -19,3 +19,9 @@ public class PersonalInfoRequest
     public string? DisablityType { get; set; }
     public string? MaritalStatus { get; set; }
 }
+
+public class PersonalInfoFormRequest : PersonalInfoRequest
+{
+    public IFormFile? Photo { get; set; }
+    public IFormFile? Signature { get; set; }
+}

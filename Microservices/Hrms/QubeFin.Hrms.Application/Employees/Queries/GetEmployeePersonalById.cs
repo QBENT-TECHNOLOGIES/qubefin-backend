@@ -1,7 +1,8 @@
-﻿using FluentResults;
+using FluentResults;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
+using QubeFin.Hrms.Application.InterviewProcess.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Hrms;
@@ -28,12 +29,16 @@ public record GetPersonalResponse(Guid Id,
         string Nationality, 
         string BloodGroup, 
         string? DisablityType,
-        string? MaritalStatus
+        string? MaritalStatus,
+        string? PhotoFileName,
+        string? PhotoFileUrl,
+        string? SignatureFileName,
+        string? SignatureFileUrl
     );
 
 #endregion
 #region --- HANDLER ---
-internal sealed class GetEmployeePersonalByIdQueryHandler(QubeFinDataContext context)
+internal sealed class GetEmployeePersonalByIdQueryHandler(QubeFinDataContext context, IFileStorageRepository fileStorageRepository)
     : IRequestHandler<GetEmployeePersonalByIdQuery, Result<GetPersonalResponse>>
 {
     public async Task<Result<GetPersonalResponse>> Handle(GetEmployeePersonalByIdQuery request, CancellationToken cancellationToken)
@@ -44,6 +49,15 @@ internal sealed class GetEmployeePersonalByIdQueryHandler(QubeFinDataContext con
         {
             return new RecordNotFoundError($"Employee not found for the given Id");
         }
+
+        var documents = await context.TblEmployeeDocuments
+            .AsNoTracking()
+            .Where(m => m.EmployeeId == request.Id
+                && (m.DocumentCategory == CandidateJoiningDocumentCategory.Photo || m.DocumentCategory == CandidateJoiningDocumentCategory.Signature))
+            .ToListAsync(cancellationToken);
+        var photo = documents.FirstOrDefault(m => m.DocumentCategory == CandidateJoiningDocumentCategory.Photo);
+        var signature = documents.FirstOrDefault(m => m.DocumentCategory == CandidateJoiningDocumentCategory.Signature);
+
         return Result.Ok(new GetPersonalResponse(
             employee.Id,
             employee.Code,
@@ -61,8 +75,17 @@ internal sealed class GetEmployeePersonalByIdQueryHandler(QubeFinDataContext con
             employee.Nationality,
             employee.BloodGroup,
             employee.DisablityType,
-            !string.IsNullOrWhiteSpace(employee.MaritalStatus) ? employee.MaritalStatus?.Trim() : null
+            !string.IsNullOrWhiteSpace(employee.MaritalStatus) ? employee.MaritalStatus?.Trim() : null,
+            photo?.FileName,
+            await FileUrl(photo?.FileNo, cancellationToken),
+            signature?.FileName,
+            await FileUrl(signature?.FileNo, cancellationToken)
         ));
+    }
+
+    private async Task<string?> FileUrl(string? fileNo, CancellationToken cancellationToken)
+    {
+        return string.IsNullOrEmpty(fileNo) ? null : await fileStorageRepository.GetFileUrlAsync(fileNo, cancellationToken);
     }
 }
 #endregion

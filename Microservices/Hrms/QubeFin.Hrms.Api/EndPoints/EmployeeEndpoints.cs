@@ -165,7 +165,7 @@ public class EmployeeEndpoints : IEndpoint
 
         // ---------- END  GET BY ID -----------//
 
-        app.MapPut("employees/update/personal/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] PersonalInfoRequest request, ISender sender) =>
+        app.MapPut("employees/update/personal/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromForm] PersonalInfoFormRequest request, ISender sender) =>
         {
             if (principal.Identity is null)
             {
@@ -174,10 +174,12 @@ public class EmployeeEndpoints : IEndpoint
             var userId = principal.Identity.GetUserId();
 
             var command = new UpdateEmployeePersonalCommand(id, /*request.Code,*/ request.Salutation, request.FirstName, request.MiddleName, request.LastName, request.FatherName, request.MotherName, request.HusbandName,
-                request.DateOfBirth, request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisablityType, request.MaritalStatus, userId);
+                request.DateOfBirth, request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisablityType, request.MaritalStatus, userId,
+                request.Photo, request.Signature);
             var result = await sender.Send(command);
             return result.ToHttpResult();
         })
+        .DisableAntiforgery()
         .WithSummary("Update Employee Personal data")
         .RequireAuthorization();
 
