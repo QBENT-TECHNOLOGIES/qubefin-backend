@@ -27,6 +27,7 @@ public interface IEmployeeRepository
     Task<string?> GetJoiningInfoReferenceNoAsync(Guid employeeId, CancellationToken cancellationToken);
     Task<int> CountJoiningInfoCreatedInYearAsync(CancellationToken cancellationToken);
     Task SaveJoiningInfoAsync(Guid employeeId, string referenceNo, DateOnly offerLetterDate, decimal monthlyCtc, Guid userId, CancellationToken cancellationToken);
+    Task SetJoiningInfoApprovalAsync(Guid joiningInfoId, string approvalStatus, bool isEmployeeActive, Guid userId, CancellationToken cancellationToken);
 }
 public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepository
 {
@@ -531,6 +532,31 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
         joiningInfo.MonthlyCtc = monthlyCtc;
         joiningInfo.LastModifiedBy = userId;
         joiningInfo.LastModifiedOn = DateTime.UtcNow;
+    }
+
+    public async Task SetJoiningInfoApprovalAsync(Guid joiningInfoId, string approvalStatus, bool isEmployeeActive, Guid userId, CancellationToken cancellationToken)
+    {
+        var joiningInfo = await context.TblJoiningInfos
+            .Include(j => j.Employee)
+            .FirstOrDefaultAsync(j => j.Id == joiningInfoId, cancellationToken);
+
+        if (joiningInfo is null)
+            throw new Exception("Joining information not found.");
+
+        if (joiningInfo.ApprovalStatus is not null && joiningInfo.ApprovalStatus != "Pending")
+            throw new InvalidOperationException($"Joining information is already {joiningInfo.ApprovalStatus.ToLowerInvariant()}.");
+
+        var now = DateTime.UtcNow;
+
+        joiningInfo.ApprovalStatus = approvalStatus;
+        joiningInfo.ApprovedRejectedBy = userId;
+        joiningInfo.LastModifiedBy = userId;
+        joiningInfo.LastModifiedOn = now;
+
+        joiningInfo.Employee.IsActive = isEmployeeActive;
+        joiningInfo.Employee.IsPayrollActive = isEmployeeActive;
+        joiningInfo.Employee.LastModifiedBy = userId;
+        joiningInfo.Employee.LastModifiedOn = now;
     }
 
 }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
 using QubeFin.Core.Results;
+using QubeFin.Report.Application.Reports.Generate.NPOIReports;
 using QubeFin.Report.Application.Reports.Generate.SSRSReports;
 using QubeFin.Report.Application.Reports.Queries;
 
@@ -369,6 +370,32 @@ namespace QubeFin.Report.Api.Endpoints
                 return Results.File(file.FileStream, file.ContentType, file.FileName);
             }).WithSummary("Generate a blank job application form for a company.");
 
+            #endregion
+
+            #region NPOI REPORTS
+            app.MapGet("/generate-employee-detail-report/{year:int}/{companyId:Guid}", [Authorize] async (int year, Guid companyId, ISender sender) =>
+            {
+                var command = new GenerateNPOIReportsCommand("Hrms.USP_GetEmployeeDetailExport",
+                    new Dictionary<string, object?>
+                    {
+                        ["@CompanyId"] = companyId,
+                        ["@LeaveYear"] = year
+                    },
+                    "Employee Detail Report",
+                    $"Year: {year}",
+                    true,
+                    companyId
+                );
+
+                var result = await sender.Send(command);
+
+                if (result.IsFailed)
+                    return result.ToHttpResult();
+
+                var file = result.Value;
+
+                return Results.File(file.FileStream, file.ContentType, $"Employee_Detail_Report_{year}.xlsx");
+            }).WithSummary("Generate Employee Detail Report.");
             #endregion
         }
     }
