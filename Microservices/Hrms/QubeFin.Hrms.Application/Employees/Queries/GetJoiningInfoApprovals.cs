@@ -33,7 +33,6 @@ internal sealed class GetJoiningInfoApprovalsQueryHandler(QubeFinDataContext con
     {
         var searchParam = request.SearchParam;
 
-        // Only an employee currently holding the MD post sees this queue, and only for their own company.
         var isMd = Guid.TryParse(configuration["MDPost"], out var mdPostId)
             && await context.TblDesignations.AnyAsync(d => d.PostId == mdPostId && d.TblEmployeeDesignations.Any(ed => ed.EmployeeId == request.EmployeeId && ed.EffectiveTo == null), cancellationToken);
 
@@ -46,7 +45,6 @@ internal sealed class GetJoiningInfoApprovalsQueryHandler(QubeFinDataContext con
             return new GetJoiningInfoApprovalsResponse([], 0, false);
         }
 
-        // Only joining info still waiting for a decision belongs in the approval queue.
         var query = context.TblJoiningInfos
             .AsNoTracking()
             .Where(j => j.Employee.CompanyId == mdCompanyId)
