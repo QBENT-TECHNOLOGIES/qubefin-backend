@@ -7,6 +7,7 @@ using QubeFin.Hrms.Api.Requests;
 using QubeFin.Hrms.Application.Employees.Commands;
 using QubeFin.Hrms.Application.Employees.Models;
 using QubeFin.Hrms.Application.Employees.Queries;
+using QubeFin.Hrms.Application.LeaveApproval.Models;
 using System.Security.Claims;
 
 namespace QubeFin.Hrms.Api.Endpoints;
@@ -508,6 +509,35 @@ public class EmployeeEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         .WithSummary("Create / Update Employee Joining Info")
+        .RequireAuthorization();
+
+        app.MapPost("employees/joining-info/approval/search", async (ClaimsPrincipal principal, [FromBody] LeaveApprovalSearchRequest request, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+
+            var employeeId = principal.Identity.GetEmployeeId();
+            var response = await sender.Send(new GetJoiningInfoApprovalsQuery(employeeId, request));
+            return Results.Ok(response);
+        })
+        .WithSummary("Get pending Employee Joining Info approvals with optional filters")
+        .RequireAuthorization();
+
+        app.MapPost("employees/joining-info/action", async (ClaimsPrincipal principal, [FromBody] JoiningInfoActionRequest request, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+            var userId = principal.Identity.GetUserId();
+
+            var command = new JoiningInfoActionCommand(request, userId);
+            var result = await sender.Send(command);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Approve / Reject Employee Joining Info")
         .RequireAuthorization();
         #endregion
 
