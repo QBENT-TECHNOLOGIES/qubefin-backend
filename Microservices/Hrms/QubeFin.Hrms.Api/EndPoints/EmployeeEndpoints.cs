@@ -410,6 +410,16 @@ public class EmployeeEndpoints : IEndpoint
         .WithSummary("Get All Organization Units With Their Employees")
         .RequireAuthorization();
 
+        app.MapGet("employees/hierarchy/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new GetEmployeeHierarchyQuery(id));
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get Employee Reporting Hierarchy")
+        .WithDescription("Tree rooted at the top-most superior (e.g. HOD) down through the employee to all subordinates, e.g. Divisional Manager > Branch Managers > Credit Officers.")
+        .WithTags("Employees")
+        .RequireAuthorization();
+
         #region Employee Transfer
 
         app.MapGet("employees/transfer/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, ISender sender) =>
