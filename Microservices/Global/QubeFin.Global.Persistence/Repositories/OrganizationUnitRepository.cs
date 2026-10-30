@@ -15,6 +15,7 @@ public interface IOrganizationUnitRepository
     Task<List<OrganizationUnit>> GetAllOrganisationUnit(CancellationToken cancellationToken);
     Task AddDesignationAsync(string name, Guid organizationUnitId, Guid postId, Guid roleId, Guid salaryGradeId, Guid userId);
     Task DesignationStatusUpdateAsync(Guid designationId);
+    Task DesignationInchargeUpdateAsync(Guid designationId);
     Task<int> GetNextCodeValAsync(CancellationToken cancellationToken);
     Task<bool> ExistsByNameAsync(string name, Guid? parentId, Guid? excludedId, CancellationToken cancellationToken);
     Task<bool> IsSelfOrDescendantAsync(Guid candidateParentId, Guid organizationUnitId, CancellationToken cancellationToken);
@@ -161,5 +162,21 @@ internal class OrganizationUnitRepository(QubeFinDataContext context) : IOrganiz
         }
         desigantionEntity.IsActive = !desigantionEntity.IsActive;
         context.TblDesignations.Update(desigantionEntity);
+    }
+
+    public async Task DesignationInchargeUpdateAsync(Guid DesignationId)
+    {
+        var designationEntity = await context.TblDesignations.FirstOrDefaultAsync(d => d.Id == DesignationId);
+        if (designationEntity == null)
+        {
+            throw new InvalidOperationException($"Designation with ID {DesignationId} does not exist.");
+        }
+        if (designationEntity.IsIncharge)
+        {
+            throw new InvalidOperationException($"This designation is already marked as incharge.");
+        }
+        var existingDeignationIncharge = await context.TblDesignations.FirstOrDefaultAsync(d => d.IsIncharge && d.OrganizationUnitId == designationEntity.OrganizationUnitId);
+        if(existingDeignationIncharge != null) existingDeignationIncharge.IsIncharge = false;
+        designationEntity.IsIncharge = true;
     }
 }

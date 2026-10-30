@@ -20,4 +20,5 @@ public class OragnizationDesignations
     public Guid? GradeId { get; set; }
     public string? GradeName { get; set; }
     public string? EmployeeName { get; set; }
+    public bool IsIncharge { get; set; }
 }
