@@ -75,7 +75,7 @@ internal sealed class GetJoiningInfoApprovalsQueryHandler(QubeFinDataContext con
                 EmployeeName = j.Employee.FullName,
                 EmployeeCode = j.Employee.Code,
                 OrganizationUnit = j.Employee.OrganizationUnit != null ? j.Employee.OrganizationUnit.Name : null,
-                Company = j.Employee.Company != null ? j.Employee.Company.Name : null,
+                Company = j.Employee.Company != null ? j.Employee.Company.EmpCodeAlias : null,
                 Department = j.Employee.Department != null ? j.Employee.Department.Name : null,
                 j.MonthlyCtc,
                 j.OfferLetterDate,
