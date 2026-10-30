@@ -25,7 +25,7 @@ public static class EmployeeMapper
             MapEmploymentInfo(entity),
             MapGrossSalaryInfo(entity),
             entity.TblJoiningInfos.Any(),
-            entity.TblJoiningInfos.Any(j => !string.IsNullOrWhiteSpace(j.ApprovalStatus) && j.ApprovalStatus == "approve"),
+            entity.TblJoiningInfos.Any(j => !string.IsNullOrWhiteSpace(j.ApprovalStatus) && j.ApprovalStatus == "Approved"),
             entity.CreatedBy,
             entity.CreatedDate,
             entity.LastModifiedBy,
