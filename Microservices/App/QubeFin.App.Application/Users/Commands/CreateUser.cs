@@ -11,7 +11,7 @@ using System.Text.RegularExpressions;
 namespace QubeFin.App.Application.Users.Commands;
 
 #region --- COMMAND ---
-public record CreateUserCommand(string UserName, string Password, Guid EmployeeId, Guid? UserId) : IRequest<Result<string>>;
+public record CreateUserCommand(string UserName, string Password, Guid EmployeeId, bool IsAttendanceOptional, Guid? UserId) : IRequest<Result<string>>;
 #endregion
 
 #region --- VALIDATION ---
@@ -47,7 +47,7 @@ internal sealed class CreateUserCommandHandler(IUserRepository userRepository, I
         var mfaSecretKey32 = Base32Encoding.ToString(secretKey);
         string hashedPassword = await userRepository.HashPasswordAsync(request.UserName, request.Password);
 
-        var user = User.Create(Guid.NewGuid(), request.UserName, hashedPassword, request.EmployeeId, mfaSecretKey32, request.UserId.Value);
+        var user = User.Create(Guid.NewGuid(), request.UserName, hashedPassword, request.EmployeeId, mfaSecretKey32, request.IsAttendanceOptional, request.UserId.Value);
         userRepository.Add(user);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Ok($"User {request.UserName} created successfully.");

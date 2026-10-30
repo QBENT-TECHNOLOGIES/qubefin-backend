@@ -201,6 +201,8 @@ public partial class TblEmployee
 
     public virtual ICollection<TblInterviewPanel> TblInterviewPanels { get; set; } = new List<TblInterviewPanel>();
 
+    public virtual ICollection<TblJoiningInfo> TblJoiningInfos { get; set; } = new List<TblJoiningInfo>();
+
     public virtual ICollection<TblLeavePrayer> TblLeavePrayers { get; set; } = new List<TblLeavePrayer>();
 
     public virtual ICollection<TblLeaveRequest> TblLeaveRequests { get; set; } = new List<TblLeaveRequest>();

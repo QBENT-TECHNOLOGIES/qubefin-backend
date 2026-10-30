@@ -21,6 +21,8 @@ public partial class TblUser
 
     public string MfaSecret { get; set; } = null!;
 
+    public bool IsAttendanceOptional { get; set; }
+
     public DateTime CreatedOn { get; set; }
 
     public Guid CreatedBy { get; set; }
@@ -52,6 +54,12 @@ public partial class TblUser
     public virtual ICollection<TblInterviewCandidate> TblInterviewCandidateModifiedByNavigations { get; set; } = new List<TblInterviewCandidate>();
 
     public virtual ICollection<TblInterviewPanel> TblInterviewPanels { get; set; } = new List<TblInterviewPanel>();
+
+    public virtual ICollection<TblJoiningInfo> TblJoiningInfoApprovedRejectedByNavigations { get; set; } = new List<TblJoiningInfo>();
+
+    public virtual ICollection<TblJoiningInfo> TblJoiningInfoCreatedByNavigations { get; set; } = new List<TblJoiningInfo>();
+
+    public virtual ICollection<TblJoiningInfo> TblJoiningInfoLastModifiedByNavigations { get; set; } = new List<TblJoiningInfo>();
 
     public virtual ICollection<TblLeaveType> TblLeaveTypeCreatedByNavigations { get; set; } = new List<TblLeaveType>();
 

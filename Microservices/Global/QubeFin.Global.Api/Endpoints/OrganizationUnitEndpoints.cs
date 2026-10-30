@@ -114,8 +114,28 @@ public class OrganizationUnitEndpoints : IEndpoint
         .WithSummary("Create Designation")
         .WithTags("OrganizationUnits")
         .RequireAuthorization();
+
+       
+        app.MapGet("organization-units/designation-activation/{designationId}", async (Guid designationId, ClaimsPrincipal principal, ISender sender) =>
+             {
+                 var result = await sender.Send(new DesignationStatusUpdateCommand(designationId));
+                 return result.ToHttpResult();
+             })
+        .RequireAuthorization()
+        .WithSummary("Disable Designation")
+        .WithTags("OrganizationUnits");
+
+        app.MapGet("organization-units/incharge-update/{designationId}", async (Guid designationId, ClaimsPrincipal principal, ISender sender) =>
+        {
+            var result = await sender.Send(new DesignationInchargeUpdateCommand(designationId));
+            return result.ToHttpResult();
+        })
+        .RequireAuthorization()
+        .WithSummary("Designation Incharge Update")
+        .WithTags("OrganizationUnits");
     }
 
+    
     // An empty Guid on the wire means "not selected", so it is stored as NULL
     // rather than as a foreign key pointing at a row that does not exist.
     private static Guid? NormalizeId(Guid? id) => id == Guid.Empty ? null : id;

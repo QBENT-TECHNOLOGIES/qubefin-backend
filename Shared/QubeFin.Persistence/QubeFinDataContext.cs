@@ -118,6 +118,8 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblInterviewPanel> TblInterviewPanels { get; set; }
 
+    public virtual DbSet<TblJoiningInfo> TblJoiningInfos { get; set; }
+
     public virtual DbSet<TblKycDocument> TblKycDocuments { get; set; }
 
     public virtual DbSet<TblLeavePrayer> TblLeavePrayers { get; set; }
@@ -227,7 +229,6 @@ public partial class QubeFinDataContext : DbContext
     public virtual DbSet<TmpLeaveBalanceLop> TmpLeaveBalanceLops { get; set; }
 
     public virtual DbSet<WegrowConsolidateEmployee> WegrowConsolidateEmployees { get; set; }
-
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -1502,6 +1503,38 @@ public partial class QubeFinDataContext : DbContext
                 .HasForeignKey(d => d.ModifiedBy)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_InterviewPanel_Tbl_User");
+        });
+
+        modelBuilder.Entity<TblJoiningInfo>(entity =>
+        {
+            entity.ToTable("Tbl_JoiningInfo", "Hrms");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.ApprovalStatus).HasMaxLength(20);
+            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
+            entity.Property(e => e.MonthlyCtc)
+                .HasColumnType("decimal(18, 2)")
+                .HasColumnName("MonthlyCTC");
+            entity.Property(e => e.ReferenceNo).HasMaxLength(50);
+
+            entity.HasOne(d => d.ApprovedRejectedByNavigation).WithMany(p => p.TblJoiningInfoApprovedRejectedByNavigations)
+                .HasForeignKey(d => d.ApprovedRejectedBy)
+                .HasConstraintName("FK_Tbl_JoiningInfo_Tbl_User2");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.TblJoiningInfoCreatedByNavigations)
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_JoiningInfo_Tbl_User");
+
+            entity.HasOne(d => d.Employee).WithMany(p => p.TblJoiningInfos)
+                .HasForeignKey(d => d.EmployeeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_JoiningInfo_Tbl_Employee");
+
+            entity.HasOne(d => d.LastModifiedByNavigation).WithMany(p => p.TblJoiningInfoLastModifiedByNavigations)
+                .HasForeignKey(d => d.LastModifiedBy)
+                .HasConstraintName("FK_Tbl_JoiningInfo_Tbl_User1");
         });
 
         modelBuilder.Entity<TblKycDocument>(entity =>

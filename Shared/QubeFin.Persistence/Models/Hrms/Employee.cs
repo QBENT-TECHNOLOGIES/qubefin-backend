@@ -19,6 +19,8 @@ namespace QubeFin.Persistence.Models.Hrms
         public Guid? LastModifiedBy { get; private set; }
         /// <summary>The interview candidate this employee was created from through the joining information form.</summary>
         public Guid? CandidateId { get; private set; }
+        public bool? HasJoiningInfo { get; private set; }
+        public bool? HasJoiningApproved { get; private set; }
         public PersonalInfo PersonalInfo { get; private set; } = default!;
         public OfficialInfo OfficialInfo { get; private set; } = default!;
         public ContactInfo ContactInfo { get; private set; } = default!;
@@ -40,7 +42,7 @@ namespace QubeFin.Persistence.Models.Hrms
         public Employee(Guid id, string? code, PersonalInfo personalInfo, OfficialInfo officialInfo, ContactInfo contactInfo,
             AddressInfo presentAddressInfo, AddressInfo permanentAddressInfo, bool presentPermanentAddressSame, PayrollInfo payrollInfo, EmployeeOrganization organizationInfo,
             List<EmployeeDesignation> designations, List<EmployeeQualification> qualifications, List<EmployeeReference> references, List<EmployeeDocument> documents,
-            List<EmployeeEmployment> employments, List<EmployeeGrossSalary> grossSalaries, Guid? createdBy, DateTime? createdOn, Guid? lastModifiedBy, DateTime? lastModifiedOn,
+            List<EmployeeEmployment> employments, List<EmployeeGrossSalary> grossSalaries,bool? hasJoiningInfo, bool? hasJoiningApproved, Guid? createdBy, DateTime? createdOn, Guid? lastModifiedBy, DateTime? lastModifiedOn,
             Guid? candidateId = null)
         {
             Id = id;
@@ -53,6 +55,8 @@ namespace QubeFin.Persistence.Models.Hrms
             PresentPermanentAddressSame = presentPermanentAddressSame;
             PayrollInfo = payrollInfo;
             OrganizationInfo = organizationInfo;
+            HasJoiningInfo = hasJoiningInfo;
+            HasJoiningApproved = hasJoiningApproved;
             CreatedBy = createdBy;
             CreatedDate = createdOn;
             LastModifiedBy = lastModifiedBy;

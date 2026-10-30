@@ -15,6 +15,8 @@ public partial class TblDesignation
 
     public bool IsActive { get; set; }
 
+    public bool IsIncharge { get; set; }
+
     public DateTime CreatedOn { get; set; }
 
     public Guid CreatedBy { get; set; }

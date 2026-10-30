@@ -7,6 +7,7 @@ using QubeFin.Hrms.Api.Requests;
 using QubeFin.Hrms.Application.Employees.Commands;
 using QubeFin.Hrms.Application.Employees.Models;
 using QubeFin.Hrms.Application.Employees.Queries;
+using QubeFin.Hrms.Application.LeaveApproval.Models;
 using System.Security.Claims;
 
 namespace QubeFin.Hrms.Api.Endpoints;
@@ -165,7 +166,7 @@ public class EmployeeEndpoints : IEndpoint
 
         // ---------- END  GET BY ID -----------//
 
-        app.MapPut("employees/update/personal/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromBody] PersonalInfoRequest request, ISender sender) =>
+        app.MapPut("employees/update/personal/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, [FromForm] PersonalInfoFormRequest request, ISender sender) =>
         {
             if (principal.Identity is null)
             {
@@ -174,10 +175,12 @@ public class EmployeeEndpoints : IEndpoint
             var userId = principal.Identity.GetUserId();
 
             var command = new UpdateEmployeePersonalCommand(id, /*request.Code,*/ request.Salutation, request.FirstName, request.MiddleName, request.LastName, request.FatherName, request.MotherName, request.HusbandName,
-                request.DateOfBirth, request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisablityType, request.MaritalStatus, userId);
+                request.DateOfBirth, request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisablityType, request.MaritalStatus, userId,
+                request.Photo, request.Signature);
             var result = await sender.Send(command);
             return result.ToHttpResult();
         })
+        .DisableAntiforgery()
         .WithSummary("Update Employee Personal data")
         .RequireAuthorization();
 
@@ -407,6 +410,16 @@ public class EmployeeEndpoints : IEndpoint
         .WithSummary("Get All Organization Units With Their Employees")
         .RequireAuthorization();
 
+        app.MapGet("employees/hierarchy/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new GetEmployeeHierarchyQuery(id));
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get Employee Reporting Hierarchy")
+        .WithDescription("Tree rooted at the top-most superior (e.g. HOD) down through the employee to all subordinates, e.g. Divisional Manager > Branch Managers > Credit Officers.")
+        .WithTags("Employees")
+        .RequireAuthorization();
+
         #region Employee Transfer
 
         app.MapGet("employees/transfer/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, ISender sender) =>
@@ -478,6 +491,63 @@ public class EmployeeEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         .WithSummary("Get Salary Structure By Gross")
+        .RequireAuthorization();
+
+        app.MapGet("employees/joining-info/{id:guid}", async (ClaimsPrincipal principal, [FromRoute] Guid id, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+            var query = new GetJoiningInfoQuery(id);
+            var result = await sender.Send(query);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get Employee Joining Info")
+        .RequireAuthorization();
+
+        app.MapPost("employees/joining-info",async (ClaimsPrincipal principal, [FromBody] JoiningInfoRequest request, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+            var userId = principal.Identity.GetUserId();
+
+            var command = new AddJoiningInfoCommand(request, userId);
+            var result = await sender.Send(command);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Create / Update Employee Joining Info")
+        .RequireAuthorization();
+
+        app.MapPost("employees/joining-info/approval/search", async (ClaimsPrincipal principal, [FromBody] LeaveApprovalSearchRequest request, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+
+            var employeeId = principal.Identity.GetEmployeeId();
+            var response = await sender.Send(new GetJoiningInfoApprovalsQuery(employeeId, request));
+            return Results.Ok(response);
+        })
+        .WithSummary("Get pending Employee Joining Info approvals with optional filters")
+        .RequireAuthorization();
+
+        app.MapPost("employees/joining-info/action", async (ClaimsPrincipal principal, [FromBody] JoiningInfoActionRequest request, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+            var userId = principal.Identity.GetUserId();
+
+            var command = new JoiningInfoActionCommand(request, userId);
+            var result = await sender.Send(command);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Approve / Reject Employee Joining Info")
         .RequireAuthorization();
         #endregion
 
