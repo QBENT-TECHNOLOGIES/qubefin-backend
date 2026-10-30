@@ -9,7 +9,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands;
 
 #region --- COMMAND ---
 
-public record TransferEmployeeCommand(EmployeeCurrentOfficialInfoRequest employee) : IRequest<Result<string>>;
+public record TransferEmployeeCommand(EmployeeCurrentOfficialInfoRequest employee, Guid UserId) : IRequest<Result<string>>;
 
 #endregion
 
@@ -20,9 +20,6 @@ public class TransferEmployeeCommandValidator : AbstractValidator<TransferEmploy
     {
         RuleFor(x => x.employee.EmployeeId).NotEmpty().WithMessage("Employee is required.");
         RuleFor(x => x.employee.OrganisationUnitId).NotEmpty().WithMessage("Organisation Unit is required.");
-        RuleFor(x => x.employee.DesignationId).NotEmpty().WithMessage("Designation is required.");
-        RuleFor(x => x.employee.SalaryGradeId).NotEmpty().WithMessage("Salary Grade is required.");
-        RuleFor(x => x.employee.GrossSalary).GreaterThanOrEqualTo(0).WithMessage("Gross Salary cannot be negative.");
         RuleFor(x => x.employee.EffectiveFrom).NotEmpty().WithMessage("Effective From date is required.");
     }
 }
@@ -36,7 +33,7 @@ internal sealed class TransferEmployeeCommandHandler(IEmployeeRepository employe
     {
         try
         {
-            await employeeRepository.TransferEmployee(request.employee.EmployeeId, request.employee.OrganisationUnitId, request.employee.DesignationId, request.employee.SalaryGradeId, request.employee.GrossSalary, request.employee.EffectiveFrom, cancellationToken);
+            await employeeRepository.TransferEmployee(request.employee.EmployeeId, request.employee.OrganisationUnitId, request.employee.EffectiveFrom, request.UserId, cancellationToken);
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
             return Result.Ok($"Employee transferred successfully.");

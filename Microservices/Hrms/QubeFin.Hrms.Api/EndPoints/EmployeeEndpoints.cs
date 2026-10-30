@@ -441,8 +441,9 @@ public class EmployeeEndpoints : IEndpoint
             {
                 return Results.Forbid();
             }
+            var userId = principal.Identity.GetUserId();
 
-            var command = new TransferEmployeeCommand(request);
+            var command = new TransferEmployeeCommand(request, userId);
             var result = await sender.Send(command);
             return result.ToHttpResult();
         })
