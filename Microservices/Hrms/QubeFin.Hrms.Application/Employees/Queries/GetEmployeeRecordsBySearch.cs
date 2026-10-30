@@ -343,7 +343,8 @@ internal sealed class GetEmployeeRecordsBySearchQueryHandler(QubeFinDataContext 
                         && m.OrganizationUnitId != null
                         && scope.Contains(m.OrganizationUnitId.Value)
                         && (m.JoiningDate == null || m.JoiningDate <= to)
-                        && (m.SeparationDate == null || m.SeparationDate >= from));
+                        && (m.SeparationDate == null || m.SeparationDate >= from)
+                        && !m.TblUsers.Any(u => u.IsAttendanceOptional));
 
         if (param.CompanyId.HasValue)
             query = query.Where(m => m.CompanyId == param.CompanyId.Value);

@@ -63,7 +63,8 @@ internal sealed class GetAttendanceHistoryByQueryHandler(QubeFinDataContext cont
         var baseQuery = context.TblAttendances
             .Include(a => a.Employee).ThenInclude(e => e.OrganizationUnit)
             .Where(a => a.Employee.OrganizationUnitId != null
-                        && organizationUnitIds.Contains(a.Employee.OrganizationUnitId.Value) && a.Employee.CompanyId != null && a.Employee.CompanyId == searchParam.CompanyId)
+                        && organizationUnitIds.Contains(a.Employee.OrganizationUnitId.Value) && a.Employee.CompanyId != null && a.Employee.CompanyId == searchParam.CompanyId
+                        && !a.Employee.TblUsers.Any(u => u.IsAttendanceOptional))
             .AsNoTracking();
 
         var hasFrom = searchParam.FromDate.HasValue;
