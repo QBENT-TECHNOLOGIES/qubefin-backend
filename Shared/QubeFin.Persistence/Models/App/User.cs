@@ -50,6 +50,7 @@ public class User
             IsAttendanceOptional = isAttendanceOptional,
             IsActive = true,
             IsSuperAdmin = false,
+            HasMfaEnabled = true,
             CreatedBy = createdBy,
             CreatedOn = DateTime.Now
         };

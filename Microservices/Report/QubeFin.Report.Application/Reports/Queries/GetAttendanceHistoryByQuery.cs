@@ -173,7 +173,8 @@ internal sealed class GetAttendanceExportQueryHandler(QubeFinDataContext context
                         && m.OrganizationUnitId != null
                         && scope.Contains(m.OrganizationUnitId.Value)
                         && (m.JoiningDate == null || m.JoiningDate <= to)
-                        && (m.SeparationDate == null || m.SeparationDate >= from));
+                        && (m.SeparationDate == null || m.SeparationDate >= from)
+                        && !m.TblUsers.Any(u => u.IsAttendanceOptional));
 
         if (param.SearchEmployeeId.HasValue)
             query = query.Where(m => m.Id == param.SearchEmployeeId.Value);
