@@ -15,7 +15,7 @@ public partial class TblDesignation
 
     public bool IsActive { get; set; }
 
-    public long IsIncharge { get; set; }
+    public bool IsIncharge { get; set; }
 
     public DateTime CreatedOn { get; set; }
 
