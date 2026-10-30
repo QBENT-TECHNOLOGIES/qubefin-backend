@@ -22,6 +22,7 @@ public class AddJoiningInfoCommandValidator : AbstractValidator<AddJoiningInfoCo
         RuleFor(x => x.JoiningInfo.EmployeeId).NotEmpty().WithMessage("Employee is required.");
         RuleFor(x => x.JoiningInfo.OfferLetterDate).NotEmpty().WithMessage("Offer Letter Date is required.");
         RuleFor(x => x.JoiningInfo.MonthlyCtc).GreaterThan(0).WithMessage("Monthly CTC must be greater than zero.");
+        RuleFor(x => x.JoiningInfo.ReferenceNo).NotEmpty().WithMessage("Reference No. is required.");
     }
 }
 #endregion
@@ -41,26 +42,18 @@ internal sealed class AddJoiningInfoCommandHandler(IEmployeeRepository employeeR
         {
             var joiningInfo = request.JoiningInfo;
             var existingReferenceNo = await employeeRepository.GetJoiningInfoReferenceNoAsync(joiningInfo.EmployeeId, cancellationToken);
-            var referenceNo = existingReferenceNo ?? await GenerateReferenceNoAsync(cancellationToken);
 
-            await employeeRepository.SaveJoiningInfoAsync(joiningInfo.EmployeeId, referenceNo, joiningInfo.OfferLetterDate, joiningInfo.MonthlyCtc, request.UserId, cancellationToken);
+            await employeeRepository.SaveJoiningInfoAsync(joiningInfo.EmployeeId, joiningInfo.ReferenceNo, joiningInfo.OfferLetterDate, joiningInfo.MonthlyCtc, request.UserId, cancellationToken);
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
             return existingReferenceNo is null
-                ? Result.Ok($"Joining information created successfully. Reference No: {referenceNo}.")
-                : Result.Ok($"Joining information updated successfully. Reference No: {referenceNo}.");
+                ? Result.Ok($"Joining information created successfully. Reference No: {request.JoiningInfo.ReferenceNo}.")
+                : Result.Ok($"Joining information updated successfully. Reference No: {request.JoiningInfo.ReferenceNo}.");
         }
         catch (Exception ex)
         {
             return Result.Fail(ex.Message);
         }
-    }
-
-    private async Task<string> GenerateReferenceNoAsync(CancellationToken cancellationToken)
-    {
-        var countThisYear = await employeeRepository.CountJoiningInfoCreatedInYearAsync(cancellationToken);
-        var year = DateTime.UtcNow.Year;
-        return $"WGRW/JOIN/{year}/{countThisYear + 1:D4}";
     }
 }
 

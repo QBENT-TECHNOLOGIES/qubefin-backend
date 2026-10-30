@@ -5,6 +5,7 @@ public class JoiningInfoRequest
     public Guid EmployeeId { get; set; }
     public DateOnly OfferLetterDate { get; set; }
     public decimal MonthlyCtc { get; set; }
+    public string ReferenceNo { get; set; } = string.Empty;
 }
 
 public static class JoiningInfoApprovalStatus

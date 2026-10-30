@@ -505,9 +505,13 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
     public async Task SaveJoiningInfoAsync(Guid employeeId, string referenceNo, DateOnly offerLetterDate, decimal monthlyCtc, Guid userId, CancellationToken cancellationToken)
     {
         var employeeExists = await context.TblEmployees.AsNoTracking().AnyAsync(e => e.Id == employeeId, cancellationToken);
-
         if (!employeeExists)
             throw new Exception("Employee not found.");
+
+        var referenceNoExists = await context.TblJoiningInfos.AsNoTracking().AnyAsync(j => j.ReferenceNo == referenceNo && j.EmployeeId != employeeId);
+        if (referenceNoExists)
+            throw new Exception("Reference number already exists.");
+
 
         var joiningInfo = await context.TblJoiningInfos.FirstOrDefaultAsync(j => j.EmployeeId == employeeId, cancellationToken);
 
@@ -528,6 +532,7 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
             return;
         }
 
+        joiningInfo.ReferenceNo = referenceNo;
         joiningInfo.OfferLetterDate = offerLetterDate;
         joiningInfo.MonthlyCtc = monthlyCtc;
         joiningInfo.LastModifiedBy = userId;
