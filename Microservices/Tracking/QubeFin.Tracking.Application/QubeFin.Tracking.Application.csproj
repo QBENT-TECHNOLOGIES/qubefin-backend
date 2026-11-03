@@ -23,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Shared\QubeFin.Core\QubeFin.Core.csproj" />
     <ProjectReference Include="..\..\..\Shared\QubeFin.Persistence\QubeFin.Persistence.csproj" />
+    <ProjectReference Include="..\QubeFin.Tracking.Persistence\QubeFin.Tracking.Persistence.csproj" />
   </ItemGroup>
 
 </Project>

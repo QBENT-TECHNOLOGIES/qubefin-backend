@@ -1,6 +1,9 @@
 @QubeFin.Tracking.Api_HostAddress = http://localhost:5198
 
-GET {{QubeFin.Tracking.Api_HostAddress}}/weatherforecast/
+@token = <paste access token>
+
+GET {{QubeFin.Tracking.Api_HostAddress}}/me
 Accept: application/json
+Authorization: Bearer {{token}}
 
 ###

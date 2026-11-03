@@ -25,7 +25,7 @@ app.MapEndpoints();
 app.MapScalarApiReference(options =>
 {
     options.Servers = [];
-    options.Title = "QubeFin Payroll API";
+    options.Title = "QubeFin Tracking API";
 });
 
 app.Run();

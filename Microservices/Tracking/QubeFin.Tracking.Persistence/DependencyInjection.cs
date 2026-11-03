@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using QubeFin.Core.Security;
 using QubeFin.Persistence;
+using QubeFin.Tracking.Persistence.Repositories;
 
 namespace QubeFin.Tracking.Persistence;
 
@@ -19,6 +20,7 @@ public static class DependencyInjection
         services.AddHttpClient();
 
         services.AddScoped<ITokenGenerator, TokenGenerator>();
+        services.AddScoped<ITrackingScopeRepository, TrackingScopeRepository>();
         return services;
     }
 }
