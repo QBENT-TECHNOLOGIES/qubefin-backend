@@ -63,3 +63,5 @@ nunit-*.xml
 /Microservices/Report/QubeFin.Report.Api/appsettings.json
 /Microservices/Report/QubeFin.Report.Api
 /QubeFin.Tracking.Api/Properties/launchSettings.json
+/Microservices/Tracking/QubeFin.Tracking.Api/appsettings.json
+/Microservices/Tracking/QubeFin.Tracking.Api/appsettings.json
