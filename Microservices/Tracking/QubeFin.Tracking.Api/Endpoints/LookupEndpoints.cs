@@ -25,5 +25,20 @@ public class LookupEndpoints : IEndpoint
         .WithDescription("Returns the signed-in user's employee id, name, tracking role, unit, branches in scope and whether they can create jobs.")
         .WithTags("Lookups")
         .RequireAuthorization();
+
+        app.MapGet("branches", async (ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Unauthorized();
+            }
+            var userId = principal.Identity.GetUserId();
+            var result = await sender.Send(new GetTrackingBranchesQuery(userId), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get branches in the user's scope")
+        .WithDescription("Returns the branches the signed-in user may see (every branch for an Admin), sorted by name, with area, division, location and operating radius.")
+        .WithTags("Lookups")
+        .RequireAuthorization();
     }
 }

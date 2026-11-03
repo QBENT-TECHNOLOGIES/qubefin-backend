@@ -8,11 +8,14 @@ public interface ITrackingScopeRepository
 {
     Task<TrackingViewer?> GetViewerAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<bool> HasAssignableEmployeesAsync(TrackingViewer viewer, CancellationToken cancellationToken = default);
+    Task<List<TrackingBranch>> GetBranchesAsync(IReadOnlyList<Guid> branchIds, CancellationToken cancellationToken = default);
 }
 
 public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScopeRepository
 {
     private const string BranchUnitType = "Branch";
+    private const string AreaUnitType = "Area";
+    private const string DivisionUnitType = "Division";
     private const string AllBranches = "All branches";
 
     public async Task<TrackingViewer?> GetViewerAsync(Guid userId, CancellationToken cancellationToken = default)
@@ -78,7 +81,45 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
                 cancellationToken);
     }
 
+    public async Task<List<TrackingBranch>> GetBranchesAsync(IReadOnlyList<Guid> branchIds, CancellationToken cancellationToken = default)
+    {
+        var units = await context.TblOrganizationUnits
+            .Select(o => new UnitNode(o.Id, o.ParentId, o.Name, o.OrganizationUnitType.Name))
+            .AsNoTracking()
+            .ToDictionaryAsync(u => u.Id, cancellationToken);
+
+        var branches = await context.TblOrganizationUnits
+            .Where(o => branchIds.Contains(o.Id))
+            .Select(o => new { o.Id, o.Name, o.CodeVal, o.ParentId, o.Latitude, o.Longitude, o.OperatingRadiusMeter })
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        return branches
+            .OrderBy(b => b.Name)
+            .Select(b => new TrackingBranch(
+                b.Id,
+                b.Name,
+                b.CodeVal.ToString(),
+                AncestorOfType(units, b.ParentId, AreaUnitType)?.Name,
+                AncestorOfType(units, b.ParentId, DivisionUnitType)?.Name,
+                b.Latitude.HasValue ? Math.Round(b.Latitude.Value, 6) : null,
+                b.Longitude.HasValue ? Math.Round(b.Longitude.Value, 6) : null,
+                b.OperatingRadiusMeter))
+            .ToList();
+    }
+
     private sealed record UnitNode(Guid Id, Guid? ParentId, string Name, string TypeName);
+
+    private static UnitNode? AncestorOfType(Dictionary<Guid, UnitNode> units, Guid? startId, string typeName)
+    {
+        var visited = new HashSet<Guid>();
+        while (startId.HasValue && visited.Add(startId.Value) && units.TryGetValue(startId.Value, out var unit))
+        {
+            if (unit.TypeName == typeName) return unit;
+            startId = unit.ParentId;
+        }
+        return null;
+    }
 
     private static IEnumerable<Guid> BranchIdsOf(IEnumerable<UnitNode> units) =>
         units.Where(u => u.TypeName == BranchUnitType).OrderBy(u => u.Name).Select(u => u.Id);

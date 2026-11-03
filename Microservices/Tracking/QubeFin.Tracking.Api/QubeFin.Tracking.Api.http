@@ -7,3 +7,9 @@ Accept: application/json
 Authorization: Bearer {{token}}
 
 ###
+
+GET {{QubeFin.Tracking.Api_HostAddress}}/branches
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
