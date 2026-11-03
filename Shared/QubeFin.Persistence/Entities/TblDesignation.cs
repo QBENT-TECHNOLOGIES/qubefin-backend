@@ -33,6 +33,10 @@ public partial class TblDesignation
 
     public virtual ICollection<TblApprovalRequestEvent> TblApprovalRequestEventSenderDesignations { get; set; } = new List<TblApprovalRequestEvent>();
 
+    public virtual ICollection<TblBcgroupTransfer> TblBcgroupTransfers { get; set; } = new List<TblBcgroupTransfer>();
+
+    public virtual ICollection<TblBcgroup> TblBcgroups { get; set; } = new List<TblBcgroup>();
+
     public virtual ICollection<TblDesignationGradeMapping> TblDesignationGradeMappings { get; set; } = new List<TblDesignationGradeMapping>();
 
     public virtual ICollection<TblDesignationRole> TblDesignationRoles { get; set; } = new List<TblDesignationRole>();
@@ -42,6 +46,10 @@ public partial class TblDesignation
     public virtual ICollection<TblEmployeeTransfer> TblEmployeeTransfers { get; set; } = new List<TblEmployeeTransfer>();
 
     public virtual ICollection<TblGroup> TblGroups { get; set; } = new List<TblGroup>();
+
+    public virtual ICollection<TblJobTask> TblJobTasks { get; set; } = new List<TblJobTask>();
+
+    public virtual ICollection<TblJob> TblJobs { get; set; } = new List<TblJob>();
 
     public virtual ICollection<TblLoanApplicationWorkflow> TblLoanApplicationWorkflows { get; set; } = new List<TblLoanApplicationWorkflow>();
 
