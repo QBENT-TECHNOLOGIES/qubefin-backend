@@ -558,9 +558,21 @@ public class EmployeeEndpoints : IEndpoint
             var result = await sender.Send(new GetEmployeeDocumentsByIdQuery(id));
             return result.ToHttpResult();
         })
-    .WithSummary("Get All Documents By Employee Id")
-    .RequireAuthorization();
+        .WithSummary("Get All Documents By Employee Id")
+        .RequireAuthorization();
 
+        #endregion
+
+        #region Employee Company Transfer
+        app.MapPost("employees/company-transfer", async (ClaimsPrincipal principal, IMediator mediator, CompanyTransferRequest request) =>
+        {
+            var userId = principal.Identity.GetUserId();
+            var result = await mediator.Send(new CompanyTransferCommand(request, userId));
+            return result.ToHttpResult();
+        })
+        .WithSummary("Transfer Employee to Different Company")
+        .WithTags("Employees")
+        .RequireAuthorization();
         #endregion
     }
 }
