@@ -70,7 +70,11 @@ internal sealed class SendLetterToCandidateCommandHandler(QubeFinDataContext con
             return Result.Fail("File is required.");
         }
 
-        await candidateLetterMailer.SendLetterEmailAsync(candidate, letterType, letterStatus.File, cancellationToken);
+        var sent = await candidateLetterMailer.SendLetterEmailAsync(candidate, letterType, letterStatus.File, cancellationToken);
+        if (sent.IsFailed)
+        {
+            return new ValidationError(sent.Errors.FirstOrDefault()?.Message ?? $"{GetLetterName(letterType)} mail could not be sent.");
+        }
 
         return Result.Ok($"{GetLetterName(letterType)} mail sent successfully.");
     }

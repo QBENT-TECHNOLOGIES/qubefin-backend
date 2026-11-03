@@ -1,6 +1,7 @@
 using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using QubeFin.Hrms.Application.InterviewProcess.Services;
 using System.Reflection;
 
@@ -22,7 +23,14 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly(), includeInternalTypes: true);
         services.AddMemoryCache();
 
-        services.Configure<MailSettings>(configuration.GetSection("MailSettings"));
+        // All HRMS mail goes through Microsoft Graph from the candidate's company HR mailbox. Settings are checked at
+        // startup so a missing secret or sender stops the API rather than failing the first mail.
+        services.AddOptions<MailSettings>()
+            .Bind(configuration.GetSection("MailSettings"))
+            .ValidateOnStart();
+        services.AddSingleton<IValidateOptions<MailSettings>, MailSettingsValidator>();
+        services.AddSingleton(sp => HrMailSender.CreateGraphClient(sp.GetRequiredService<IOptions<MailSettings>>().Value.MicrosoftGraph));
+        services.AddScoped<IHrMailSender, HrMailSender>();
         services.AddScoped<ICandidateLetterMailer, CandidateLetterMailer>();
         services.AddScoped<IPanelInvitationMailer, PanelInvitationMailer>();
 

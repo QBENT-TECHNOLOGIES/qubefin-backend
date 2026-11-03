@@ -1,8 +1,7 @@
+using FluentResults;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Options;
 using QubeFin.Persistence.Models.Hrms;
 using System.Net;
-using System.Net.Mail;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Services;
 
@@ -16,43 +15,31 @@ public enum CandidateLetterType
 
 public interface ICandidateLetterMailer
 {
-    Task SendLetterEmailAsync(Candidate candidate, CandidateLetterType letterType, IFormFile file, CancellationToken cancellationToken = default);
+    /// <summary>Emails the letter to the candidate from the HR mailbox of the candidate's company.</summary>
+    Task<Result> SendLetterEmailAsync(Candidate candidate, CandidateLetterType letterType, IFormFile file, CancellationToken cancellationToken = default);
 }
-internal sealed class CandidateLetterMailer(IOptions<MailSettings> options) : ICandidateLetterMailer
+
+internal sealed class CandidateLetterMailer(IHrMailSender hrMailSender) : ICandidateLetterMailer
 {
-    private readonly MailSettings _settings = options.Value;
-    public async Task SendLetterEmailAsync(Candidate candidate, CandidateLetterType letterType, IFormFile file, CancellationToken cancellationToken = default)
+    public async Task<Result> SendLetterEmailAsync(Candidate candidate, CandidateLetterType letterType, IFormFile file, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(candidate.Email))
-            throw new InvalidOperationException("Candidate email address is not available.");
+            return Result.Fail("Candidate email address is not available.");
 
         if (file == null || file.Length == 0)
-            throw new InvalidOperationException("Letter file is required.");
-
-        using var message = new MailMessage
-        {
-            From = new MailAddress(_settings.FromEmail, _settings.FromName),
-
-            Subject = GetSubject(letterType),
-            Body = GetEmailBody(candidate, letterType),
-            IsBodyHtml = true
-        };
-
-        message.To.Add(candidate.Email);
+            return Result.Fail("Letter file is required.");
 
         await using var fileStream = file.OpenReadStream();
+        using var buffer = new MemoryStream();
+        await fileStream.CopyToAsync(buffer, cancellationToken);
 
-        var attachment = new Attachment(fileStream, file.FileName, file.ContentType ?? "application/pdf");
+        var mail = new HrMail(
+            candidate.Email,
+            GetSubject(letterType),
+            GetEmailBody(candidate, letterType),
+            [new HrMailAttachment(file.FileName, file.ContentType ?? "application/pdf", buffer.ToArray())]);
 
-        message.Attachments.Add(attachment);
-
-        using var smtpClient = new SmtpClient(_settings.Host, _settings.Port)
-        {
-            EnableSsl = _settings.EnableSsl,
-            Credentials = new NetworkCredential(_settings.Username, _settings.Password)
-        };
-
-        await smtpClient.SendMailAsync(message, cancellationToken);
+        return await hrMailSender.SendAsync(candidate.CompanyId, mail, cancellationToken);
     }
 
     private static string GetSubject(CandidateLetterType letterType)

@@ -1,24 +1,24 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using QubeFin.Hrms.Application.InterviewProcess.Models;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Hrms;
 using System.Net;
-using System.Net.Mail;
 
 namespace QubeFin.Hrms.Application.InterviewProcess.Services;
 
+/// <summary>How the panel invitations went: panelists skipped for having no email, and those whose mail failed.</summary>
+public record PanelInvitationResult(int MissingEmail, int Failed, string? FirstError);
+
 public interface IPanelInvitationMailer
 {
-    Task<int> SendInvitationsAsync(Candidate candidate, IReadOnlyList<PanelistScheduleDto> panelists, IFormFile? acknowledgementFile, CancellationToken cancellationToken = default);
+    /// <summary>Emails each panelist from the HR mailbox of the candidate's company.</summary>
+    Task<PanelInvitationResult> SendInvitationsAsync(Candidate candidate, IReadOnlyList<PanelistScheduleDto> panelists, IFormFile? acknowledgementFile, CancellationToken cancellationToken = default);
 }
 
-internal sealed class PanelInvitationMailer(QubeFinDataContext context, IOptions<MailSettings> options) : IPanelInvitationMailer
+internal sealed class PanelInvitationMailer(QubeFinDataContext context, IHrMailSender hrMailSender) : IPanelInvitationMailer
 {
-    private readonly MailSettings _settings = options.Value;
-
-    public async Task<int> SendInvitationsAsync(Candidate candidate, IReadOnlyList<PanelistScheduleDto> panelists, IFormFile? acknowledgementFile, CancellationToken cancellationToken = default)
+    public async Task<PanelInvitationResult> SendInvitationsAsync(Candidate candidate, IReadOnlyList<PanelistScheduleDto> panelists, IFormFile? acknowledgementFile, CancellationToken cancellationToken = default)
     {
         var employeeIds = panelists.Select(p => p.EmployeeId).ToList();
         var employees = await context.TblEmployees
@@ -27,23 +27,22 @@ internal sealed class PanelInvitationMailer(QubeFinDataContext context, IOptions
             .Select(e => new { e.Id, e.FullName, Email = e.OfficialEmail ?? e.PersonalEmail })
             .ToDictionaryAsync(e => e.Id, cancellationToken);
 
-        // Read the upload once - every panelist's message gets its own attachment stream.
-        byte[]? fileBytes = null;
+        // Read the upload once - every panelist's mail carries the same attachment.
+        var attachments = new List<HrMailAttachment>();
         if (acknowledgementFile is { Length: > 0 })
         {
             await using var stream = acknowledgementFile.OpenReadStream();
             using var buffer = new MemoryStream();
             await stream.CopyToAsync(buffer, cancellationToken);
-            fileBytes = buffer.ToArray();
+            attachments.Add(new HrMailAttachment(
+                string.IsNullOrWhiteSpace(acknowledgementFile.FileName) ? "interview_panel_acknowledgement.pdf" : acknowledgementFile.FileName,
+                acknowledgementFile.ContentType ?? "application/pdf",
+                buffer.ToArray()));
         }
 
-        using var smtpClient = new SmtpClient(_settings.Host, _settings.Port)
-        {
-            EnableSsl = _settings.EnableSsl,
-            Credentials = new NetworkCredential(_settings.Username, _settings.Password)
-        };
-
         var missingEmail = 0;
+        var failed = 0;
+        string? firstError = null;
         foreach (var panelist in panelists)
         {
             if (!employees.TryGetValue(panelist.EmployeeId, out var employee) || string.IsNullOrWhiteSpace(employee.Email))
@@ -52,27 +51,21 @@ internal sealed class PanelInvitationMailer(QubeFinDataContext context, IOptions
                 continue;
             }
 
-            using var message = new MailMessage
-            {
-                From = new MailAddress(_settings.FromEmail, _settings.FromName),
-                Subject = $"Interview Panel Invitation - {candidate.ReferenceNo}",
-                Body = GetEmailBody(employee.FullName, candidate, panelist),
-                IsBodyHtml = true
-            };
-            message.To.Add(employee.Email);
+            var mail = new HrMail(
+                employee.Email,
+                $"Interview Panel Invitation - {candidate.ReferenceNo}",
+                GetEmailBody(employee.FullName, candidate, panelist),
+                attachments);
 
-            if (fileBytes is not null)
+            var result = await hrMailSender.SendAsync(candidate.CompanyId, mail, cancellationToken);
+            if (result.IsFailed)
             {
-                message.Attachments.Add(new Attachment(
-                    new MemoryStream(fileBytes),
-                    string.IsNullOrWhiteSpace(acknowledgementFile!.FileName) ? "interview_panel_acknowledgement.pdf" : acknowledgementFile.FileName,
-                    acknowledgementFile.ContentType ?? "application/pdf"));
+                failed++;
+                firstError ??= result.Errors.FirstOrDefault()?.Message;
             }
-
-            await smtpClient.SendMailAsync(message, cancellationToken);
         }
 
-        return missingEmail;
+        return new PanelInvitationResult(missingEmail, failed, firstError);
     }
 
     private static string GetEmailBody(string employeeName, Candidate candidate, PanelistScheduleDto panelist)

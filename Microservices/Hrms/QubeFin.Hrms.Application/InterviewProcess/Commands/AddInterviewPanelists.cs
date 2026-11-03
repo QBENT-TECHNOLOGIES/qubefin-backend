@@ -84,17 +84,16 @@ internal sealed class AddInterviewPanelistsCommandHandler(IInterviewPanelReposit
         await panelRepository.AddRangeAsync(newPanelists, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        try
+        // The panel is already saved - a mail problem is reported in the message rather than failing the request.
+        var mail = await panelInvitationMailer.SendInvitationsAsync(candidate, request.Panelists, request.AcknowledgementFile, cancellationToken);
+        if (mail.Failed > 0)
         {
-            var missingEmail = await panelInvitationMailer.SendInvitationsAsync(candidate, request.Panelists, request.AcknowledgementFile, cancellationToken);
-            if (missingEmail > 0)
-            {
-                return Result.Ok($"Panelist(s) added successfully. Invitation mail was not sent to {missingEmail} panelist(s) without an email address.");
-            }
+            return Result.Ok($"Panelist(s) added successfully. However, the invitation mail could not be sent to {mail.Failed} panelist(s): {mail.FirstError}");
         }
-        catch (Exception)
+
+        if (mail.MissingEmail > 0)
         {
-            return Result.Ok("Panelist(s) added successfully. However, the invitation mail could not be sent to the panelists.");
+            return Result.Ok($"Panelist(s) added successfully. Invitation mail was not sent to {mail.MissingEmail} panelist(s) without an email address.");
         }
 
         return Result.Ok("Panelist(s) added successfully.");
