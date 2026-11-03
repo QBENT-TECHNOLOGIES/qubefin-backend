@@ -579,6 +579,12 @@ public class EmployeeRepository(QubeFinDataContext context, IUserRepository user
 
             var employeeDesignation = employee.TblEmployeeDesignations.FirstOrDefault(d => d.EffectiveTo == null);
 
+            employee.SeparationDate = separationDate;
+            employee.IsActive = false;
+            employee.IsPayrollActive = false;
+            employee.LastModifiedBy = loginUserId;
+            employee.LastModifiedOn = DateTime.UtcNow;
+
             #region Close current running records
             await context.TblEmployeeDesignations.Where(d => d.EmployeeId == employeeId && d.EffectiveTo == null).LoadAsync(cancellationToken);
             foreach (var designation in context.TblEmployeeDesignations.Local.Where(d => d.EmployeeId == employeeId && d.EffectiveTo == null))
