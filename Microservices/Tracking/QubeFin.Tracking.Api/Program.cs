@@ -1,6 +1,3 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using QubeFin.Core.Endpoint;
 using QubeFin.Core.Settings;
 using QubeFin.Tracking.Application;
@@ -16,7 +13,6 @@ builder.Services
     .AddPersistence(builder.Configuration);
 builder.Services.AddEndpoints(typeof(Program).Assembly);
 
-builder.Services.AddMemoryCache();
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -29,7 +25,8 @@ app.MapEndpoints();
 app.MapScalarApiReference(options =>
 {
     options.Servers = [];
-    options.Title = "QubeFin Tracking API";
+    options.Title = "QubeFin Payroll API";
 });
 
 app.Run();
+

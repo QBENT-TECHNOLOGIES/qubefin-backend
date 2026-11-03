@@ -1,0 +1,6 @@
+@QubeFin.Tracking.Api_HostAddress = http://localhost:5198
+
+GET {{QubeFin.Tracking.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
