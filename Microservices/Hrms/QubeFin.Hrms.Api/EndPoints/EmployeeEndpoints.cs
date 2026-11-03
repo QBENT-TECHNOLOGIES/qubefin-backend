@@ -410,13 +410,19 @@ public class EmployeeEndpoints : IEndpoint
         .WithSummary("Get All Organization Units With Their Employees")
         .RequireAuthorization();
 
-        app.MapGet("employees/hierarchy/{id:guid}", async (Guid id, ISender sender) =>
+        app.MapGet("employees/hierarchy/{id:guid?}", async (ClaimsPrincipal principal, Guid? id, ISender sender) =>
         {
-            var result = await sender.Send(new GetEmployeeHierarchyQuery(id));
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+
+            var employeeId = id ?? principal.Identity.GetEmployeeId();
+            var result = await sender.Send(new GetEmployeeHierarchyQuery(employeeId));
             return result.ToHttpResult();
         })
         .WithSummary("Get Employee Reporting Hierarchy")
-        .WithDescription("Tree rooted at the top-most superior (e.g. HOD) down through the employee to all subordinates, e.g. Divisional Manager > Branch Managers > Credit Officers.")
+        .WithDescription("Tree rooted at the top-most superior (e.g. HOD) down through the employee to all subordinates. Without an id the logged-in employee is used (My team page); with an id that employee is used and the token is ignored (employee list).")
         .WithTags("Employees")
         .RequireAuthorization();
 
