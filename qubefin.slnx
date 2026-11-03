@@ -6,7 +6,12 @@
     <Project Path="Host/QubeFin.AppHost/QubeFin.AppHost.csproj" Id="ca177eef-db43-4164-aa90-ba52daecebcb" />
     <Project Path="Host/QubeFin.ServiceDefaults/QubeFin.ServiceDefaults.csproj" Id="1477ff41-cddf-4a38-8ed1-aacd2f4fcd77" />
   </Folder>
-  <Folder Name="/Microservices/" />
+  <Folder Name="/Microservices/">
+    <Project Path="Microservices/Tracking/QubeFin.Tracking.Api/QubeFin.Tracking.Api.csproj" Id="9cd03d16-2cd5-42e3-9dba-543c926eda52" />
+    <Project Path="Microservices/Tracking/QubeFin.Tracking.Application/QubeFin.Tracking.Application.csproj" Id="192a47d5-2922-45b6-a284-d0fe8aca7e5d" />
+    <Project Path="Microservices/Tracking/QubeFin.Tracking.Infrastructure/QubeFin.Tracking.Infrastructure.csproj" Id="35655f0f-5c8a-4146-87bc-1ba0ddf209a9" />
+    <Project Path="Microservices/Tracking/QubeFin.Tracking.Persistence/QubeFin.Tracking.Persistence.csproj" Id="dc9f263e-0587-44ae-95ac-19549817e5f9" />
+  </Folder>
   <Folder Name="/Microservices/App/">
     <Project Path="Microservices/App/QubeFin.App.Api/QubeFin.App.Api.csproj" />
     <Project Path="Microservices/App/QubeFin.App.Application/QubeFin.App.Application.csproj" Id="cba4d1d3-7263-4d67-b2a6-dd882f886703" />

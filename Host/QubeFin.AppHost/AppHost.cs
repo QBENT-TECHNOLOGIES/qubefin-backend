@@ -14,4 +14,6 @@ builder.AddProject<Projects.QubeFin_Payroll_Api>("qubefin-payroll-api");
 
 builder.AddProject<Projects.QubeFin_Report_Api>("qubefin-report-api");
 
+builder.AddProject<Projects.QubeFin_Tracking_Api>("qubefin-tracking-api");
+
 builder.Build().Run();
