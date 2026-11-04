@@ -25,7 +25,7 @@ public class CompanyTransferCommandValidator : AbstractValidator<CompanyTransfer
         RuleFor(x => x.transfer.GrossSalary).GreaterThanOrEqualTo(0).WithMessage("Gross Salary cannot be negative.");
         RuleFor(x => x.transfer.JoiningDate).NotEmpty().WithMessage("Joining Date is required.");
         RuleFor(x => x.transfer.SeparationDate).NotEmpty().WithMessage("Separation Date is required.");
-        RuleFor(x => x.transfer.SeparationDate).GreaterThanOrEqualTo(x => x.transfer.JoiningDate).WithMessage("Separation Date cannot be earlier than Joining Date.");
+        RuleFor(x => x.transfer.JoiningDate).GreaterThan(x => x.transfer.SeparationDate).WithMessage("Joining Date must be later than Separation Date.");
         RuleFor(x => x.transfer.OrganisationUnitId).NotEqual(x => x.transfer.EmployeeId).WithMessage("Organisation Unit cannot be the same as Employee.");
         RuleFor(x => x.transfer.Designation).NotEqual(x => x.transfer.GradeId.ToString()).WithMessage("Designation cannot be the same as Grade.");
     }
