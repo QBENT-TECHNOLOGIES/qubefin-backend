@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Models.Tracking;
-using System.Globalization;
 
 namespace QubeFin.Tracking.Persistence.Repositories;
 
@@ -175,8 +174,7 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
                     t.OriginRefId.HasValue ? targetKinds.GetValueOrDefault(t.OriginRefId.Value) : "Custom",
                     t.OriginRefId,
                     t.TargetName,
-                    ToCoordinate(t.TargetLatitude),
-                    ToCoordinate(t.TargetLongitude),
+                    GeoCoordinates.ToGeoPoint(t.TargetLocation),
                     t.BranchId,
                     x.BranchName,
                     t.RadiusMeters,
@@ -185,13 +183,11 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
                     x.AddedByName,
                     t.TaskAddedOn,
                     t.ArrivedOn,
-                    ToCoordinate(t.ArriveLatitude),
-                    ToCoordinate(t.ArriveLongitude),
+                    GeoCoordinates.ToGeoPoint(t.ArriveLocation),
                     t.ArriveDistanceMeters,
                     t.TaskCompletedOn,
                     x.CompletedByName,
-                    ToCoordinate(t.CompletedLatitude),
-                    ToCoordinate(t.CompletedLongitude),
+                    GeoCoordinates.ToGeoPoint(t.CompletedLocation),
                     t.CompletedDistanceMeter,
                     t.IsLocationMatched,
                     t.PhotoUrl,
@@ -450,8 +446,7 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
                     p.Task.OriginRefId.HasValue ? targetKinds.GetValueOrDefault(p.Task.OriginRefId.Value) : "Custom",
                     p.Task.OriginRefId,
                     p.Task.BranchId,
-                    ToCoordinate(p.Task.TargetLatitude),
-                    ToCoordinate(p.Task.TargetLongitude),
+                    GeoCoordinates.ToGeoPoint(p.Task.TargetLocation),
                     p.Status == Completed && !p.Task.IsLocationMatched);
             })
             .ToList();
@@ -633,7 +628,4 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
         if (doneCount > 0) return InProgress;
         return Assigned;
     }
-
-    private static decimal? ToCoordinate(string? value) =>
-        decimal.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var coordinate) ? Math.Round(coordinate, 6) : null;
 }

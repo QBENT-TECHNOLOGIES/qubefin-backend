@@ -83,18 +83,15 @@ public record JobTaskTarget(
     TaskTargetKind? Kind,
     Guid? OriginRefId,
     string? TargetName,
-    decimal? TargetLatitude,
-    decimal? TargetLongitude,
+    GeoPoint? TargetLocation,
     Guid OrganisationUnitId,
     string BranchName,
     int? RadiusMeters);
 
 public record JobTaskVerification(
-    decimal? ArriveLatitude,
-    decimal? ArriveLongitude,
+    GeoPoint? ArriveLocation,
     decimal? ArriveDistanceMeters,
-    decimal? CompletedLatitude,
-    decimal? CompletedLongitude,
+    GeoPoint? CompletedLocation,
     decimal? CompletedDistanceMeter,
     bool IsLocationMatched,
     string? PhotoUrl);
@@ -135,7 +132,7 @@ public record JobTaskResponse(
     {
         var taskType = Enum.TryParse<TaskType>(row.TaskType, true, out var type) ? type : (TaskType?)null;
         var status = Enum.TryParse<JobTaskStatus>(row.Status, true, out var taskStatus) ? taskStatus : (JobTaskStatus?)null;
-        var hasVerification = row.ArrivedOn.HasValue || row.ArriveLatitude.HasValue || row.CompletedLatitude.HasValue || row.PhotoUrl is not null;
+        var hasVerification = row.ArrivedOn.HasValue || row.ArriveLocation is not null || row.CompletedLocation is not null || row.PhotoUrl is not null;
 
         return new JobTaskResponse(
             row.Id,
@@ -151,8 +148,7 @@ public record JobTaskResponse(
                 Enum.TryParse<TaskTargetKind>(row.TargetKind, true, out var kind) ? kind : null,
                 row.OriginRefId,
                 row.TargetName,
-                row.TargetLatitude,
-                row.TargetLongitude,
+                row.TargetLocation,
                 row.OrganisationUnitId,
                 row.BranchName,
                 row.RadiusMeters),
@@ -165,7 +161,7 @@ public record JobTaskResponse(
             row.CompletedByName,
             row.Remarks,
             hasVerification
-                ? new JobTaskVerification(row.ArriveLatitude, row.ArriveLongitude, row.ArriveDistanceMeters, row.CompletedLatitude, row.CompletedLongitude, row.CompletedDistanceMeter, row.IsLocationMatched, row.PhotoUrl)
+                ? new JobTaskVerification(row.ArriveLocation, row.ArriveDistanceMeters, row.CompletedLocation, row.CompletedDistanceMeter, row.IsLocationMatched, row.PhotoUrl)
                 : null,
             taskType == Enums.TaskType.OdFollowUp && status == JobTaskStatus.Completed
                 ? new JobTaskOdOutcome(row.IsOdMemberAvailable, row.IsEmireceived, row.ReceivedAmount, row.Odptpdate)

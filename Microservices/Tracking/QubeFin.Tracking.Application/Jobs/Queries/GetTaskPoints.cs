@@ -2,6 +2,7 @@ using FluentResults;
 using FluentValidation;
 using MediatR;
 using QubeFin.Core.Results;
+using QubeFin.Persistence.Models.Tracking;
 using QubeFin.Tracking.Application.Enums;
 using QubeFin.Tracking.Persistence.Repositories;
 
@@ -40,8 +41,7 @@ public record JobTaskPointResponse(
     TaskTargetKind? TargetKind,
     Guid? OriginRefId,
     Guid OrganisationUnitId,
-    decimal? TargetLatitude,
-    decimal? TargetLongitude,
+    GeoPoint? TargetLocation,
     bool LocationMismatch);
 #endregion
 
@@ -73,8 +73,7 @@ internal sealed class GetTaskPointsQueryHandler(ITrackingScopeRepository scopeRe
             Enum.TryParse<TaskTargetKind>(p.TargetKind, true, out var kind) ? kind : null,
             p.OriginRefId,
             p.OrganisationUnitId,
-            p.TargetLatitude,
-            p.TargetLongitude,
+            p.TargetLocation,
             p.LocationMismatch)).ToList());
     }
 }

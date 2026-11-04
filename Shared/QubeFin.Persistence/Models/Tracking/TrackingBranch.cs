@@ -6,6 +6,5 @@ public record TrackingBranch(
     string Code,
     string? AreaName,
     string? DivisionName,
-    decimal? Latitude,
-    decimal? Longitude,
-    int? OperatingRadiusMeter);
+    GeoPoint? Location,
+    int? BranchOperatingRadiusInKm);

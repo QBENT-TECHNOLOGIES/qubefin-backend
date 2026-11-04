@@ -11,7 +11,6 @@ public record TrackingFieldOfficer(
     string UnitName,
     IReadOnlyList<Guid> OrganisationUnitIds,
     string? Phone,
-    decimal? HomeLatitude,
-    decimal? HomeLongitude,
+    GeoPoint? PresentLocation,
     string? ReportingOfficerName,
     bool CanAssign);

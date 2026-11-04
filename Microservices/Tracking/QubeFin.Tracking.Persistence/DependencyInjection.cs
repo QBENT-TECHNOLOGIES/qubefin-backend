@@ -13,7 +13,7 @@ public static class DependencyInjection
     {
         services.AddDbContext<QubeFinDataContext>(options =>
         {
-            options.UseSqlServer(configuration.GetConnectionString("DataConnection"));
+            options.UseSqlServer(configuration.GetConnectionString("DataConnection"), sqlOptions => sqlOptions.UseNetTopologySuite());
             options.EnableSensitiveDataLogging(false);
         });
         services.AddScoped<IUnitOfWork>(options => options.GetRequiredService<QubeFinDataContext>());
@@ -22,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<ITokenGenerator, TokenGenerator>();
         services.AddScoped<ITrackingScopeRepository, TrackingScopeRepository>();
         services.AddScoped<IJobRepository, JobRepository>();
+        services.AddScoped<IGeoTagRepository, GeoTagRepository>();
         return services;
     }
 }

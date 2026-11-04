@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Models.Tracking;
 
 namespace QubeFin.Tracking.Persistence.Repositories;
@@ -9,6 +10,7 @@ public interface ITrackingScopeRepository
     Task<TrackingViewer?> GetViewerAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<bool> HasAssignableEmployeesAsync(TrackingViewer viewer, CancellationToken cancellationToken = default);
     Task<List<TrackingBranch>> GetBranchesAsync(IReadOnlyList<Guid> branchIds, CancellationToken cancellationToken = default);
+    Task<TblTrackingSetting?> GetTrackingSettingAsync(CancellationToken cancellationToken = default);
     Task<List<TrackingFieldOfficer>> GetFieldOfficersAsync(TrackingViewer viewer, Guid? branchId, CancellationToken cancellationToken = default);
 }
 
@@ -91,9 +93,10 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
 
         var branches = await context.TblOrganizationUnits
             .Where(o => branchIds.Contains(o.Id))
-            .Select(o => new { o.Id, o.Name, o.CodeVal, o.ParentId, o.Latitude, o.Longitude, o.OperatingRadiusMeter })
+            .Select(o => new { o.Id, o.Name, o.CodeVal, o.ParentId, o.Latitude, o.Longitude })
             .AsNoTracking()
             .ToListAsync(cancellationToken);
+        var setting = await GetTrackingSettingAsync(cancellationToken);
 
         return branches
             .OrderBy(b => b.Name)
@@ -103,11 +106,18 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
                 b.CodeVal.ToString(),
                 AncestorOfType(units, b.ParentId, AreaUnitType)?.Name,
                 AncestorOfType(units, b.ParentId, DivisionUnitType)?.Name,
-                b.Latitude.HasValue ? Math.Round(b.Latitude.Value, 6) : null,
-                b.Longitude.HasValue ? Math.Round(b.Longitude.Value, 6) : null,
-                b.OperatingRadiusMeter))
+                GeoCoordinates.ToGeoPoint(b.Latitude, b.Longitude),
+                setting?.BranchOperatingRadiusInKm))
             .ToList();
     }
+
+    // The active Tbl_TrackingSetting row (latest if more than one is active)
+    public async Task<TblTrackingSetting?> GetTrackingSettingAsync(CancellationToken cancellationToken = default) =>
+        await context.TblTrackingSettings
+            .Where(s => s.IsActive)
+            .OrderByDescending(s => s.ModifiedOn ?? s.CreatedOn)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(cancellationToken);
 
     public async Task<List<TrackingFieldOfficer>> GetFieldOfficersAsync(TrackingViewer viewer, Guid? branchId, CancellationToken cancellationToken = default)
     {
@@ -136,8 +146,7 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
                 ed.Employee.OrganizationUnitId,
                 OrganizationUnitName = ed.Employee.OrganizationUnit != null ? ed.Employee.OrganizationUnit.Name : null,
                 ed.Employee.MobileNo,
-                ed.Employee.PresentLatitude,
-                ed.Employee.PresentLongitude,
+                ed.Employee.PresentLocation,
                 ReportingOfficerName = ed.Employee.Supervisor != null ? ed.Employee.Supervisor.FullName : null
             })
             .AsNoTracking()
@@ -169,8 +178,7 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
                 p.DesignationUnitName,
                 officerBranchIds,
                 p.MobileNo,
-                p.PresentLatitude.HasValue ? Math.Round(p.PresentLatitude.Value, 6) : null,
-                p.PresentLongitude.HasValue ? Math.Round(p.PresentLongitude.Value, 6) : null,
+                GeoCoordinates.ToGeoPoint(p.PresentLocation),
                 p.ReportingOfficerName,
                 isBelow));
         }

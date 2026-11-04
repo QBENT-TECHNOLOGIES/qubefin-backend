@@ -18,6 +18,5 @@ public record JobTaskPointRow(
     string? TargetKind,
     Guid? OriginRefId,
     Guid OrganisationUnitId,
-    decimal? TargetLatitude,
-    decimal? TargetLongitude,
+    GeoPoint? TargetLocation,
     bool LocationMismatch);

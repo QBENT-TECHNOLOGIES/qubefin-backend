@@ -60,3 +60,11 @@ Authorization: Bearer {{token}}
 GET {{QubeFin.Tracking.Api_HostAddress}}/jobs/task-points?pendingOnly=true
 Accept: application/json
 Authorization: Bearer {{token}}
+
+###
+
+@organisationUnitId = <paste branch id>
+
+GET {{QubeFin.Tracking.Api_HostAddress}}/geo-tags/points?organisationUnitId={{organisationUnitId}}&kinds=GroupCentre,Member,OdMember
+Accept: application/json
+Authorization: Bearer {{token}}
