@@ -48,3 +48,15 @@ Authorization: Bearer {{token}}
 GET {{QubeFin.Tracking.Api_HostAddress}}/jobs/{{jobId}}
 Accept: application/json
 Authorization: Bearer {{token}}
+
+###
+
+GET {{QubeFin.Tracking.Api_HostAddress}}/jobs/{{jobId}}/history
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+
+GET {{QubeFin.Tracking.Api_HostAddress}}/jobs/task-points?pendingOnly=true
+Accept: application/json
+Authorization: Bearer {{token}}
