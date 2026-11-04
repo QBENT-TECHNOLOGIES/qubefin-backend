@@ -669,6 +669,24 @@ public class EmployeeRepository(QubeFinDataContext context, IUserRepository user
             else
             {
                 designationId = transferDesignation.Id;
+
+                var currentGradeMapping = currentDesignation.TblDesignationGradeMappings.FirstOrDefault(g => g.IsActive);
+                if (currentGradeMapping != null)
+                {
+                    currentGradeMapping.IsActive = false;
+                }
+                if (currentGradeMapping == null || currentGradeMapping.GradeId != SalaryGradeId)
+                {
+                    await context.TblDesignationGradeMappings.AddAsync(
+                        new TblDesignationGradeMapping
+                        {
+                            Id = Guid.NewGuid(),
+                            DesignationId = designationId,
+                            GradeId = SalaryGradeId,
+                            IsActive = true
+                        },
+                        cancellationToken);
+                }
             }
 
             var newEmployee = new TblEmployee();
