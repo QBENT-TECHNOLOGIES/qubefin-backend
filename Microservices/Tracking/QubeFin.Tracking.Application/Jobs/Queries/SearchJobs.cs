@@ -31,37 +31,12 @@ public class SearchJobsQueryValidator : AbstractValidator<SearchJobsQuery>
 #endregion
 
 #region --- RESPONSE ---
-public record JobSummaryResponse(
-    Guid Id,
-    string JobCode,
-    string JobTitle,
-    JobStatus Status,
-    Guid? AssigneeId,
-    string? AssigneeName,
-    string AssigneeRole,
-    string UnitName,
-    IReadOnlyList<Guid> OrganisationUnitIds,
-    IReadOnlyList<string> BranchNames,
-    string CreatedByName,
-    DateTime? CreatedOn,
-    DateOnly StartDate,
-    DateOnly? EndDate,
-    int TaskCount,
-    int DoneCount,
-    int OpenCount,
-    int SelfAddedCount,
-    IReadOnlyList<TaskType> Types,
-    Guid? TransferJobRefId,
-    string? TransferJobRefCode);
-
 public record JobSearchResponse(List<JobSummaryResponse> Jobs, int TotalRecords, JobStatusCounts Summary);
 #endregion
 
 #region --- HANDLER ---
 internal sealed class SearchJobsQueryHandler(ITrackingScopeRepository scopeRepository, IJobRepository jobRepository) : IRequestHandler<SearchJobsQuery, Result<JobSearchResponse>>
 {
-    private static readonly TimeZoneInfo IndiaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Kolkata");
-
     public async Task<Result<JobSearchResponse>> Handle(SearchJobsQuery query, CancellationToken cancellationToken)
     {
         var viewer = await scopeRepository.GetViewerAsync(query.UserId, cancellationToken);
@@ -90,32 +65,9 @@ internal sealed class SearchJobsQueryHandler(ITrackingScopeRepository scopeRepos
             request.PageSize,
             request.SortOn,
             request.SortDirection == SortDirection.Desc);
-        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, IndiaTimeZone));
+        var result = await jobRepository.SearchJobsAsync(viewer, filter, TrackingClock.Today(), cancellationToken);
 
-        var result = await jobRepository.SearchJobsAsync(viewer, filter, today, cancellationToken);
-
-        var jobs = result.Jobs.Select(j => new JobSummaryResponse(
-            j.Id,
-            j.JobCode,
-            j.JobTitle,
-            Enum.Parse<JobStatus>(j.Status),
-            j.AssigneeId,
-            j.AssigneeName,
-            j.AssigneeRole,
-            j.UnitName,
-            j.OrganisationUnitIds,
-            j.BranchNames,
-            j.CreatedByName,
-            j.CreatedOn,
-            j.StartDate,
-            j.EndDate,
-            j.TaskCount,
-            j.DoneCount,
-            j.OpenCount,
-            j.SelfAddedCount,
-            j.Types.Select(t => Enum.TryParse<TaskType>(t, true, out var type) ? (TaskType?)type : null).OfType<TaskType>().ToList(),
-            j.TransferJobRefId,
-            j.TransferJobRefCode)).ToList();
+        var jobs = result.Jobs.Select(JobSummaryResponse.From).ToList();
 
         return Result.Ok(new JobSearchResponse(jobs, result.TotalRecords, result.Summary));
     }

@@ -2,12 +2,14 @@ using Microsoft.EntityFrameworkCore;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Models.Tracking;
+using System.Globalization;
 
 namespace QubeFin.Tracking.Persistence.Repositories;
 
 public interface IJobRepository
 {
     Task<JobSearchResult> SearchJobsAsync(TrackingViewer viewer, JobSearchFilter filter, DateOnly today, CancellationToken cancellationToken = default);
+    Task<JobDetailRow?> GetJobAsync(TrackingViewer viewer, Guid jobId, DateOnly today, CancellationToken cancellationToken = default);
 }
 
 public class JobRepository(QubeFinDataContext context) : IJobRepository
@@ -19,6 +21,7 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
     private const string Completed = "Completed";
     private const string Cancelled = "Cancelled";
     private const string Pending = "Pending";
+    private const string Transferred = "Transferred";
     private const string OdFollowUp = "OdFollowUp";
     private const string MemberVisit = "MemberVisit";
 
@@ -67,42 +70,23 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
                     .Max(l => l.Dpddays) <= dpdMax));
         }
 
-        var keys = await jobs
-            .Select(j => new
-            {
-                j.Id,
-                j.JobCode,
-                j.IsCancel,
-                j.EndDate,
-                j.CreatedOn,
-                AssigneeName = context.TblEmployeeDesignations
-                    .Where(ed => ed.DesignationId == j.AssignTo && ed.EffectiveTo == null)
-                    .OrderByDescending(ed => ed.EffectiveFrom)
-                    .Select(ed => ed.Employee.FullName)
-                    .FirstOrDefault(),
-                PendingCount = j.TblJobTasks.Count(t => t.Status == Pending || (t.Status == null && !t.IsCompleted && !t.IsTaskCancel && t.TransferTaskId == null)),
-                DoneCount = j.TblJobTasks.Count(t => t.Status == Completed || (t.Status == null && t.IsCompleted))
-            })
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
-
-        var withStatus = keys
-            .Select(k => new { k.Id, k.JobCode, k.EndDate, k.CreatedOn, k.AssigneeName, k.PendingCount, k.DoneCount, Status = JobStatusOf(k.IsCancel, k.PendingCount, k.DoneCount, k.EndDate, today) })
+        var keys = (await JobKeys(jobs).ToListAsync(cancellationToken))
+            .Select(k => k with { Status = JobStatusOf(k.IsCancel, k.PendingCount, k.DoneCount, k.EndDate, today) })
             .ToList();
 
         // Counts use every filter except status, so the top cards do not change when a status card is clicked
         var summary = new JobStatusCounts(
-            withStatus.Count,
-            withStatus.Count(k => k.Status == Assigned),
-            withStatus.Count(k => k.Status == InProgress),
-            withStatus.Count(k => k.Status == Delayed),
-            withStatus.Count(k => k.Status == Completed));
+            keys.Count,
+            keys.Count(k => k.Status == Assigned),
+            keys.Count(k => k.Status == InProgress),
+            keys.Count(k => k.Status == Delayed),
+            keys.Count(k => k.Status == Completed));
 
         var filtered = filter.Status is not null
-            ? withStatus.Where(k => k.Status == filter.Status)
+            ? keys.Where(k => k.Status == filter.Status)
             : filter.OpenOnly
-                ? withStatus.Where(k => k.Status is Assigned or InProgress or Delayed)
-                : withStatus;
+                ? keys.Where(k => k.Status is Assigned or InProgress or Delayed)
+                : keys;
 
         var sorted = (filter.SortOn?.ToLowerInvariant()) switch
         {
@@ -114,10 +98,155 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
 
         var matching = sorted.ThenBy(k => k.JobCode).ToList();
         var page = matching.Skip(filter.PageIndex * filter.PageSize).Take(filter.PageSize).ToList();
-        var pageIds = page.Select(k => k.Id).ToList();
+        var rows = await SummaryRowsAsync(page, cancellationToken);
 
+        return new JobSearchResult(rows, matching.Count, summary);
+    }
+
+    public async Task<JobDetailRow?> GetJobAsync(TrackingViewer viewer, Guid jobId, DateOnly today, CancellationToken cancellationToken = default)
+    {
+        var key = await JobKeys(VisibleJobs(viewer).Where(j => j.Id == jobId)).FirstOrDefaultAsync(cancellationToken);
+        if (key is null) return null;
+        key = key with { Status = JobStatusOf(key.IsCancel, key.PendingCount, key.DoneCount, key.EndDate, today) };
+        var summary = (await SummaryRowsAsync([key], cancellationToken)).Single();
+
+        var job = await context.TblJobs
+            .Where(j => j.Id == jobId)
+            .Select(j => new
+            {
+                j.JobDescription,
+                j.CreatedBy,
+                j.AssignTo,
+                AssigneePost = j.AssignToNavigation.Post.Name,
+                AssigneeUnitId = j.AssignToNavigation.OrganizationUnitId
+            })
+            .AsNoTracking()
+            .SingleAsync(cancellationToken);
+        var creator = await GetPositionAsync(job.CreatedBy, cancellationToken);
+
+        var tasks = await context.TblJobTasks
+            .Where(t => t.JobId == jobId)
+            .Select(t => new
+            {
+                Task = t,
+                CoOrdinatedByName = context.TblEmployeeDesignations
+                    .Where(ed => ed.DesignationId == t.CoOrdinatedBy && ed.EffectiveTo == null)
+                    .OrderByDescending(ed => ed.EffectiveFrom)
+                    .Select(ed => ed.Employee.FullName)
+                    .FirstOrDefault(),
+                BranchName = t.Branch.Name,
+                AddedByName = t.TaskAddedByNavigation != null
+                    ? (t.TaskAddedByNavigation.Employee != null ? t.TaskAddedByNavigation.Employee.FullName : t.TaskAddedByNavigation.UserName)
+                    : null,
+                CompletedByName = t.TaskCompletedByNavigation != null
+                    ? (t.TaskCompletedByNavigation.Employee != null ? t.TaskCompletedByNavigation.Employee.FullName : t.TaskCompletedByNavigation.UserName)
+                    : null,
+                TransferredTo = context.TblJobTasks
+                    .Where(n => n.Id == t.TransferTaskId)
+                    .Select(n => new { n.JobId, n.Job.JobCode })
+                    .FirstOrDefault()
+            })
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        var targetKinds = await TargetKindsAsync(tasks.Select(t => t.Task.OriginRefId), cancellationToken);
+
+        var taskRows = tasks
+            .OrderBy(t => t.Task.TaskAddedOn).ThenBy(t => t.Task.TaskNo)
+            .Select(x =>
+            {
+                var t = x.Task;
+                var status = TaskStatusOf(t);
+                var isLate = summary.EndDate.HasValue && (status == Completed
+                    ? t.TaskCompletedOn.HasValue && DateOnly.FromDateTime(t.TaskCompletedOn.Value) > summary.EndDate.Value
+                    : status == Pending && today > summary.EndDate.Value);
+                return new JobTaskRow(
+                    t.Id,
+                    t.TaskNo,
+                    t.JobId,
+                    t.TaskType,
+                    t.TaskTitle,
+                    t.Notes,
+                    t.Priority,
+                    t.CoOrdinatedBy,
+                    x.CoOrdinatedByName,
+                    t.OriginRefId.HasValue ? targetKinds.GetValueOrDefault(t.OriginRefId.Value) : "Custom",
+                    t.OriginRefId,
+                    t.TargetName,
+                    ToCoordinate(t.TargetLatitude),
+                    ToCoordinate(t.TargetLongitude),
+                    t.BranchId,
+                    x.BranchName,
+                    t.RadiusMeters,
+                    status,
+                    t.IsSelfAdded == true,
+                    x.AddedByName,
+                    t.TaskAddedOn,
+                    t.ArrivedOn,
+                    ToCoordinate(t.ArriveLatitude),
+                    ToCoordinate(t.ArriveLongitude),
+                    t.ArriveDistanceMeters,
+                    t.TaskCompletedOn,
+                    x.CompletedByName,
+                    ToCoordinate(t.CompletedLatitude),
+                    ToCoordinate(t.CompletedLongitude),
+                    t.CompletedDistanceMeter,
+                    t.IsLocationMatched,
+                    t.PhotoUrl,
+                    t.IsOdMemberAvailable,
+                    t.IsEmireceived,
+                    t.ReceivedAmount,
+                    t.Odptpdate,
+                    t.Remarks,
+                    isLate,
+                    x.TransferredTo?.JobId,
+                    x.TransferredTo?.JobCode,
+                    t.TaskCancelReason);
+            })
+            .ToList();
+
+        return new JobDetailRow(
+            summary,
+            job.JobDescription,
+            job.CreatedBy,
+            creator,
+            job.AssignTo,
+            new TrackingPosition(false, job.AssigneePost, job.AssigneeUnitId),
+            taskRows);
+    }
+
+    private sealed record JobKey(
+        Guid Id,
+        string JobCode,
+        bool IsCancel,
+        DateOnly? EndDate,
+        DateTime? CreatedOn,
+        string? AssigneeName,
+        int PendingCount,
+        int DoneCount,
+        string Status);
+
+    private IQueryable<JobKey> JobKeys(IQueryable<TblJob> jobs) =>
+        jobs.Select(j => new JobKey(
+            j.Id,
+            j.JobCode,
+            j.IsCancel,
+            j.EndDate,
+            j.CreatedOn,
+            context.TblEmployeeDesignations
+                .Where(ed => ed.DesignationId == j.AssignTo && ed.EffectiveTo == null)
+                .OrderByDescending(ed => ed.EffectiveFrom)
+                .Select(ed => ed.Employee.FullName)
+                .FirstOrDefault(),
+            j.TblJobTasks.Count(t => t.Status == Pending || (t.Status == null && !t.IsCompleted && !t.IsTaskCancel && t.TransferTaskId == null)),
+            j.TblJobTasks.Count(t => t.Status == Completed || (t.Status == null && t.IsCompleted)),
+            string.Empty));
+
+    private async Task<List<JobSummaryRow>> SummaryRowsAsync(List<JobKey> keys, CancellationToken cancellationToken)
+    {
+        var ids = keys.Select(k => k.Id).ToList();
         var details = await context.TblJobs
-            .Where(j => pageIds.Contains(j.Id))
+            .Where(j => ids.Contains(j.Id))
             .Select(j => new
             {
                 j.Id,
@@ -140,7 +269,7 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
             .AsNoTracking()
             .ToDictionaryAsync(j => j.Id, cancellationToken);
 
-        var rows = page
+        return keys
             .Where(k => details.ContainsKey(k.Id))
             .Select(k =>
             {
@@ -170,8 +299,6 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
                     d.TransferJobRefCode);
             })
             .ToList();
-
-        return new JobSearchResult(rows, matching.Count, summary);
     }
 
     // D4 "see a job": Admin sees all; everyone sees jobs they created or hold, plus jobs in their scope held by someone below them,
@@ -191,6 +318,60 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
             || (isBranchManager && j.AssignToNavigation.OrganizationUnitId == viewer.UnitId && j.AssignToNavigation.Post.Name == TrackingRole.AssistantBranchManager));
     }
 
+    private async Task<TrackingPosition> GetPositionAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var user = await context.TblUsers
+            .Where(u => u.Id == userId)
+            .Select(u => new { u.IsSuperAdmin, u.EmployeeId })
+            .AsNoTracking()
+            .FirstOrDefaultAsync(cancellationToken);
+        if (user is null) return new TrackingPosition(false, null, null);
+        if (user.IsSuperAdmin) return new TrackingPosition(true, TrackingRole.Admin, null);
+
+        var position = await context.TblEmployeeDesignations
+            .Where(ed => ed.EmployeeId == user.EmployeeId && ed.EffectiveTo == null)
+            .OrderByDescending(ed => ed.EffectiveFrom)
+            .Select(ed => new { PostName = ed.Designation.Post.Name, ed.Designation.OrganizationUnitId })
+            .AsNoTracking()
+            .FirstOrDefaultAsync(cancellationToken);
+        return new TrackingPosition(false, position?.PostName, position?.OrganizationUnitId);
+    }
+
+    // OriginRefId may point to a group, a member, a loan or a branch; null means a point picked on the map
+    private async Task<Dictionary<Guid, string>> TargetKindsAsync(IEnumerable<Guid?> originRefIds, CancellationToken cancellationToken)
+    {
+        var ids = originRefIds.Where(id => id.HasValue).Select(id => id!.Value).Distinct().ToList();
+        var kinds = new Dictionary<Guid, string>();
+        if (ids.Count == 0) return kinds;
+
+        foreach (var id in await context.TblBcgroups.Where(g => ids.Contains(g.Id)).Select(g => g.Id).ToListAsync(cancellationToken))
+        {
+            kinds[id] = "GroupCentre";
+        }
+        foreach (var member in await context.TblBcmembers.Where(m => ids.Contains(m.Id)).Select(m => new { m.Id, m.IsOverdueMember }).ToListAsync(cancellationToken))
+        {
+            kinds[member.Id] = member.IsOverdueMember ? "OdMember" : "Member";
+        }
+        foreach (var id in await context.TblBcloans.Where(l => ids.Contains(l.Id)).Select(l => l.Id).ToListAsync(cancellationToken))
+        {
+            kinds[id] = "OdMember";
+        }
+        foreach (var id in await context.TblOrganizationUnits.Where(o => ids.Contains(o.Id)).Select(o => o.Id).ToListAsync(cancellationToken))
+        {
+            kinds[id] = "Branch";
+        }
+        return kinds;
+    }
+
+    private static string TaskStatusOf(TblJobTask task)
+    {
+        if (!string.IsNullOrWhiteSpace(task.Status)) return task.Status;
+        if (task.IsCompleted) return Completed;
+        if (task.TransferTaskId.HasValue) return Transferred;
+        if (task.IsTaskCancel) return Cancelled;
+        return Pending;
+    }
+
     // D8, first match wins
     private static string JobStatusOf(bool isCancel, int pendingCount, int doneCount, DateOnly? endDate, DateOnly today)
     {
@@ -200,4 +381,7 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
         if (doneCount > 0) return InProgress;
         return Assigned;
     }
+
+    private static decimal? ToCoordinate(string? value) =>
+        decimal.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var coordinate) ? Math.Round(coordinate, 6) : null;
 }

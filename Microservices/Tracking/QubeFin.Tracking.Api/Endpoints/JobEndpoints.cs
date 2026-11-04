@@ -26,5 +26,20 @@ public class JobEndpoints : IEndpoint
         .WithDescription("Returns one page of the jobs the signed-in user may see, with filters, sorting and the status counts for the top cards.")
         .WithTags("Jobs")
         .RequireAuthorization();
+
+        app.MapGet("jobs/{id:guid}", async (Guid id, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Unauthorized();
+            }
+            var userId = principal.Identity.GetUserId();
+            var result = await sender.Send(new GetJobByIdQuery(userId, id), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get one job")
+        .WithDescription("Returns one job with all its tasks (including cancelled, rejected and transferred ones) and what the signed-in user may do with it. Outside the user's scope returns 404.")
+        .WithTags("Jobs")
+        .RequireAuthorization();
     }
 }
