@@ -13,3 +13,30 @@ Accept: application/json
 Authorization: Bearer {{token}}
 
 ###
+
+###
+
+GET {{QubeFin.Tracking.Api_HostAddress}}/field-officers
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+
+POST {{QubeFin.Tracking.Api_HostAddress}}/jobs/search
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "searchText": null,
+  "status": null,
+  "openOnly": false,
+  "organisationUnitId": null,
+  "assigneeId": null,
+  "dueFrom": null,
+  "dueTo": null,
+  "dpdRange": null,
+  "pageIndex": 0,
+  "pageSize": 10,
+  "sortOn": "endDate",
+  "sortDirection": "asc"
+}

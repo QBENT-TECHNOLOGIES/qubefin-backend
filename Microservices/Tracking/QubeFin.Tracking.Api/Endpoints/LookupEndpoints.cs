@@ -40,5 +40,20 @@ public class LookupEndpoints : IEndpoint
         .WithDescription("Returns the branches the signed-in user may see (every branch for an Admin), sorted by name, with area, division, location and operating radius.")
         .WithTags("Lookups")
         .RequireAuthorization();
+
+        app.MapGet("field-officers", async (Guid? branchId, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Unauthorized();
+            }
+            var userId = principal.Identity.GetUserId();
+            var result = await sender.Send(new GetFieldOfficersQuery(userId, branchId), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get field officers the user may monitor")
+        .WithDescription("Returns everyone in a lower role inside the user's scope (plus, for a Branch Manager, the Assistant Branch Manager of their branch), with canAssign telling who may be given work. Optional branchId keeps only people who may work in that branch.")
+        .WithTags("Lookups")
+        .RequireAuthorization();
     }
 }

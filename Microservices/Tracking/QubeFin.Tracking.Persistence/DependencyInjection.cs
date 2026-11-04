@@ -21,6 +21,7 @@ public static class DependencyInjection
 
         services.AddScoped<ITokenGenerator, TokenGenerator>();
         services.AddScoped<ITrackingScopeRepository, TrackingScopeRepository>();
+        services.AddScoped<IJobRepository, JobRepository>();
         return services;
     }
 }

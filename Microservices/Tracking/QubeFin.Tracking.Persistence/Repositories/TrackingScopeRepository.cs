@@ -9,6 +9,7 @@ public interface ITrackingScopeRepository
     Task<TrackingViewer?> GetViewerAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<bool> HasAssignableEmployeesAsync(TrackingViewer viewer, CancellationToken cancellationToken = default);
     Task<List<TrackingBranch>> GetBranchesAsync(IReadOnlyList<Guid> branchIds, CancellationToken cancellationToken = default);
+    Task<List<TrackingFieldOfficer>> GetFieldOfficersAsync(TrackingViewer viewer, Guid? branchId, CancellationToken cancellationToken = default);
 }
 
 public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScopeRepository
@@ -106,6 +107,74 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
                 b.Longitude.HasValue ? Math.Round(b.Longitude.Value, 6) : null,
                 b.OperatingRadiusMeter))
             .ToList();
+    }
+
+    public async Task<List<TrackingFieldOfficer>> GetFieldOfficersAsync(TrackingViewer viewer, Guid? branchId, CancellationToken cancellationToken = default)
+    {
+        var units = await context.TblOrganizationUnits
+            .Select(o => new UnitNode(o.Id, o.ParentId, o.Name, o.OrganizationUnitType.Name))
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        var trackingPosts = TrackingRole.PostNamesBelow(TrackingRole.Admin).ToList();
+        var positions = (await context.TblEmployeeDesignations
+            .Where(ed => ed.EffectiveTo == null
+                && ed.Employee.IsActive
+                && ed.EmployeeId != viewer.EmployeeId
+                && trackingPosts.Contains(ed.Designation.Post.Name)
+                && viewer.UnitIdsInScope.Contains(ed.Designation.OrganizationUnitId))
+            .Select(ed => new
+            {
+                ed.EmployeeId,
+                ed.EffectiveFrom,
+                ed.Employee.Code,
+                ed.Employee.FullName,
+                PostName = ed.Designation.Post.Name,
+                DesignationName = ed.Designation.Name,
+                DesignationUnitId = ed.Designation.OrganizationUnitId,
+                DesignationUnitName = ed.Designation.OrganizationUnit.Name,
+                ed.Employee.OrganizationUnitId,
+                OrganizationUnitName = ed.Employee.OrganizationUnit != null ? ed.Employee.OrganizationUnit.Name : null,
+                ed.Employee.MobileNo,
+                ed.Employee.PresentLatitude,
+                ed.Employee.PresentLongitude,
+                ReportingOfficerName = ed.Employee.Supervisor != null ? ed.Employee.Supervisor.FullName : null
+            })
+            .AsNoTracking()
+            .ToListAsync(cancellationToken))
+            .GroupBy(p => p.EmployeeId)
+            .Select(g => g.OrderByDescending(p => p.EffectiveFrom).First());
+
+        var officers = new List<TrackingFieldOfficer>();
+        foreach (var p in positions)
+        {
+            var isBelow = TrackingRole.Rank(p.PostName) < TrackingRole.Rank(viewer.Role);
+            // A Branch Manager oversees the Assistant Branch Manager of their own branch but cannot give them work
+            var isOwnBranchAbm = viewer.Role == TrackingRole.BranchManager
+                && p.PostName == TrackingRole.AssistantBranchManager
+                && p.DesignationUnitId == viewer.UnitId;
+            if (!isBelow && !isOwnBranchAbm) continue;
+
+            var officerBranchIds = BranchIdsOf(DescendantsAndSelf(units, p.DesignationUnitId)).ToList();
+            if (branchId.HasValue && !officerBranchIds.Contains(branchId.Value)) continue;
+
+            officers.Add(new TrackingFieldOfficer(
+                p.EmployeeId,
+                p.Code,
+                p.FullName,
+                p.PostName,
+                p.DesignationName,
+                p.OrganizationUnitId,
+                p.OrganizationUnitName,
+                p.DesignationUnitName,
+                officerBranchIds,
+                p.MobileNo,
+                p.PresentLatitude.HasValue ? Math.Round(p.PresentLatitude.Value, 6) : null,
+                p.PresentLongitude.HasValue ? Math.Round(p.PresentLongitude.Value, 6) : null,
+                p.ReportingOfficerName,
+                isBelow));
+        }
+        return officers.OrderBy(o => o.Name).ToList();
     }
 
     private sealed record UnitNode(Guid Id, Guid? ParentId, string Name, string TypeName);

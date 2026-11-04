@@ -27,7 +27,7 @@ public record TrackingViewerResponse(
     string Name,
     string Role,
     string UnitName,
-    IReadOnlyList<Guid> BranchIds,
+    IReadOnlyList<Guid> OrganisationUnitIds,
     bool CanCreateJobs);
 #endregion
 
