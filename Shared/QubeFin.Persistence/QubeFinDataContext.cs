@@ -1766,7 +1766,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.ArriveDistanceMeters).HasColumnType("decimal(9, 6)");
             entity.Property(e => e.ArriveLatitude).HasMaxLength(50);
-            entity.Property(e => e.ArriveLontitude).HasMaxLength(50);
+            entity.Property(e => e.ArriveLongitude).HasMaxLength(50);
             entity.Property(e => e.ArrivedOn).HasColumnType("datetime");
             entity.Property(e => e.CompletedDistanceMeter).HasColumnType("decimal(9, 6)");
             entity.Property(e => e.CompletedLatitude).HasMaxLength(50);
@@ -1781,11 +1781,11 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Remarks).HasMaxLength(500);
             entity.Property(e => e.Status).HasMaxLength(30);
             entity.Property(e => e.TargetLatitude).HasMaxLength(50);
-            entity.Property(e => e.TargetLongtitude).HasMaxLength(50);
+            entity.Property(e => e.TargetLongitude).HasMaxLength(50);
             entity.Property(e => e.TargetName).HasMaxLength(50);
             entity.Property(e => e.TaskAddedOn).HasColumnType("datetime");
             entity.Property(e => e.TaskCancelDate).HasColumnType("datetime");
-            entity.Property(e => e.TaskCancelReson).HasMaxLength(50);
+            entity.Property(e => e.TaskCancelReason).HasMaxLength(50);
             entity.Property(e => e.TaskCompletedOn).HasColumnType("datetime");
             entity.Property(e => e.TaskNo).HasMaxLength(5);
             entity.Property(e => e.TaskTitle).HasMaxLength(200);

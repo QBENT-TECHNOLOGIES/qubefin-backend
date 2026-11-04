@@ -29,7 +29,7 @@ public partial class TblJobTask
 
     public string? TargetLatitude { get; set; }
 
-    public string? TargetLongtitude { get; set; }
+    public string? TargetLongitude { get; set; }
 
     public int? RadiusMeters { get; set; }
 
@@ -45,7 +45,7 @@ public partial class TblJobTask
 
     public string? ArriveLatitude { get; set; }
 
-    public string? ArriveLontitude { get; set; }
+    public string? ArriveLongitude { get; set; }
 
     public decimal? ArriveDistanceMeters { get; set; }
 
@@ -61,7 +61,7 @@ public partial class TblJobTask
 
     public decimal? CompletedDistanceMeter { get; set; }
 
-    public bool IsLoacationMatched { get; set; }
+    public bool IsLocationMatched { get; set; }
 
     public string? PhotoUrl { get; set; }
 
@@ -83,7 +83,7 @@ public partial class TblJobTask
 
     public DateTime? TaskCancelDate { get; set; }
 
-    public string? TaskCancelReson { get; set; }
+    public string? TaskCancelReason { get; set; }
 
     public DateTime? ModifiedOn { get; set; }
 
