@@ -1,9 +1,12 @@
 ﻿using System.Data;
 using Microsoft.EntityFrameworkCore;
+using OtpNet;
+using QubeFin.App.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Mappers.App;
 using QubeFin.Persistence.Mappers.Hrms;
+using QubeFin.Persistence.Models.App;
 using QubeFin.Persistence.Models.Global;
 using QubeFin.Persistence.Models.Hrms;
 
@@ -29,8 +32,9 @@ public interface IEmployeeRepository
     Task<int> CountJoiningInfoCreatedInYearAsync(CancellationToken cancellationToken);
     Task SaveJoiningInfoAsync(Guid employeeId, string referenceNo, DateOnly offerLetterDate, decimal monthlyCtc, Guid userId, CancellationToken cancellationToken);
     Task SetJoiningInfoApprovalAsync(Guid joiningInfoId, string approvalStatus, bool isEmployeeActive, Guid userId, CancellationToken cancellationToken);
+    Task CompanyTransferEmployee(Guid EmployeeId, Guid CompanyId, Guid OrganisationUnitId, string Designation, Guid SalaryGradeId, decimal GrossSalary, DateOnly JoiningDate, DateOnly separationDate, Guid loginUserId, CancellationToken cancellationToken);
 }
-public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepository
+public class EmployeeRepository(QubeFinDataContext context, IUserRepository userRepository) : IEmployeeRepository
 {
     public async Task AddAsync(Employee employee)
     {
@@ -617,5 +621,217 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
         joiningInfo.Employee.LastModifiedOn = now;
     }
 
+    public async Task CompanyTransferEmployee(Guid employeeId, Guid CompanyId, Guid OrganisationUnitId, string Designation, Guid SalaryGradeId, decimal GrossSalary, DateOnly JoiningDate, DateOnly separationDate, Guid loginUserId, CancellationToken cancellationToken)
+    {
+        await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            var employee = await context.TblEmployees.Include(e => e.TblEmployeeDesignations).Include(e => e.TblEmployeeDocuments).FirstOrDefaultAsync(e => e.Id == employeeId, cancellationToken);
+            if (employee is null)
+                throw new Exception("Employee not found.");
+
+            var employeeDesignation = employee.TblEmployeeDesignations.FirstOrDefault(d => d.EffectiveTo == null);
+
+            employee.SeparationDate = separationDate;
+            employee.IsActive = false;
+            employee.IsPayrollActive = false;
+            employee.LastModifiedBy = loginUserId;
+            employee.LastModifiedOn = DateTime.UtcNow;
+
+            #region Close current running records
+            await context.TblEmployeeDesignations.Where(d => d.EmployeeId == employeeId && d.EffectiveTo == null).LoadAsync(cancellationToken);
+            foreach (var designation in context.TblEmployeeDesignations.Local.Where(d => d.EmployeeId == employeeId && d.EffectiveTo == null))
+            {
+                designation.EffectiveTo = separationDate.ToDateTime(TimeOnly.MinValue);
+            }
+
+            await context.TblEmployeeGrossSalaries.Where(s => s.EmployeeId == employeeId && s.EffectiveTill == null).LoadAsync(cancellationToken);
+            foreach (var grossSalary in context.TblEmployeeGrossSalaries.Local.Where(s => s.EmployeeId == employeeId && s.EffectiveTill == null))
+            {
+                grossSalary.EffectiveTill = separationDate;
+            }
+
+            await context.TblEmployeeTransfers.Where(t => t.EmployeeId == employeeId && t.ToDate == null).LoadAsync(cancellationToken);
+            foreach (var transfer in context.TblEmployeeTransfers.Local.Where(t => t.EmployeeId == employeeId && t.ToDate == null))
+            {
+                transfer.ToDate = separationDate;
+            }
+
+            var users = await context.TblUsers.Where(u => u.EmployeeId == employeeId && u.IsActive).ToListAsync(cancellationToken);
+            foreach (var user in users)
+            {
+                user.IsActive = false;
+                user.LastModifiedBy = loginUserId;
+                user.LastModifiedOn = DateTime.Now;
+            }
+
+            await CloseUserSessionsAsync(employeeId, cancellationToken);
+            #endregion
+
+            #region Add new records
+            Guid designationId;
+
+            var transferDesignation = await context.TblDesignations
+                .Include(d => d.TblEmployeeDesignations)
+                .FirstOrDefaultAsync(d => d.Name.Trim().ToLower() == Designation.ToLower().Trim() && d.OrganizationUnitId == OrganisationUnitId, cancellationToken);
+
+            var currentDesignation = await context.TblDesignations
+                .Include(d => d.TblDesignationRoles)
+                .Include(d => d.TblDesignationGradeMappings)
+                .FirstOrDefaultAsync(d => d.Id == employeeDesignation.DesignationId, cancellationToken);
+
+            var newEmployeeCode = await GenerateEmployeeCodeAsync(CompanyId, cancellationToken);
+            if (string.IsNullOrWhiteSpace(newEmployeeCode))
+                throw new Exception("Employee code could not be generated for the destination company.");
+
+            if (transferDesignation == null || transferDesignation.TblEmployeeDesignations.Any(ed => ed.EffectiveTo == null))
+            {
+                designationId = Guid.NewGuid();
+                await context.TblDesignations.AddAsync(
+                    new TblDesignation
+                    {
+                        Id = designationId,
+                        Name = Designation,
+                        OrganizationUnitId = OrganisationUnitId,
+                        PostId = currentDesignation.PostId,
+                        IsActive = true,
+                        IsIncharge = false,
+                        CreatedBy = loginUserId,
+                        CreatedOn = DateTime.UtcNow,
+                        TblDesignationRoles = currentDesignation.TblDesignationRoles
+                            .Select(r => new TblDesignationRole
+                            {
+                                Id = Guid.NewGuid(),
+                                RoleId = r.RoleId,
+                                CreatedBy = loginUserId,
+                                CreatedOn = DateTime.UtcNow
+                            })
+                            .ToList(),
+                        TblDesignationGradeMappings = new List<TblDesignationGradeMapping>
+                        {
+                            new TblDesignationGradeMapping
+                            {
+                                Id = Guid.NewGuid(),
+                                GradeId = SalaryGradeId,
+                                IsActive = true
+                            }
+                        }
+                    },
+                    cancellationToken);
+            }
+            else
+            {
+                designationId = transferDesignation.Id;
+
+                var currentGradeMapping = currentDesignation.TblDesignationGradeMappings.FirstOrDefault(g => g.IsActive);
+                if (currentGradeMapping != null)
+                {
+                    currentGradeMapping.IsActive = false;
+                }
+                if (currentGradeMapping == null || currentGradeMapping.GradeId != SalaryGradeId)
+                {
+                    await context.TblDesignationGradeMappings.AddAsync(
+                        new TblDesignationGradeMapping
+                        {
+                            Id = Guid.NewGuid(),
+                            DesignationId = designationId,
+                            GradeId = SalaryGradeId,
+                            IsActive = true
+                        },
+                        cancellationToken);
+                }
+            }
+
+            var newEmployee = new TblEmployee();
+            context.Entry(newEmployee).CurrentValues.SetValues(employee);
+            newEmployee.Id = Guid.NewGuid();
+            newEmployee.Code = newEmployeeCode;
+            newEmployee.CompanyId = CompanyId;
+            newEmployee.OrganizationUnitId = OrganisationUnitId;
+            newEmployee.JoiningDate = JoiningDate;
+            newEmployee.SeparationDate = null;
+            newEmployee.IsActive = true;
+            newEmployee.IsPayrollActive = true;
+            newEmployee.CreatedBy = loginUserId;
+            newEmployee.CreatedDate = DateTime.UtcNow;
+            newEmployee.LastModifiedBy = null;
+            newEmployee.LastModifiedOn = null;
+
+            await context.TblEmployees.AddAsync(newEmployee, cancellationToken);
+
+            await context.TblEmployeeDesignations.AddAsync(
+                new TblEmployeeDesignation
+                {
+                    Id = Guid.NewGuid(),
+                    EmployeeId = newEmployee.Id,
+                    DesignationId = designationId,
+                    EffectiveFrom = JoiningDate.ToDateTime(TimeOnly.MinValue),
+                    EffectiveTo = null
+                },
+                cancellationToken);
+
+            await context.TblEmployeeGrossSalaries.AddAsync(
+                new TblEmployeeGrossSalary
+                {
+                    Id = Guid.NewGuid(),
+                    EmployeeId = newEmployee.Id,
+                    GrossSalary = GrossSalary,
+                    EffectiveFrom = JoiningDate,
+                    EffectiveTill = null
+                },
+                cancellationToken);
+
+            await context.TblEmployeeTransfers.AddAsync(
+                new TblEmployeeTransfer
+                {
+                    Id = Guid.NewGuid(),
+                    EmployeeId = newEmployee.Id,
+                    OrganisationUnitId = OrganisationUnitId,
+                    DesignationId = designationId,
+                    SalaryGradeId = SalaryGradeId,
+                    GrossSalary = GrossSalary,
+                    FromDate = JoiningDate,
+                    ToDate = null,
+                    IsApprove = false
+                },
+                cancellationToken);
+
+            foreach (var employeeDocument in employee.TblEmployeeDocuments)
+            {
+                var newDocument = new TblEmployeeDocument();
+                context.Entry(newDocument).CurrentValues.SetValues(employeeDocument);
+                newDocument.Id = Guid.NewGuid();
+                newDocument.EmployeeId = newEmployee.Id;
+                newDocument.CreatedBy = loginUserId;
+                newDocument.CreatedOn = DateTime.UtcNow;
+                newDocument.LastModifiedBy = null;
+                newDocument.LastModifiedOn = null;
+                await context.TblEmployeeDocuments.AddAsync(newDocument, cancellationToken);
+            }
+
+
+            var mfaSecretKey32 = Base32Encoding.ToString(KeyGeneration.GenerateRandomKey(20));
+            var hashedPassword = await userRepository.HashPasswordAsync(newEmployeeCode, "123");
+
+            var newUser = User.Create(
+                Guid.NewGuid(),
+                newEmployeeCode,
+                hashedPassword,
+                newEmployee.Id,
+                mfaSecretKey32,
+                users.FirstOrDefault()?.IsAttendanceOptional ?? false,
+                loginUserId);
+
+            userRepository.Add(newUser);
+            #endregion
+            await context.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
 }
 
