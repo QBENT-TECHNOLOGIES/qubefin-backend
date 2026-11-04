@@ -33,33 +33,7 @@ internal sealed class GetJobByIdQueryHandler(ITrackingScopeRepository scopeRepos
         var job = await jobRepository.GetJobAsync(viewer, request.JobId, TrackingClock.Today(), cancellationToken);
         if (job is null) return new RecordNotFoundError("Job not found");
 
-        var summary = JobSummaryResponse.From(job.Summary);
-        return Result.Ok(new JobResponse(
-            summary.Id,
-            summary.JobCode,
-            summary.JobTitle,
-            summary.Status,
-            summary.AssigneeId,
-            summary.AssigneeName,
-            summary.AssigneeRole,
-            summary.UnitName,
-            summary.OrganisationUnitIds,
-            summary.BranchNames,
-            summary.CreatedByName,
-            summary.CreatedOn,
-            summary.StartDate,
-            summary.EndDate,
-            summary.TaskCount,
-            summary.DoneCount,
-            summary.OpenCount,
-            summary.SelfAddedCount,
-            summary.Types,
-            summary.TransferJobRefId,
-            summary.TransferJobRefCode,
-            job.JobDescription,
-            job.CreatedBy,
-            job.Tasks.Select(JobTaskResponse.From).ToList(),
-            JobPermissionRules.For(viewer, job)));
+        return Result.Ok(JobResponse.From(viewer, job));
     }
 }
 #endregion

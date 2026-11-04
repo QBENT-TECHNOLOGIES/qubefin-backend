@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using QubeFin.Tracking.Application.Jobs;
 
 namespace QubeFin.Tracking.Application;
 
@@ -16,6 +17,8 @@ public static class DependencyInjection
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();
         services.AddValidatorsFromAssembly(assembly, includeInternalTypes: true);
+        services.AddScoped<JobTaskPlanner>();
+        services.AddScoped<JobNumberGenerator>();
 
         return services;
     }

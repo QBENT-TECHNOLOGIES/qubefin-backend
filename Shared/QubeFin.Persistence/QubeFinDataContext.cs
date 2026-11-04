@@ -1769,7 +1769,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.TaskCancelDate).HasColumnType("datetime");
             entity.Property(e => e.TaskCancelReason).HasMaxLength(50);
             entity.Property(e => e.TaskCompletedOn).HasColumnType("datetime");
-            entity.Property(e => e.TaskNo).HasMaxLength(5);
+            entity.Property(e => e.TaskNo).HasMaxLength(20);
             entity.Property(e => e.TaskTitle).HasMaxLength(200);
             entity.Property(e => e.TaskType).HasMaxLength(50);
 

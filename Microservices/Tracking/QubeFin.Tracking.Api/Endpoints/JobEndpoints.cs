@@ -2,6 +2,7 @@ using MediatR;
 using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
 using QubeFin.Core.Results;
+using QubeFin.Tracking.Application.Jobs.Commands;
 using QubeFin.Tracking.Application.Jobs.Models;
 using QubeFin.Tracking.Application.Jobs.Queries;
 using System.Security.Claims;
@@ -24,6 +25,21 @@ public class JobEndpoints : IEndpoint
         })
         .WithSummary("Search jobs")
         .WithDescription("Returns one page of the jobs the signed-in user may see, with filters, sorting and the status counts for the top cards.")
+        .WithTags("Jobs")
+        .RequireAuthorization();
+
+        app.MapPost("jobs", async (CreateJobRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Unauthorized();
+            }
+            var userId = principal.Identity.GetUserId();
+            var result = await sender.Send(new CreateJobCommand(userId, request), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Create a job")
+        .WithDescription("Creates a job with its assignee and tasks. Tasks that are duplicates or at an untagged place are skipped with a reason; tasks pending with someone else at the same place come back as warnings.")
         .WithTags("Jobs")
         .RequireAuthorization();
 

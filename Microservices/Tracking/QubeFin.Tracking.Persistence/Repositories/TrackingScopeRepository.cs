@@ -12,6 +12,9 @@ public interface ITrackingScopeRepository
     Task<List<TrackingBranch>> GetBranchesAsync(IReadOnlyList<Guid> branchIds, CancellationToken cancellationToken = default);
     Task<TblTrackingSetting?> GetTrackingSettingAsync(CancellationToken cancellationToken = default);
     Task<List<TrackingFieldOfficer>> GetFieldOfficersAsync(TrackingViewer viewer, Guid? branchId, CancellationToken cancellationToken = default);
+    Task<TrackingOfficer?> GetOfficerAsync(Guid employeeId, CancellationToken cancellationToken = default);
+    Task<Dictionary<Guid, BranchCode>> GetBranchCodesAsync(IEnumerable<Guid> branchIds, CancellationToken cancellationToken = default);
+    Task<DateOnly?> GetFinancialYearStartAsync(DateOnly day, CancellationToken cancellationToken = default);
 }
 
 public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScopeRepository
@@ -184,6 +187,47 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
         }
         return officers.OrderBy(o => o.Name).ToList();
     }
+
+    // An active employee's latest open designation and the branches at or below its unit
+    public async Task<TrackingOfficer?> GetOfficerAsync(Guid employeeId, CancellationToken cancellationToken = default)
+    {
+        var position = await context.TblEmployeeDesignations
+            .Where(ed => ed.EmployeeId == employeeId && ed.EffectiveTo == null && ed.Employee.IsActive)
+            .OrderByDescending(ed => ed.EffectiveFrom)
+            .Select(ed => new { ed.EmployeeId, ed.Employee.FullName, ed.DesignationId, PostName = ed.Designation.Post.Name, ed.Designation.OrganizationUnitId })
+            .AsNoTracking()
+            .FirstOrDefaultAsync(cancellationToken);
+        if (position is null) return null;
+
+        var units = await context.TblOrganizationUnits
+            .Select(o => new UnitNode(o.Id, o.ParentId, o.Name, o.OrganizationUnitType.Name))
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        return new TrackingOfficer(
+            position.EmployeeId,
+            position.FullName,
+            position.DesignationId,
+            position.PostName,
+            position.OrganizationUnitId,
+            BranchIdsOf(DescendantsAndSelf(units, position.OrganizationUnitId)).ToList());
+    }
+
+    public async Task<Dictionary<Guid, BranchCode>> GetBranchCodesAsync(IEnumerable<Guid> branchIds, CancellationToken cancellationToken = default)
+    {
+        var ids = branchIds.Distinct().ToList();
+        return await context.TblOrganizationUnits
+            .Where(o => ids.Contains(o.Id))
+            .Select(o => new BranchCode(o.Id, o.Name, o.CodeVal))
+            .AsNoTracking()
+            .ToDictionaryAsync(b => b.Id, cancellationToken);
+    }
+
+    public async Task<DateOnly?> GetFinancialYearStartAsync(DateOnly day, CancellationToken cancellationToken = default) =>
+        await context.TblFinancialYears
+            .Where(f => f.StartDate <= day && f.EndDate >= day)
+            .Select(f => (DateOnly?)f.StartDate)
+            .FirstOrDefaultAsync(cancellationToken);
 
     private sealed record UnitNode(Guid Id, Guid? ParentId, string Name, string TypeName);
 

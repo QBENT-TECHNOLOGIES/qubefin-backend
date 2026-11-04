@@ -68,3 +68,35 @@ Authorization: Bearer {{token}}
 GET {{QubeFin.Tracking.Api_HostAddress}}/geo-tags/points?organisationUnitId={{organisationUnitId}}&kinds=GroupCentre,Member,OdMember
 Accept: application/json
 Authorization: Bearer {{token}}
+
+###
+
+POST {{QubeFin.Tracking.Api_HostAddress}}/jobs
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "jobTitle": "Falakata OD follow-up, week 45",
+  "jobDescription": "Visit OD members above 30 DPD first.",
+  "assigneeId": "<employee id>",
+  "startDate": null,
+  "endDate": "2026-11-10",
+  "tasks": [
+    {
+      "taskType": "OdFollowUp",
+      "taskTitle": "OD follow-up: Anjali Barman",
+      "notes": "Collect at least one instalment.",
+      "priority": "High",
+      "coOrdinatedBy": null,
+      "target": { "kind": "OdMember", "originRefId": "<member id>", "targetName": "Anjali Barman", "targetLocation": null, "organisationUnitId": null }
+    },
+    {
+      "taskType": "LeadSourcing",
+      "taskTitle": "Lead sourcing near Falakata market",
+      "notes": null,
+      "priority": "Medium",
+      "coOrdinatedBy": null,
+      "target": { "kind": "Custom", "originRefId": null, "targetName": "Falakata market", "targetLocation": { "lat": 26.523900, "lng": 89.205100 }, "organisationUnitId": "<branch id>" }
+    }
+  ]
+}

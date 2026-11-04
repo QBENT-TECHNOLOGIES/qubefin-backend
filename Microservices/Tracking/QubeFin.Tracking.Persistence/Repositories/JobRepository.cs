@@ -11,6 +11,10 @@ public interface IJobRepository
     Task<JobDetailRow?> GetJobAsync(TrackingViewer viewer, Guid jobId, DateOnly today, CancellationToken cancellationToken = default);
     Task<List<JobHistoryRow>?> GetJobHistoryAsync(TrackingViewer viewer, Guid jobId, DateOnly today, CancellationToken cancellationToken = default);
     Task<List<JobTaskPointRow>> GetTaskPointsAsync(TrackingViewer viewer, Guid? organisationUnitId, Guid? assigneeId, bool pendingOnly, DateOnly today, CancellationToken cancellationToken = default);
+    Task<List<PendingPlaceTask>> GetPendingTasksAtAsync(IEnumerable<Guid> originRefIds, CancellationToken cancellationToken = default);
+    Task<string?> GetLastJobCodeAsync(string prefix, CancellationToken cancellationToken = default);
+    Task<string?> GetLastTaskNoAsync(string prefix, CancellationToken cancellationToken = default);
+    Task AddAsync(TblJob job, CancellationToken cancellationToken = default);
 }
 
 public class JobRepository(QubeFinDataContext context) : IJobRepository
@@ -451,6 +455,50 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
             })
             .ToList();
     }
+
+    // Pending tasks (in jobs not cancelled) at these places, with who holds each job and its window
+    public async Task<List<PendingPlaceTask>> GetPendingTasksAtAsync(IEnumerable<Guid> originRefIds, CancellationToken cancellationToken = default)
+    {
+        var ids = originRefIds.Distinct().ToList();
+        if (ids.Count == 0) return [];
+
+        return await context.TblJobTasks
+            .Where(t => t.OriginRefId.HasValue && ids.Contains(t.OriginRefId.Value)
+                && !t.Job.IsCancel
+                && (t.Status == Pending || (t.Status == null && !t.IsCompleted && !t.IsTaskCancel && t.TransferTaskId == null)))
+            .Select(t => new PendingPlaceTask(
+                t.TaskType,
+                t.OriginRefId!.Value,
+                t.JobId,
+                t.Job.JobCode,
+                t.Job.AssignTo,
+                context.TblEmployeeDesignations
+                    .Where(ed => ed.DesignationId == t.Job.AssignTo && ed.EffectiveTo == null)
+                    .OrderByDescending(ed => ed.EffectiveFrom)
+                    .Select(ed => ed.Employee.FullName)
+                    .FirstOrDefault(),
+                t.Job.StartDate,
+                t.Job.EndDate))
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<string?> GetLastJobCodeAsync(string prefix, CancellationToken cancellationToken = default) =>
+        await context.TblJobs
+            .Where(j => j.JobCode.StartsWith(prefix))
+            .OrderByDescending(j => j.JobCode)
+            .Select(j => j.JobCode)
+            .FirstOrDefaultAsync(cancellationToken);
+
+    public async Task<string?> GetLastTaskNoAsync(string prefix, CancellationToken cancellationToken = default) =>
+        await context.TblJobTasks
+            .Where(t => t.TaskNo.StartsWith(prefix))
+            .OrderByDescending(t => t.TaskNo)
+            .Select(t => t.TaskNo)
+            .FirstOrDefaultAsync(cancellationToken);
+
+    public async Task AddAsync(TblJob job, CancellationToken cancellationToken = default) =>
+        await context.TblJobs.AddAsync(job, cancellationToken);
 
     private const string SystemName = "System";
     private const string Rejected = "Rejected";

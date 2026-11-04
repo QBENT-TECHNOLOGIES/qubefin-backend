@@ -7,6 +7,7 @@ namespace QubeFin.Tracking.Persistence.Repositories;
 public interface IGeoTagRepository
 {
     Task<GeoTagPointsResult> GetPointsAsync(Guid organisationUnitId, IReadOnlyCollection<string> kinds, int? taskLocationMatchInMeters, CancellationToken cancellationToken = default);
+    Task<Dictionary<Guid, TrackingPlace>> GetPlacesAsync(IEnumerable<Guid> refIds, CancellationToken cancellationToken = default);
 }
 
 public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
@@ -93,6 +94,38 @@ public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
         }
 
         return new GeoTagPointsResult(points.OrderBy(p => p.Kind).ThenBy(p => p.Name).ToList(), untagged);
+    }
+
+    // The place behind each id: a group, a member (also found through one of their loans) or a branch, with its current location
+    public async Task<Dictionary<Guid, TrackingPlace>> GetPlacesAsync(IEnumerable<Guid> refIds, CancellationToken cancellationToken = default)
+    {
+        var ids = refIds.Distinct().ToList();
+        var places = new Dictionary<Guid, TrackingPlace>();
+        if (ids.Count == 0) return places;
+
+        foreach (var g in await context.TblBcgroups.Where(g => ids.Contains(g.Id)).Select(g => new { g.Id, g.OrganizationUnitId, g.Location }).AsNoTracking().ToListAsync(cancellationToken))
+        {
+            places[g.Id] = new TrackingPlace(g.Id, GroupCentre, g.OrganizationUnitId, g.Location);
+        }
+
+        var members = await context.TblBcmembers
+            .Where(m => ids.Contains(m.Id) || m.TblBcloans.Any(l => ids.Contains(l.Id)))
+            .Select(m => new { m.Id, m.IsOverdueMember, m.Bcgroup.OrganizationUnitId, m.Location, LoanIds = m.TblBcloans.Where(l => ids.Contains(l.Id)).Select(l => l.Id).ToList() })
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+        foreach (var m in members)
+        {
+            var kind = m.IsOverdueMember ? OdMember : Member;
+            if (ids.Contains(m.Id)) places[m.Id] = new TrackingPlace(m.Id, kind, m.OrganizationUnitId, m.Location);
+            foreach (var loanId in m.LoanIds) places[loanId] = new TrackingPlace(loanId, OdMember, m.OrganizationUnitId, m.Location);
+        }
+
+        foreach (var b in await context.TblOrganizationUnits.Where(o => ids.Contains(o.Id)).Select(o => new { o.Id, o.Latitude, o.Longitude }).AsNoTracking().ToListAsync(cancellationToken))
+        {
+            var point = GeoCoordinates.ToGeoPoint(b.Latitude, b.Longitude);
+            places[b.Id] = new TrackingPlace(b.Id, "Branch", b.Id, point is null ? null : GeoCoordinates.ToGeometry(point));
+        }
+        return places;
     }
 
     private sealed record DesignationHolder(Guid EmployeeId, string Name);

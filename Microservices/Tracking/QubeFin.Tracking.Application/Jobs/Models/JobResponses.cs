@@ -77,7 +77,39 @@ public record JobResponse(
     string? JobDescription,
     Guid CreatedBy,
     List<JobTaskResponse> Tasks,
-    JobPermissions Permissions);
+    JobPermissions Permissions)
+{
+    internal static JobResponse From(TrackingViewer viewer, JobDetailRow job)
+    {
+        var summary = JobSummaryResponse.From(job.Summary);
+        return new JobResponse(
+            summary.Id,
+            summary.JobCode,
+            summary.JobTitle,
+            summary.Status,
+            summary.AssigneeId,
+            summary.AssigneeName,
+            summary.AssigneeRole,
+            summary.UnitName,
+            summary.OrganisationUnitIds,
+            summary.BranchNames,
+            summary.CreatedByName,
+            summary.CreatedOn,
+            summary.StartDate,
+            summary.EndDate,
+            summary.TaskCount,
+            summary.DoneCount,
+            summary.OpenCount,
+            summary.SelfAddedCount,
+            summary.Types,
+            summary.TransferJobRefId,
+            summary.TransferJobRefCode,
+            job.JobDescription,
+            job.CreatedBy,
+            job.Tasks.Select(JobTaskResponse.From).ToList(),
+            JobPermissionRules.For(viewer, job));
+    }
+}
 
 public record JobTaskTarget(
     TaskTargetKind? Kind,
