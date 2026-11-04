@@ -32,5 +32,3 @@ public record NewTaskTarget(
 public record SkippedTask(string Title, string Reason);
 
 public record TaskWarning(string Title, string Reason);
-
-public record AddTasksResponse(JobResponse Job, List<SkippedTask> Skipped, List<TaskWarning> Warnings);

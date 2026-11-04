@@ -86,7 +86,7 @@ internal sealed class CreateJobCommandHandler(
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         var created = await jobRepository.GetJobAsync(viewer, jobId, today, cancellationToken);
-        return Result.Ok(new AddTasksResponse(JobResponse.From(viewer, created!), plan.Skipped, plan.Warnings));
+        return Result.Ok(new AddTasksResponse(JobDocResponse.From(viewer, created!), plan.Skipped, plan.Warnings));
     }
 
     // D4 "give work": someone in a lower role inside the user's scope (an Admin may give work to anyone in a tracking role).

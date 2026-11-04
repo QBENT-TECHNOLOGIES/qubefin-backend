@@ -43,6 +43,21 @@ public class JobEndpoints : IEndpoint
         .WithTags("Jobs")
         .RequireAuthorization();
 
+        app.MapPost("jobs/{id:guid}/tasks", async (Guid id, AddTasksRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Unauthorized();
+            }
+            var userId = principal.Identity.GetUserId();
+            var result = await sender.Send(new AddTasksCommand(userId, id, request), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Add tasks to a job")
+        .WithDescription("Adds tasks to an open job (Assigned, InProgress or Delayed). The same rules as creating a job apply, checked against the job's assignee.")
+        .WithTags("Jobs")
+        .RequireAuthorization();
+
         app.MapGet("jobs/task-points", async (Guid? organisationUnitId, Guid? assigneeId, bool? pendingOnly, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)

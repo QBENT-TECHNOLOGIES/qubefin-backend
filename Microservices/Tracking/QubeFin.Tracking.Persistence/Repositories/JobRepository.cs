@@ -15,6 +15,7 @@ public interface IJobRepository
     Task<string?> GetLastJobCodeAsync(string prefix, CancellationToken cancellationToken = default);
     Task<string?> GetLastTaskNoAsync(string prefix, CancellationToken cancellationToken = default);
     Task AddAsync(TblJob job, CancellationToken cancellationToken = default);
+    Task AddTasksAsync(IEnumerable<TblJobTask> tasks, CancellationToken cancellationToken = default);
 }
 
 public class JobRepository(QubeFinDataContext context) : IJobRepository
@@ -134,10 +135,10 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
             .Select(t => new
             {
                 Task = t,
-                CoOrdinatedByName = context.TblEmployeeDesignations
+                CoOrdinatedByHolder = context.TblEmployeeDesignations
                     .Where(ed => ed.DesignationId == t.CoOrdinatedBy && ed.EffectiveTo == null)
                     .OrderByDescending(ed => ed.EffectiveFrom)
-                    .Select(ed => ed.Employee.FullName)
+                    .Select(ed => new { ed.EmployeeId, ed.Employee.FullName })
                     .FirstOrDefault(),
                 BranchName = t.Branch.Name,
                 AddedByName = t.TaskAddedByNavigation != null
@@ -174,7 +175,8 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
                     t.Notes,
                     t.Priority,
                     t.CoOrdinatedBy,
-                    x.CoOrdinatedByName,
+                    x.CoOrdinatedByHolder?.EmployeeId,
+                    x.CoOrdinatedByHolder?.FullName,
                     t.OriginRefId.HasValue ? targetKinds.GetValueOrDefault(t.OriginRefId.Value) : "Custom",
                     t.OriginRefId,
                     t.TargetName,
@@ -499,6 +501,9 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
 
     public async Task AddAsync(TblJob job, CancellationToken cancellationToken = default) =>
         await context.TblJobs.AddAsync(job, cancellationToken);
+
+    public async Task AddTasksAsync(IEnumerable<TblJobTask> tasks, CancellationToken cancellationToken = default) =>
+        await context.TblJobTasks.AddRangeAsync(tasks, cancellationToken);
 
     private const string SystemName = "System";
     private const string Rejected = "Rejected";

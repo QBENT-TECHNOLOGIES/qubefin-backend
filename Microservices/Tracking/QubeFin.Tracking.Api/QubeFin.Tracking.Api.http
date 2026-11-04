@@ -100,3 +100,22 @@ Authorization: Bearer {{token}}
     }
   ]
 }
+
+###
+
+POST {{QubeFin.Tracking.Api_HostAddress}}/jobs/{{jobId}}/tasks
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "tasks": [
+    {
+      "taskType": "Survey",
+      "taskTitle": "Survey near the school",
+      "notes": null,
+      "priority": "Low",
+      "coOrdinatedBy": null,
+      "target": { "kind": "Custom", "originRefId": null, "targetName": "School", "targetLocation": { "lat": 26.527500, "lng": 89.201200 }, "organisationUnitId": "<branch id>" }
+    }
+  ]
+}

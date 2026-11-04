@@ -21,6 +21,7 @@ public record JobTaskRow(
     string? Notes,
     string? Priority,
     Guid? CoOrdinatedBy,
+    Guid? CoOrdinatedByEmployeeId,
     string? CoOrdinatedByName,
     string? TargetKind,
     Guid? OriginRefId,

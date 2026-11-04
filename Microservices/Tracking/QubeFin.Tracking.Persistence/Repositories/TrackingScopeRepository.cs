@@ -13,6 +13,7 @@ public interface ITrackingScopeRepository
     Task<TblTrackingSetting?> GetTrackingSettingAsync(CancellationToken cancellationToken = default);
     Task<List<TrackingFieldOfficer>> GetFieldOfficersAsync(TrackingViewer viewer, Guid? branchId, CancellationToken cancellationToken = default);
     Task<TrackingOfficer?> GetOfficerAsync(Guid employeeId, CancellationToken cancellationToken = default);
+    Task<TrackingOfficer?> GetDesignationHolderAsync(Guid designationId, CancellationToken cancellationToken = default);
     Task<Dictionary<Guid, BranchCode>> GetBranchCodesAsync(IEnumerable<Guid> branchIds, CancellationToken cancellationToken = default);
     Task<DateOnly?> GetFinancialYearStartAsync(DateOnly day, CancellationToken cancellationToken = default);
 }
@@ -193,6 +194,31 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
     {
         var position = await context.TblEmployeeDesignations
             .Where(ed => ed.EmployeeId == employeeId && ed.EffectiveTo == null && ed.Employee.IsActive)
+            .OrderByDescending(ed => ed.EffectiveFrom)
+            .Select(ed => new { ed.EmployeeId, ed.Employee.FullName, ed.DesignationId, PostName = ed.Designation.Post.Name, ed.Designation.OrganizationUnitId })
+            .AsNoTracking()
+            .FirstOrDefaultAsync(cancellationToken);
+        if (position is null) return null;
+
+        var units = await context.TblOrganizationUnits
+            .Select(o => new UnitNode(o.Id, o.ParentId, o.Name, o.OrganizationUnitType.Name))
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        return new TrackingOfficer(
+            position.EmployeeId,
+            position.FullName,
+            position.DesignationId,
+            position.PostName,
+            position.OrganizationUnitId,
+            BranchIdsOf(DescendantsAndSelf(units, position.OrganizationUnitId)).ToList());
+    }
+
+    // The employee currently holding a designation (a job's AssignTo), with the branches that designation covers
+    public async Task<TrackingOfficer?> GetDesignationHolderAsync(Guid designationId, CancellationToken cancellationToken = default)
+    {
+        var position = await context.TblEmployeeDesignations
+            .Where(ed => ed.DesignationId == designationId && ed.EffectiveTo == null)
             .OrderByDescending(ed => ed.EffectiveFrom)
             .Select(ed => new { ed.EmployeeId, ed.Employee.FullName, ed.DesignationId, PostName = ed.Designation.Post.Name, ed.Designation.OrganizationUnitId })
             .AsNoTracking()
