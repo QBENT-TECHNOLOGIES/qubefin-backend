@@ -7,7 +7,7 @@ using QubeFin.Persistence;
 namespace QubeFin.Hrms.Application.Employees.Queries;
 
 #region --- QUERY ---
-public record GetEmployeeHierarchyQuery(Guid EmployeeId) : IRequest<Result<EmployeeHierarchyNode>>;
+public record GetEmployeeHierarchyQuery(Guid EmployeeId) : IRequest<Result<EmployeeHierarchyResponse?>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -21,18 +21,22 @@ public class GetEmployeeHierarchyQueryValidator : AbstractValidator<GetEmployeeH
 #endregion
 
 #region --- RESPONSE ---
-public record EmployeeHierarchyNode(    Guid Id,    string Name,    string? OrganizationUnit,    string? Designation,    List<EmployeeHierarchyNode> Children);
+// Null when the employee has no current designation
+public record EmployeeHierarchyResponse(Guid EmployeeId, EmployeeHierarchyNode Root);
+// One member normally; several when a unit has no Incharge and more than one head post holder (shared team head).
+// No members and VacantUnit set when a unit has nobody to head it (e.g. an Area without an Area Manager).
+public record EmployeeHierarchyNode(List<EmployeeHierarchyMember> Members, List<EmployeeHierarchyNode> Children, string? VacantUnit = null);
+public record EmployeeHierarchyMember(Guid Id, string Name, string? OrganizationUnit, string? Designation);
 #endregion
 
 #region --- HANDLER ---
-internal sealed class GetEmployeeHierarchyQueryHandler(QubeFinDataContext context) : IRequestHandler<GetEmployeeHierarchyQuery, Result<EmployeeHierarchyNode>>
+internal sealed class GetEmployeeHierarchyQueryHandler(QubeFinDataContext context) : IRequestHandler<GetEmployeeHierarchyQuery, Result<EmployeeHierarchyResponse?>>
 {
     private static readonly string[] HeadPosts = ["Managing Director", "Divisional Manager", "Area Manager", "Branch Manager"];
-    private static readonly Guid[] HeadLevelPostIds = [new("C37C4C1C-9CEA-45FC-97A3-01672E005802")];
     private const int MaxDepth = 50;
-    private sealed record Position(Guid EmployeeId, string Name, string Designation, Guid OrganizationUnitId, string OrganizationUnit, bool IsIncharge, bool IsHeadPost, bool IsHeadLevelPost, DateTime EffectiveFrom);
+    private sealed record Position(Guid EmployeeId, string Name, string Designation, Guid OrganizationUnitId, string OrganizationUnit, bool IsIncharge, bool IsHeadPost, DateTime EffectiveFrom);
 
-    public async Task<Result<EmployeeHierarchyNode>> Handle(GetEmployeeHierarchyQuery request, CancellationToken cancellationToken)
+    public async Task<Result<EmployeeHierarchyResponse?>> Handle(GetEmployeeHierarchyQuery request, CancellationToken cancellationToken)
     {
         var positions = (await context.TblEmployeeDesignations
             .Where(ed => ed.EffectiveTo == null && ed.Employee.IsActive && ed.Employee.IsPayrollActive)
@@ -44,7 +48,6 @@ internal sealed class GetEmployeeHierarchyQueryHandler(QubeFinDataContext contex
                 ed.Designation.OrganizationUnit.Name,
                 ed.Designation.IsIncharge,
                 HeadPosts.Contains(ed.Designation.Post.Name),
-                HeadLevelPostIds.Contains(ed.Designation.PostId),
                 ed.EffectiveFrom))
             .AsNoTracking()
             .ToListAsync(cancellationToken))
@@ -54,61 +57,77 @@ internal sealed class GetEmployeeHierarchyQueryHandler(QubeFinDataContext contex
 
         if (!positions.TryGetValue(request.EmployeeId, out var self))
         {
-            return Result.Fail("Employee not found or has no current designation.");
+            return Result.Ok<EmployeeHierarchyResponse?>(null);
         }
 
-        var unitParents = await context.TblOrganizationUnits
+        var units = await context.TblOrganizationUnits
             .AsNoTracking()
-            .ToDictionaryAsync(u => u.Id, u => u.ParentId, cancellationToken);
+            .ToDictionaryAsync(u => u.Id, u => (u.ParentId, u.Name), cancellationToken);
 
+        // Team head of a unit is its Incharge; without one, every head post holder shares the head
         var unitHeads = positions.Values
-            .Where(p => p.IsIncharge || p.IsHeadPost)
             .GroupBy(p => p.OrganizationUnitId)
-            .ToDictionary(g => g.Key, g => g.OrderByDescending(p => p.IsIncharge).ThenBy(p => p.EffectiveFrom).First().EmployeeId);
+            .Select(g => (UnitId: g.Key, Heads: g.Any(p => p.IsIncharge)
+                ? g.Where(p => p.IsIncharge).OrderBy(p => p.EffectiveFrom).Take(1).ToList()
+                : g.Where(p => p.IsHeadPost).OrderBy(p => p.EffectiveFrom).ToList()))
+            .Where(u => u.Heads.Count > 0)
+            .ToDictionary(u => u.UnitId, u => u.Heads);
+        var headIds = unitHeads.Values.SelectMany(h => h).Select(p => p.EmployeeId).ToHashSet();
 
-        Guid? NearestHead(Guid? unitId)
+        Guid? ParentUnit(Guid unitId) => units.TryGetValue(unitId, out var unit) ? unit.ParentId : null;
+
+        // Every unit with staff in or below it gets a node, so a unit without a head still shows as vacant
+        var activeUnits = new HashSet<Guid>();
+        foreach (var p in positions.Values)
         {
-            for (var depth = 0; unitId is Guid id && depth < MaxDepth; depth++)
+            for (Guid? unitId = p.OrganizationUnitId; unitId is Guid id && activeUnits.Count <= units.Count && activeUnits.Add(id);)
             {
-                if (unitHeads.TryGetValue(id, out var headId)) return headId;
-                unitId = unitParents.GetValueOrDefault(id);
+                unitId = ParentUnit(id);
             }
-            return null;
         }
 
-        var reportsTo = positions.Values.ToDictionary(p => p.EmployeeId, p =>
-        {
-            var isHeadLevel = p.IsHeadLevelPost || unitHeads.GetValueOrDefault(p.OrganizationUnitId) == p.EmployeeId;
-            var parentId = isHeadLevel ? NearestHead(unitParents.GetValueOrDefault(p.OrganizationUnitId)) : NearestHead(p.OrganizationUnitId);
-            return parentId == p.EmployeeId ? null : parentId;
-        });
+        // Unit nodes (its heads, or vacant) are keyed by the unit id; everyone else by their employee id
+        Guid NodeKey(Position p) => headIds.Contains(p.EmployeeId) ? p.OrganizationUnitId : p.EmployeeId;
+        var staff = positions.Values.Where(p => !headIds.Contains(p.EmployeeId)).ToDictionary(p => p.EmployeeId);
 
-        var subordinates = positions.Values
-            .Where(p => reportsTo[p.EmployeeId] is not null)
-            .ToLookup(p => reportsTo[p.EmployeeId]!.Value);
+        var reportsTo = activeUnits.ToDictionary(u => u, ParentUnit);   // unit -> unit above
+        foreach (var p in staff.Values) reportsTo[p.EmployeeId] = p.OrganizationUnitId;   // staff -> own unit
+
+        var subordinates = reportsTo
+            .Where(r => r.Value is not null)
+            .ToLookup(r => r.Value!.Value, r => r.Key);
+
+        List<EmployeeHierarchyMember> Members(Guid key) =>
+            (unitHeads.TryGetValue(key, out var heads) ? heads : staff.TryGetValue(key, out var p) ? [p] : [])
+            .Select(m => new EmployeeHierarchyMember(m.EmployeeId, m.Name, m.OrganizationUnit, m.Designation))
+            .ToList();
+
+        EmployeeHierarchyNode Node(Guid key, List<EmployeeHierarchyNode> children) =>
+            activeUnits.Contains(key) && !unitHeads.ContainsKey(key)
+                ? new([], children, units[key].Name)
+                : new(Members(key), children);
+
+        string SortName(Guid key) => activeUnits.Contains(key) ? units[key].Name : staff[key].Name;
 
         var visited = new HashSet<Guid>();
-        EmployeeHierarchyNode BuildSubtree(Position p) => new(
-            p.EmployeeId, p.Name, p.OrganizationUnit, p.Designation,
-            visited.Add(p.EmployeeId)
-                ? subordinates[p.EmployeeId]
-                    .OrderByDescending(c => unitHeads.GetValueOrDefault(c.OrganizationUnitId) == c.EmployeeId)
-                    .ThenBy(c => c.OrganizationUnit)
-                    .ThenBy(c => c.Name)
+        EmployeeHierarchyNode BuildSubtree(Guid key) => Node(key,
+            visited.Add(key)
+                ? subordinates[key]
+                    .OrderByDescending(activeUnits.Contains)
+                    .ThenBy(SortName)
                     .Select(BuildSubtree)
                     .ToList()
                 : []);
 
-        var node = BuildSubtree(self);
-        var current = self.EmployeeId;
-        for (var depth = 0; reportsTo[current] is Guid parentId && depth < MaxDepth; depth++)
+        var current = NodeKey(self);
+        var node = BuildSubtree(current);
+        for (var depth = 0; reportsTo[current] is Guid parentKey && depth < MaxDepth; depth++)
         {
-            var parent = positions[parentId];
-            node = new EmployeeHierarchyNode(parent.EmployeeId, parent.Name, parent.OrganizationUnit, parent.Designation, [node]);
-            current = parentId;
+            node = Node(parentKey, [node]);
+            current = parentKey;
         }
 
-        return Result.Ok(node);
+        return Result.Ok<EmployeeHierarchyResponse?>(new EmployeeHierarchyResponse(self.EmployeeId, node));
     }
 }
 #endregion
