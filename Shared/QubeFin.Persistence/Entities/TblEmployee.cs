@@ -93,6 +93,10 @@ public partial class TblEmployee
 
     public int? PermanentDurationOfStayInMonths { get; set; }
 
+    public decimal? PermanentLatitude { get; set; }
+
+    public decimal? PermanentLongitude { get; set; }
+
     public bool PresentPermanentAddressSame { get; set; }
 
     public string? PresentHouseNo { get; set; }
@@ -114,6 +118,10 @@ public partial class TblEmployee
     public string? PresentOwnerShipOfHouse { get; set; }
 
     public int? PresentDurationOfStayInMonths { get; set; }
+
+    public decimal? PresentLatitude { get; set; }
+
+    public decimal? PresentLongitude { get; set; }
 
     public string? OfficialEmail { get; set; }
 

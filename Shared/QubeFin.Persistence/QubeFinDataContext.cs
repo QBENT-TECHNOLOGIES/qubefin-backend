@@ -1237,6 +1237,8 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.PermanentAddress).HasMaxLength(250);
             entity.Property(e => e.PermanentHouseNo).HasMaxLength(20);
             entity.Property(e => e.PermanentLandMark).HasMaxLength(100);
+            entity.Property(e => e.PermanentLatitude).HasColumnType("numeric(19, 15)");
+            entity.Property(e => e.PermanentLongitude).HasColumnType("numeric(19, 15)");
             entity.Property(e => e.PermanentOwnerShipOfHouse).HasMaxLength(20);
             entity.Property(e => e.PermanentPinCode)
                 .HasMaxLength(6)
@@ -1249,6 +1251,8 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.PresentAddress).HasMaxLength(250);
             entity.Property(e => e.PresentHouseNo).HasMaxLength(20);
             entity.Property(e => e.PresentLandMark).HasMaxLength(100);
+            entity.Property(e => e.PresentLatitude).HasColumnType("numeric(19, 15)");
+            entity.Property(e => e.PresentLongitude).HasColumnType("numeric(19, 15)");
             entity.Property(e => e.PresentOwnerShipOfHouse).HasMaxLength(10);
             entity.Property(e => e.PresentPinCode)
                 .HasMaxLength(6)
