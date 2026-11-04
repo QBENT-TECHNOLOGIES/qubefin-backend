@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using NetTopologySuite.Geometries;
 
 namespace QubeFin.Persistence.Entities;
 
@@ -43,13 +44,11 @@ public partial class TblBcmember
 
     public string? PinCode { get; set; }
 
+    public Geometry? Location { get; set; }
+
     public Guid BcgroupId { get; set; }
 
     public bool IsOverdueMember { get; set; }
-
-    public string? Latitude { get; set; }
-
-    public string? Longitude { get; set; }
 
     public DateTime? CreatedDate { get; set; }
 

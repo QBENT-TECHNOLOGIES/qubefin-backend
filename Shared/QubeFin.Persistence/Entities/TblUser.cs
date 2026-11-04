@@ -99,6 +99,10 @@ public partial class TblUser
 
     public virtual ICollection<TblRole> TblRoleLastModifiedByNavigations { get; set; } = new List<TblRole>();
 
+    public virtual ICollection<TblTrackingSetting> TblTrackingSettingCreatedByNavigations { get; set; } = new List<TblTrackingSetting>();
+
+    public virtual ICollection<TblTrackingSetting> TblTrackingSettingModifiedByNavigations { get; set; } = new List<TblTrackingSetting>();
+
     public virtual ICollection<TblUserDevice> TblUserDevices { get; set; } = new List<TblUserDevice>();
 
     public virtual ICollection<TblUserMenuPermission> TblUserMenuPermissions { get; set; } = new List<TblUserMenuPermission>();

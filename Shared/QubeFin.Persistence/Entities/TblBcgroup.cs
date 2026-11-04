@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using NetTopologySuite.Geometries;
 
 namespace QubeFin.Persistence.Entities;
 
@@ -17,6 +18,8 @@ public partial class TblBcgroup
 
     public string? PinCode { get; set; }
 
+    public Geometry? Location { get; set; }
+
     public Guid OrganizationUnitId { get; set; }
 
     public Guid DesignationId { get; set; }
@@ -28,10 +31,6 @@ public partial class TblBcgroup
     public string? CollectionDay { get; set; }
 
     public TimeOnly? CollectionTime { get; set; }
-
-    public string? Latitude { get; set; }
-
-    public string? Longitude { get; set; }
 
     public DateTime? CreatedDate { get; set; }
 

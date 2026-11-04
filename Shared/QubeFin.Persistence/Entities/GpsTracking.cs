@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using NetTopologySuite.Geometries;
 
 namespace QubeFin.Persistence.Entities;
 
@@ -21,11 +22,9 @@ public partial class GpsTracking
 
     public double? CourseDegree { get; set; }
 
+    public Geometry? Location { get; set; }
+
     public double? Speed { get; set; }
 
-    public double Latitude { get; set; }
-
     public double? Accuracy { get; set; }
-
-    public double Longitude { get; set; }
 }

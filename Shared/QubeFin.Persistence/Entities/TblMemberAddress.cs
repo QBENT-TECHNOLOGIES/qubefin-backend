@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using NetTopologySuite.Geometries;
 
 namespace QubeFin.Persistence.Entities;
 
@@ -23,13 +24,11 @@ public partial class TblMemberAddress
 
     public string? PinCode { get; set; }
 
+    public Geometry? Location { get; set; }
+
     public string? NearestLandmark { get; set; }
 
     public int? ResidenceYear { get; set; }
-
-    public decimal? Latitude { get; set; }
-
-    public decimal? Longitude { get; set; }
 
     public bool IsDefault { get; set; }
 

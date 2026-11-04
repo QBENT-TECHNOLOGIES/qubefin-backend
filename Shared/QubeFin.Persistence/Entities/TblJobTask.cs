@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using NetTopologySuite.Geometries;
 
 namespace QubeFin.Persistence.Entities;
 
@@ -27,9 +28,7 @@ public partial class TblJobTask
 
     public string? TargetName { get; set; }
 
-    public string? TargetLatitude { get; set; }
-
-    public string? TargetLongitude { get; set; }
+    public Geometry? TargetLocation { get; set; }
 
     public int? RadiusMeters { get; set; }
 
@@ -41,23 +40,19 @@ public partial class TblJobTask
 
     public DateTime? TaskAddedOn { get; set; }
 
+    public Geometry? ArriveLocation { get; set; }
+
     public DateTime? ArrivedOn { get; set; }
-
-    public string? ArriveLatitude { get; set; }
-
-    public string? ArriveLongitude { get; set; }
 
     public decimal? ArriveDistanceMeters { get; set; }
 
     public bool IsCompleted { get; set; }
 
+    public Geometry? CompletedLocation { get; set; }
+
     public Guid? TaskCompletedBy { get; set; }
 
     public DateTime? TaskCompletedOn { get; set; }
-
-    public string? CompletedLatitude { get; set; }
-
-    public string? CompletedLongitude { get; set; }
 
     public decimal? CompletedDistanceMeter { get; set; }
 

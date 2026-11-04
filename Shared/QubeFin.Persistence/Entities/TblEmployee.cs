@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using NetTopologySuite.Geometries;
 
 namespace QubeFin.Persistence.Entities;
 
@@ -93,9 +94,7 @@ public partial class TblEmployee
 
     public int? PermanentDurationOfStayInMonths { get; set; }
 
-    public decimal? PermanentLatitude { get; set; }
-
-    public decimal? PermanentLongitude { get; set; }
+    public Geometry? PermanentLocation { get; set; }
 
     public bool PresentPermanentAddressSame { get; set; }
 
@@ -119,9 +118,7 @@ public partial class TblEmployee
 
     public int? PresentDurationOfStayInMonths { get; set; }
 
-    public decimal? PresentLatitude { get; set; }
-
-    public decimal? PresentLongitude { get; set; }
+    public Geometry? PresentLocation { get; set; }
 
     public string? OfficialEmail { get; set; }
 

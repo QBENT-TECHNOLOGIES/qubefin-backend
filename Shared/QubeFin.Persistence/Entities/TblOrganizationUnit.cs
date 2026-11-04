@@ -35,8 +35,6 @@ public partial class TblOrganizationUnit
 
     public int? CheckRadiusInMeter { get; set; }
 
-    public int? OperatingRadiusMeter { get; set; }
-
     public Guid? CompanyId { get; set; }
 
     public virtual TblCompany? Company { get; set; }

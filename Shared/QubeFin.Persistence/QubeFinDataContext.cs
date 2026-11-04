@@ -232,6 +232,8 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblTempBranch> TblTempBranches { get; set; }
 
+    public virtual DbSet<TblTrackingSetting> TblTrackingSettings { get; set; }
+
     public virtual DbSet<TblUser> TblUsers { get; set; }
 
     public virtual DbSet<TblUserDevice> TblUserDevices { get; set; }
@@ -283,12 +285,10 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.BatteryPercentage).HasColumnName("battery_percentage");
             entity.Property(e => e.CourseDegree).HasColumnName("course_degree");
             entity.Property(e => e.IsMockLocation).HasColumnName("is_mock_location");
-            entity.Property(e => e.Latitude).HasColumnName("latitude");
             entity.Property(e => e.LocationId)
                 .HasMaxLength(100)
                 .IsUnicode(false)
                 .HasColumnName("location_id");
-            entity.Property(e => e.Longitude).HasColumnName("longitude");
             entity.Property(e => e.ReceivedAt).HasColumnName("received_at");
             entity.Property(e => e.Speed).HasColumnName("speed");
             entity.Property(e => e.UserId)
@@ -607,8 +607,6 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.CollectionDay).HasMaxLength(20);
             entity.Property(e => e.ContactNo).HasMaxLength(10);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-            entity.Property(e => e.Latitude).HasMaxLength(50);
-            entity.Property(e => e.Longitude).HasMaxLength(50);
             entity.Property(e => e.Name).HasMaxLength(50);
             entity.Property(e => e.PinCode).HasMaxLength(10);
 
@@ -722,8 +720,6 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.FirstName).HasMaxLength(50);
             entity.Property(e => e.Gender).HasMaxLength(10);
             entity.Property(e => e.LastName).HasMaxLength(50);
-            entity.Property(e => e.Latitude).HasMaxLength(50);
-            entity.Property(e => e.Longitude).HasMaxLength(50);
             entity.Property(e => e.MaritalStatus).HasMaxLength(10);
             entity.Property(e => e.MiddleName).HasMaxLength(50);
             entity.Property(e => e.MobileNo).HasMaxLength(20);
@@ -810,11 +806,9 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Jlgpotential).HasColumnName("JLGPotential");
             entity.Property(e => e.LandslideRisk).HasMaxLength(20);
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
-            entity.Property(e => e.Latitude).HasColumnType("decimal(10, 8)");
             entity.Property(e => e.LeanSeason).HasMaxLength(200);
             entity.Property(e => e.LiteracyRate).HasColumnType("decimal(5, 2)");
             entity.Property(e => e.LocalReferencesVerified).HasMaxLength(10);
-            entity.Property(e => e.Longitude).HasColumnType("decimal(11, 8)");
             entity.Property(e => e.MainCrop).HasMaxLength(200);
             entity.Property(e => e.MigrationRisk).HasMaxLength(20);
             entity.Property(e => e.MigrationTrend).HasMaxLength(100);
@@ -1237,8 +1231,6 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.PermanentAddress).HasMaxLength(250);
             entity.Property(e => e.PermanentHouseNo).HasMaxLength(20);
             entity.Property(e => e.PermanentLandMark).HasMaxLength(100);
-            entity.Property(e => e.PermanentLatitude).HasColumnType("numeric(19, 15)");
-            entity.Property(e => e.PermanentLongitude).HasColumnType("numeric(19, 15)");
             entity.Property(e => e.PermanentOwnerShipOfHouse).HasMaxLength(20);
             entity.Property(e => e.PermanentPinCode)
                 .HasMaxLength(6)
@@ -1251,8 +1243,6 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.PresentAddress).HasMaxLength(250);
             entity.Property(e => e.PresentHouseNo).HasMaxLength(20);
             entity.Property(e => e.PresentLandMark).HasMaxLength(100);
-            entity.Property(e => e.PresentLatitude).HasColumnType("numeric(19, 15)");
-            entity.Property(e => e.PresentLongitude).HasColumnType("numeric(19, 15)");
             entity.Property(e => e.PresentOwnerShipOfHouse).HasMaxLength(10);
             entity.Property(e => e.PresentPinCode)
                 .HasMaxLength(6)
@@ -1556,8 +1546,6 @@ public partial class QubeFinDataContext : DbContext
                 .IsFixedLength();
             entity.Property(e => e.LandMark).HasMaxLength(100);
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
-            entity.Property(e => e.Latitude).HasMaxLength(100);
-            entity.Property(e => e.Longitude).HasMaxLength(100);
             entity.Property(e => e.MobileNo).HasMaxLength(15);
             entity.Property(e => e.Name).HasMaxLength(50);
             entity.Property(e => e.PhotoScan).HasMaxLength(500);
@@ -1765,12 +1753,8 @@ public partial class QubeFinDataContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.ArriveDistanceMeters).HasColumnType("decimal(9, 6)");
-            entity.Property(e => e.ArriveLatitude).HasMaxLength(50);
-            entity.Property(e => e.ArriveLongitude).HasMaxLength(50);
             entity.Property(e => e.ArrivedOn).HasColumnType("datetime");
             entity.Property(e => e.CompletedDistanceMeter).HasColumnType("decimal(9, 6)");
-            entity.Property(e => e.CompletedLatitude).HasMaxLength(50);
-            entity.Property(e => e.CompletedLongitude).HasMaxLength(50);
             entity.Property(e => e.IsEmireceived).HasColumnName("IsEMIReceived");
             entity.Property(e => e.ModifiedOn).HasColumnType("datetime");
             entity.Property(e => e.Notes).HasMaxLength(100);
@@ -1780,8 +1764,6 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.ReceivedAmount).HasColumnType("numeric(18, 2)");
             entity.Property(e => e.Remarks).HasMaxLength(500);
             entity.Property(e => e.Status).HasMaxLength(30);
-            entity.Property(e => e.TargetLatitude).HasMaxLength(50);
-            entity.Property(e => e.TargetLongitude).HasMaxLength(50);
             entity.Property(e => e.TargetName).HasMaxLength(50);
             entity.Property(e => e.TaskAddedOn).HasColumnType("datetime");
             entity.Property(e => e.TaskCancelDate).HasColumnType("datetime");
@@ -2403,8 +2385,6 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.City).HasMaxLength(50);
             entity.Property(e => e.HouseNo).HasMaxLength(100);
-            entity.Property(e => e.Latitude).HasColumnType("numeric(18, 16)");
-            entity.Property(e => e.Longitude).HasColumnType("numeric(18, 16)");
             entity.Property(e => e.NearestLandmark).HasMaxLength(100);
             entity.Property(e => e.PinCode).HasMaxLength(10);
             entity.Property(e => e.PostOffice).HasMaxLength(100);
@@ -2935,6 +2915,24 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Lat).HasMaxLength(50);
             entity.Property(e => e.Lon).HasMaxLength(50);
             entity.Property(e => e.Name).HasMaxLength(200);
+        });
+
+        modelBuilder.Entity<TblTrackingSetting>(entity =>
+        {
+            entity.ToTable("Tbl_TrackingSetting", "Tracking");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.ModifiedOn).HasColumnType("datetime");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.TblTrackingSettingCreatedByNavigations)
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_TrackingSetting_Tbl_User");
+
+            entity.HasOne(d => d.ModifiedByNavigation).WithMany(p => p.TblTrackingSettingModifiedByNavigations)
+                .HasForeignKey(d => d.ModifiedBy)
+                .HasConstraintName("FK_Tbl_TrackingSetting_Tbl_User1");
         });
 
         modelBuilder.Entity<TblUser>(entity =>
