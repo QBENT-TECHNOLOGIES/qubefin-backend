@@ -58,7 +58,7 @@ public class EmployeeEndpoints : IEndpoint
         .WithSummary("Get Employee By Id")
         .RequireAuthorization();
 
-        app.MapPost("employees", async (ClaimsPrincipal principal, [FromBody] PersonalInfoRequest request, ISender sender) =>
+        app.MapPost("employees", async (ClaimsPrincipal principal, [FromForm] PersonalInfoFormRequest request, ISender sender) =>
         {
             if (principal.Identity is null)
             {
@@ -67,10 +67,12 @@ public class EmployeeEndpoints : IEndpoint
             var userId = principal.Identity.GetUserId();
 
             var command = new CreateEmployeeCommand(/*request.Code,*/ request.Salutation, request.FirstName, request.MiddleName, request.LastName, request.FatherName, request.MotherName,
-                request.HusbandName, request.DateOfBirth, request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisablityType, request.MaritalStatus, userId);
+                request.HusbandName, request.DateOfBirth, request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisablityType, request.MaritalStatus, userId,
+                request.Photo, request.Signature);
             var result = await sender.Send(command);
             return result.ToHttpResult();
         })
+        .DisableAntiforgery()
         .WithSummary("Create Employee")
         .RequireAuthorization();
 

@@ -1,9 +1,13 @@
 ﻿using FluentResults;
 using FluentValidation;
 using MediatR;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
+using QubeFin.Hrms.Application.InterviewProcess.Models;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Models.Hrms;
 using System.Text.RegularExpressions;
 
@@ -12,7 +16,7 @@ namespace QubeFin.Hrms.Application.Employees.Commands;
 #region --- COMMAND ---
 public record CreateEmployeeCommand(/*string Code,*/ string? Salutation, string FirstName, string? MiddleName, string LastName, string? FatherName, string? MotherName,
     string? HusbandName, DateOnly DateOfBirth, string Gender, string? Religion, string? Caste, string Nationality, string? BloodGroup, string? DisablityType, string? MaritalStatus,
-    Guid CreatedBy
+    Guid CreatedBy, IFormFile? Photo = null, IFormFile? Signature = null
 ) : IRequest<Result<CreateEmployeeResponse?>>;
 #endregion
 
@@ -47,7 +51,17 @@ public class CreateEmployeeCommandValidator : AbstractValidator<CreateEmployeeCo
         //RuleFor(x => x.BloodGroup).NotEmpty().WithMessage("Blood Group is Mandatory.");
         //RuleFor(x => x.Religion).NotEmpty().WithMessage("Religion is Mandatory.");
         RuleFor(x => x.Nationality).NotEmpty().WithMessage("Nationality is Mandatory.");
+        RuleFor(x => x.Photo)
+            .Must(BeAnImage!).When(x => x.Photo is not null)
+            .WithMessage("Photo must be a JPG, PNG or WEBP image.");
+        RuleFor(x => x.Signature)
+            .Must(BeAnImage!).When(x => x.Signature is not null)
+            .WithMessage("Signature must be a JPG, PNG or WEBP image.");
     }
+
+    private static readonly string[] AllowedImageTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
+    private static bool BeAnImage(IFormFile file) => AllowedImageTypes.Contains(file.ContentType?.ToLowerInvariant());
 }
 #endregion
 #region --- RESPONSE ---
@@ -56,7 +70,11 @@ public record CreateEmployeeResponse(Guid Id, string? Message);
 #endregion
 
 #region --- HANDLER ---
-internal sealed class CreateEmployeeCommandHandler(IEmployeeRepository employeeRepository, IUnitOfWork unitOfWork)
+internal sealed class CreateEmployeeCommandHandler(
+    IEmployeeRepository employeeRepository,
+    IFileStorageRepository fileStorageRepository,
+    IUnitOfWork unitOfWork,
+    QubeFinDataContext context)
     : IRequestHandler<CreateEmployeeCommand, Result<CreateEmployeeResponse?>>
 {
     public async Task<Result<CreateEmployeeResponse?>> Handle(CreateEmployeeCommand request, CancellationToken cancellationToken)
@@ -83,6 +101,8 @@ internal sealed class CreateEmployeeCommandHandler(IEmployeeRepository employeeR
                 );
 
             await employeeRepository.AddAsync(employee);
+            await SaveDocument(employeeId, CandidateJoiningDocumentCategory.Photo, "Passport Size Photo", request.Photo, request.CreatedBy, cancellationToken);
+            await SaveDocument(employeeId, CandidateJoiningDocumentCategory.Signature, "Signature", request.Signature, request.CreatedBy, cancellationToken);
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
             return Result.Ok(new CreateEmployeeResponse(employeeId, $"Employee created successfully with Name : {request.FirstName} {request.LastName}"));
@@ -91,6 +111,34 @@ internal sealed class CreateEmployeeCommandHandler(IEmployeeRepository employeeR
         {
             return Result.Fail(new Error($"An error occurred while creating the employee: {ex.Message}"));
         }
+    }
+
+    // Uploads the file and stages its employee-document row; saved together with the new employee.
+    private async Task SaveDocument(Guid employeeId, string category, string documentName, IFormFile? file, Guid userId, CancellationToken cancellationToken)
+    {
+        if (file is null || file.Length == 0)
+        {
+            return;
+        }
+
+        await using var stream = file.OpenReadStream();
+        var fileNo = await fileStorageRepository.UploadFileAsync(
+            stream,
+            file.FileName,
+            file.ContentType ?? "application/octet-stream",
+            cancellationToken).ConfigureAwait(false);
+
+        context.TblEmployeeDocuments.Add(new TblEmployeeDocument
+        {
+            Id = Guid.NewGuid(),
+            DocumentCategory = category,
+            DocumentName = documentName,
+            FileName = file.FileName,
+            FileNo = fileNo,
+            EmployeeId = employeeId,
+            UploadedBy = userId,
+            UploadedOn = DateTime.Now
+        });
     }
 }
 #endregion
