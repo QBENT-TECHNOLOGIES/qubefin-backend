@@ -20,7 +20,7 @@ internal sealed class GetEmployeesBySearchQueryHandler(QubeFinDataContext contex
     public async Task<GetEmployeesBySearchResponse> Handle(GetEmployeesBySearchQuery request, CancellationToken cancellationToken)
     {
         var skipRecordCount = request.SearchParam.PageIndex * request.SearchParam.PageSize;
-        var filterEntitiesQuery = context.TblEmployees.Include(e => e.Company).Include(e => e.OrganizationUnit).AsNoTracking().AsQueryable();
+        var filterEntitiesQuery = context.TblEmployees.AsNoTracking().AsQueryable();
 
         if (request.SearchParam.CompanyId != null && request.SearchParam.CompanyId != Guid.Empty)
         {
@@ -55,23 +55,66 @@ internal sealed class GetEmployeesBySearchQueryHandler(QubeFinDataContext contex
                 _ => request.SearchParam.SortDirection == "DESC" ? filterEntitiesQuery.OrderByDescending(m => m.Code) : filterEntitiesQuery.OrderBy(m => m.Code),
             };
         }
-
+        
         var totalCount = await filterEntitiesQuery.CountAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-        var employees = await filterEntitiesQuery.Skip(skipRecordCount).Take(request.SearchParam.PageSize)
-            .Select(m => new EmployeeSearchResult
+        var employees = await filterEntitiesQuery
+    .Skip(skipRecordCount)
+    .Take(request.SearchParam.PageSize)
+    .Select(m => new
+    {
+        Employee = m,
+
+        CurrentDesignation = m.TblEmployeeDesignations
+            .OrderByDescending(ed => ed.EffectiveTo == null)
+            .ThenByDescending(ed => ed.EffectiveFrom)
+            .Select(ed => new
             {
-                Id = m.Id,
-                Code = m.Code,
-                FullName = m.FullName,
-                CompanyName = m.CompanyId != null ? m.Company.EmpCodeAlias : null,
-                OrganizationUnitName = m.OrganizationUnitId != null ? m.OrganizationUnit.Name : null,
-                Email = m.OfficialEmail,
-                Mobile = m.MobileNo,
-                Gender = m.Gender,
-                JoiningDate = m.JoiningDate,
-                SeperationDate = m.SeparationDate,
-                IsActive = m.IsActive
-            }).ToListAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+                ed.DesignationId,
+                DesignationName = ed.Designation.Name,
+
+                SalaryGrade = ed.Designation.TblDesignationGradeMappings
+                    .Where(g => g.IsActive)
+                    .Select(g => g.Grade.Name)
+                    .FirstOrDefault()
+                    ??
+                    ed.Designation.TblDesignationGradeMappings
+                        .Select(g => g.Grade.Name)
+                        .FirstOrDefault()
+            })
+            .FirstOrDefault()
+    })
+    .Select(x => new EmployeeSearchResult
+    {
+        Id = x.Employee.Id,
+        Code = x.Employee.Code,
+        FullName = x.Employee.FullName,
+
+        CompanyName = x.Employee.CompanyId != null
+            ? x.Employee.Company.EmpCodeAlias
+            : null,
+
+        OrganizationUnitName = x.Employee.OrganizationUnitId != null
+            ? x.Employee.OrganizationUnit.Name
+            : null,
+
+        Email = x.Employee.OfficialEmail,
+        Mobile = x.Employee.MobileNo,
+        Gender = x.Employee.Gender,
+        JoiningDate = x.Employee.JoiningDate,
+        SeperationDate = x.Employee.SeparationDate,
+        IsActive = x.Employee.IsActive,
+
+
+        Designation = x.CurrentDesignation != null
+            ? x.CurrentDesignation.DesignationName
+            : null,
+
+        Grade = x.CurrentDesignation != null
+            ? x.CurrentDesignation.SalaryGrade
+            : null
+    })
+    .ToListAsync(cancellationToken: cancellationToken)
+    .ConfigureAwait(false);
         return new GetEmployeesBySearchResponse(employees, totalCount);
     }
 }

@@ -25,5 +25,7 @@ namespace QubeFin.Hrms.Application.Employees.Models
         public DateOnly? JoiningDate { get; set; }
         public DateOnly? SeperationDate { get; set; }
         public bool IsActive { get; set; }
+        public string? Grade { get; set; }
+        public string? Designation { get; set; }
     }
 }
