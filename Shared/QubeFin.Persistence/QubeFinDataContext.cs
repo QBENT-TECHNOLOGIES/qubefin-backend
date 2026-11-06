@@ -186,6 +186,8 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblMobileAppVersion> TblMobileAppVersions { get; set; }
 
+    public virtual DbSet<TblMotionHistory> TblMotionHistories { get; set; }
+
     public virtual DbSet<TblNotification> TblNotifications { get; set; }
 
     public virtual DbSet<TblOrganizationUnit> TblOrganizationUnits { get; set; }
@@ -579,6 +581,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.CollectionDay).HasMaxLength(20);
             entity.Property(e => e.ContactNo).HasMaxLength(10);
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.LocationPhoto).HasMaxLength(50);
             entity.Property(e => e.Name).HasMaxLength(50);
             entity.Property(e => e.PinCode).HasMaxLength(10);
 
@@ -692,6 +695,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.FirstName).HasMaxLength(50);
             entity.Property(e => e.Gender).HasMaxLength(10);
             entity.Property(e => e.LastName).HasMaxLength(50);
+            entity.Property(e => e.LocationPhoto).HasMaxLength(50);
             entity.Property(e => e.MaritalStatus).HasMaxLength(10);
             entity.Property(e => e.MiddleName).HasMaxLength(50);
             entity.Property(e => e.MobileNo).HasMaxLength(20);
@@ -1192,6 +1196,7 @@ public partial class QubeFinDataContext : DbContext
                 .IsUnicode(false);
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
             entity.Property(e => e.LastName).HasMaxLength(30);
+            entity.Property(e => e.LocationPhoto).HasMaxLength(50);
             entity.Property(e => e.MaritalStatus)
                 .HasMaxLength(10)
                 .IsFixedLength();
@@ -1723,7 +1728,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.JobCode).HasMaxLength(50);
             entity.Property(e => e.JobDescription).HasMaxLength(500);
-            entity.Property(e => e.JobTitle).HasMaxLength(50);
+            entity.Property(e => e.JobTitle).HasMaxLength(300);
             entity.Property(e => e.ModifiedOn).HasColumnType("datetime");
 
             entity.HasOne(d => d.AssignToNavigation).WithMany(p => p.TblJobs)
@@ -2542,6 +2547,28 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.AppUrl).HasMaxLength(200);
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.Version).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<TblMotionHistory>(entity =>
+        {
+            entity.ToTable("Tbl_MotionHistory", "Tracking");
+
+            entity.HasIndex(e => new { e.EmployeeId, e.EndedAt, e.StartedAt }, "IX_Tbl_MotionHistory_Active").IsDescending(false, false, true);
+
+            entity.Property(e => e.Id)
+                .ValueGeneratedNever()
+                .HasColumnName("id");
+            entity.Property(e => e.EmployeeId).HasColumnName("employeeId");
+            entity.Property(e => e.EndedAt).HasColumnName("endedAt");
+            entity.Property(e => e.Motion)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasColumnName("motion");
+            entity.Property(e => e.Source)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasColumnName("source");
+            entity.Property(e => e.StartedAt).HasColumnName("startedAt");
         });
 
         modelBuilder.Entity<TblNotification>(entity =>

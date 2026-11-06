@@ -20,6 +20,8 @@ public partial class TblBcgroup
 
     public Geometry? Location { get; set; }
 
+    public string? LocationPhoto { get; set; }
+
     public Guid OrganizationUnitId { get; set; }
 
     public Guid DesignationId { get; set; }
@@ -31,6 +33,10 @@ public partial class TblBcgroup
     public string? CollectionDay { get; set; }
 
     public TimeOnly? CollectionTime { get; set; }
+
+    public DateOnly? BiWeeklyStartDate { get; set; }
+
+    public bool IsMonthlyGroup { get; set; }
 
     public DateTime? CreatedDate { get; set; }
 

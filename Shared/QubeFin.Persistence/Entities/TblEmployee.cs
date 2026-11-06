@@ -120,6 +120,8 @@ public partial class TblEmployee
 
     public Geometry? PresentLocation { get; set; }
 
+    public string? LocationPhoto { get; set; }
+
     public string? OfficialEmail { get; set; }
 
     public string? UniversalAccountNo { get; set; }

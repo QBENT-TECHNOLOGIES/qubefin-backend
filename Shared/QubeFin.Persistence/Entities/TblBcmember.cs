@@ -46,6 +46,8 @@ public partial class TblBcmember
 
     public Geometry? Location { get; set; }
 
+    public string? LocationPhoto { get; set; }
+
     public Guid BcgroupId { get; set; }
 
     public bool IsOverdueMember { get; set; }
