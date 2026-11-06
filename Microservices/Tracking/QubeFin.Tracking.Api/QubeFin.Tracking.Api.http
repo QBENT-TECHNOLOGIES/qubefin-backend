@@ -132,3 +132,24 @@ Authorization: Bearer {{token}}
   "remarks": "Assignee is on leave this week.",
   "endDate": null
 }
+
+###
+
+PUT {{QubeFin.Tracking.Api_HostAddress}}/jobs/{{jobId}}/extend
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "endDate": "2026-11-30",
+  "remarks": "Market day on Thursday."
+}
+
+###
+
+PUT {{QubeFin.Tracking.Api_HostAddress}}/jobs/{{jobId}}/cancel
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "remarks": "Branch closed for audit this week."
+}

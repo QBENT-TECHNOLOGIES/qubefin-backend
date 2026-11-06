@@ -108,7 +108,7 @@ internal sealed class JobTaskPlanner(ITrackingScopeRepository scopeRepository, I
             if (input.CoOrdinatedBy.HasValue)
             {
                 var companion = companions[input.CoOrdinatedBy.Value];
-                if (input.CoOrdinatedBy == assignee.DesignationId)
+                if (input.CoOrdinatedBy == assignee.EmployeeId)
                 {
                     errors.Add($"{title}: {assignee.Name} holds the job, so cannot also be the person going along.");
                     continue;
@@ -123,7 +123,7 @@ internal sealed class JobTaskPlanner(ITrackingScopeRepository scopeRepository, I
                     errors.Add($"{title}: {companion.Name} does not work in {BranchName(branchId)}.");
                     continue;
                 }
-                coOrdinatedBy = companion.DesignationId;
+                coOrdinatedBy = companion.EmployeeId;
             }
 
             // D6: only places with a verified location (every tagged place counts as verified for now)
@@ -148,7 +148,7 @@ internal sealed class JobTaskPlanner(ITrackingScopeRepository scopeRepository, I
                     skipped.Add(new SkippedTask(title, "Already pending in this job"));
                     continue;
                 }
-                var samePerson = samePlace.Where(p => p.AssignTo == assignee.DesignationId && p.JobId != existingJobId).ToList();
+                var samePerson = samePlace.Where(p => p.AssignTo == assignee.EmployeeId && p.JobId != existingJobId).ToList();
                 var followUp = type == TaskType.OdFollowUp ? samePerson.FirstOrDefault(p => p.TaskType == nameof(TaskType.OdFollowUp)) : null;
                 if (followUp is not null)
                 {
@@ -161,7 +161,7 @@ internal sealed class JobTaskPlanner(ITrackingScopeRepository scopeRepository, I
                     skipped.Add(new SkippedTask(title, $"Already pending with {overlapping.AssigneeName} in {overlapping.JobCode}"));
                     continue;
                 }
-                var someoneElse = samePlace.FirstOrDefault(p => p.AssignTo != assignee.DesignationId && p.TaskType == type.ToString());
+                var someoneElse = samePlace.FirstOrDefault(p => p.AssignTo != assignee.EmployeeId && p.TaskType == type.ToString());
                 if (someoneElse is not null)
                 {
                     warnings.Add(new TaskWarning(title, $"Also pending with {someoneElse.AssigneeName} ({someoneElse.JobCode})"));

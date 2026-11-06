@@ -73,6 +73,36 @@ public class JobEndpoints : IEndpoint
         .WithTags("Jobs")
         .RequireAuthorization();
 
+        app.MapPut("jobs/{id:guid}/extend", async (Guid id, ExtendJobRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Unauthorized();
+            }
+            var userId = principal.Identity.GetUserId();
+            var result = await sender.Send(new ExtendJobCommand(userId, id, request), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Extend a job's complete-by date")
+        .WithDescription("Moves an open job's complete-by date later, with a reason. The new date must be later than the current one and not in the past.")
+        .WithTags("Jobs")
+        .RequireAuthorization();
+
+        app.MapPut("jobs/{id:guid}/cancel", async (Guid id, CancelJobRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Unauthorized();
+            }
+            var userId = principal.Identity.GetUserId();
+            var result = await sender.Send(new CancelJobCommand(userId, id, request), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Cancel a job")
+        .WithDescription("Cancels an open job with a reason. Pending tasks become Cancelled; completed tasks stay on record.")
+        .WithTags("Jobs")
+        .RequireAuthorization();
+
         app.MapGet("jobs/task-points", async (Guid? organisationUnitId, Guid? assigneeId, bool? pendingOnly, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)

@@ -9,7 +9,8 @@ public interface IJobRepository
 {
     Task<JobSearchResult> SearchJobsAsync(TrackingViewer viewer, JobSearchFilter filter, DateOnly today, CancellationToken cancellationToken = default);
     Task<JobDetailRow?> GetJobAsync(TrackingViewer viewer, Guid jobId, DateOnly today, CancellationToken cancellationToken = default);
-    Task<List<JobHistoryRow>?> GetJobHistoryAsync(TrackingViewer viewer, Guid jobId, DateOnly today, CancellationToken cancellationToken = default);
+    Task<List<JobHistoryRow>?> GetJobHistoryAsync(TrackingViewer viewer, Guid jobId, CancellationToken cancellationToken = default);
+    Task AddHistoryAsync(TblJobHistory history, CancellationToken cancellationToken = default);
     Task<List<JobTaskPointRow>> GetTaskPointsAsync(TrackingViewer viewer, Guid? organisationUnitId, Guid? assigneeId, bool pendingOnly, DateOnly today, CancellationToken cancellationToken = default);
     Task<List<PendingPlaceTask>> GetPendingTasksAtAsync(IEnumerable<Guid> originRefIds, CancellationToken cancellationToken = default);
     Task<string?> GetLastJobCodeAsync(string prefix, CancellationToken cancellationToken = default);
@@ -41,7 +42,7 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
             var text = filter.SearchText.Trim();
             jobs = jobs.Where(j => j.JobCode.Contains(text)
                 || j.JobTitle.Contains(text)
-                || context.TblEmployeeDesignations.Any(ed => ed.DesignationId == j.AssignTo && ed.EffectiveTo == null && ed.Employee.FullName.Contains(text))
+                || j.AssignToNavigation.FullName.Contains(text)
                 || (j.CreatedByNavigation.Employee != null ? j.CreatedByNavigation.Employee.FullName : j.CreatedByNavigation.UserName).Contains(text)
                 || j.TblJobTasks.Any(t => t.TaskNo.Contains(text) || (t.TargetName != null && t.TargetName.Contains(text))));
         }
@@ -51,7 +52,7 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
         }
         if (filter.AssigneeId.HasValue)
         {
-            jobs = jobs.Where(j => context.TblEmployeeDesignations.Any(ed => ed.DesignationId == j.AssignTo && ed.EffectiveTo == null && ed.EmployeeId == filter.AssigneeId.Value));
+            jobs = jobs.Where(j => j.AssignTo == filter.AssigneeId.Value);
         }
         if (filter.DueFrom.HasValue)
         {
@@ -124,8 +125,11 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
                 j.JobDescription,
                 j.CreatedBy,
                 j.AssignTo,
-                AssigneePost = j.AssignToNavigation.Post.Name,
-                AssigneeUnitId = j.AssignToNavigation.OrganizationUnitId
+                AssigneePosition = context.TblEmployeeDesignations
+                    .Where(ed => ed.EmployeeId == j.AssignTo && ed.EffectiveTo == null)
+                    .OrderByDescending(ed => ed.EffectiveFrom)
+                    .Select(ed => new { PostName = ed.Designation.Post.Name, ed.Designation.OrganizationUnitId })
+                    .FirstOrDefault()
             })
             .AsNoTracking()
             .SingleAsync(cancellationToken);
@@ -136,11 +140,7 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
             .Select(t => new
             {
                 Task = t,
-                CoOrdinatedByHolder = context.TblEmployeeDesignations
-                    .Where(ed => ed.DesignationId == t.CoOrdinatedBy && ed.EffectiveTo == null)
-                    .OrderByDescending(ed => ed.EffectiveFrom)
-                    .Select(ed => new { ed.EmployeeId, ed.Employee.FullName })
-                    .FirstOrDefault(),
+                CoOrdinatedByName = t.CoOrdinatedByNavigation != null ? t.CoOrdinatedByNavigation.FullName : null,
                 BranchName = t.Branch.Name,
                 AddedByName = t.TaskAddedByNavigation != null
                     ? (t.TaskAddedByNavigation.Employee != null ? t.TaskAddedByNavigation.Employee.FullName : t.TaskAddedByNavigation.UserName)
@@ -176,8 +176,8 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
                     t.Notes,
                     t.Priority,
                     t.CoOrdinatedBy,
-                    x.CoOrdinatedByHolder?.EmployeeId,
-                    x.CoOrdinatedByHolder?.FullName,
+                    t.CoOrdinatedBy,
+                    x.CoOrdinatedByName,
                     t.OriginRefId.HasValue ? targetKinds.GetValueOrDefault(t.OriginRefId.Value) : "Custom",
                     t.OriginRefId,
                     t.TargetName,
@@ -216,176 +216,38 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
             job.CreatedBy,
             creator,
             job.AssignTo,
-            new TrackingPosition(false, job.AssigneePost, job.AssigneeUnitId),
+            new TrackingPosition(false, job.AssigneePosition?.PostName, job.AssigneePosition?.OrganizationUnitId),
             taskRows);
     }
 
-    // There is no history table, so the trail is rebuilt from the "by" and "on" columns of Tbl_Job and Tbl_JobTask.
-    // A whole-job transfer and a date extension overwrite their columns, so they cannot be shown.
-    public async Task<List<JobHistoryRow>?> GetJobHistoryAsync(TrackingViewer viewer, Guid jobId, DateOnly today, CancellationToken cancellationToken = default)
+    // Tbl_JobHistory is append-only; each row lists the tasks it mentions through Tbl_JobHistoryTasks. Newest first.
+    public async Task<List<JobHistoryRow>?> GetJobHistoryAsync(TrackingViewer viewer, Guid jobId, CancellationToken cancellationToken = default)
     {
-        var job = await VisibleJobs(viewer)
-            .Where(j => j.Id == jobId)
-            .Select(j => new
-            {
-                j.Id,
-                j.CreatedOn,
-                CreatedByName = j.CreatedByNavigation.Employee != null ? j.CreatedByNavigation.Employee.FullName : j.CreatedByNavigation.UserName,
-                AssigneeName = context.TblEmployeeDesignations
-                    .Where(ed => ed.DesignationId == j.AssignTo && ed.EffectiveTo == null)
-                    .OrderByDescending(ed => ed.EffectiveFrom)
-                    .Select(ed => ed.Employee.FullName)
-                    .FirstOrDefault(),
-                j.EndDate,
-                j.IsCancel,
-                j.CanceledBy,
-                CanceledByName = j.CanceledByNavigation != null
-                    ? (j.CanceledByNavigation.Employee != null ? j.CanceledByNavigation.Employee.FullName : j.CanceledByNavigation.UserName)
-                    : null,
-                j.CancelDate,
-                j.CancelReason,
-                j.TransferJobRefId,
-                TransferJobRefCode = j.TransferJobRef != null ? j.TransferJobRef.JobCode : null,
-                TransferFromAssigneeName = j.TransferJobRef != null
-                    ? context.TblEmployeeDesignations
-                        .Where(ed => ed.DesignationId == j.TransferJobRef.AssignTo && ed.EffectiveTo == null)
-                        .OrderByDescending(ed => ed.EffectiveFrom)
-                        .Select(ed => ed.Employee.FullName)
-                        .FirstOrDefault()
-                    : null
-            })
-            .FirstOrDefaultAsync(cancellationToken);
-        if (job is null) return null;
+        if (!await VisibleJobs(viewer).AnyAsync(j => j.Id == jobId, cancellationToken)) return null;
 
-        var tasks = await context.TblJobTasks
-            .Where(t => t.JobId == jobId)
-            .Select(t => new
-            {
-                Task = t,
-                AddedByName = t.TaskAddedByNavigation != null
-                    ? (t.TaskAddedByNavigation.Employee != null ? t.TaskAddedByNavigation.Employee.FullName : t.TaskAddedByNavigation.UserName)
-                    : null,
-                CompletedByName = t.TaskCompletedByNavigation != null
-                    ? (t.TaskCompletedByNavigation.Employee != null ? t.TaskCompletedByNavigation.Employee.FullName : t.TaskCompletedByNavigation.UserName)
-                    : null,
-                CancelByName = t.TaskCancelByNavigation != null
-                    ? (t.TaskCancelByNavigation.Employee != null ? t.TaskCancelByNavigation.Employee.FullName : t.TaskCancelByNavigation.UserName)
-                    : null,
-                TransferredTo = context.TblJobTasks
-                    .Where(n => n.Id == t.TransferTaskId)
-                    .Select(n => new
-                    {
-                        n.JobId,
-                        n.Job.JobCode,
-                        n.Job.CreatedOn,
-                        CreatedByName = n.Job.CreatedByNavigation.Employee != null ? n.Job.CreatedByNavigation.Employee.FullName : n.Job.CreatedByNavigation.UserName,
-                        AssigneeName = context.TblEmployeeDesignations
-                            .Where(ed => ed.DesignationId == n.Job.AssignTo && ed.EffectiveTo == null)
-                            .OrderByDescending(ed => ed.EffectiveFrom)
-                            .Select(ed => ed.Employee.FullName)
-                            .FirstOrDefault()
-                    })
-                    .FirstOrDefault()
-            })
+        return await context.TblJobHistories
+            .Where(h => h.JobId == jobId)
+            .OrderByDescending(h => h.PerformedAt)
+            .Select(h => new JobHistoryRow(
+                h.Id,
+                h.JobId,
+                h.Actions,
+                h.PerformedBy != null ? (h.PerformedBy.Employee != null ? h.PerformedBy.Employee.FullName : h.PerformedBy.UserName) : SystemName,
+                h.PerformedAt,
+                h.FromAssignee != null ? h.FromAssignee.FullName : null,
+                h.ToAssignee != null ? h.ToAssignee.FullName : null,
+                h.Tasks.OrderBy(t => t.TaskNo).Select(t => t.TaskNo).ToList(),
+                h.RelatedJobId,
+                h.RelatedJob != null ? h.RelatedJob.JobCode : null,
+                h.OldCompleteBy,
+                h.NewCompleteBy,
+                h.Remarks))
             .AsNoTracking()
             .ToListAsync(cancellationToken);
-
-        var entries = new List<JobHistoryRow>();
-        void Add(string action, string? performedByName, DateTime? performedOn, IEnumerable<string> taskNos,
-            string? fromAssigneeName = null, string? toAssigneeName = null, Guid? relatedJobId = null, string? relatedJobCode = null, string? remarks = null)
-        {
-            var taskNoList = taskNos.OrderBy(n => n).ToList();
-            entries.Add(new JobHistoryRow(
-                HistoryId(jobId, action, performedOn, taskNoList),
-                jobId,
-                action,
-                performedByName ?? SystemName,
-                performedOn,
-                fromAssigneeName,
-                toAssigneeName,
-                taskNoList,
-                relatedJobId,
-                relatedJobCode,
-                remarks));
-        }
-
-        // Tasks put in by a manager: the ones added with the job make up "Created", later batches are "TasksAdded"
-        var managerBatches = tasks
-            .Where(t => t.Task.IsSelfAdded != true)
-            .GroupBy(t => new { t.Task.TaskAddedOn, t.AddedByName })
-            .ToList();
-        var createdTaskNos = managerBatches
-            .Where(b => b.Key.TaskAddedOn is null || job.CreatedOn is null || b.Key.TaskAddedOn <= job.CreatedOn.Value.AddMinutes(1))
-            .SelectMany(b => b.Select(t => t.Task.TaskNo))
-            .ToList();
-
-        Add("Created", job.CreatedByName, job.CreatedOn, createdTaskNos, toAssigneeName: job.AssigneeName);
-        if (job.TransferJobRefId.HasValue)
-        {
-            Add("TasksTransferredIn", job.CreatedByName, job.CreatedOn, createdTaskNos,
-                job.TransferFromAssigneeName, job.AssigneeName, job.TransferJobRefId, job.TransferJobRefCode);
-        }
-        foreach (var batch in managerBatches.Where(b => b.Key.TaskAddedOn.HasValue && job.CreatedOn.HasValue && b.Key.TaskAddedOn > job.CreatedOn.Value.AddMinutes(1)))
-        {
-            Add("TasksAdded", batch.Key.AddedByName, batch.Key.TaskAddedOn, batch.Select(t => t.Task.TaskNo));
-        }
-
-        foreach (var t in tasks.Where(t => t.Task.IsSelfAdded == true))
-        {
-            Add("TaskSelfAdded", t.AddedByName, t.Task.TaskAddedOn, [t.Task.TaskNo]);
-        }
-
-        foreach (var t in tasks.Where(t => TaskStatusOf(t.Task) == Completed))
-        {
-            Add("TaskCompleted", t.CompletedByName, t.Task.TaskCompletedOn, [t.Task.TaskNo], remarks: t.Task.Remarks);
-        }
-
-        foreach (var t in tasks.Where(t => TaskStatusOf(t.Task) is Cancelled or Rejected))
-        {
-            // Tasks closed by cancelling the whole job are covered by the job's "Cancelled" entry
-            var closedWithJob = job.IsCancel && t.Task.TaskCancelBy == job.CanceledBy && t.Task.TaskCancelReason == job.CancelReason;
-            if (closedWithJob) continue;
-            var action = TaskStatusOf(t.Task) == Rejected ? "TaskRejected" : "TaskCancelled";
-            Add(action, t.CancelByName, t.Task.TaskCancelDate, [t.Task.TaskNo], remarks: t.Task.TaskCancelReason);
-        }
-
-        foreach (var moved in tasks.Where(t => t.TransferredTo is not null).GroupBy(t => t.TransferredTo!.JobId))
-        {
-            var target = moved.First().TransferredTo!;
-            Add("TasksTransferredOut", target.CreatedByName, target.CreatedOn, moved.Select(t => t.Task.TaskNo),
-                job.AssigneeName, target.AssigneeName, target.JobId, target.JobCode);
-        }
-
-        // Nightly rule: the job passed its end date with pending tasks
-        var pendingCount = tasks.Count(t => TaskStatusOf(t.Task) == Pending);
-        if (job.EndDate.HasValue && !job.IsCancel)
-        {
-            var lastDay = job.EndDate.Value;
-            var completedLate = tasks.Any(t => TaskStatusOf(t.Task) == Completed && t.Task.TaskCompletedOn.HasValue && DateOnly.FromDateTime(t.Task.TaskCompletedOn.Value) > lastDay);
-            if ((pendingCount > 0 && today > lastDay) || completedLate)
-            {
-                Add("BecameDelayed", null, lastDay.AddDays(1).ToDateTime(TimeOnly.MinValue), []);
-            }
-        }
-
-        var doneTasks = tasks.Where(t => TaskStatusOf(t.Task) == Completed).ToList();
-        if (!job.IsCancel && pendingCount == 0 && doneTasks.Count > 0)
-        {
-            var last = doneTasks.OrderByDescending(t => t.Task.TaskCompletedOn).First();
-            Add("Completed", last.CompletedByName, last.Task.TaskCompletedOn, []);
-        }
-
-        if (job.IsCancel)
-        {
-            Add("Cancelled", job.CanceledByName, job.CancelDate?.ToDateTime(TimeOnly.MinValue), [], remarks: job.CancelReason);
-        }
-
-        // Newest first
-        return entries
-            .OrderByDescending(e => e.PerformedOn ?? DateTime.MinValue)
-            .ThenByDescending(e => e.Action == "Created" ? 0 : 1)
-            .ToList();
     }
+
+    public async Task AddHistoryAsync(TblJobHistory history, CancellationToken cancellationToken = default) =>
+        await context.TblJobHistories.AddAsync(history, cancellationToken);
 
     // Task locations of open jobs (Assigned, InProgress, Delayed) the user may see, for the duplicate check in the task picker
     public async Task<List<JobTaskPointRow>> GetTaskPointsAsync(TrackingViewer viewer, Guid? organisationUnitId, Guid? assigneeId, bool pendingOnly, DateOnly today, CancellationToken cancellationToken = default)
@@ -393,7 +255,7 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
         var jobs = VisibleJobs(viewer).Where(j => !j.IsCancel);
         if (assigneeId.HasValue)
         {
-            jobs = jobs.Where(j => context.TblEmployeeDesignations.Any(ed => ed.DesignationId == j.AssignTo && ed.EffectiveTo == null && ed.EmployeeId == assigneeId.Value));
+            jobs = jobs.Where(j => j.AssignTo == assigneeId.Value);
         }
         if (organisationUnitId.HasValue)
         {
@@ -415,11 +277,7 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
                 Task = t,
                 t.Job.JobTitle,
                 t.Job.StartDate,
-                AssigneeId = context.TblEmployeeDesignations
-                    .Where(ed => ed.DesignationId == t.Job.AssignTo && ed.EffectiveTo == null)
-                    .OrderByDescending(ed => ed.EffectiveFrom)
-                    .Select(ed => (Guid?)ed.EmployeeId)
-                    .FirstOrDefault()
+                AssigneeId = (Guid?)t.Job.AssignTo
             })
             .AsNoTracking()
             .ToListAsync(cancellationToken);
@@ -475,11 +333,7 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
                 t.JobId,
                 t.Job.JobCode,
                 t.Job.AssignTo,
-                context.TblEmployeeDesignations
-                    .Where(ed => ed.DesignationId == t.Job.AssignTo && ed.EffectiveTo == null)
-                    .OrderByDescending(ed => ed.EffectiveFrom)
-                    .Select(ed => ed.Employee.FullName)
-                    .FirstOrDefault(),
+                t.Job.AssignToNavigation.FullName,
                 t.Job.StartDate,
                 t.Job.EndDate))
             .AsNoTracking()
@@ -518,14 +372,6 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
     public static string StatusOf(TblJobTask task) => TaskStatusOf(task);
 
     private const string SystemName = "System";
-    private const string Rejected = "Rejected";
-
-    // Entries are rebuilt on every read, so their id is derived from what they describe to stay stable
-    private static Guid HistoryId(Guid jobId, string action, DateTime? performedOn, IEnumerable<string> taskNos)
-    {
-        var key = $"{jobId}|{action}|{performedOn:O}|{string.Join(',', taskNos)}";
-        return new Guid(System.Security.Cryptography.MD5.HashData(System.Text.Encoding.UTF8.GetBytes(key)));
-    }
 
     private sealed record JobKey(
         Guid Id,
@@ -545,11 +391,7 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
             j.IsCancel,
             j.EndDate,
             j.CreatedOn,
-            context.TblEmployeeDesignations
-                .Where(ed => ed.DesignationId == j.AssignTo && ed.EffectiveTo == null)
-                .OrderByDescending(ed => ed.EffectiveFrom)
-                .Select(ed => ed.Employee.FullName)
-                .FirstOrDefault(),
+            j.AssignToNavigation.FullName,
             j.TblJobTasks.Count(t => t.Status == Pending || (t.Status == null && !t.IsCompleted && !t.IsTaskCancel && t.TransferTaskId == null)),
             j.TblJobTasks.Count(t => t.Status == Completed || (t.Status == null && t.IsCompleted)),
             string.Empty));
@@ -563,13 +405,18 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
             {
                 j.Id,
                 j.JobTitle,
-                AssigneeId = context.TblEmployeeDesignations
-                    .Where(ed => ed.DesignationId == j.AssignTo && ed.EffectiveTo == null)
+                AssigneeId = (Guid?)j.AssignTo,
+                // The assignee's role and unit come from their current designation
+                AssigneeRole = context.TblEmployeeDesignations
+                    .Where(ed => ed.EmployeeId == j.AssignTo && ed.EffectiveTo == null)
                     .OrderByDescending(ed => ed.EffectiveFrom)
-                    .Select(ed => (Guid?)ed.EmployeeId)
-                    .FirstOrDefault(),
-                AssigneeRole = j.AssignToNavigation.Post.Name,
-                UnitName = j.AssignToNavigation.OrganizationUnit.Name,
+                    .Select(ed => ed.Designation.Post.Name)
+                    .FirstOrDefault() ?? string.Empty,
+                UnitName = context.TblEmployeeDesignations
+                    .Where(ed => ed.EmployeeId == j.AssignTo && ed.EffectiveTo == null)
+                    .OrderByDescending(ed => ed.EffectiveFrom)
+                    .Select(ed => ed.Designation.OrganizationUnit.Name)
+                    .FirstOrDefault() ?? string.Empty,
                 CreatedByName = j.CreatedByNavigation.Employee != null ? j.CreatedByNavigation.Employee.FullName : j.CreatedByNavigation.UserName,
                 j.StartDate,
                 j.TransferJobRefId,
@@ -625,9 +472,11 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
         var isBranchManager = viewer.Role == TrackingRole.BranchManager;
 
         return jobs.Where(j => j.CreatedBy == viewer.UserId
-            || context.TblEmployeeDesignations.Any(ed => ed.DesignationId == j.AssignTo && ed.EffectiveTo == null && ed.EmployeeId == viewer.EmployeeId)
-            || (unitIdsInScope.Contains(j.AssignToNavigation.OrganizationUnitId) && postNamesBelow.Contains(j.AssignToNavigation.Post.Name))
-            || (isBranchManager && j.AssignToNavigation.OrganizationUnitId == viewer.UnitId && j.AssignToNavigation.Post.Name == TrackingRole.AssistantBranchManager));
+            || j.AssignTo == viewer.EmployeeId
+            || context.TblEmployeeDesignations.Any(ed => ed.EmployeeId == j.AssignTo && ed.EffectiveTo == null
+                && unitIdsInScope.Contains(ed.Designation.OrganizationUnitId) && postNamesBelow.Contains(ed.Designation.Post.Name))
+            || (isBranchManager && context.TblEmployeeDesignations.Any(ed => ed.EmployeeId == j.AssignTo && ed.EffectiveTo == null
+                && ed.Designation.OrganizationUnitId == viewer.UnitId && ed.Designation.Post.Name == TrackingRole.AssistantBranchManager)));
     }
 
     private async Task<TrackingPosition> GetPositionAsync(Guid userId, CancellationToken cancellationToken)

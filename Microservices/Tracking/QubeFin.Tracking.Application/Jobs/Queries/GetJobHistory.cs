@@ -26,14 +26,16 @@ public class GetJobHistoryQueryValidator : AbstractValidator<GetJobHistoryQuery>
 public record JobHistoryResponse(
     Guid Id,
     Guid JobId,
-    JobHistoryAction Action,
+    JobHistoryAction? Action,
     string PerformedByName,
-    DateTime? PerformedOn,
+    DateTimeOffset PerformedAt,
     string? FromAssigneeName,
     string? ToAssigneeName,
     IReadOnlyList<string> TaskNos,
     Guid? RelatedJobId,
     string? RelatedJobCode,
+    DateOnly? OldCompleteBy,
+    DateOnly? NewCompleteBy,
     string? Remarks);
 #endregion
 
@@ -45,20 +47,22 @@ internal sealed class GetJobHistoryQueryHandler(ITrackingScopeRepository scopeRe
         var viewer = await scopeRepository.GetViewerAsync(request.UserId, cancellationToken);
         if (viewer is null) return new ForbiddenError("You do not have access to Tracking.");
 
-        var history = await jobRepository.GetJobHistoryAsync(viewer, request.JobId, TrackingClock.Today(), cancellationToken);
+        var history = await jobRepository.GetJobHistoryAsync(viewer, request.JobId, cancellationToken);
         if (history is null) return new RecordNotFoundError("Job not found");
 
         return Result.Ok(history.Select(h => new JobHistoryResponse(
             h.Id,
             h.JobId,
-            Enum.Parse<JobHistoryAction>(h.Action),
+            Enum.TryParse<JobHistoryAction>(h.Action, true, out var action) ? action : null,
             h.PerformedByName,
-            h.PerformedOn,
+            h.PerformedAt,
             h.FromAssigneeName,
             h.ToAssigneeName,
             h.TaskNos,
             h.RelatedJobId,
             h.RelatedJobCode,
+            h.OldCompleteBy,
+            h.NewCompleteBy,
             h.Remarks)).ToList());
     }
 }

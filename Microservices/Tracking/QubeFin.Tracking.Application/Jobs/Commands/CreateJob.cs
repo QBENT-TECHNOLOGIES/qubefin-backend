@@ -5,6 +5,7 @@ using QubeFin.Core.Results;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Models.Tracking;
+using QubeFin.Tracking.Application.Enums;
 using QubeFin.Tracking.Application.Jobs.Models;
 using QubeFin.Tracking.Persistence.Repositories;
 
@@ -55,7 +56,8 @@ internal sealed class CreateJobCommandHandler(
         if (assignee is null) return new ValidationError("Select who will do this job.");
         if (!JobPermissionRules.CanGiveWork(viewer, assignee)) return new ForbiddenError($"You cannot give work to {assignee.Name}.");
 
-        var now = DateTime.Now;
+        var performedAt = DateTimeOffset.Now;
+        var now = performedAt.DateTime;
         var today = TrackingClock.Today();
         var jobId = Guid.NewGuid();
         var startDate = request.StartDate ?? today;
@@ -75,7 +77,7 @@ internal sealed class CreateJobCommandHandler(
             JobCode = await numberGenerator.NextJobCodeAsync(today, cancellationToken),
             JobTitle = request.JobTitle!.Trim(),
             JobDescription = string.IsNullOrWhiteSpace(request.JobDescription) ? null : request.JobDescription.Trim(),
-            AssignTo = assignee.DesignationId,
+            AssignTo = assignee.EmployeeId,
             StartDate = startDate,
             EndDate = endDate,
             CreatedBy = viewer.UserId,
@@ -83,6 +85,10 @@ internal sealed class CreateJobCommandHandler(
             TblJobTasks = plan.Tasks
         };
         await jobRepository.AddAsync(job, cancellationToken);
+        // Created lists only the tasks that were inserted; skipped tasks are never mentioned
+        await jobRepository.AddHistoryAsync(
+            JobHistoryEntries.New(jobId, JobHistoryAction.Created, viewer.UserId, performedAt, plan.Tasks, toAssigneeId: assignee.EmployeeId),
+            cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         var created = await jobRepository.GetJobAsync(viewer, jobId, today, cancellationToken);

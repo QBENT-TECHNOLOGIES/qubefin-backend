@@ -29,6 +29,7 @@ public class TransferJobCommandValidator : AbstractValidator<TransferJobCommand>
         RuleFor(v => v.Request.AssigneeId).NotEmpty().WithMessage("Select who will do this job.");
         RuleFor(v => v.Request.Remarks)
             .Must(r => r is not null && r.Trim().Length >= 3).WithMessage("A reason is required for a transfer.");
+        RuleFor(v => v.Request.Remarks).MaximumLength(1000).WithMessage("The reason can be at most 1000 characters.");
         RuleFor(v => v.Request.EndDate)
             .Must(d => d >= TrackingClock.Today()).WithMessage("The complete-by date cannot be in the past.")
             .When(v => v.Request.EndDate.HasValue);
@@ -61,7 +62,7 @@ internal sealed class TransferJobCommandHandler(
         var request = command.Request;
         var newAssignee = await scopeRepository.GetOfficerAsync(request.AssigneeId!.Value, cancellationToken);
         if (newAssignee is null) return new ValidationError("Select who will do this job.");
-        if (newAssignee.DesignationId == detail.AssignTo || newAssignee.EmployeeId == detail.Summary.AssigneeId)
+        if (newAssignee.EmployeeId == detail.AssignTo)
         {
             return new ValidationError($"{newAssignee.Name} already holds this job.");
         }
@@ -108,7 +109,7 @@ internal sealed class TransferJobCommandHandler(
         {
             var duplicate = task.OriginRefId.HasValue
                 ? pendingElsewhere.FirstOrDefault(p => p.OriginRefId == task.OriginRefId
-                    && p.AssignTo == newAssignee.DesignationId
+                    && p.AssignTo == newAssignee.EmployeeId
                     && p.TaskType == task.TaskType
                     && (task.TaskType == nameof(TaskType.OdFollowUp) || Overlaps(p.StartDate, p.EndDate, windowStart, windowEnd, today)))
                 : null;
@@ -124,28 +125,37 @@ internal sealed class TransferJobCommandHandler(
             return new ValidationError($"Nothing to transfer: {newAssignee.Name} already has these tasks pending ({string.Join(", ", skipped.Select(s => s.Title))}).");
         }
 
-        var now = DateTime.Now;
+        var performedAt = DateTimeOffset.Now;
+        var now = performedAt.DateTime;
+        var remarks = request.Remarks!.Trim();
+        var fromAssigneeId = job.AssignTo;
         Guid? newJobId = null;
         var isWholeTransfer = doneCount == 0 && moving.Count == pendingTasks.Count;
         if (isWholeTransfer)
         {
-            job.AssignTo = newAssignee.DesignationId;
+            // Whole transfer: the job changes hands; its tasks keep their numbers and belong to the new person through the job
+            job.AssignTo = newAssignee.EmployeeId;
             foreach (var task in moving)
             {
                 // The new person cannot also be the one going along (D9)
-                if (task.CoOrdinatedBy == newAssignee.DesignationId) task.CoOrdinatedBy = null;
+                if (task.CoOrdinatedBy == newAssignee.EmployeeId) task.CoOrdinatedBy = null;
                 task.ModifiedOn = now;
             }
+            await jobRepository.AddHistoryAsync(
+                JobHistoryEntries.New(job.Id, JobHistoryAction.Transferred, viewer.UserId, performedAt, moving,
+                    fromAssigneeId: fromAssigneeId, toAssigneeId: newAssignee.EmployeeId, remarks: remarks),
+                cancellationToken);
         }
         else
         {
+            // Partial transfer: copies go into a new job for the new person; the originals are closed as Transferred
             var newJob = new TblJob
             {
                 Id = Guid.NewGuid(),
                 JobCode = await numberGenerator.NextJobCodeAsync(today, cancellationToken),
-                JobTitle = job.JobTitle,
+                JobTitle = $"{job.JobTitle} (from {job.JobCode})",
                 JobDescription = job.JobDescription,
-                AssignTo = newAssignee.DesignationId,
+                AssignTo = newAssignee.EmployeeId,
                 StartDate = windowStart,
                 EndDate = windowEnd,
                 TransferJobRefId = job.Id,
@@ -165,7 +175,7 @@ internal sealed class TransferJobCommandHandler(
                     TaskTitle = task.TaskTitle,
                     Notes = task.Notes,
                     Priority = task.Priority,
-                    CoOrdinatedBy = task.CoOrdinatedBy == newAssignee.DesignationId ? null : task.CoOrdinatedBy,
+                    CoOrdinatedBy = task.CoOrdinatedBy == newAssignee.EmployeeId ? null : task.CoOrdinatedBy,
                     TargetName = task.TargetName,
                     TargetLocation = task.TargetLocation,
                     RadiusMeters = task.RadiusMeters,
@@ -177,11 +187,32 @@ internal sealed class TransferJobCommandHandler(
                 newJob.TblJobTasks.Add(copy);
                 task.Status = nameof(JobTaskStatus.Transferred);
                 task.TransferTaskId = copy.Id;
+                task.TaskCancelDate = now;
+                task.TaskCancelBy = viewer.UserId;
+                task.TaskCancelReason = $"Moved to {newJob.JobCode}";
                 task.ModifiedOn = now;
             }
             await numberGenerator.AssignTaskNosAsync(newJob.TblJobTasks, branches, today, cancellationToken);
             await jobRepository.AddAsync(newJob, cancellationToken);
             newJobId = newJob.Id;
+
+            // Three rows at the same time; the two jobs point at each other through RelatedJobId
+            await jobRepository.AddHistoryAsync(
+                JobHistoryEntries.New(job.Id, JobHistoryAction.TasksTransferredOut, viewer.UserId, performedAt, moving,
+                    fromAssigneeId: fromAssigneeId, toAssigneeId: newAssignee.EmployeeId, relatedJobId: newJob.Id, remarks: remarks),
+                cancellationToken);
+            await jobRepository.AddHistoryAsync(
+                JobHistoryEntries.New(newJob.Id, JobHistoryAction.Created, viewer.UserId, performedAt,
+                    toAssigneeId: newAssignee.EmployeeId, remarks: $"Created by a partial transfer from {job.JobCode}"),
+                cancellationToken);
+            await jobRepository.AddHistoryAsync(
+                JobHistoryEntries.New(newJob.Id, JobHistoryAction.TasksTransferredIn, viewer.UserId, performedAt, newJob.TblJobTasks,
+                    fromAssigneeId: fromAssigneeId, toAssigneeId: newAssignee.EmployeeId, relatedJobId: job.Id, remarks: remarks),
+                cancellationToken);
+
+            // Moving the last pending tasks out of a job with completed work finishes it
+            var completed = JobHistoryEntries.CompleteIfDone(job, viewer.UserId, performedAt);
+            if (completed is not null) await jobRepository.AddHistoryAsync(completed, cancellationToken);
         }
         job.ModifiedBy = viewer.UserId;
         job.ModifiedOn = now;

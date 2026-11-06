@@ -8,7 +8,7 @@ using QubeFin.Tracking.Persistence.Repositories;
 namespace QubeFin.Tracking.Application.Lookups.Queries;
 
 #region --- QUERY ---
-public record GetFieldOfficersQuery(Guid UserId, Guid? BranchId) : IRequest<Result<List<TrackingFieldOfficer>>>;
+public record GetFieldOfficersQuery(Guid UserId, Guid? OrganizationUnitId) : IRequest<Result<List<TrackingFieldOfficer>>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -29,7 +29,7 @@ internal sealed class GetFieldOfficersQueryHandler(ITrackingScopeRepository scop
         var viewer = await scopeRepository.GetViewerAsync(request.UserId, cancellationToken);
         if (viewer is null) return new ForbiddenError("You do not have access to Tracking.");
 
-        var officers = await scopeRepository.GetFieldOfficersAsync(viewer, request.BranchId, cancellationToken);
+        var officers = await scopeRepository.GetFieldOfficersAsync(viewer, request.OrganizationUnitId, cancellationToken);
         return Result.Ok(officers);
     }
 }

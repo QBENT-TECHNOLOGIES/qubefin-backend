@@ -5,10 +5,12 @@ public record JobHistoryRow(
     Guid JobId,
     string Action,
     string PerformedByName,
-    DateTime? PerformedOn,
+    DateTimeOffset PerformedAt,
     string? FromAssigneeName,
     string? ToAssigneeName,
     IReadOnlyList<string> TaskNos,
     Guid? RelatedJobId,
     string? RelatedJobCode,
+    DateOnly? OldCompleteBy,
+    DateOnly? NewCompleteBy,
     string? Remarks);

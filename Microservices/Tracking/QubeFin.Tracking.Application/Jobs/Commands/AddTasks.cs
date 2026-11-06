@@ -59,7 +59,8 @@ internal sealed class AddTasksCommandHandler(
         var assignee = await scopeRepository.GetOfficerAsync(job.AssignTo, cancellationToken);
         if (assignee is null) return new ValidationError($"{job.Summary.JobCode} has no one holding it, so tasks cannot be added.");
 
-        var now = DateTime.Now;
+        var performedAt = DateTimeOffset.Now;
+        var now = performedAt.DateTime;
         var plan = await taskPlanner.PlanAsync(viewer, assignee, job.Summary.Id, job.Summary.StartDate, job.Summary.EndDate ?? today,
             command.Request.Tasks!, job.Summary.Id, now, today, cancellationToken);
         if (plan.Errors.Count > 0) return new ValidationError(string.Join(" ", plan.Errors));
@@ -70,6 +71,10 @@ internal sealed class AddTasksCommandHandler(
 
         await numberGenerator.AssignTaskNosAsync(plan.Tasks, plan.Branches, today, cancellationToken);
         await jobRepository.AddTasksAsync(plan.Tasks, cancellationToken);
+        // TasksAdded lists only the tasks that were inserted
+        await jobRepository.AddHistoryAsync(
+            JobHistoryEntries.New(job.Summary.Id, JobHistoryAction.TasksAdded, viewer.UserId, performedAt, plan.Tasks),
+            cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         var updated = await jobRepository.GetJobAsync(viewer, job.Summary.Id, today, cancellationToken);

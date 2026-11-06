@@ -11,8 +11,8 @@ public interface ITrackingScopeRepository
     Task<bool> HasAssignableEmployeesAsync(TrackingViewer viewer, CancellationToken cancellationToken = default);
     Task<List<TrackingBranch>> GetBranchesAsync(IReadOnlyList<Guid> branchIds, CancellationToken cancellationToken = default);
     Task<TblTrackingSetting?> GetTrackingSettingAsync(CancellationToken cancellationToken = default);
-    Task<List<TrackingFieldOfficer>> GetFieldOfficersAsync(TrackingViewer viewer, Guid? branchId, CancellationToken cancellationToken = default);
-    Task<TrackingOfficer?> GetOfficerAsync(Guid designationId, CancellationToken cancellationToken = default);
+    Task<List<TrackingFieldOfficer>> GetFieldOfficersAsync(TrackingViewer viewer, Guid? organizationUnitId, CancellationToken cancellationToken = default);
+    Task<TrackingOfficer?> GetOfficerAsync(Guid employeeId, CancellationToken cancellationToken = default);
     Task<Dictionary<Guid, BranchCode>> GetBranchCodesAsync(IEnumerable<Guid> branchIds, CancellationToken cancellationToken = default);
     Task<DateOnly?> GetFinancialYearStartAsync(DateOnly day, CancellationToken cancellationToken = default);
 }
@@ -122,7 +122,7 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
             .AsNoTracking()
             .FirstOrDefaultAsync(cancellationToken);
 
-    public async Task<List<TrackingFieldOfficer>> GetFieldOfficersAsync(TrackingViewer viewer, Guid? branchId, CancellationToken cancellationToken = default)
+    public async Task<List<TrackingFieldOfficer>> GetFieldOfficersAsync(TrackingViewer viewer, Guid? organizationUnitId, CancellationToken cancellationToken = default)
     {
         var units = await context.TblOrganizationUnits
             .Select(o => new UnitNode(o.Id, o.ParentId, o.Name, o.OrganizationUnitType.Name))
@@ -139,7 +139,6 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
             .Select(ed => new
             {
                 ed.EmployeeId,
-                ed.DesignationId,
                 ed.EffectiveFrom,
                 ed.Employee.Code,
                 ed.Employee.FullName,
@@ -169,11 +168,10 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
             if (!isBelow && !isOwnBranchAbm) continue;
 
             var officerBranchIds = BranchIdsOf(DescendantsAndSelf(units, p.DesignationUnitId)).ToList();
-            if (branchId.HasValue && !officerBranchIds.Contains(branchId.Value)) continue;
+            if (organizationUnitId.HasValue && !officerBranchIds.Contains(organizationUnitId.Value)) continue;
 
             officers.Add(new TrackingFieldOfficer(
                 p.EmployeeId,
-                p.DesignationId,
                 p.Code,
                 p.FullName,
                 p.PostName,
@@ -190,11 +188,11 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
         return officers.OrderBy(o => o.Name).ToList();
     }
 
-    // The active employee currently holding a designation (latest if more than one) and the branches at or below its unit
-    public async Task<TrackingOfficer?> GetOfficerAsync(Guid designationId, CancellationToken cancellationToken = default)
+    // An active employee's latest open designation and the branches at or below its unit
+    public async Task<TrackingOfficer?> GetOfficerAsync(Guid employeeId, CancellationToken cancellationToken = default)
     {
         var position = await context.TblEmployeeDesignations
-            .Where(ed => ed.DesignationId == designationId && ed.EffectiveTo == null && ed.Employee.IsActive)
+            .Where(ed => ed.EmployeeId == employeeId && ed.EffectiveTo == null && ed.Employee.IsActive)
             .OrderByDescending(ed => ed.EffectiveFrom)
             .Select(ed => new { ed.EmployeeId, ed.Employee.FullName, ed.DesignationId, PostName = ed.Designation.Post.Name, ed.Designation.OrganizationUnitId })
             .AsNoTracking()
