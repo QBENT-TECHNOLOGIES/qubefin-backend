@@ -320,7 +320,11 @@ internal sealed class GetEmployeeRecordsBySearchQueryHandler(QubeFinDataContext 
 
     private sealed record AttendanceLeave(Guid EmployeeId, DateOnly FromDate, DateOnly ToDate, string LeaveType);
 
-    private sealed record AttendanceRow(AttendanceEmployee Employee, DateOnly Date, AttendanceEntry? Entry, string? LeaveType, string Status);
+    // An approved regularization (ATTENDANCE or ONDUTY) covering one day.
+    private sealed record AttendanceRegularizationDay(Guid EmployeeId, DateOnly Date, TimeOnly? ActualInTime, TimeOnly? ActualOutTime);
+
+    private sealed record AttendanceRow(
+        AttendanceEmployee Employee, DateOnly Date, AttendanceEntry? Entry, AttendanceRegularizationDay? Regularization, string? LeaveType, string Status);
 
     // One row per employee per day, so the window defaults to today and is capped to keep a page cheap.
     private static (DateOnly From, DateOnly To) ResolveAttendanceWindow(EmployeeRecordSearchRequest param)
@@ -400,6 +404,9 @@ internal sealed class GetEmployeeRecordsBySearchQueryHandler(QubeFinDataContext 
 
         var leaveLookup = leaves.ToLookup(l => l.EmployeeId);
 
+        // Approved regularizations excuse a day that has no (or an incomplete) punch row.
+        var regularizationLookup = await LoadApprovedRegularizationDaysAsync(employeeQuery, from, to, cancellationToken);
+
         var days = Enumerable.Range(0, to.DayNumber - from.DayNumber + 1).Select(from.AddDays).ToList();
 
         var rows = employees
@@ -409,7 +416,8 @@ internal sealed class GetEmployeeRecordsBySearchQueryHandler(QubeFinDataContext 
                 {
                     entryLookup.TryGetValue((e.Id, d), out var entry);
                     var leave = leaveLookup[e.Id].FirstOrDefault(l => l.FromDate <= d && l.ToDate >= d);
-                    return new AttendanceRow(e, d, entry, leave?.LeaveType, DeriveAttendanceRowStatus(d, entry, leave is not null));
+                    regularizationLookup.TryGetValue((e.Id, d), out var regularization);
+                    return new AttendanceRow(e, d, entry, regularization, leave?.LeaveType, DeriveAttendanceRowStatus(d, entry, regularization is not null, leave is not null));
                 }))
             .ToList();
 
@@ -452,12 +460,16 @@ internal sealed class GetEmployeeRecordsBySearchQueryHandler(QubeFinDataContext 
                 OrganizationUnit = r.Employee.OrganizationUnit,
                 Category = r.Status == AttendanceStatuses.OnLeave ? r.LeaveType : null,
                 Period = r.Date.ToString(DateFormat),
-                Quantity = r.Entry is null ? null : FormatTimeRange(r.Entry.ActualInTime, r.Entry.ActualOutTime),
+                Quantity = r.Entry is not null
+                    ? FormatTimeRange(r.Entry.ActualInTime, r.Entry.ActualOutTime)
+                    : FormatTimeRange(r.Regularization?.ActualInTime, r.Regularization?.ActualOutTime),
                 Status = r.Status,
-                Stage = r.Entry is { IsRegularization: true } ? "Yes" : "-",
+                Stage = r.Entry is { IsRegularization: true } || r.Regularization is not null ? "Yes" : "-",
                 FromDate = r.Date,
                 ToDate = r.Date,
-                WorkingHours = r.Entry is null ? null : FormatWorkingHours(r.Entry.ActualInTime, r.Entry.ActualOutTime),
+                WorkingHours = r.Entry is not null
+                    ? FormatWorkingHours(r.Entry.ActualInTime, r.Entry.ActualOutTime)
+                    : FormatWorkingHours(r.Regularization?.ActualInTime, r.Regularization?.ActualOutTime),
                 StartMileage = r.Entry?.StartMileage?.ToString(),
                 EndMileage = r.Entry?.EndMileage?.ToString(),
                 PersonalUseKm = r.Entry?.PersonalUseKm?.ToString(),
@@ -490,8 +502,69 @@ internal sealed class GetEmployeeRecordsBySearchQueryHandler(QubeFinDataContext 
         return ascending ? rows.OrderBy(keySelector) : rows.OrderByDescending(keySelector);
     }
 
-    private static string DeriveAttendanceRowStatus(DateOnly date, AttendanceEntry? entry, bool onLeave)
+    private async Task<Dictionary<(Guid EmployeeId, DateOnly Date), AttendanceRegularizationDay>> LoadApprovedRegularizationDaysAsync(
+        IQueryable<TblEmployee> employeeQuery, DateOnly from, DateOnly to, CancellationToken cancellationToken)
     {
+        // RegularizationDates is a serialized list of "yyyy-MM-dd", so narrow by the months in the window
+        // in SQL and match the exact days in memory.
+        var fromMonth = from.ToString("yyyy-MM");
+        var toMonth = to.ToString("yyyy-MM");
+
+        var approved = await context.TblAttendanceRegularizations
+            .AsNoTracking()
+            .Where(r => r.CurrentStatus == EmployeeRecordStatuses.Approved
+                        && (r.RegularizationDates.Contains(fromMonth) || r.RegularizationDates.Contains(toMonth))
+                        && employeeQuery.Select(m => m.Id).Contains(r.EmployeeId))
+            .Select(r => new { r.EmployeeId, r.RegularizationDates, r.ActualInTime, r.ActualOutTime })
+            .ToListAsync(cancellationToken);
+
+        var result = new Dictionary<(Guid, DateOnly), AttendanceRegularizationDay>();
+
+        foreach (var regularization in approved)
+        {
+            foreach (var day in ParseRegularizationDates(regularization.RegularizationDates))
+            {
+                if (day < from || day > to) continue;
+
+                result.TryAdd((regularization.EmployeeId, day),
+                    new AttendanceRegularizationDay(regularization.EmployeeId, day, regularization.ActualInTime, regularization.ActualOutTime));
+            }
+        }
+
+        return result;
+    }
+
+    private static IEnumerable<DateOnly> ParseRegularizationDates(string? dates)
+    {
+        if (string.IsNullOrWhiteSpace(dates)) yield break;
+
+        List<string>? parsed;
+        try
+        {
+            parsed = JsonSerializer.Deserialize<List<string>>(dates);
+        }
+        catch (JsonException)
+        {
+            parsed = [dates];
+        }
+
+        foreach (var value in parsed ?? [])
+        {
+            if (DateOnly.TryParse(value, System.Globalization.CultureInfo.InvariantCulture, out var day))
+                yield return day;
+            else if (DateTime.TryParse(value, System.Globalization.CultureInfo.InvariantCulture, out var dateTime))
+                yield return DateOnly.FromDateTime(dateTime);
+        }
+    }
+
+    private static string DeriveAttendanceRowStatus(DateOnly date, AttendanceEntry? entry, bool isRegularized, bool onLeave)
+    {
+        // An approved regularization makes the day a present day: it covers a missing row (was "Absent")
+        // and an incomplete punch (was "MSP"). A complete punch keeps its own on-time / late / early status.
+        var isIncomplete = entry is null || entry.ActualInTime is null || entry.ActualOutTime is null;
+        if (isRegularized && isIncomplete)
+            return AttendanceStatuses.OnTime;
+
         // Someone who punched in or out worked that day, whatever leave is on file.
         var hasPunch = entry is { ActualInTime: not null } or { ActualOutTime: not null };
         if (onLeave && !hasPunch)

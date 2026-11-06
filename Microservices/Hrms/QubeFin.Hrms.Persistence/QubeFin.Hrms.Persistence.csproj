@@ -8,11 +8,13 @@
 
   <ItemGroup>
     <PackageReference Include="AWSSDK.S3" Version="4.0.101.7" />
+    <PackageReference Include="Otp.NET" Version="1.4.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Shared\QubeFin.Core\QubeFin.Core.csproj" />
     <ProjectReference Include="..\..\..\Shared\QubeFin.Persistence\QubeFin.Persistence.csproj" />
+    <ProjectReference Include="..\..\App\QubeFin.App.Persistence\QubeFin.App.Persistence.csproj" />
   </ItemGroup>
 
 </Project>

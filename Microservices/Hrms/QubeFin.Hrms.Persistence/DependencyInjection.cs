@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using QubeFin.App.Persistence.Repositories;
 using QubeFin.Hrms.Persistence.Repositories;
 using QubeFin.Core.Security;
 using QubeFin.Persistence;
@@ -19,6 +20,7 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork>(options => options.GetRequiredService<QubeFinDataContext>());
 
         services.AddScoped<ITokenGenerator, TokenGenerator>();
+        services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IEmployeeRepository, EmployeeRepository>();
         services.AddScoped<IAttendanceRepository, AttendanceRepository>();
         services.AddScoped<IApprovalWorkflowRepository, ApprovalWorkflowRepository>();

@@ -7,7 +7,7 @@ using QubeFin.Hrms.Persistence.Repositories;
 namespace QubeFin.Hrms.Application.Leaves.Commands;
 
 #region --- QUERY --
-public record SaveRequestCommand(Guid? Id, Guid EmployeeId, Guid LeaveTypeId, DateOnly FromDate, DateOnly ToDate, string Address, string Reason, string EnclosedFileName, IFormFile EnclosedFile)
+public record SaveRequestCommand(Guid? Id, Guid EmployeeId, Guid UserId, Guid LeaveTypeId, DateOnly FromDate, DateOnly ToDate, string Address, string Reason, string EnclosedFileName, IFormFile EnclosedFile)
     : IRequest<Result<string>>;
 #endregion
 #region --- HANDLER ---
@@ -34,12 +34,13 @@ internal sealed class SaveRequestCommandHandler(ILeaveRepository leaveRepository
             //await request.EnclosedFile.CopyToAsync(stream, cancellationToken);
         }
 
-        var message = await leaveRepository.AddAsync(request.Id == null ? Guid.Empty : request.Id.Value, request.EmployeeId, request.LeaveTypeId, request.FromDate, request.ToDate, request.Address, request.Reason, request.EnclosedFileName, fileNo);
+        var message = await leaveRepository.AddAsync(request.Id == null ? Guid.Empty : request.Id.Value, request.EmployeeId, request.UserId, request.LeaveTypeId, request.FromDate, request.ToDate, request.Address, request.Reason, request.EnclosedFileName, fileNo);
         if (!string.IsNullOrEmpty(message))
         {
             return new ValidationError(message);
         }
-        return Result.Ok(string.IsNullOrEmpty(message) ? $"Leave request {(request.Id == null ? "created" : "updated")} successfully." : message);
+        //return Result.Ok(string.IsNullOrEmpty(message) ? $"Leave request {(request.Id == null ? "created" : "updated")} successfully." : message);
+        return Result.Ok(string.IsNullOrEmpty(message) ? $"Leave request applied successfully." : message);
     }
 }
 #endregion

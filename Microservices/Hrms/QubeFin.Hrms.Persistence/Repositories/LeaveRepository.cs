@@ -10,7 +10,7 @@ namespace QubeFin.Hrms.Persistence.Repositories;
 public interface ILeaveRepository
 {
     Task<LeaveRequest?> GetByIdAsync(Guid id);
-    Task<string> AddAsync(Guid Id, Guid employeeId, Guid leaveTypeId, DateOnly fromDate, DateOnly toDate, string address, string reason, string enclosedFileName, string enclosedFileNo);
+    Task<string> AddAsync(Guid Id, Guid employeeId, Guid userId, Guid leaveTypeId, DateOnly fromDate, DateOnly toDate, string address, string reason, string enclosedFileName, string enclosedFileNo);
     Task<bool> SubmitAsync(Guid id, Guid userId);
     Task<bool> CancelAsync(Guid id, string? reason, Guid userId);
     Task<List<GetAllPendingFitnessApprovalResposne>> GetPendingFitnessApprovalList(CancellationToken cancellationToken);
@@ -18,13 +18,14 @@ public interface ILeaveRepository
 
 public class LeaveRepository(QubeFinDataContext context) : ILeaveRepository
 {
-    public async Task<string> AddAsync(Guid Id, Guid employeeId, Guid leaveTypeId, DateOnly fromDate, DateOnly toDate, string address, string reason, string enclosedFileName, string enclosedFileNo)
+    public async Task<string> AddAsync(Guid Id, Guid employeeId, Guid userId, Guid leaveTypeId, DateOnly fromDate, DateOnly toDate, string address, string reason, string enclosedFileName, string enclosedFileNo)
     {
         var returnMessage = @"";
         var parameters = new[]
         {
-            new SqlParameter("@p_Id", Id),
+            //new SqlParameter("@p_Id", Id),
             new SqlParameter("@p_EmployeeId", employeeId),
+            new SqlParameter("@p_UserId", userId),
             new SqlParameter("@p_LeaveTypeId", leaveTypeId),
             new SqlParameter("@p_FromDate", fromDate),
             new SqlParameter("@p_ToDate", toDate),
@@ -36,8 +37,8 @@ public class LeaveRepository(QubeFinDataContext context) : ILeaveRepository
         try
         {
             var result = await context.Database.ExecuteSqlRawAsync(@"EXEC [Hrms].[USP_LeaveRequestSave]
-              @p_Id,
               @p_EmployeeId,
+              @p_UserId,
               @p_LeaveTypeId,
               @p_FromDate,
               @p_ToDate,

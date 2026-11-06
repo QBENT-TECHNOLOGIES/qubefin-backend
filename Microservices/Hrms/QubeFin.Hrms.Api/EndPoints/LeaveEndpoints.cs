@@ -55,6 +55,7 @@ public class LeaveEndpoints : IEndpoint
                 return Results.Forbid();
             }
             var employeeId = principal.Identity.GetEmployeeId();
+            var userId  = principal.Identity.GetUserId();
 
             if (!request.HasFormContentType)
                 return Results.BadRequest("Invalid content type");
@@ -87,7 +88,7 @@ public class LeaveEndpoints : IEndpoint
             var enclosedFileName = form["enclosedFileName"].ToString();
             var enclosedFile = form.Files["enclosedFile"];
 
-            var result = await sender.Send(new SaveRequestCommand(id, employeeId, leaveTypeId, fromDate, toDate, address, reason, enclosedFileName, enclosedFile));
+            var result = await sender.Send(new SaveRequestCommand(id, employeeId, userId,leaveTypeId, fromDate, toDate, address, reason, enclosedFileName, enclosedFile));
             return result.ToHttpResult();
         })
         .WithSummary("Create And save Leave Request")
