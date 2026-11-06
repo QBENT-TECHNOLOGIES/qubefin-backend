@@ -18,8 +18,6 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<DboTempEmpBranch> DboTempEmpBranches { get; set; }
 
-    public virtual DbSet<GpsTracking> GpsTrackings { get; set; }
-
     public virtual DbSet<HrmsTblEmployeeTransfer> HrmsTblEmployeeTransfers { get; set; }
 
     public virtual DbSet<TblAccountGroup> TblAccountGroups { get; set; }
@@ -122,6 +120,8 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblFinancialYear> TblFinancialYears { get; set; }
 
+    public virtual DbSet<TblGpsTracking> TblGpsTrackings { get; set; }
+
     public virtual DbSet<TblGroup> TblGroups { get; set; }
 
     public virtual DbSet<TblHoliday> TblHolidays { get; set; }
@@ -131,6 +131,8 @@ public partial class QubeFinDataContext : DbContext
     public virtual DbSet<TblInterviewPanel> TblInterviewPanels { get; set; }
 
     public virtual DbSet<TblJob> TblJobs { get; set; }
+
+    public virtual DbSet<TblJobHistory> TblJobHistories { get; set; }
 
     public virtual DbSet<TblJobTask> TblJobTasks { get; set; }
 
@@ -265,36 +267,6 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Location)
                 .HasMaxLength(50)
                 .HasColumnName("location");
-        });
-
-        modelBuilder.Entity<GpsTracking>(entity =>
-        {
-            entity.HasKey(e => new { e.Id, e.GpsTime }).HasName("pk_gps_tracking");
-
-            entity.ToTable("gps_tracking", "gps");
-
-            entity.HasIndex(e => new { e.GpsTime, e.LocationId }, "idx_gps_tracking_location_id");
-
-            entity.HasIndex(e => new { e.UserId, e.GpsTime }, "idx_gps_tracking_user_time");
-
-            entity.HasIndex(e => new { e.LocationId, e.GpsTime }, "uq_gps_tracking_location_time").IsUnique();
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.GpsTime).HasColumnName("gps_time");
-            entity.Property(e => e.Accuracy).HasColumnName("accuracy");
-            entity.Property(e => e.BatteryPercentage).HasColumnName("battery_percentage");
-            entity.Property(e => e.CourseDegree).HasColumnName("course_degree");
-            entity.Property(e => e.IsMockLocation).HasColumnName("is_mock_location");
-            entity.Property(e => e.LocationId)
-                .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("location_id");
-            entity.Property(e => e.ReceivedAt).HasColumnName("received_at");
-            entity.Property(e => e.Speed).HasColumnName("speed");
-            entity.Property(e => e.UserId)
-                .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("user_id");
         });
 
         modelBuilder.Entity<HrmsTblEmployeeTransfer>(entity =>
@@ -1531,6 +1503,36 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Caption).HasMaxLength(20);
         });
 
+        modelBuilder.Entity<TblGpsTracking>(entity =>
+        {
+            entity.HasKey(e => new { e.Id, e.GpsTime });
+
+            entity.ToTable("Tbl_GpsTracking", "Tracking");
+
+            entity.HasIndex(e => new { e.GpsTime, e.LocationId }, "IX_Tbl_GpsTracking_Location_ID");
+
+            entity.HasIndex(e => new { e.UserId, e.GpsTime }, "IX_Tbl_GpsTracking_User_Time");
+
+            entity.HasIndex(e => new { e.LocationId, e.GpsTime }, "UQ_Tbl_GpsTracking_Location_Time").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.GpsTime).HasColumnName("gps_time");
+            entity.Property(e => e.Accuracy).HasColumnName("accuracy");
+            entity.Property(e => e.BatteryPercentage).HasColumnName("battery_percentage");
+            entity.Property(e => e.CourseDegree).HasColumnName("course_degree");
+            entity.Property(e => e.IsMockLocation).HasColumnName("is_mock_location");
+            entity.Property(e => e.LocationId)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("location_id");
+            entity.Property(e => e.ReceivedAt).HasColumnName("received_at");
+            entity.Property(e => e.Speed).HasColumnName("speed");
+            entity.Property(e => e.UserId)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("user_id");
+        });
+
         modelBuilder.Entity<TblGroup>(entity =>
         {
             entity.ToTable("Tbl_Group", "Global");
@@ -1745,6 +1747,47 @@ public partial class QubeFinDataContext : DbContext
             entity.HasOne(d => d.TransferJobRef).WithMany(p => p.InverseTransferJobRef)
                 .HasForeignKey(d => d.TransferJobRefId)
                 .HasConstraintName("FK_Tbl_Job_Tbl_Job");
+        });
+
+        modelBuilder.Entity<TblJobHistory>(entity =>
+        {
+            entity.ToTable("Tbl_JobHistory", "Tracking");
+
+            entity.HasIndex(e => new { e.JobId, e.PerformedAt }, "IX_Tbl_JobHistory_JobId_PerformedAt").IsDescending(false, true);
+
+            entity.Property(e => e.Id).HasDefaultValueSql("(newsequentialid())", "DF_Tbl_JobHistory_Id");
+            entity.Property(e => e.Actions)
+                .HasMaxLength(30)
+                .IsUnicode(false);
+            entity.Property(e => e.PerformedAt).HasDefaultValueSql("(sysdatetimeoffset())", "DF_Tbl_JobHistory_PerformedAt");
+            entity.Property(e => e.Remarks).HasMaxLength(1000);
+
+            entity.HasOne(d => d.Job).WithMany(p => p.TblJobHistoryJobs)
+                .HasForeignKey(d => d.JobId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_JobHistory_Job");
+
+            entity.HasOne(d => d.RelatedJob).WithMany(p => p.TblJobHistoryRelatedJobs)
+                .HasForeignKey(d => d.RelatedJobId)
+                .HasConstraintName("FK_Tbl_JobHistory_RelatedJob");
+
+            entity.HasMany(d => d.Tasks).WithMany(p => p.Histories)
+                .UsingEntity<Dictionary<string, object>>(
+                    "TblJobHistoryTask",
+                    r => r.HasOne<TblJobTask>().WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("FK_Tbl_JobHistoryTasks_Task"),
+                    l => l.HasOne<TblJobHistory>().WithMany()
+                        .HasForeignKey("HistoryId")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("FK_Tbl_JobHistoryTasks_History"),
+                    j =>
+                    {
+                        j.HasKey("HistoryId", "TaskId");
+                        j.ToTable("Tbl_JobHistoryTasks", "Tracking");
+                        j.HasIndex(new[] { "TaskId" }, "IX_Tbl_JobHistoryTasks_TaskId");
+                    });
         });
 
         modelBuilder.Entity<TblJobTask>(entity =>

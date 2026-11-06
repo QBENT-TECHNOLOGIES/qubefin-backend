@@ -53,6 +53,10 @@ public partial class TblJob
 
     public virtual TblUser? ModifiedByNavigation { get; set; }
 
+    public virtual ICollection<TblJobHistory> TblJobHistoryJobs { get; set; } = new List<TblJobHistory>();
+
+    public virtual ICollection<TblJobHistory> TblJobHistoryRelatedJobs { get; set; } = new List<TblJobHistory>();
+
     public virtual ICollection<TblJobTask> TblJobTasks { get; set; } = new List<TblJobTask>();
 
     public virtual TblJob? TransferJobRef { get; set; }

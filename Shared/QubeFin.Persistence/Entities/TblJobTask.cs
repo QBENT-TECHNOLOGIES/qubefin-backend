@@ -93,4 +93,6 @@ public partial class TblJobTask
     public virtual TblUser? TaskCancelByNavigation { get; set; }
 
     public virtual TblUser? TaskCompletedByNavigation { get; set; }
+
+    public virtual ICollection<TblJobHistory> Histories { get; set; } = new List<TblJobHistory>();
 }
