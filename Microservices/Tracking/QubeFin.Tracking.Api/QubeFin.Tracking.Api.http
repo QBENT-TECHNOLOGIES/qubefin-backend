@@ -153,3 +153,25 @@ Authorization: Bearer {{token}}
 {
   "remarks": "Branch closed for audit this week."
 }
+
+###
+
+@taskId = <paste task id>
+
+PUT {{QubeFin.Tracking.Api_HostAddress}}/jobs/{{jobId}}/tasks/{{taskId}}/cancel
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "remarks": "Group meeting moved to next week."
+}
+
+###
+
+PUT {{QubeFin.Tracking.Api_HostAddress}}/jobs/{{jobId}}/tasks/{{taskId}}/reject
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "remarks": "Outside this job area."
+}

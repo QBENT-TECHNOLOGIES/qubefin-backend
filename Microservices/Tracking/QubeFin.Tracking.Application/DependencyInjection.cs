@@ -19,6 +19,7 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(assembly, includeInternalTypes: true);
         services.AddScoped<JobTaskPlanner>();
         services.AddScoped<JobNumberGenerator>();
+        services.AddScoped<JobTaskCloser>();
 
         return services;
     }

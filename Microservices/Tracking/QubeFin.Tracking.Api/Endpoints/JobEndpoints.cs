@@ -103,6 +103,36 @@ public class JobEndpoints : IEndpoint
         .WithTags("Jobs")
         .RequireAuthorization();
 
+        app.MapPut("jobs/{id:guid}/tasks/{taskId:guid}/cancel", async (Guid id, Guid taskId, CancelTaskRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Unauthorized();
+            }
+            var userId = principal.Identity.GetUserId();
+            var result = await sender.Send(new CancelTaskCommand(userId, id, taskId, request), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Cancel one task")
+        .WithDescription("Cancels one pending task of a job with a reason. If no pending task is left and at least one is done, the job completes.")
+        .WithTags("Jobs")
+        .RequireAuthorization();
+
+        app.MapPut("jobs/{id:guid}/tasks/{taskId:guid}/reject", async (Guid id, Guid taskId, RejectTaskRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Unauthorized();
+            }
+            var userId = principal.Identity.GetUserId();
+            var result = await sender.Send(new RejectTaskCommand(userId, id, taskId, request), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Reject a self-added task")
+        .WithDescription("Refuses a pending task the assignee added from the mobile app, with a reason. Tasks added on the web must be cancelled instead.")
+        .WithTags("Jobs")
+        .RequireAuthorization();
+
         app.MapGet("jobs/task-points", async (Guid? organisationUnitId, Guid? assigneeId, bool? pendingOnly, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)
