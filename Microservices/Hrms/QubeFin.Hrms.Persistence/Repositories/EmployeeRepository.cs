@@ -1,8 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Data;
+using Microsoft.EntityFrameworkCore;
+using OtpNet;
+using QubeFin.App.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Mappers.App;
 using QubeFin.Persistence.Mappers.Hrms;
+using QubeFin.Persistence.Models.App;
 using QubeFin.Persistence.Models.Global;
 using QubeFin.Persistence.Models.Hrms;
 
@@ -21,15 +25,16 @@ public interface IEmployeeRepository
     Task SeparateAsync(Guid employeeId, DateOnly separationDate, Guid modifiedBy, CancellationToken cancellationToken);
     Task TransferEntry(Guid employeeId, Guid organisationUnitId, Guid designationId, Guid salaryGradeId, decimal grossSalary, CancellationToken cancellationToken);
     Task<AddressUnit?> GetAdressUnit(Guid administrativeUnitId);
-    Task TransferEmployee(Guid EmployeeId, Guid OrganisationUnitId, Guid DesignationId, Guid SalaryGradeId, decimal GrossSalary, DateOnly EffectiveFrom, CancellationToken cancellationToken);
+    Task TransferEmployee(Guid EmployeeId, Guid OrganisationUnitId, DateOnly EffectiveFrom, Guid UserId, CancellationToken cancellationToken);
     Task SaveGrossSalary(Guid EmployeeId, Guid SalaryGradeId, decimal GrossSalary, decimal? PfAmount, DateOnly EffectiveFrom, CancellationToken cancellationToken);
     Task<List<EmployeeSalaryStructure>> GetSalaryStructureByGrossAsync(Guid employeeId, Guid salaryGradeId, decimal grossSalary, decimal? fixedPFAmount, CancellationToken cancellationToken);
     Task<string?> GetJoiningInfoReferenceNoAsync(Guid employeeId, CancellationToken cancellationToken);
     Task<int> CountJoiningInfoCreatedInYearAsync(CancellationToken cancellationToken);
     Task SaveJoiningInfoAsync(Guid employeeId, string referenceNo, DateOnly offerLetterDate, decimal monthlyCtc, Guid userId, CancellationToken cancellationToken);
     Task SetJoiningInfoApprovalAsync(Guid joiningInfoId, string approvalStatus, bool isEmployeeActive, Guid userId, CancellationToken cancellationToken);
+    Task CompanyTransferEmployee(Guid EmployeeId, Guid CompanyId, Guid OrganisationUnitId, string Designation, Guid SalaryGradeId, decimal GrossSalary, DateOnly JoiningDate, DateOnly separationDate, Guid loginUserId, CancellationToken cancellationToken);
 }
-public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepository
+public class EmployeeRepository(QubeFinDataContext context, IUserRepository userRepository) : IEmployeeRepository
 {
     public async Task AddAsync(Employee employee)
     {
@@ -249,7 +254,11 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
 
         return result;
     }
-    public async Task TransferEmployee(Guid employeeId, Guid organisationUnitId, Guid designationId, Guid salaryGradeId, decimal grossSalary, DateOnly effectiveFrom, CancellationToken cancellationToken)
+    // Moves the employee to another organisation unit. Only the designation changes: a vacant, active designation of
+    // the same post in the target unit is reused, otherwise a new one is created there with the current designation's
+    // name, post and roles. Either way it is mapped to the employee's current grade. The previous designation and its
+    // grade mapping are deactivated. Grade and gross salary are carried over unchanged.
+    public async Task TransferEmployee(Guid employeeId, Guid organisationUnitId, DateOnly effectiveFrom, Guid userId, CancellationToken cancellationToken)
     {
         // Running records are closed one day before the new effective date
         var effectiveTill = effectiveFrom.AddDays(-1);
@@ -259,88 +268,136 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
         if (employee is null)
             throw new Exception("Employee not found.");
 
-        var existingDesignation = await context.TblEmployeeDesignations.Where(ed => ed.EmployeeId != employeeId && ed.DesignationId == designationId && ed.EffectiveTo == null).AsNoTracking().FirstOrDefaultAsync();
-        if (existingDesignation != null)
-        {
-            throw new InvalidOperationException("The designation is already assigned to another employee.");
-        }
+        if (employee.OrganizationUnitId == organisationUnitId)
+            throw new InvalidOperationException("No changes found. The employee is already assigned to the selected organisation unit.");
 
         var currentEmployeeDesignation = await context.TblEmployeeDesignations.FirstOrDefaultAsync(d => d.EmployeeId == employeeId && d.EffectiveTo == null, cancellationToken);
 
         if (currentEmployeeDesignation is null)
             throw new Exception("Designation is not mapped with the employee.");
 
+        var currentDesignation = await context.TblDesignations
+            .Include(d => d.TblDesignationRoles)
+            .Include(d => d.TblDesignationGradeMappings)
+            .FirstAsync(d => d.Id == currentEmployeeDesignation.DesignationId, cancellationToken);
+
+        var currentGradeMapping = currentDesignation.TblDesignationGradeMappings.FirstOrDefault(g => g.IsActive);
+
+        if (currentGradeMapping is null)
+            throw new Exception("Employee designation is not mapped with salary grade.");
+
         var currentTransfer = await context.TblEmployeeTransfers.FirstOrDefaultAsync(t => t.EmployeeId == employeeId && t.ToDate == null, cancellationToken);
 
         if (currentTransfer is null)
             throw new Exception("Employee transfer history not found.");
 
-        var designationSalaryGrade = await context.TblDesignationGradeMappings.FirstOrDefaultAsync(d => d.DesignationId == designationId && d.IsActive, cancellationToken);
-
-        if (designationSalaryGrade is null)
-            throw new Exception("Employee designation is not mapped with salary grade.");
-
-        var currentGrossSalary = await context.TblEmployeeGrossSalaries.FirstOrDefaultAsync(s => s.EmployeeId == employeeId && s.EffectiveTill == null, cancellationToken);
+        var currentGrossSalary = await context.TblEmployeeGrossSalaries.AsNoTracking().FirstOrDefaultAsync(s => s.EmployeeId == employeeId && s.EffectiveTill == null, cancellationToken);
 
         if (currentGrossSalary is null)
             throw new Exception("Employee gross salary is not mapped.");
 
-        if (employee.OrganizationUnitId == organisationUnitId && currentEmployeeDesignation.DesignationId == designationId && designationSalaryGrade.GradeId == salaryGradeId && currentGrossSalary.GrossSalary == grossSalary)
-            throw new Exception("No changes found. The employee is already assigned to the selected organisation unit, designation, salary grade, and gross salary.");
-
         if (effectiveFrom <= currentTransfer.FromDate)
             throw new InvalidOperationException($"Effective From must be later than the current transfer from date ({currentTransfer.FromDate:dd-MM-yyyy}).");
 
-        await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+        // Serializable so two concurrent transfers cannot both claim the same vacant designation
+        await using var transaction = await context.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
 
         try
         {
-            if (currentEmployeeDesignation.DesignationId != designationId)
-            {
-                currentEmployeeDesignation.EffectiveTo = effectiveTill.ToDateTime(TimeOnly.MinValue);
+            var salaryGradeId = currentGradeMapping.GradeId;
 
-                await context.TblEmployeeDesignations.AddAsync(
-                    new TblEmployeeDesignation
+            // Vacant designation of the same post in the target unit; one already on the employee's grade is preferred
+            var vacantDesignation = await context.TblDesignations
+                .Include(d => d.TblDesignationGradeMappings)
+                .Where(d => d.OrganizationUnitId == organisationUnitId
+                    && d.PostId == currentDesignation.PostId
+                    && d.IsActive
+                    && !d.TblEmployeeDesignations.Any(ed => ed.EffectiveTo == null))
+                .OrderByDescending(d => d.TblDesignationGradeMappings.Any(g => g.IsActive && g.GradeId == salaryGradeId))
+                .ThenBy(d => d.CreatedOn)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            Guid designationId;
+
+            if (vacantDesignation is not null)
+            {
+                designationId = vacantDesignation.Id;
+
+                // Map the employee's grade to the vacant designation if it is on a different one
+                if (!vacantDesignation.TblDesignationGradeMappings.Any(g => g.IsActive && g.GradeId == salaryGradeId))
+                {
+                    foreach (var gradeMapping in vacantDesignation.TblDesignationGradeMappings.Where(g => g.IsActive))
                     {
-                        Id = Guid.NewGuid(),
-                        EmployeeId = employeeId,
-                        DesignationId = designationId,
-                        EffectiveFrom = effectiveFrom.ToDateTime(TimeOnly.MinValue),
-                        EffectiveTo = null
+                        gradeMapping.IsActive = false;
+                    }
+
+                    await context.TblDesignationGradeMappings.AddAsync(
+                        new TblDesignationGradeMapping
+                        {
+                            Id = Guid.NewGuid(),
+                            DesignationId = designationId,
+                            GradeId = salaryGradeId,
+                            IsActive = true
+                        },
+                        cancellationToken);
+                }
+            }
+            else
+            {
+                designationId = Guid.NewGuid();
+
+                await context.TblDesignations.AddAsync(
+                    new TblDesignation
+                    {
+                        Id = designationId,
+                        Name = currentDesignation.Name,
+                        OrganizationUnitId = organisationUnitId,
+                        PostId = currentDesignation.PostId,
+                        IsActive = true,
+                        IsIncharge = false,
+                        CreatedBy = userId,
+                        CreatedOn = DateTime.UtcNow,
+                        TblDesignationRoles = currentDesignation.TblDesignationRoles
+                            .Select(r => new TblDesignationRole
+                            {
+                                Id = Guid.NewGuid(),
+                                RoleId = r.RoleId,
+                                CreatedBy = userId,
+                                CreatedOn = DateTime.UtcNow
+                            })
+                            .ToList(),
+                        TblDesignationGradeMappings = new List<TblDesignationGradeMapping>
+                        {
+                            new TblDesignationGradeMapping
+                            {
+                                Id = Guid.NewGuid(),
+                                GradeId = salaryGradeId,
+                                IsActive = true
+                            }
+                        }
                     },
                     cancellationToken);
             }
 
-            if (currentEmployeeDesignation.DesignationId != designationId || designationSalaryGrade.GradeId != salaryGradeId)
-            {
-                designationSalaryGrade.IsActive = false;
+            // Deactivate the previous designation and its grade mapping
+            currentDesignation.IsActive = false;
+            currentDesignation.LastModifiedBy = userId;
+            currentDesignation.LastModifiedOn = DateTime.UtcNow;
+            currentGradeMapping.IsActive = false;
 
-                await context.TblDesignationGradeMappings.AddAsync(
-                    new TblDesignationGradeMapping
-                    {
-                        Id = Guid.NewGuid(),
-                        DesignationId = designationId,
-                        GradeId = salaryGradeId,
-                        IsActive = true
-                    },
-                    cancellationToken);
-            }
+            // Close current designation and map the resolved one
+            currentEmployeeDesignation.EffectiveTo = effectiveTill.ToDateTime(TimeOnly.MinValue);
 
-            if (currentGrossSalary.GrossSalary != grossSalary)
-            {
-                currentGrossSalary.EffectiveTill = effectiveTill;
-
-                await context.TblEmployeeGrossSalaries.AddAsync(
-                    new TblEmployeeGrossSalary
-                    {
-                        Id = Guid.NewGuid(),
-                        EmployeeId = employeeId,
-                        GrossSalary = grossSalary,
-                        EffectiveFrom = effectiveFrom,
-                        EffectiveTill = null
-                    },
-                    cancellationToken);
-            }
+            await context.TblEmployeeDesignations.AddAsync(
+                new TblEmployeeDesignation
+                {
+                    Id = Guid.NewGuid(),
+                    EmployeeId = employeeId,
+                    DesignationId = designationId,
+                    EffectiveFrom = effectiveFrom.ToDateTime(TimeOnly.MinValue),
+                    EffectiveTo = null
+                },
+                cancellationToken);
 
             // Close current transfer
             currentTransfer.ToDate = effectiveTill;
@@ -354,7 +411,7 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
                     OrganisationUnitId = organisationUnitId,
                     DesignationId = designationId,
                     SalaryGradeId = salaryGradeId,
-                    GrossSalary = grossSalary,
+                    GrossSalary = currentGrossSalary.GrossSalary,
                     FromDate = effectiveFrom,
                     ToDate = null,
                     IsApprove = false
@@ -564,5 +621,217 @@ public class EmployeeRepository(QubeFinDataContext context) : IEmployeeRepositor
         joiningInfo.Employee.LastModifiedOn = now;
     }
 
+    public async Task CompanyTransferEmployee(Guid employeeId, Guid CompanyId, Guid OrganisationUnitId, string Designation, Guid SalaryGradeId, decimal GrossSalary, DateOnly JoiningDate, DateOnly separationDate, Guid loginUserId, CancellationToken cancellationToken)
+    {
+        await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            var employee = await context.TblEmployees.Include(e => e.TblEmployeeDesignations).Include(e => e.TblEmployeeDocuments).FirstOrDefaultAsync(e => e.Id == employeeId, cancellationToken);
+            if (employee is null)
+                throw new Exception("Employee not found.");
+
+            var employeeDesignation = employee.TblEmployeeDesignations.FirstOrDefault(d => d.EffectiveTo == null);
+
+            employee.SeparationDate = separationDate;
+            employee.IsActive = false;
+            employee.IsPayrollActive = false;
+            employee.LastModifiedBy = loginUserId;
+            employee.LastModifiedOn = DateTime.UtcNow;
+
+            #region Close current running records
+            await context.TblEmployeeDesignations.Where(d => d.EmployeeId == employeeId && d.EffectiveTo == null).LoadAsync(cancellationToken);
+            foreach (var designation in context.TblEmployeeDesignations.Local.Where(d => d.EmployeeId == employeeId && d.EffectiveTo == null))
+            {
+                designation.EffectiveTo = separationDate.ToDateTime(TimeOnly.MinValue);
+            }
+
+            await context.TblEmployeeGrossSalaries.Where(s => s.EmployeeId == employeeId && s.EffectiveTill == null).LoadAsync(cancellationToken);
+            foreach (var grossSalary in context.TblEmployeeGrossSalaries.Local.Where(s => s.EmployeeId == employeeId && s.EffectiveTill == null))
+            {
+                grossSalary.EffectiveTill = separationDate;
+            }
+
+            await context.TblEmployeeTransfers.Where(t => t.EmployeeId == employeeId && t.ToDate == null).LoadAsync(cancellationToken);
+            foreach (var transfer in context.TblEmployeeTransfers.Local.Where(t => t.EmployeeId == employeeId && t.ToDate == null))
+            {
+                transfer.ToDate = separationDate;
+            }
+
+            var users = await context.TblUsers.Where(u => u.EmployeeId == employeeId && u.IsActive).ToListAsync(cancellationToken);
+            foreach (var user in users)
+            {
+                user.IsActive = false;
+                user.LastModifiedBy = loginUserId;
+                user.LastModifiedOn = DateTime.Now;
+            }
+
+            await CloseUserSessionsAsync(employeeId, cancellationToken);
+            #endregion
+
+            #region Add new records
+            Guid designationId;
+
+            var transferDesignation = await context.TblDesignations
+                .Include(d => d.TblEmployeeDesignations)
+                .FirstOrDefaultAsync(d => d.Name.Trim().ToLower() == Designation.ToLower().Trim() && d.OrganizationUnitId == OrganisationUnitId, cancellationToken);
+
+            var currentDesignation = await context.TblDesignations
+                .Include(d => d.TblDesignationRoles)
+                .Include(d => d.TblDesignationGradeMappings)
+                .FirstOrDefaultAsync(d => d.Id == employeeDesignation.DesignationId, cancellationToken);
+
+            var newEmployeeCode = await GenerateEmployeeCodeAsync(CompanyId, cancellationToken);
+            if (string.IsNullOrWhiteSpace(newEmployeeCode))
+                throw new Exception("Employee code could not be generated for the destination company.");
+
+            if (transferDesignation == null || transferDesignation.TblEmployeeDesignations.Any(ed => ed.EffectiveTo == null))
+            {
+                designationId = Guid.NewGuid();
+                await context.TblDesignations.AddAsync(
+                    new TblDesignation
+                    {
+                        Id = designationId,
+                        Name = Designation,
+                        OrganizationUnitId = OrganisationUnitId,
+                        PostId = currentDesignation.PostId,
+                        IsActive = true,
+                        IsIncharge = false,
+                        CreatedBy = loginUserId,
+                        CreatedOn = DateTime.UtcNow,
+                        TblDesignationRoles = currentDesignation.TblDesignationRoles
+                            .Select(r => new TblDesignationRole
+                            {
+                                Id = Guid.NewGuid(),
+                                RoleId = r.RoleId,
+                                CreatedBy = loginUserId,
+                                CreatedOn = DateTime.UtcNow
+                            })
+                            .ToList(),
+                        TblDesignationGradeMappings = new List<TblDesignationGradeMapping>
+                        {
+                            new TblDesignationGradeMapping
+                            {
+                                Id = Guid.NewGuid(),
+                                GradeId = SalaryGradeId,
+                                IsActive = true
+                            }
+                        }
+                    },
+                    cancellationToken);
+            }
+            else
+            {
+                designationId = transferDesignation.Id;
+
+                var currentGradeMapping = currentDesignation.TblDesignationGradeMappings.FirstOrDefault(g => g.IsActive);
+                if (currentGradeMapping != null)
+                {
+                    currentGradeMapping.IsActive = false;
+                }
+                if (currentGradeMapping == null || currentGradeMapping.GradeId != SalaryGradeId)
+                {
+                    await context.TblDesignationGradeMappings.AddAsync(
+                        new TblDesignationGradeMapping
+                        {
+                            Id = Guid.NewGuid(),
+                            DesignationId = designationId,
+                            GradeId = SalaryGradeId,
+                            IsActive = true
+                        },
+                        cancellationToken);
+                }
+            }
+
+            var newEmployee = new TblEmployee();
+            context.Entry(newEmployee).CurrentValues.SetValues(employee);
+            newEmployee.Id = Guid.NewGuid();
+            newEmployee.Code = newEmployeeCode;
+            newEmployee.CompanyId = CompanyId;
+            newEmployee.OrganizationUnitId = OrganisationUnitId;
+            newEmployee.JoiningDate = JoiningDate;
+            newEmployee.SeparationDate = null;
+            newEmployee.IsActive = true;
+            newEmployee.IsPayrollActive = true;
+            newEmployee.CreatedBy = loginUserId;
+            newEmployee.CreatedDate = DateTime.UtcNow;
+            newEmployee.LastModifiedBy = null;
+            newEmployee.LastModifiedOn = null;
+
+            await context.TblEmployees.AddAsync(newEmployee, cancellationToken);
+
+            await context.TblEmployeeDesignations.AddAsync(
+                new TblEmployeeDesignation
+                {
+                    Id = Guid.NewGuid(),
+                    EmployeeId = newEmployee.Id,
+                    DesignationId = designationId,
+                    EffectiveFrom = JoiningDate.ToDateTime(TimeOnly.MinValue),
+                    EffectiveTo = null
+                },
+                cancellationToken);
+
+            await context.TblEmployeeGrossSalaries.AddAsync(
+                new TblEmployeeGrossSalary
+                {
+                    Id = Guid.NewGuid(),
+                    EmployeeId = newEmployee.Id,
+                    GrossSalary = GrossSalary,
+                    EffectiveFrom = JoiningDate,
+                    EffectiveTill = null
+                },
+                cancellationToken);
+
+            await context.TblEmployeeTransfers.AddAsync(
+                new TblEmployeeTransfer
+                {
+                    Id = Guid.NewGuid(),
+                    EmployeeId = newEmployee.Id,
+                    OrganisationUnitId = OrganisationUnitId,
+                    DesignationId = designationId,
+                    SalaryGradeId = SalaryGradeId,
+                    GrossSalary = GrossSalary,
+                    FromDate = JoiningDate,
+                    ToDate = null,
+                    IsApprove = false
+                },
+                cancellationToken);
+
+            foreach (var employeeDocument in employee.TblEmployeeDocuments)
+            {
+                var newDocument = new TblEmployeeDocument();
+                context.Entry(newDocument).CurrentValues.SetValues(employeeDocument);
+                newDocument.Id = Guid.NewGuid();
+                newDocument.EmployeeId = newEmployee.Id;
+                newDocument.CreatedBy = loginUserId;
+                newDocument.CreatedOn = DateTime.UtcNow;
+                newDocument.LastModifiedBy = null;
+                newDocument.LastModifiedOn = null;
+                await context.TblEmployeeDocuments.AddAsync(newDocument, cancellationToken);
+            }
+
+
+            var mfaSecretKey32 = Base32Encoding.ToString(KeyGeneration.GenerateRandomKey(20));
+            var hashedPassword = await userRepository.HashPasswordAsync(newEmployeeCode, "123");
+
+            var newUser = User.Create(
+                Guid.NewGuid(),
+                newEmployeeCode,
+                hashedPassword,
+                newEmployee.Id,
+                mfaSecretKey32,
+                users.FirstOrDefault()?.IsAttendanceOptional ?? false,
+                loginUserId);
+
+            userRepository.Add(newUser);
+            #endregion
+            await context.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
 }
 

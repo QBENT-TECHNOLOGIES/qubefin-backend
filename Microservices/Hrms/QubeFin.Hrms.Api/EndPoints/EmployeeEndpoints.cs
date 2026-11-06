@@ -58,7 +58,7 @@ public class EmployeeEndpoints : IEndpoint
         .WithSummary("Get Employee By Id")
         .RequireAuthorization();
 
-        app.MapPost("employees", async (ClaimsPrincipal principal, [FromBody] PersonalInfoRequest request, ISender sender) =>
+        app.MapPost("employees", async (ClaimsPrincipal principal, [FromForm] PersonalInfoFormRequest request, ISender sender) =>
         {
             if (principal.Identity is null)
             {
@@ -67,10 +67,12 @@ public class EmployeeEndpoints : IEndpoint
             var userId = principal.Identity.GetUserId();
 
             var command = new CreateEmployeeCommand(/*request.Code,*/ request.Salutation, request.FirstName, request.MiddleName, request.LastName, request.FatherName, request.MotherName,
-                request.HusbandName, request.DateOfBirth, request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisablityType, request.MaritalStatus, userId);
+                request.HusbandName, request.DateOfBirth, request.Gender, request.Religion, request.Caste, request.Nationality, request.BloodGroup, request.DisablityType, request.MaritalStatus, userId,
+                request.Photo, request.Signature);
             var result = await sender.Send(command);
             return result.ToHttpResult();
         })
+        .DisableAntiforgery()
         .WithSummary("Create Employee")
         .RequireAuthorization();
 
@@ -410,13 +412,19 @@ public class EmployeeEndpoints : IEndpoint
         .WithSummary("Get All Organization Units With Their Employees")
         .RequireAuthorization();
 
-        app.MapGet("employees/hierarchy/{id:guid}", async (Guid id, ISender sender) =>
+        app.MapGet("employees/hierarchy/{id:guid?}", async (ClaimsPrincipal principal, Guid? id, ISender sender) =>
         {
-            var result = await sender.Send(new GetEmployeeHierarchyQuery(id));
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+
+            var employeeId = id ?? principal.Identity.GetEmployeeId();
+            var result = await sender.Send(new GetEmployeeHierarchyQuery(employeeId));
             return result.ToHttpResult();
         })
         .WithSummary("Get Employee Reporting Hierarchy")
-        .WithDescription("Tree rooted at the top-most superior (e.g. HOD) down through the employee to all subordinates, e.g. Divisional Manager > Branch Managers > Credit Officers.")
+        .WithDescription("Tree rooted at the top-most superior (e.g. HOD) down through the employee to all subordinates. Without an id the logged-in employee is used (My team page); with an id that employee is used and the token is ignored (employee list).")
         .WithTags("Employees")
         .RequireAuthorization();
 
@@ -441,8 +449,9 @@ public class EmployeeEndpoints : IEndpoint
             {
                 return Results.Forbid();
             }
+            var userId = principal.Identity.GetUserId();
 
-            var command = new TransferEmployeeCommand(request);
+            var command = new TransferEmployeeCommand(request, userId);
             var result = await sender.Send(command);
             return result.ToHttpResult();
         })
@@ -558,9 +567,21 @@ public class EmployeeEndpoints : IEndpoint
             var result = await sender.Send(new GetEmployeeDocumentsByIdQuery(id));
             return result.ToHttpResult();
         })
-    .WithSummary("Get All Documents By Employee Id")
-    .RequireAuthorization();
+        .WithSummary("Get All Documents By Employee Id")
+        .RequireAuthorization();
 
+        #endregion
+
+        #region Employee Company Transfer
+        app.MapPost("employees/company-transfer", async (ClaimsPrincipal principal, IMediator mediator, CompanyTransferRequest request) =>
+        {
+            var userId = principal.Identity.GetUserId();
+            var result = await mediator.Send(new CompanyTransferCommand(request, userId));
+            return result.ToHttpResult();
+        })
+        .WithSummary("Transfer Employee to Different Company")
+        .WithTags("Employees")
+        .RequireAuthorization();
         #endregion
     }
 }
