@@ -43,7 +43,7 @@ public partial class TblJob
 
     public DateTime? ModifiedOn { get; set; }
 
-    public virtual TblDesignation AssignToNavigation { get; set; } = null!;
+    public virtual TblEmployee AssignToNavigation { get; set; } = null!;
 
     public virtual TblUser? CanceledByNavigation { get; set; }
 

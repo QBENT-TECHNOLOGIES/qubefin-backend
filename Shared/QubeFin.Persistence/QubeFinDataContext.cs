@@ -1729,7 +1729,7 @@ public partial class QubeFinDataContext : DbContext
             entity.HasOne(d => d.AssignToNavigation).WithMany(p => p.TblJobs)
                 .HasForeignKey(d => d.AssignTo)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Tbl_Job_Tbl_Designation");
+                .HasConstraintName("FK_Tbl_Job_Tbl_Employee");
 
             entity.HasOne(d => d.CanceledByNavigation).WithMany(p => p.TblJobCanceledByNavigations)
                 .HasForeignKey(d => d.CanceledBy)
@@ -1762,14 +1762,26 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.PerformedAt).HasDefaultValueSql("(sysdatetimeoffset())", "DF_Tbl_JobHistory_PerformedAt");
             entity.Property(e => e.Remarks).HasMaxLength(1000);
 
+            entity.HasOne(d => d.FromAssignee).WithMany(p => p.TblJobHistoryFromAssignees)
+                .HasForeignKey(d => d.FromAssigneeId)
+                .HasConstraintName("FK_Tbl_JobHistory_Tbl_Employee");
+
             entity.HasOne(d => d.Job).WithMany(p => p.TblJobHistoryJobs)
                 .HasForeignKey(d => d.JobId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_JobHistory_Job");
 
+            entity.HasOne(d => d.PerformedBy).WithMany(p => p.TblJobHistories)
+                .HasForeignKey(d => d.PerformedById)
+                .HasConstraintName("FK_Tbl_JobHistory_Tbl_User");
+
             entity.HasOne(d => d.RelatedJob).WithMany(p => p.TblJobHistoryRelatedJobs)
                 .HasForeignKey(d => d.RelatedJobId)
                 .HasConstraintName("FK_Tbl_JobHistory_RelatedJob");
+
+            entity.HasOne(d => d.ToAssignee).WithMany(p => p.TblJobHistoryToAssignees)
+                .HasForeignKey(d => d.ToAssigneeId)
+                .HasConstraintName("FK_Tbl_JobHistory_Tbl_Employee1");
 
             entity.HasMany(d => d.Tasks).WithMany(p => p.Histories)
                 .UsingEntity<Dictionary<string, object>>(
@@ -1823,7 +1835,7 @@ public partial class QubeFinDataContext : DbContext
 
             entity.HasOne(d => d.CoOrdinatedByNavigation).WithMany(p => p.TblJobTasks)
                 .HasForeignKey(d => d.CoOrdinatedBy)
-                .HasConstraintName("FK_Tbl_JobTask_Tbl_Designation");
+                .HasConstraintName("FK_Tbl_JobTask_Tbl_Employee");
 
             entity.HasOne(d => d.Job).WithMany(p => p.TblJobTasks)
                 .HasForeignKey(d => d.JobId)
