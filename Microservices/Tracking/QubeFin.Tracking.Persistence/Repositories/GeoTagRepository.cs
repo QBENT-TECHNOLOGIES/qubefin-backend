@@ -8,6 +8,7 @@ public interface IGeoTagRepository
 {
     Task<GeoTagPointsResult> GetPointsAsync(Guid organisationUnitId, IReadOnlyCollection<string> kinds, int? taskLocationMatchInMeters, CancellationToken cancellationToken = default);
     Task<Dictionary<Guid, TrackingPlace>> GetPlacesAsync(IEnumerable<Guid> refIds, CancellationToken cancellationToken = default);
+    Task<List<GeoTagRow>> GetGeoTagsAsync(GeoTagFilter filter, CancellationToken cancellationToken = default);
 }
 
 public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
@@ -126,6 +127,105 @@ public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
             places[b.Id] = new TrackingPlace(b.Id, "Branch", b.Id, point is null ? null : GeoCoordinates.ToGeometry(point));
         }
         return places;
+    }
+
+    // Places of one kind, with and without a location, sorted by name. BranchIds null = every branch (an Admin).
+    // There is no geo-tag table yet, so the id of each row is the id of the place itself.
+    public async Task<List<GeoTagRow>> GetGeoTagsAsync(GeoTagFilter filter, CancellationToken cancellationToken = default)
+    {
+        var text = string.IsNullOrWhiteSpace(filter.SearchText) ? null : filter.SearchText.Trim();
+        var branchIds = filter.BranchIds;
+        var unitId = filter.OrganisationUnitId;
+
+        List<GeoTagRow> rows;
+        switch (filter.Kind)
+        {
+            case "Branch":
+            {
+                var branches = await context.TblOrganizationUnits
+                    .Where(o => o.OrganizationUnitType.Name == "Branch")
+                    .Where(o => branchIds == null || branchIds.Contains(o.Id))
+                    .Where(o => unitId == null || o.Id == unitId)
+                    .Where(o => !filter.OnlyUntagged || o.Latitude == null || o.Longitude == null)
+                    .Select(o => new { o.Id, o.Name, o.CodeVal, o.Latitude, o.Longitude })
+                    .AsNoTracking()
+                    .ToListAsync(cancellationToken);
+                rows = branches
+                    .Where(b => text == null || b.Name.Contains(text, StringComparison.OrdinalIgnoreCase) || b.CodeVal.ToString().Contains(text))
+                    .Select(b => new GeoTagRow(b.Id, "Branch", b.Id, b.Name, b.CodeVal.ToString(), b.Id, b.Name, null,
+                        GeoCoordinates.ToGeoPoint(b.Latitude, b.Longitude), filter.BranchRadiusMeters))
+                    .ToList();
+                break;
+            }
+            case GroupCentre:
+            {
+                var groups = await context.TblBcgroups
+                    .Where(g => branchIds == null || branchIds.Contains(g.OrganizationUnitId))
+                    .Where(g => unitId == null || g.OrganizationUnitId == unitId)
+                    .Where(g => !filter.OnlyUntagged || g.Location == null)
+                    .Where(g => text == null || g.Name.Contains(text) || g.Code.Contains(text))
+                    .Select(g => new { g.Id, g.Name, g.Code, g.OrganizationUnitId, BranchName = g.OrganizationUnit.Name, g.AddressLine1, g.Location })
+                    .AsNoTracking()
+                    .ToListAsync(cancellationToken);
+                rows = groups
+                    .Select(g => new GeoTagRow(g.Id, GroupCentre, g.Id, g.Name, g.Code, g.OrganizationUnitId, g.BranchName, g.AddressLine1,
+                        GeoCoordinates.ToGeoPoint(g.Location), filter.MatchRadiusMeters))
+                    .ToList();
+                break;
+            }
+            case Member:
+            case OdMember:
+            {
+                // Member lists every member; OdMember only the ones overdue now
+                var overdueOnly = filter.Kind == OdMember;
+                var members = await context.TblBcmembers
+                    .Where(m => !overdueOnly || m.IsOverdueMember)
+                    .Where(m => branchIds == null || branchIds.Contains(m.Bcgroup.OrganizationUnitId))
+                    .Where(m => unitId == null || m.Bcgroup.OrganizationUnitId == unitId)
+                    .Where(m => !filter.OnlyUntagged || m.Location == null)
+                    .Where(m => text == null || m.FirstName.Contains(text) || (m.MiddleName != null && m.MiddleName.Contains(text))
+                        || m.LastName.Contains(text) || m.Code.Contains(text))
+                    .Select(m => new
+                    {
+                        m.Id, m.Code, m.FirstName, m.MiddleName, m.LastName, m.AddressLine1, m.AddressLine2, m.Location,
+                        m.Bcgroup.OrganizationUnitId, BranchName = m.Bcgroup.OrganizationUnit.Name
+                    })
+                    .AsNoTracking()
+                    .ToListAsync(cancellationToken);
+                rows = members
+                    .Select(m => new GeoTagRow(m.Id, filter.Kind, m.Id,
+                        string.Join(' ', new[] { m.FirstName, m.MiddleName, m.LastName }.Where(n => !string.IsNullOrWhiteSpace(n))),
+                        m.Code, m.OrganizationUnitId, m.BranchName,
+                        string.Join(", ", new[] { m.AddressLine1, m.AddressLine2 }.Where(a => !string.IsNullOrWhiteSpace(a))) is { Length: > 0 } address ? address : null,
+                        GeoCoordinates.ToGeoPoint(m.Location), filter.MatchRadiusMeters))
+                    .ToList();
+                break;
+            }
+            default:
+            {
+                // EmployeeHome: every active employee, placed in the unit of Tbl_Employee.OrganizationUnitId
+                var employees = await context.TblEmployees
+                    .Where(e => e.IsActive)
+                    .Where(e => branchIds == null || (e.OrganizationUnitId != null && branchIds.Contains(e.OrganizationUnitId.Value)))
+                    .Where(e => unitId == null || e.OrganizationUnitId == unitId)
+                    .Where(e => !filter.OnlyUntagged || e.PresentLocation == null)
+                    .Where(e => text == null || e.FullName.Contains(text) || (e.Code != null && e.Code.Contains(text)))
+                    .Select(e => new
+                    {
+                        e.Id, e.FullName, e.Code, e.OrganizationUnitId,
+                        BranchName = e.OrganizationUnit != null ? e.OrganizationUnit.Name : null,
+                        e.PresentAddress, e.PresentLocation
+                    })
+                    .AsNoTracking()
+                    .ToListAsync(cancellationToken);
+                rows = employees
+                    .Select(e => new GeoTagRow(e.Id, "EmployeeHome", e.Id, e.FullName, e.Code, e.OrganizationUnitId, e.BranchName, e.PresentAddress,
+                        GeoCoordinates.ToGeoPoint(e.PresentLocation), filter.MatchRadiusMeters))
+                    .ToList();
+                break;
+            }
+        }
+        return rows.OrderBy(r => r.Name).ToList();
     }
 
     private sealed record DesignationHolder(Guid EmployeeId, string Name);

@@ -175,3 +175,9 @@ Authorization: Bearer {{token}}
 {
   "remarks": "Outside this job area."
 }
+
+###
+
+GET {{QubeFin.Tracking.Api_HostAddress}}/geo-tags?kind=GroupCentre&onlyUntagged=false
+Accept: application/json
+Authorization: Bearer {{token}}
