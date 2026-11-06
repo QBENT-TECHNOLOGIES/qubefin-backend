@@ -24,29 +24,38 @@ public class GetGeoTagsQueryValidator : AbstractValidator<GetGeoTagsQuery>
 #endregion
 
 #region --- RESPONSE ---
-public record GeoTagChangeResponse(GeoPoint Location, int RadiusMeters, string ChangedByName, DateTimeOffset ChangedAt, string? Reason);
-
 public record GeoTagResponse(
-    Guid Id,
     GeoTagKind Kind,
     Guid RefId,
     string Name,
     string? RefCode,
-    Guid? OrganisationUnitId,
+    Guid? BranchId,
     string? BranchName,
     string? Address,
     GeoPoint? Location,
     int? RadiusMeters,
     string? PhotoUrl,
-    bool Verified,
     string? TaggedByName,
-    DateTimeOffset? TaggedAt,
-    List<GeoTagChangeResponse> History);
+    DateTimeOffset? TaggedAt)
+{
+    internal static GeoTagResponse From(GeoTagRow row) => new(
+        Enum.Parse<GeoTagKind>(row.Kind),
+        row.RefId,
+        row.Name,
+        row.RefCode,
+        row.BranchId,
+        row.BranchName,
+        row.Address,
+        row.Location,
+        row.RadiusMeters,
+        row.PhotoUrl,
+        row.TaggedByName,
+        TrackingClock.WithIndiaOffset(row.TaggedAt));
+}
 #endregion
 
 #region --- HANDLER ---
 // Places of one kind with and without a location, in the user's branches. Employee homes are for an Admin only.
-// There is no geo-tag history yet, so taggedByName, taggedAt and photoUrl are null, history is empty and every place counts as verified.
 internal sealed class GetGeoTagsQueryHandler(ITrackingScopeRepository scopeRepository, IGeoTagRepository geoTagRepository) : IRequestHandler<GetGeoTagsQuery, Result<List<GeoTagResponse>>>
 {
     public async Task<Result<List<GeoTagResponse>>> Handle(GetGeoTagsQuery request, CancellationToken cancellationToken)
@@ -72,22 +81,7 @@ internal sealed class GetGeoTagsQueryHandler(ITrackingScopeRepository scopeRepos
             setting is null ? null : setting.BranchOperatingRadiusInKm * 1000,
             setting?.TaskLocationMatchInMeters), cancellationToken);
 
-        return Result.Ok(rows.Select(r => new GeoTagResponse(
-            r.Id,
-            kind,
-            r.RefId,
-            r.Name,
-            r.RefCode,
-            r.OrganisationUnitId,
-            r.BranchName,
-            r.Address,
-            r.Location,
-            r.RadiusMeters,
-            null,
-            true,
-            null,
-            null,
-            [])).ToList());
+        return Result.Ok(rows.Select(GeoTagResponse.From).ToList());
     }
 }
 #endregion

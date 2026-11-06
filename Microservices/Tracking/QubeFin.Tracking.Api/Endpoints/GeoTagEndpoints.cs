@@ -3,6 +3,7 @@ using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
 using QubeFin.Core.Results;
 using QubeFin.Tracking.Application.Enums;
+using QubeFin.Tracking.Application.GeoTags.Commands;
 using QubeFin.Tracking.Application.GeoTags.Queries;
 using System.Security.Claims;
 
@@ -39,6 +40,21 @@ public class GeoTagEndpoints : IEndpoint
         })
         .WithSummary("List geo-tagged places of one kind")
         .WithDescription("Returns places of one kind (Branch, GroupCentre, Member, OdMember or EmployeeHome) in the user's branches, with and without a location. onlyUntagged = true returns only places with no location yet. Employee homes are for an Admin only.")
+        .WithTags("Geo Tags")
+        .RequireAuthorization();
+
+        app.MapPut("geo-tags/{id:guid}", async (Guid id, UpdateGeoTagRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Unauthorized();
+            }
+            var userId = principal.Identity.GetUserId();
+            var result = await sender.Send(new UpdateGeoTagCommand(userId, id, request), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Set or change a location")
+        .WithDescription("Sets or changes the location of a branch, group, member or employee home (id = the place's id, as refId in GET geo-tags), with a radius and a reason.")
         .WithTags("Geo Tags")
         .RequireAuthorization();
     }
