@@ -27,9 +27,15 @@ public partial class TblJobHistory
 
     public string? Remarks { get; set; }
 
+    public virtual TblEmployee? FromAssignee { get; set; }
+
     public virtual TblJob Job { get; set; } = null!;
 
+    public virtual TblUser? PerformedBy { get; set; }
+
     public virtual TblJob? RelatedJob { get; set; }
+
+    public virtual TblEmployee? ToAssignee { get; set; }
 
     public virtual ICollection<TblJobTask> Tasks { get; set; } = new List<TblJobTask>();
 }

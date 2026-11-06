@@ -206,6 +206,14 @@ public partial class TblEmployee
 
     public virtual ICollection<TblInterviewPanel> TblInterviewPanels { get; set; } = new List<TblInterviewPanel>();
 
+    public virtual ICollection<TblJobHistory> TblJobHistoryFromAssignees { get; set; } = new List<TblJobHistory>();
+
+    public virtual ICollection<TblJobHistory> TblJobHistoryToAssignees { get; set; } = new List<TblJobHistory>();
+
+    public virtual ICollection<TblJobTask> TblJobTasks { get; set; } = new List<TblJobTask>();
+
+    public virtual ICollection<TblJob> TblJobs { get; set; } = new List<TblJob>();
+
     public virtual ICollection<TblJoiningInfo> TblJoiningInfos { get; set; } = new List<TblJoiningInfo>();
 
     public virtual ICollection<TblLeavePrayer> TblLeavePrayers { get; set; } = new List<TblLeavePrayer>();

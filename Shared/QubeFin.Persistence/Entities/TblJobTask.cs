@@ -84,7 +84,7 @@ public partial class TblJobTask
 
     public virtual TblOrganizationUnit Branch { get; set; } = null!;
 
-    public virtual TblDesignation? CoOrdinatedByNavigation { get; set; }
+    public virtual TblEmployee? CoOrdinatedByNavigation { get; set; }
 
     public virtual TblJob Job { get; set; } = null!;
 

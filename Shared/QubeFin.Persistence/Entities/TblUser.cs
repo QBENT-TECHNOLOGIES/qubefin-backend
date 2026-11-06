@@ -67,6 +67,8 @@ public partial class TblUser
 
     public virtual ICollection<TblJob> TblJobCreatedByNavigations { get; set; } = new List<TblJob>();
 
+    public virtual ICollection<TblJobHistory> TblJobHistories { get; set; } = new List<TblJobHistory>();
+
     public virtual ICollection<TblJob> TblJobModifiedByNavigations { get; set; } = new List<TblJob>();
 
     public virtual ICollection<TblJobTask> TblJobTaskTaskAddedByNavigations { get; set; } = new List<TblJobTask>();
