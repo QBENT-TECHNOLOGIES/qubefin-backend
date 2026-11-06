@@ -20,6 +20,16 @@ internal static class JobPermissionRules
         return new JobPermissions(isCreatorOrAbove, isCreatorOrAbove, canUpdate);
     }
 
+    // D4 "give work": someone in a lower role inside the user's scope (an Admin may give work to anyone in a tracking role).
+    // A Branch Manager and an Assistant Branch Manager are the same level, so they never give each other work.
+    public static bool CanGiveWork(TrackingViewer viewer, TrackingOfficer assignee)
+    {
+        if (assignee.EmployeeId == viewer.EmployeeId || !TrackingRole.IsTrackingPost(assignee.PostName)) return false;
+        if (viewer.Role == TrackingRole.Admin) return true;
+        return TrackingRole.Rank(assignee.PostName) < TrackingRole.Rank(viewer.Role)
+            && viewer.UnitIdsInScope.Contains(assignee.UnitId);
+    }
+
     // Higher role, with the other person's unit inside the viewer's scope
     private static bool IsAbove(TrackingViewer viewer, TrackingPosition other)
     {

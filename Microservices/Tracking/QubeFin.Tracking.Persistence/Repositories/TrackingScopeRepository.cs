@@ -12,8 +12,7 @@ public interface ITrackingScopeRepository
     Task<List<TrackingBranch>> GetBranchesAsync(IReadOnlyList<Guid> branchIds, CancellationToken cancellationToken = default);
     Task<TblTrackingSetting?> GetTrackingSettingAsync(CancellationToken cancellationToken = default);
     Task<List<TrackingFieldOfficer>> GetFieldOfficersAsync(TrackingViewer viewer, Guid? branchId, CancellationToken cancellationToken = default);
-    Task<TrackingOfficer?> GetOfficerAsync(Guid employeeId, CancellationToken cancellationToken = default);
-    Task<TrackingOfficer?> GetDesignationHolderAsync(Guid designationId, CancellationToken cancellationToken = default);
+    Task<TrackingOfficer?> GetOfficerAsync(Guid designationId, CancellationToken cancellationToken = default);
     Task<Dictionary<Guid, BranchCode>> GetBranchCodesAsync(IEnumerable<Guid> branchIds, CancellationToken cancellationToken = default);
     Task<DateOnly?> GetFinancialYearStartAsync(DateOnly day, CancellationToken cancellationToken = default);
 }
@@ -140,6 +139,7 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
             .Select(ed => new
             {
                 ed.EmployeeId,
+                ed.DesignationId,
                 ed.EffectiveFrom,
                 ed.Employee.Code,
                 ed.Employee.FullName,
@@ -173,6 +173,7 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
 
             officers.Add(new TrackingFieldOfficer(
                 p.EmployeeId,
+                p.DesignationId,
                 p.Code,
                 p.FullName,
                 p.PostName,
@@ -189,36 +190,11 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
         return officers.OrderBy(o => o.Name).ToList();
     }
 
-    // An active employee's latest open designation and the branches at or below its unit
-    public async Task<TrackingOfficer?> GetOfficerAsync(Guid employeeId, CancellationToken cancellationToken = default)
+    // The active employee currently holding a designation (latest if more than one) and the branches at or below its unit
+    public async Task<TrackingOfficer?> GetOfficerAsync(Guid designationId, CancellationToken cancellationToken = default)
     {
         var position = await context.TblEmployeeDesignations
-            .Where(ed => ed.EmployeeId == employeeId && ed.EffectiveTo == null && ed.Employee.IsActive)
-            .OrderByDescending(ed => ed.EffectiveFrom)
-            .Select(ed => new { ed.EmployeeId, ed.Employee.FullName, ed.DesignationId, PostName = ed.Designation.Post.Name, ed.Designation.OrganizationUnitId })
-            .AsNoTracking()
-            .FirstOrDefaultAsync(cancellationToken);
-        if (position is null) return null;
-
-        var units = await context.TblOrganizationUnits
-            .Select(o => new UnitNode(o.Id, o.ParentId, o.Name, o.OrganizationUnitType.Name))
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
-
-        return new TrackingOfficer(
-            position.EmployeeId,
-            position.FullName,
-            position.DesignationId,
-            position.PostName,
-            position.OrganizationUnitId,
-            BranchIdsOf(DescendantsAndSelf(units, position.OrganizationUnitId)).ToList());
-    }
-
-    // The employee currently holding a designation (a job's AssignTo), with the branches that designation covers
-    public async Task<TrackingOfficer?> GetDesignationHolderAsync(Guid designationId, CancellationToken cancellationToken = default)
-    {
-        var position = await context.TblEmployeeDesignations
-            .Where(ed => ed.DesignationId == designationId && ed.EffectiveTo == null)
+            .Where(ed => ed.DesignationId == designationId && ed.EffectiveTo == null && ed.Employee.IsActive)
             .OrderByDescending(ed => ed.EffectiveFrom)
             .Select(ed => new { ed.EmployeeId, ed.Employee.FullName, ed.DesignationId, PostName = ed.Designation.Post.Name, ed.Designation.OrganizationUnitId })
             .AsNoTracking()

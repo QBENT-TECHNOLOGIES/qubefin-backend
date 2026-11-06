@@ -108,7 +108,7 @@ internal sealed class JobTaskPlanner(ITrackingScopeRepository scopeRepository, I
             if (input.CoOrdinatedBy.HasValue)
             {
                 var companion = companions[input.CoOrdinatedBy.Value];
-                if (input.CoOrdinatedBy == assignee.EmployeeId)
+                if (input.CoOrdinatedBy == assignee.DesignationId)
                 {
                     errors.Add($"{title}: {assignee.Name} holds the job, so cannot also be the person going along.");
                     continue;

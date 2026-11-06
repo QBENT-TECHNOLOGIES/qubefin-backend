@@ -58,6 +58,21 @@ public class JobEndpoints : IEndpoint
         .WithTags("Jobs")
         .RequireAuthorization();
 
+        app.MapPut("jobs/{id:guid}/transfer", async (Guid id, TransferJobRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Unauthorized();
+            }
+            var userId = principal.Identity.GetUserId();
+            var result = await sender.Send(new TransferJobCommand(userId, id, request), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Transfer a job")
+        .WithDescription("Gives the whole job, or some pending tasks, to someone else. Completed tasks never move; a partial transfer creates a new linked job for the new person.")
+        .WithTags("Jobs")
+        .RequireAuthorization();
+
         app.MapGet("jobs/task-points", async (Guid? organisationUnitId, Guid? assigneeId, bool? pendingOnly, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)

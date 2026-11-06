@@ -16,6 +16,7 @@ public interface IJobRepository
     Task<string?> GetLastTaskNoAsync(string prefix, CancellationToken cancellationToken = default);
     Task AddAsync(TblJob job, CancellationToken cancellationToken = default);
     Task AddTasksAsync(IEnumerable<TblJobTask> tasks, CancellationToken cancellationToken = default);
+    Task<TblJob?> GetJobForUpdateAsync(Guid jobId, CancellationToken cancellationToken = default);
 }
 
 public class JobRepository(QubeFinDataContext context) : IJobRepository
@@ -504,6 +505,17 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
 
     public async Task AddTasksAsync(IEnumerable<TblJobTask> tasks, CancellationToken cancellationToken = default) =>
         await context.TblJobTasks.AddRangeAsync(tasks, cancellationToken);
+
+    // Tracked, with its tasks, for the write APIs
+    public async Task<TblJob?> GetJobForUpdateAsync(Guid jobId, CancellationToken cancellationToken = default) =>
+        await context.TblJobs
+            .Include(j => j.TblJobTasks)
+            .FirstOrDefaultAsync(j => j.Id == jobId, cancellationToken);
+
+    // Pending under the same rule as the reads: the Status column, or the flags when it is empty
+    public static bool IsPending(TblJobTask task) => TaskStatusOf(task) == Pending;
+
+    public static string StatusOf(TblJobTask task) => TaskStatusOf(task);
 
     private const string SystemName = "System";
     private const string Rejected = "Rejected";

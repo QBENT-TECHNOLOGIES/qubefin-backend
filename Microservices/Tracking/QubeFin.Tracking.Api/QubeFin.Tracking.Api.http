@@ -119,3 +119,16 @@ Authorization: Bearer {{token}}
     }
   ]
 }
+
+###
+
+PUT {{QubeFin.Tracking.Api_HostAddress}}/jobs/{{jobId}}/transfer
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "assigneeId": "<new designation id>",
+  "taskIds": null,
+  "remarks": "Assignee is on leave this week.",
+  "endDate": null
+}

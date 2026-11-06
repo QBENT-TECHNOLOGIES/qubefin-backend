@@ -2,6 +2,7 @@ namespace QubeFin.Persistence.Models.Tracking;
 
 public record TrackingFieldOfficer(
     Guid Id,
+    Guid DesignationId,
     string? EmployeeCode,
     string Name,
     string Role,

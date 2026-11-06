@@ -53,7 +53,7 @@ internal sealed class CreateJobCommandHandler(
         var request = command.Request;
         var assignee = await scopeRepository.GetOfficerAsync(request.AssigneeId!.Value, cancellationToken);
         if (assignee is null) return new ValidationError("Select who will do this job.");
-        if (!CanGiveWork(viewer, assignee)) return new ForbiddenError($"You cannot give work to {assignee.Name}.");
+        if (!JobPermissionRules.CanGiveWork(viewer, assignee)) return new ForbiddenError($"You cannot give work to {assignee.Name}.");
 
         var now = DateTime.Now;
         var today = TrackingClock.Today();
@@ -87,16 +87,6 @@ internal sealed class CreateJobCommandHandler(
 
         var created = await jobRepository.GetJobAsync(viewer, jobId, today, cancellationToken);
         return Result.Ok(new AddTasksResponse(JobDocResponse.From(viewer, created!), plan.Skipped, plan.Warnings));
-    }
-
-    // D4 "give work": someone in a lower role inside the user's scope (an Admin may give work to anyone in a tracking role).
-    // A Branch Manager and an Assistant Branch Manager are the same level, so they never give each other work.
-    private static bool CanGiveWork(TrackingViewer viewer, TrackingOfficer assignee)
-    {
-        if (assignee.EmployeeId == viewer.EmployeeId || !TrackingRole.IsTrackingPost(assignee.PostName)) return false;
-        if (viewer.Role == TrackingRole.Admin) return true;
-        return TrackingRole.Rank(assignee.PostName) < TrackingRole.Rank(viewer.Role)
-            && viewer.UnitIdsInScope.Contains(assignee.UnitId);
     }
 }
 #endregion

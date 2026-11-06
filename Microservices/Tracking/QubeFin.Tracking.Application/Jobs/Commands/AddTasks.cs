@@ -56,7 +56,7 @@ internal sealed class AddTasksCommandHandler(
         }
 
         // The same rules as creating a job, checked against the job's assignee
-        var assignee = await scopeRepository.GetDesignationHolderAsync(job.AssignTo, cancellationToken);
+        var assignee = await scopeRepository.GetOfficerAsync(job.AssignTo, cancellationToken);
         if (assignee is null) return new ValidationError($"{job.Summary.JobCode} has no one holding it, so tasks cannot be added.");
 
         var now = DateTime.Now;
