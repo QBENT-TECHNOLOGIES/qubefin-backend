@@ -577,6 +577,10 @@ public partial class QubeFinDataContext : DbContext
         {
             entity.ToTable("Tbl_BCGroup", "BC");
 
+            entity.HasIndex(e => e.DesignationId, "IX_Tbl_BCGroup_DesignationId");
+
+            entity.HasIndex(e => new { e.OrganizationUnitId, e.DesignationId }, "IX_Tbl_BCGroup_OrganizationUnitId_DesignationId");
+
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.AddressLine1).HasMaxLength(50);
             entity.Property(e => e.Code).HasMaxLength(50);
@@ -718,6 +722,8 @@ public partial class QubeFinDataContext : DbContext
         modelBuilder.Entity<TblBcmember>(entity =>
         {
             entity.ToTable("Tbl_BCMember", "BC");
+
+            entity.HasIndex(e => e.BcgroupId, "IX_Tbl_BCMember_BCGroupId");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.AadharNo).HasMaxLength(20);
@@ -1198,6 +1204,8 @@ public partial class QubeFinDataContext : DbContext
         {
             entity.ToTable("Tbl_Employee", "Hrms");
 
+            entity.HasIndex(e => e.OrganizationUnitId, "IX_Tbl_Employee_OrganizationUnitId");
+
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.BankAccountType).HasMaxLength(10);
             entity.Property(e => e.BankBranch).HasMaxLength(50);
@@ -1363,6 +1371,10 @@ public partial class QubeFinDataContext : DbContext
         modelBuilder.Entity<TblEmployeeDesignation>(entity =>
         {
             entity.ToTable("Tbl_EmployeeDesignation", "Hrms");
+
+            entity.HasIndex(e => new { e.DesignationId, e.EffectiveTo }, "IX_Tbl_EmployeeDesignation_DesignationId_EffectiveTo");
+
+            entity.HasIndex(e => new { e.EmployeeId, e.EffectiveTo }, "IX_Tbl_EmployeeDesignation_EmployeeId_EffectiveTo");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
 
