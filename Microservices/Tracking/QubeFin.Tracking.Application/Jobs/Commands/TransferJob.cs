@@ -14,9 +14,7 @@ namespace QubeFin.Tracking.Application.Jobs.Commands;
 // AssigneeId is the new person's designation id. TaskIds null = the whole job; a list = only those pending tasks. EndDate is the new job's date for a partial transfer (null = the original's).
 public record TransferJobRequest(Guid? AssigneeId, List<Guid>? TaskIds, string? Remarks, DateOnly? EndDate);
 
-public record TransferJobCommand(Guid UserId, Guid JobId, TransferJobRequest Request) : IRequest<Result<TransferJobResponse>>;
-
-public record TransferJobResponse(JobDocResponse Job, JobDocResponse? NewJob, List<SkippedTask> Skipped);
+public record TransferJobCommand(Guid UserId, Guid JobId, TransferJobRequest Request) : IRequest<Result<string>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -44,9 +42,9 @@ internal sealed class TransferJobCommandHandler(
     ITrackingScopeRepository scopeRepository,
     IJobRepository jobRepository,
     JobNumberGenerator numberGenerator,
-    IUnitOfWork unitOfWork) : IRequestHandler<TransferJobCommand, Result<TransferJobResponse>>
+    IUnitOfWork unitOfWork) : IRequestHandler<TransferJobCommand, Result<string>>
 {
-    public async Task<Result<TransferJobResponse>> Handle(TransferJobCommand command, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(TransferJobCommand command, CancellationToken cancellationToken)
     {
         var viewer = await scopeRepository.GetViewerAsync(command.UserId, cancellationToken);
         if (viewer is null) return new ForbiddenError("You do not have access to Tracking.");
@@ -129,7 +127,7 @@ internal sealed class TransferJobCommandHandler(
         var now = performedAt.DateTime;
         var remarks = request.Remarks!.Trim();
         var fromAssigneeId = job.AssignTo;
-        Guid? newJobId = null;
+        string? newJobCode = null;
         var isWholeTransfer = doneCount == 0 && moving.Count == pendingTasks.Count;
         if (isWholeTransfer)
         {
@@ -194,7 +192,7 @@ internal sealed class TransferJobCommandHandler(
             }
             await numberGenerator.AssignTaskNosAsync(newJob.TblJobTasks, branches, today, cancellationToken);
             await jobRepository.AddAsync(newJob, cancellationToken);
-            newJobId = newJob.Id;
+            newJobCode = newJob.JobCode;
 
             // Three rows at the same time; the two jobs point at each other through RelatedJobId
             await jobRepository.AddHistoryAsync(
@@ -218,13 +216,10 @@ internal sealed class TransferJobCommandHandler(
         job.ModifiedOn = now;
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // Both jobs stay visible: the new person is someone this user may give work to, so they are inside the user's scope
-        var original = await jobRepository.GetJobAsync(viewer, job.Id, today, cancellationToken);
-        var created = newJobId.HasValue ? await jobRepository.GetJobAsync(viewer, newJobId.Value, today, cancellationToken) : null;
-        return Result.Ok(new TransferJobResponse(
-            JobDocResponse.From(viewer, original!),
-            created is null ? null : JobDocResponse.From(viewer, created),
-            skipped));
+        var message = newJobCode is null
+            ? $"{job.JobCode} transferred to {newAssignee.Name}."
+            : $"{JobMessages.Tasks(moving.Count)} of {job.JobCode} moved to new job {newJobCode} for {newAssignee.Name}.";
+        return Result.Ok(JobMessages.With(message, skipped, [], "Not moved"));
     }
 
     // A job is active from its start date to its end date; a delayed job stays active until today

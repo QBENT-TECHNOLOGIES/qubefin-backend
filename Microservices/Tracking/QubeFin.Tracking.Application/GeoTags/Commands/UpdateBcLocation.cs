@@ -25,7 +25,7 @@ public enum BcPlace
     Member
 }
 
-public record UpdateBcLocationCommand(Guid UserId, BcPlace Place, Guid Id, UpdateBcLocationRequest Request) : IRequest<Result<GeoTagResponse>>;
+public record UpdateBcLocationCommand(Guid UserId, BcPlace Place, Guid Id, UpdateBcLocationRequest Request) : IRequest<Result<string>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -55,9 +55,9 @@ internal sealed class UpdateBcLocationCommandHandler(
     ITrackingScopeRepository scopeRepository,
     IGeoTagRepository geoTagRepository,
     IFileStorageRepository fileStorage,
-    IUnitOfWork unitOfWork) : IRequestHandler<UpdateBcLocationCommand, Result<GeoTagResponse>>
+    IUnitOfWork unitOfWork) : IRequestHandler<UpdateBcLocationCommand, Result<string>>
 {
-    public async Task<Result<GeoTagResponse>> Handle(UpdateBcLocationCommand command, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(UpdateBcLocationCommand command, CancellationToken cancellationToken)
     {
         var viewer = await scopeRepository.GetViewerAsync(command.UserId, cancellationToken);
         if (viewer is null) return new ForbiddenError("You do not have access to Tracking.");
@@ -82,7 +82,7 @@ internal sealed class UpdateBcLocationCommandHandler(
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         var updated = await GeoTagRules.ReadBackAsync(scopeRepository, geoTagRepository, target!, cancellationToken);
-        return Result.Ok(GeoTagResponse.From(updated, fileStorage));
+        return Result.Ok($"Location updated for {(command.Place == BcPlace.Group ? "group" : "member")} {updated.Name}.");
     }
 }
 #endregion

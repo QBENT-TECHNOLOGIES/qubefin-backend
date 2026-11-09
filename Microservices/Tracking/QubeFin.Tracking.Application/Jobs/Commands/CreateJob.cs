@@ -12,7 +12,9 @@ using QubeFin.Tracking.Persistence.Repositories;
 namespace QubeFin.Tracking.Application.Jobs.Commands;
 
 #region --- COMMAND ---
-public record CreateJobCommand(Guid UserId, CreateJobRequest Request) : IRequest<Result<AddTasksResponse>>;
+public record CreateJobCommand(Guid UserId, CreateJobRequest Request) : IRequest<Result<CreateJobResponse>>;
+
+public record CreateJobResponse(Guid JobId, string Message);
 #endregion
 
 #region --- VALIDATOR ---
@@ -44,9 +46,9 @@ internal sealed class CreateJobCommandHandler(
     IJobRepository jobRepository,
     JobTaskPlanner taskPlanner,
     JobNumberGenerator numberGenerator,
-    IUnitOfWork unitOfWork) : IRequestHandler<CreateJobCommand, Result<AddTasksResponse>>
+    IUnitOfWork unitOfWork) : IRequestHandler<CreateJobCommand, Result<CreateJobResponse>>
 {
-    public async Task<Result<AddTasksResponse>> Handle(CreateJobCommand command, CancellationToken cancellationToken)
+    public async Task<Result<CreateJobResponse>> Handle(CreateJobCommand command, CancellationToken cancellationToken)
     {
         var viewer = await scopeRepository.GetViewerAsync(command.UserId, cancellationToken);
         if (viewer is null) return new ForbiddenError("You do not have access to Tracking.");
@@ -91,8 +93,8 @@ internal sealed class CreateJobCommandHandler(
             cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var created = await jobRepository.GetJobAsync(viewer, jobId, today, cancellationToken);
-        return Result.Ok(new AddTasksResponse(JobDocResponse.From(viewer, created!), plan.Skipped, plan.Warnings));
+        var message = JobMessages.With($"Job {job.JobCode} created for {assignee.Name} with {JobMessages.Tasks(plan.Tasks.Count)}.", plan.Skipped, plan.Warnings);
+        return Result.Ok(new CreateJobResponse(jobId, message));
     }
 }
 #endregion

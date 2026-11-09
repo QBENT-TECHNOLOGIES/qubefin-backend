@@ -12,7 +12,7 @@ namespace QubeFin.Tracking.Application.Jobs.Commands;
 #region --- COMMAND ---
 public record ExtendJobRequest(DateOnly? EndDate, string? Remarks);
 
-public record ExtendJobCommand(Guid UserId, Guid JobId, ExtendJobRequest Request) : IRequest<Result<JobDocResponse>>;
+public record ExtendJobCommand(Guid UserId, Guid JobId, ExtendJobRequest Request) : IRequest<Result<string>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -37,9 +37,9 @@ public class ExtendJobCommandValidator : AbstractValidator<ExtendJobCommand>
 internal sealed class ExtendJobCommandHandler(
     ITrackingScopeRepository scopeRepository,
     IJobRepository jobRepository,
-    IUnitOfWork unitOfWork) : IRequestHandler<ExtendJobCommand, Result<JobDocResponse>>
+    IUnitOfWork unitOfWork) : IRequestHandler<ExtendJobCommand, Result<string>>
 {
-    public async Task<Result<JobDocResponse>> Handle(ExtendJobCommand command, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(ExtendJobCommand command, CancellationToken cancellationToken)
     {
         var viewer = await scopeRepository.GetViewerAsync(command.UserId, cancellationToken);
         if (viewer is null) return new ForbiddenError("You do not have access to Tracking.");
@@ -76,8 +76,7 @@ internal sealed class ExtendJobCommandHandler(
             cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var updated = await jobRepository.GetJobAsync(viewer, job.Id, today, cancellationToken);
-        return Result.Ok(JobDocResponse.From(viewer, updated!));
+        return Result.Ok($"{job.JobCode} complete-by date extended from {oldEndDate:dd MMM yyyy} to {newEndDate:dd MMM yyyy}.");
     }
 }
 #endregion

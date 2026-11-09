@@ -15,7 +15,7 @@ internal sealed class JobTaskCloser(
     IJobRepository jobRepository,
     IUnitOfWork unitOfWork)
 {
-    public async Task<Result<JobDocResponse>> CloseAsync(
+    public async Task<Result<string>> CloseAsync(
         Guid userId,
         Guid jobId,
         Guid taskId,
@@ -62,7 +62,7 @@ internal sealed class JobTaskCloser(
         if (completed is not null) await jobRepository.AddHistoryAsync(completed, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var updated = await jobRepository.GetJobAsync(viewer, job.Id, today, cancellationToken);
-        return Result.Ok(JobDocResponse.From(viewer, updated!));
+        var message = $"Task {task.TaskNo} {closedStatus.ToString().ToLowerInvariant()}.";
+        return Result.Ok(completed is null ? message : $"{message} {job.JobCode} is now completed.");
     }
 }

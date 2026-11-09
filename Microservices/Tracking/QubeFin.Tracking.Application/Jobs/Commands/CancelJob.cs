@@ -12,7 +12,7 @@ namespace QubeFin.Tracking.Application.Jobs.Commands;
 #region --- COMMAND ---
 public record CancelJobRequest(string? Remarks);
 
-public record CancelJobCommand(Guid UserId, Guid JobId, CancelJobRequest Request) : IRequest<Result<JobDocResponse>>;
+public record CancelJobCommand(Guid UserId, Guid JobId, CancelJobRequest Request) : IRequest<Result<string>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -35,9 +35,9 @@ public class CancelJobCommandValidator : AbstractValidator<CancelJobCommand>
 internal sealed class CancelJobCommandHandler(
     ITrackingScopeRepository scopeRepository,
     IJobRepository jobRepository,
-    IUnitOfWork unitOfWork) : IRequestHandler<CancelJobCommand, Result<JobDocResponse>>
+    IUnitOfWork unitOfWork) : IRequestHandler<CancelJobCommand, Result<string>>
 {
-    public async Task<Result<JobDocResponse>> Handle(CancelJobCommand command, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(CancelJobCommand command, CancellationToken cancellationToken)
     {
         var viewer = await scopeRepository.GetViewerAsync(command.UserId, cancellationToken);
         if (viewer is null) return new ForbiddenError("You do not have access to Tracking.");
@@ -86,8 +86,7 @@ internal sealed class CancelJobCommandHandler(
             cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var updated = await jobRepository.GetJobAsync(viewer, job.Id, today, cancellationToken);
-        return Result.Ok(JobDocResponse.From(viewer, updated!));
+        return Result.Ok($"{job.JobCode} cancelled. {JobMessages.Tasks(cancelledTasks.Count)} cancelled with it.");
     }
 }
 #endregion

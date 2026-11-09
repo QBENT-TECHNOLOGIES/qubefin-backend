@@ -9,7 +9,7 @@ namespace QubeFin.Tracking.Application.Jobs.Commands;
 #region --- COMMAND ---
 public record RejectTaskRequest(string? Remarks);
 
-public record RejectTaskCommand(Guid UserId, Guid JobId, Guid TaskId, RejectTaskRequest Request) : IRequest<Result<JobDocResponse>>;
+public record RejectTaskCommand(Guid UserId, Guid JobId, Guid TaskId, RejectTaskRequest Request) : IRequest<Result<string>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -28,9 +28,9 @@ public class RejectTaskCommandValidator : AbstractValidator<RejectTaskCommand>
 
 #region --- HANDLER ---
 // Only a Pending task the assignee added from the mobile app can be rejected; a task added on the web is cancelled instead (C6)
-internal sealed class RejectTaskCommandHandler(JobTaskCloser taskCloser) : IRequestHandler<RejectTaskCommand, Result<JobDocResponse>>
+internal sealed class RejectTaskCommandHandler(JobTaskCloser taskCloser) : IRequestHandler<RejectTaskCommand, Result<string>>
 {
-    public Task<Result<JobDocResponse>> Handle(RejectTaskCommand command, CancellationToken cancellationToken) =>
+    public Task<Result<string>> Handle(RejectTaskCommand command, CancellationToken cancellationToken) =>
         taskCloser.CloseAsync(command.UserId, command.JobId, command.TaskId, command.Request.Remarks!,
             JobTaskStatus.Rejected, JobHistoryAction.TaskRejected,
             task => task.IsSelfAdded == true ? null : "Only tasks added from the mobile app can be rejected. Cancel it instead.",

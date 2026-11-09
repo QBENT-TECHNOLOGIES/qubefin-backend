@@ -13,7 +13,7 @@ namespace QubeFin.Tracking.Application.GeoTags.Commands;
 // radiusMeters is checked but not stored (radii come from Tbl_TrackingSetting); the reason is required but there is no table to keep it yet
 public record UpdateGeoTagRequest(GeoPoint? Location, int? RadiusMeters, string? Reason);
 
-public record UpdateGeoTagCommand(Guid UserId, Guid Id, UpdateGeoTagRequest Request) : IRequest<Result<GeoTagResponse>>;
+public record UpdateGeoTagCommand(Guid UserId, Guid Id, UpdateGeoTagRequest Request) : IRequest<Result<string>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -39,10 +39,9 @@ public class UpdateGeoTagCommandValidator : AbstractValidator<UpdateGeoTagComman
 internal sealed class UpdateGeoTagCommandHandler(
     ITrackingScopeRepository scopeRepository,
     IGeoTagRepository geoTagRepository,
-    IFileStorageRepository fileStorage,
-    IUnitOfWork unitOfWork) : IRequestHandler<UpdateGeoTagCommand, Result<GeoTagResponse>>
+    IUnitOfWork unitOfWork) : IRequestHandler<UpdateGeoTagCommand, Result<string>>
 {
-    public async Task<Result<GeoTagResponse>> Handle(UpdateGeoTagCommand command, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(UpdateGeoTagCommand command, CancellationToken cancellationToken)
     {
         var viewer = await scopeRepository.GetViewerAsync(command.UserId, cancellationToken);
         if (viewer is null) return new ForbiddenError("You do not have access to Tracking.");
@@ -58,7 +57,8 @@ internal sealed class UpdateGeoTagCommandHandler(
         await geoTagRepository.UpdateLocationAsync(target, command.Request.Location!, null, viewer.UserId, DateTime.Now, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Ok(GeoTagResponse.From(await GeoTagRules.ReadBackAsync(scopeRepository, geoTagRepository, target, cancellationToken), fileStorage));
+        var updated = await GeoTagRules.ReadBackAsync(scopeRepository, geoTagRepository, target, cancellationToken);
+        return Result.Ok($"Location updated for {updated.Name}.");
     }
 }
 #endregion
