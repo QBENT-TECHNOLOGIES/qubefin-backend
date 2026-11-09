@@ -48,6 +48,10 @@ public partial class TblBcmember
 
     public string? LocationPhoto { get; set; }
 
+    public Guid? TaggedBy { get; set; }
+
+    public DateTime? TaggedOn { get; set; }
+
     public Guid BcgroupId { get; set; }
 
     public bool IsOverdueMember { get; set; }
@@ -59,6 +63,8 @@ public partial class TblBcmember
     public virtual TblBcgroup Bcgroup { get; set; } = null!;
 
     public virtual TblUser? CreatedByNavigation { get; set; }
+
+    public virtual TblUser? TaggedByNavigation { get; set; }
 
     public virtual ICollection<TblBcloan> TblBcloans { get; set; } = new List<TblBcloan>();
 

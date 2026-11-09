@@ -29,6 +29,10 @@ public partial class TblOrganizationUnit
 
     public decimal? Longitude { get; set; }
 
+    public Guid? TaggedBy { get; set; }
+
+    public DateTime? TaggedOn { get; set; }
+
     public TimeOnly? AttendanceInTime { get; set; }
 
     public TimeOnly? AttendanceOutTime { get; set; }
@@ -50,6 +54,8 @@ public partial class TblOrganizationUnit
     public virtual TblOrganizationUnitType OrganizationUnitType { get; set; } = null!;
 
     public virtual TblOrganizationUnit? Parent { get; set; }
+
+    public virtual TblUser? TaggedByNavigation { get; set; }
 
     public virtual ICollection<TblAttendance> TblAttendanceCheckinOrganizationUnits { get; set; } = new List<TblAttendance>();
 

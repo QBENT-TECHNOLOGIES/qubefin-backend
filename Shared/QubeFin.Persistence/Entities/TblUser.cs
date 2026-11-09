@@ -49,13 +49,21 @@ public partial class TblUser
 
     public virtual ICollection<TblApprovalWorkflow> TblApprovalWorkflowLastModifiedByNavigations { get; set; } = new List<TblApprovalWorkflow>();
 
-    public virtual ICollection<TblBcgroup> TblBcgroups { get; set; } = new List<TblBcgroup>();
+    public virtual ICollection<TblBcgroup> TblBcgroupCreatedByNavigations { get; set; } = new List<TblBcgroup>();
+
+    public virtual ICollection<TblBcgroup> TblBcgroupTaggedByNavigations { get; set; } = new List<TblBcgroup>();
+
+    public virtual ICollection<TblBcloanCollection> TblBcloanCollections { get; set; } = new List<TblBcloanCollection>();
 
     public virtual ICollection<TblBcloan> TblBcloanCreatedByNavigations { get; set; } = new List<TblBcloan>();
 
     public virtual ICollection<TblBcloan> TblBcloanModifiedByNavigations { get; set; } = new List<TblBcloan>();
 
-    public virtual ICollection<TblBcmember> TblBcmembers { get; set; } = new List<TblBcmember>();
+    public virtual ICollection<TblBcmember> TblBcmemberCreatedByNavigations { get; set; } = new List<TblBcmember>();
+
+    public virtual ICollection<TblBcmember> TblBcmemberTaggedByNavigations { get; set; } = new List<TblBcmember>();
+
+    public virtual ICollection<TblEmployee> TblEmployees { get; set; } = new List<TblEmployee>();
 
     public virtual ICollection<TblInterviewCandidate> TblInterviewCandidateCreatedByNavigations { get; set; } = new List<TblInterviewCandidate>();
 
@@ -96,6 +104,8 @@ public partial class TblUser
     public virtual ICollection<TblOrganizationUnit> TblOrganizationUnitCreatedByNavigations { get; set; } = new List<TblOrganizationUnit>();
 
     public virtual ICollection<TblOrganizationUnit> TblOrganizationUnitLastModifiedByNavigations { get; set; } = new List<TblOrganizationUnit>();
+
+    public virtual ICollection<TblOrganizationUnit> TblOrganizationUnitTaggedByNavigations { get; set; } = new List<TblOrganizationUnit>();
 
     public virtual ICollection<TblRole> TblRoleCreatedByNavigations { get; set; } = new List<TblRole>();
 

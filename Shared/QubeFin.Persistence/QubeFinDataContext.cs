@@ -54,6 +54,8 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblBcloan> TblBcloans { get; set; }
 
+    public virtual DbSet<TblBcloanCollection> TblBcloanCollections { get; set; }
+
     public virtual DbSet<TblBcmember> TblBcmembers { get; set; }
 
     public virtual DbSet<TblBcmemberTransfer> TblBcmemberTransfers { get; set; }
@@ -584,8 +586,9 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.LocationPhoto).HasMaxLength(50);
             entity.Property(e => e.Name).HasMaxLength(50);
             entity.Property(e => e.PinCode).HasMaxLength(10);
+            entity.Property(e => e.TaggedOn).HasColumnType("datetime");
 
-            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.TblBcgroups)
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.TblBcgroupCreatedByNavigations)
                 .HasForeignKey(d => d.CreatedBy)
                 .HasConstraintName("FK_Tbl_BCGroup_Tbl_User");
 
@@ -598,6 +601,10 @@ public partial class QubeFinDataContext : DbContext
                 .HasForeignKey(d => d.OrganizationUnitId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_BCGroup_Tbl_OrganizationUnit");
+
+            entity.HasOne(d => d.TaggedByNavigation).WithMany(p => p.TblBcgroupTaggedByNavigations)
+                .HasForeignKey(d => d.TaggedBy)
+                .HasConstraintName("FK_Tbl_BCGroup_Tbl_User1");
         });
 
         modelBuilder.Entity<TblBcgroupTransfer>(entity =>
@@ -679,6 +686,35 @@ public partial class QubeFinDataContext : DbContext
                 .HasConstraintName("FK_Tbl_BCLoan_Tbl_User");
         });
 
+        modelBuilder.Entity<TblBcloanCollection>(entity =>
+        {
+            entity.ToTable("Tbl_BCLoanCollection", "BC");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.CollectionAmount).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.EmiAmount).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.LessCollection)
+                .HasComputedColumnSql("(case when [CollectionAmount]<[EmiAmount] then [CollectionAmount]-[EmiAmount] else (0) end)", false)
+                .HasColumnType("numeric(19, 2)");
+            entity.Property(e => e.MoreCollection)
+                .HasComputedColumnSql("(case when [CollectionAmount]>[EmiAmount] then [CollectionAmount]-[EmiAmount] else (0) end)", false)
+                .HasColumnType("numeric(19, 2)");
+            entity.Property(e => e.PostedOn).HasColumnType("datetime");
+            entity.Property(e => e.Remarks).HasMaxLength(50);
+            entity.Property(e => e.UtrNo).HasMaxLength(50);
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.TblBcloanCollections)
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_BCLoanCollection_Tbl_User");
+
+            entity.HasOne(d => d.Loan).WithMany(p => p.TblBcloanCollections)
+                .HasForeignKey(d => d.LoanId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_BCLoanCollection_Tbl_BCLoan");
+        });
+
         modelBuilder.Entity<TblBcmember>(entity =>
         {
             entity.ToTable("Tbl_BCMember", "BC");
@@ -705,6 +741,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.PinCode).HasMaxLength(10);
             entity.Property(e => e.Qualification).HasMaxLength(50);
             entity.Property(e => e.Religion).HasMaxLength(20);
+            entity.Property(e => e.TaggedOn).HasColumnType("datetime");
             entity.Property(e => e.VoterNo).HasMaxLength(30);
 
             entity.HasOne(d => d.Bcgroup).WithMany(p => p.TblBcmembers)
@@ -712,9 +749,13 @@ public partial class QubeFinDataContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_BCMember_Tbl_BCGroup");
 
-            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.TblBcmembers)
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.TblBcmemberCreatedByNavigations)
                 .HasForeignKey(d => d.CreatedBy)
                 .HasConstraintName("FK_Tbl_BCMember_Tbl_User");
+
+            entity.HasOne(d => d.TaggedByNavigation).WithMany(p => p.TblBcmemberTaggedByNavigations)
+                .HasForeignKey(d => d.TaggedBy)
+                .HasConstraintName("FK_Tbl_BCMember_Tbl_User1");
         });
 
         modelBuilder.Entity<TblBcmemberTransfer>(entity =>
@@ -1228,6 +1269,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Religion).HasMaxLength(25);
             entity.Property(e => e.RetirementDate).HasComputedColumnSql("(dateadd(year,(60),[DateOfBirth]))", false);
             entity.Property(e => e.Salutation).HasMaxLength(20);
+            entity.Property(e => e.TaggedOn).HasColumnType("datetime");
             entity.Property(e => e.UniversalAccountNo).HasMaxLength(50);
 
             entity.HasOne(d => d.Bank).WithMany(p => p.TblEmployees)
@@ -1261,6 +1303,10 @@ public partial class QubeFinDataContext : DbContext
             entity.HasOne(d => d.Supervisor).WithMany(p => p.InverseSupervisor)
                 .HasForeignKey(d => d.SupervisorId)
                 .HasConstraintName("FK_Tbl_Employee_Tbl_Employee1");
+
+            entity.HasOne(d => d.TaggedByNavigation).WithMany(p => p.TblEmployees)
+                .HasForeignKey(d => d.TaggedBy)
+                .HasConstraintName("FK_Tbl_Employee_Tbl_User");
         });
 
         modelBuilder.Entity<TblEmployeeAttendanceException>(entity =>
@@ -2605,6 +2651,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Latitude).HasColumnType("numeric(19, 15)");
             entity.Property(e => e.Longitude).HasColumnType("numeric(19, 15)");
             entity.Property(e => e.Name).HasMaxLength(50);
+            entity.Property(e => e.TaggedOn).HasColumnType("datetime");
 
             entity.HasOne(d => d.Company).WithMany(p => p.TblOrganizationUnits)
                 .HasForeignKey(d => d.CompanyId)
@@ -2631,6 +2678,10 @@ public partial class QubeFinDataContext : DbContext
             entity.HasOne(d => d.Parent).WithMany(p => p.InverseParent)
                 .HasForeignKey(d => d.ParentId)
                 .HasConstraintName("FK_Tbl_OrganizationUnit_Tbl_OrganizationUnit");
+
+            entity.HasOne(d => d.TaggedByNavigation).WithMany(p => p.TblOrganizationUnitTaggedByNavigations)
+                .HasForeignKey(d => d.TaggedBy)
+                .HasConstraintName("FK_Tbl_OrganizationUnit_Tbl_User2");
         });
 
         modelBuilder.Entity<TblOrganizationUnitType>(entity =>

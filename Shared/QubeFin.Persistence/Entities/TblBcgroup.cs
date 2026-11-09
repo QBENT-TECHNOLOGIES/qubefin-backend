@@ -22,6 +22,10 @@ public partial class TblBcgroup
 
     public string? LocationPhoto { get; set; }
 
+    public Guid? TaggedBy { get; set; }
+
+    public DateTime? TaggedOn { get; set; }
+
     public Guid OrganizationUnitId { get; set; }
 
     public Guid DesignationId { get; set; }
@@ -47,6 +51,8 @@ public partial class TblBcgroup
     public virtual TblDesignation Designation { get; set; } = null!;
 
     public virtual TblOrganizationUnit OrganizationUnit { get; set; } = null!;
+
+    public virtual TblUser? TaggedByNavigation { get; set; }
 
     public virtual ICollection<TblBcgroupTransfer> TblBcgroupTransfers { get; set; } = new List<TblBcgroupTransfer>();
 

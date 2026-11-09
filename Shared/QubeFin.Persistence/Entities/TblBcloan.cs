@@ -54,4 +54,6 @@ public partial class TblBcloan
     public virtual TblUser CreatedByNavigation { get; set; } = null!;
 
     public virtual TblUser? ModifiedByNavigation { get; set; }
+
+    public virtual ICollection<TblBcloanCollection> TblBcloanCollections { get; set; } = new List<TblBcloanCollection>();
 }

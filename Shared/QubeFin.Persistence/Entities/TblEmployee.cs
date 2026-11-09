@@ -122,6 +122,10 @@ public partial class TblEmployee
 
     public string? LocationPhoto { get; set; }
 
+    public Guid? TaggedBy { get; set; }
+
+    public DateTime? TaggedOn { get; set; }
+
     public string? OfficialEmail { get; set; }
 
     public string? UniversalAccountNo { get; set; }
@@ -181,6 +185,8 @@ public partial class TblEmployee
     public virtual TblAdministrativeUnit? PresentAdministrativeUnit { get; set; }
 
     public virtual TblEmployee? Supervisor { get; set; }
+
+    public virtual TblUser? TaggedByNavigation { get; set; }
 
     public virtual ICollection<TblAttendanceRegularization> TblAttendanceRegularizations { get; set; } = new List<TblAttendanceRegularization>();
 
