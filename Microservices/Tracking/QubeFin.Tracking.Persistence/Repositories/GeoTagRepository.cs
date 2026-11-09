@@ -10,7 +10,7 @@ public interface IGeoTagRepository
     Task<Dictionary<Guid, TrackingPlace>> GetPlacesAsync(IEnumerable<Guid> refIds, CancellationToken cancellationToken = default);
     Task<List<GeoTagRow>> GetGeoTagsAsync(GeoTagFilter filter, CancellationToken cancellationToken = default);
     Task<GeoTagTarget?> FindGeoTagAsync(Guid id, Guid? viewerEmployeeId, CancellationToken cancellationToken = default);
-    Task UpdateLocationAsync(GeoTagTarget target, GeoPoint location, Guid userId, DateTime now, CancellationToken cancellationToken = default);
+    Task UpdateLocationAsync(GeoTagTarget target, GeoPoint location, string? photoKey, Guid userId, DateTime now, CancellationToken cancellationToken = default);
 }
 
 public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
@@ -34,7 +34,7 @@ public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
 
         var groups = await context.TblBcgroups
             .Where(g => g.OrganizationUnitId == organisationUnitId)
-            .Select(g => new { g.Id, g.Code, g.Name, g.AddressLine1, g.DesignationId, g.Location })
+            .Select(g => new { g.Id, g.Code, g.Name, g.AddressLine1, g.DesignationId, g.Location, g.TaggedOn, TaggedByName = g.TaggedByNavigation != null ? (g.TaggedByNavigation.Employee != null ? g.TaggedByNavigation.Employee.FullName : g.TaggedByNavigation.UserName) : null })
             .AsNoTracking()
             .ToListAsync(cancellationToken);
         var creditOfficers = await DesignationHoldersAsync(groups.Select(g => g.DesignationId), cancellationToken);
@@ -52,7 +52,7 @@ public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
                 points.Add(new GeoTagPointRow(
                     g.Id, GroupCentre, g.Id, g.Name, g.Code, organisationUnitId, branchName, g.AddressLine1,
                     GeoCoordinates.ToGeoPoint(g.Location), taskLocationMatchInMeters, true,
-                    creditOfficer?.EmployeeId, creditOfficer?.Name, null, null, null, null));
+                    creditOfficer?.EmployeeId, creditOfficer?.Name, null, null, null, null, g.TaggedByName, g.TaggedOn));
             }
         }
 
@@ -61,7 +61,7 @@ public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
             var groupIds = groups.Select(g => g.Id).ToList();
             var members = await context.TblBcmembers
                 .Where(m => groupIds.Contains(m.BcgroupId))
-                .Select(m => new { m.Id, m.Code, m.FirstName, m.MiddleName, m.LastName, m.AddressLine1, m.AddressLine2, m.BcgroupId, m.IsOverdueMember, m.Location })
+                .Select(m => new { m.Id, m.Code, m.FirstName, m.MiddleName, m.LastName, m.AddressLine1, m.AddressLine2, m.BcgroupId, m.IsOverdueMember, m.Location, m.TaggedOn, TaggedByName = m.TaggedByNavigation != null ? (m.TaggedByNavigation.Employee != null ? m.TaggedByNavigation.Employee.FullName : m.TaggedByNavigation.UserName) : null })
                 .AsNoTracking()
                 .ToListAsync(cancellationToken);
 
@@ -94,7 +94,7 @@ public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
                     string.Join(", ", new[] { m.AddressLine1, m.AddressLine2 }.Where(a => !string.IsNullOrWhiteSpace(a))) is { Length: > 0 } address ? address : null,
                     GeoCoordinates.ToGeoPoint(m.Location), taskLocationMatchInMeters, true,
                     creditOfficer?.EmployeeId, creditOfficer?.Name, group.Id, group.Name,
-                    due?.Dpd, due?.OverdueAmount));
+                    due?.Dpd, due?.OverdueAmount, m.TaggedByName, m.TaggedOn));
             }
         }
 
@@ -134,7 +134,7 @@ public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
     }
 
     // Places of one kind, with and without a location, sorted by name. BranchIds null = every branch (an Admin).
-    // Tagged by / at: groups and members use CreatedBy / CreatedDate; branches and employees LastModifiedBy / LastModifiedOn.
+    // Tagged by / at: TaggedBy / TaggedOn, the last user and time the location was set.
     // They are only shown once the place has a location.
     public async Task<List<GeoTagRow>> GetGeoTagsAsync(GeoTagFilter filter, CancellationToken cancellationToken = default)
     {
@@ -156,9 +156,9 @@ public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
                     .Where(o => !filter.OnlyUntagged || o.Latitude == null || o.Longitude == null)
                     .Select(o => new
                     {
-                        o.Id, o.Name, o.CodeVal, o.Latitude, o.Longitude, o.LastModifiedOn,
-                        TaggedByName = o.LastModifiedByNavigation != null
-                            ? (o.LastModifiedByNavigation.Employee != null ? o.LastModifiedByNavigation.Employee.FullName : o.LastModifiedByNavigation.UserName)
+                        o.Id, o.Name, o.CodeVal, o.Latitude, o.Longitude, o.TaggedOn,
+                        TaggedByName = o.TaggedByNavigation != null
+                            ? (o.TaggedByNavigation.Employee != null ? o.TaggedByNavigation.Employee.FullName : o.TaggedByNavigation.UserName)
                             : null
                     })
                     .AsNoTracking()
@@ -169,7 +169,7 @@ public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
                     {
                         var location = GeoCoordinates.ToGeoPoint(b.Latitude, b.Longitude);
                         return new GeoTagRow(Branch, b.Id, b.Name, b.CodeVal.ToString(), b.Id, b.Name, null, location,
-                            filter.BranchRadiusMeters, null, location is null ? null : b.TaggedByName, location is null ? null : b.LastModifiedOn);
+                            filter.BranchRadiusMeters, null, location is null ? null : b.TaggedByName, location is null ? null : b.TaggedOn);
                     })
                     .ToList();
                 break;
@@ -184,9 +184,9 @@ public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
                     .Where(g => text == null || g.Name.Contains(text) || g.Code.Contains(text))
                     .Select(g => new
                     {
-                        g.Id, g.Name, g.Code, g.OrganizationUnitId, BranchName = g.OrganizationUnit.Name, g.AddressLine1, g.Location, g.LocationPhoto, g.CreatedDate,
-                        TaggedByName = g.CreatedByNavigation != null
-                            ? (g.CreatedByNavigation.Employee != null ? g.CreatedByNavigation.Employee.FullName : g.CreatedByNavigation.UserName)
+                        g.Id, g.Name, g.Code, g.OrganizationUnitId, BranchName = g.OrganizationUnit.Name, g.AddressLine1, g.Location, g.LocationPhoto, g.TaggedOn,
+                        TaggedByName = g.TaggedByNavigation != null
+                            ? (g.TaggedByNavigation.Employee != null ? g.TaggedByNavigation.Employee.FullName : g.TaggedByNavigation.UserName)
                             : null
                     })
                     .AsNoTracking()
@@ -194,7 +194,7 @@ public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
                 rows = groups
                     .Select(g => new GeoTagRow(GroupCentre, g.Id, g.Name, g.Code, g.OrganizationUnitId, g.BranchName, g.AddressLine1,
                         GeoCoordinates.ToGeoPoint(g.Location), filter.MatchRadiusMeters, g.LocationPhoto,
-                        g.Location is null ? null : g.TaggedByName, g.Location is null ? null : g.CreatedDate))
+                        g.Location is null ? null : g.TaggedByName, g.Location is null ? null : g.TaggedOn))
                     .ToList();
                 break;
             }
@@ -213,10 +213,10 @@ public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
                         || m.LastName.Contains(text) || m.Code.Contains(text))
                     .Select(m => new
                     {
-                        m.Id, m.Code, m.FirstName, m.MiddleName, m.LastName, m.AddressLine1, m.AddressLine2, m.Location, m.LocationPhoto, m.CreatedDate,
+                        m.Id, m.Code, m.FirstName, m.MiddleName, m.LastName, m.AddressLine1, m.AddressLine2, m.Location, m.LocationPhoto, m.TaggedOn,
                         m.Bcgroup.OrganizationUnitId, BranchName = m.Bcgroup.OrganizationUnit.Name,
-                        TaggedByName = m.CreatedByNavigation != null
-                            ? (m.CreatedByNavigation.Employee != null ? m.CreatedByNavigation.Employee.FullName : m.CreatedByNavigation.UserName)
+                        TaggedByName = m.TaggedByNavigation != null
+                            ? (m.TaggedByNavigation.Employee != null ? m.TaggedByNavigation.Employee.FullName : m.TaggedByNavigation.UserName)
                             : null
                     })
                     .AsNoTracking()
@@ -227,7 +227,7 @@ public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
                         m.Code, m.OrganizationUnitId, m.BranchName,
                         string.Join(", ", new[] { m.AddressLine1, m.AddressLine2 }.Where(a => !string.IsNullOrWhiteSpace(a))) is { Length: > 0 } address ? address : null,
                         GeoCoordinates.ToGeoPoint(m.Location), filter.MatchRadiusMeters, m.LocationPhoto,
-                        m.Location is null ? null : m.TaggedByName, m.Location is null ? null : m.CreatedDate))
+                        m.Location is null ? null : m.TaggedByName, m.Location is null ? null : m.TaggedOn))
                     .ToList();
                 break;
             }
@@ -245,18 +245,17 @@ public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
                     {
                         e.Id, e.FullName, e.Code, e.OrganizationUnitId,
                         BranchName = e.OrganizationUnit != null ? e.OrganizationUnit.Name : null,
-                        e.PresentAddress, e.PresentLocation, e.LocationPhoto, e.LastModifiedOn,
-                        TaggedByName = context.TblUsers
-                            .Where(u => u.Id == e.LastModifiedBy)
-                            .Select(u => u.Employee != null ? u.Employee.FullName : u.UserName)
-                            .FirstOrDefault()
+                        e.PresentAddress, e.PresentLocation, e.LocationPhoto, e.TaggedOn,
+                        TaggedByName = e.TaggedByNavigation != null
+                            ? (e.TaggedByNavigation.Employee != null ? e.TaggedByNavigation.Employee.FullName : e.TaggedByNavigation.UserName)
+                            : null
                     })
                     .AsNoTracking()
                     .ToListAsync(cancellationToken);
                 rows = employees
                     .Select(e => new GeoTagRow(EmployeeHome, e.Id, e.FullName, e.Code, e.OrganizationUnitId, e.BranchName, e.PresentAddress,
                         GeoCoordinates.ToGeoPoint(e.PresentLocation), filter.MatchRadiusMeters, e.LocationPhoto,
-                        e.PresentLocation is null ? null : e.TaggedByName, e.PresentLocation is null ? null : e.LastModifiedOn))
+                        e.PresentLocation is null ? null : e.TaggedByName, e.PresentLocation is null ? null : e.TaggedOn))
                     .ToList();
                 break;
             }
@@ -299,8 +298,9 @@ public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
         return employeeUnitId is null ? null : new GeoTagTarget(EmployeeHome, id, employeeUnitId.OrganizationUnitId, null, null, null, false);
     }
 
-    // Saves a new location: branches keep decimal latitude / longitude, the others a geography point
-    public async Task UpdateLocationAsync(GeoTagTarget target, GeoPoint location, Guid userId, DateTime now, CancellationToken cancellationToken = default)
+    // Saves a new location and who set it (TaggedBy / TaggedOn). Branches keep decimal latitude / longitude, the others a
+    // geography point. The photo key is stored only when a photo was uploaded.
+    public async Task UpdateLocationAsync(GeoTagTarget target, GeoPoint location, string? photoKey, Guid userId, DateTime now, CancellationToken cancellationToken = default)
     {
         switch (target.Kind)
         {
@@ -308,23 +308,30 @@ public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
                 var branch = await context.TblOrganizationUnits.FirstAsync(o => o.Id == target.RefId, cancellationToken);
                 branch.Latitude = location.Lat;
                 branch.Longitude = location.Lng;
-                branch.LastModifiedBy = userId;
-                branch.LastModifiedOn = now;
+                branch.TaggedBy = userId;
+                branch.TaggedOn = now;
                 break;
             case GroupCentre:
                 var group = await context.TblBcgroups.FirstAsync(g => g.Id == target.RefId, cancellationToken);
                 group.Location = GeoCoordinates.ToGeometry(location);
+                if (photoKey is not null) group.LocationPhoto = photoKey;
+                group.TaggedBy = userId;
+                group.TaggedOn = now;
                 break;
             case Member:
             case OdMember:
                 var member = await context.TblBcmembers.FirstAsync(m => m.Id == target.RefId, cancellationToken);
                 member.Location = GeoCoordinates.ToGeometry(location);
+                if (photoKey is not null) member.LocationPhoto = photoKey;
+                member.TaggedBy = userId;
+                member.TaggedOn = now;
                 break;
             default:
                 var employee = await context.TblEmployees.FirstAsync(e => e.Id == target.RefId, cancellationToken);
                 employee.PresentLocation = GeoCoordinates.ToGeometry(location);
-                employee.LastModifiedBy = userId;
-                employee.LastModifiedOn = now;
+                if (photoKey is not null) employee.LocationPhoto = photoKey;
+                employee.TaggedBy = userId;
+                employee.TaggedOn = now;
                 break;
         }
     }

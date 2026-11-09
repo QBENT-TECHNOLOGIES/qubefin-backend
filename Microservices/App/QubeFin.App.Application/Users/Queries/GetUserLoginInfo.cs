@@ -1,4 +1,4 @@
-﻿using FluentResults;
+using FluentResults;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.App.Application.Users.Models;
@@ -35,6 +35,13 @@ internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context) :
             CompanyLogoUrl = user.CompanyLogoUrl,
             IsMileageEnabled = user.IsMileageEnabled,
             IsLoginRequired = user.IsLoginRequired,
+            Role = user.Role,
+            UnitName = user.UnitName,
+            OrganisationUnitIds = (user.OrganisationUnitIds ?? string.Empty)
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(Guid.Parse)
+                .ToList(),
+            CanCreateJobs = user.CanCreateJobs,
             AccessOrganizationUnits = rows
                 .Where(m => m.OrganizationUnitId.HasValue)
                 .Select(m => new UserAccessOrganizationUnit

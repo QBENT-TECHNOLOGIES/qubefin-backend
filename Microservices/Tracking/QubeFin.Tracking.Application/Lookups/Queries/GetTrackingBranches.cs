@@ -22,6 +22,8 @@ public class GetTrackingBranchesQueryValidator : AbstractValidator<GetTrackingBr
 #endregion
 
 #region --- HANDLER ---
+// The user's branches come from Global.Fn_GetUserWiseBranches, the same scope as the group and member lists:
+// super admin every branch, DM / AM / BM the branches under their unit, everyone else their own branch
 internal sealed class GetTrackingBranchesQueryHandler(ITrackingScopeRepository scopeRepository) : IRequestHandler<GetTrackingBranchesQuery, Result<List<TrackingBranch>>>
 {
     public async Task<Result<List<TrackingBranch>>> Handle(GetTrackingBranchesQuery request, CancellationToken cancellationToken)
@@ -29,7 +31,7 @@ internal sealed class GetTrackingBranchesQueryHandler(ITrackingScopeRepository s
         var viewer = await scopeRepository.GetViewerAsync(request.UserId, cancellationToken);
         if (viewer is null) return new ForbiddenError("You do not have access to Tracking.");
 
-        var branches = await scopeRepository.GetBranchesAsync(viewer.BranchIds, cancellationToken);
+        var branches = await scopeRepository.GetUserWiseBranchesAsync(request.UserId, cancellationToken);
         return Result.Ok(branches);
     }
 }

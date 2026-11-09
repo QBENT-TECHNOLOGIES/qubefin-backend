@@ -38,7 +38,8 @@ public record GeoTagResponse(
     string? TaggedByName,
     DateTimeOffset? TaggedAt)
 {
-    internal static GeoTagResponse From(GeoTagRow row) => new(
+    // PhotoUrl holds the stored S3 key; it is sent as a signed link
+    internal static GeoTagResponse From(GeoTagRow row, IFileStorageRepository fileStorage) => new(
         Enum.Parse<GeoTagKind>(row.Kind),
         row.RefId,
         row.Name,
@@ -48,7 +49,7 @@ public record GeoTagResponse(
         row.Address,
         row.Location,
         row.RadiusMeters,
-        row.PhotoUrl,
+        fileStorage.GetFileUrl(row.PhotoUrl),
         row.TaggedByName,
         TrackingClock.WithIndiaOffset(row.TaggedAt));
 }
@@ -56,7 +57,7 @@ public record GeoTagResponse(
 
 #region --- HANDLER ---
 // Places of one kind with and without a location, in the user's branches. Employee homes are for an Admin only.
-internal sealed class GetGeoTagsQueryHandler(ITrackingScopeRepository scopeRepository, IGeoTagRepository geoTagRepository) : IRequestHandler<GetGeoTagsQuery, Result<List<GeoTagResponse>>>
+internal sealed class GetGeoTagsQueryHandler(ITrackingScopeRepository scopeRepository, IGeoTagRepository geoTagRepository, IFileStorageRepository fileStorage) : IRequestHandler<GetGeoTagsQuery, Result<List<GeoTagResponse>>>
 {
     public async Task<Result<List<GeoTagResponse>>> Handle(GetGeoTagsQuery request, CancellationToken cancellationToken)
     {
@@ -81,7 +82,7 @@ internal sealed class GetGeoTagsQueryHandler(ITrackingScopeRepository scopeRepos
             setting is null ? null : setting.BranchOperatingRadiusInKm * 1000,
             setting?.TaskLocationMatchInMeters), cancellationToken);
 
-        return Result.Ok(rows.Select(GeoTagResponse.From).ToList());
+        return Result.Ok(rows.Select(r => GeoTagResponse.From(r, fileStorage)).ToList());
     }
 }
 #endregion

@@ -23,6 +23,8 @@ public static class DependencyInjection
         services.AddScoped<ITrackingScopeRepository, TrackingScopeRepository>();
         services.AddScoped<IJobRepository, JobRepository>();
         services.AddScoped<IGeoTagRepository, GeoTagRepository>();
+        services.AddScoped<IBcListRepository, BcListRepository>();
+        services.AddScoped<IFileStorageRepository, FileStorageRepository>();
         return services;
     }
 }

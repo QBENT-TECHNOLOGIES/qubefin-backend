@@ -47,7 +47,9 @@ public record GeoTagPointResponse(
     Guid? GroupId,
     string? GroupName,
     int? Dpd,
-    decimal? OverdueAmount);
+    decimal? OverdueAmount,
+    string? TaggedByName,
+    DateTimeOffset? TaggedAt);
 
 public record GeoTagPointsResponse(List<GeoTagPointResponse> Points, Dictionary<string, int> UntaggedByKind);
 #endregion
@@ -86,7 +88,9 @@ internal sealed class GetGeoTagPointsQueryHandler(ITrackingScopeRepository scope
                 p.GroupId,
                 p.GroupName,
                 p.Dpd,
-                p.OverdueAmount)).ToList(),
+                p.OverdueAmount,
+                p.TaggedByName,
+                TrackingClock.WithIndiaOffset(p.TaggedAt))).ToList(),
             result.UntaggedByKind));
     }
 }

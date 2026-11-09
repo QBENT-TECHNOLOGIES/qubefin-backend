@@ -24,5 +24,11 @@ namespace QubeFin.Persistence.Models.App
         public TimeOnly? AttendanceOutTime { get; set; }
         public int CheckRadiusInMeter { get; set; }
         public bool IsLoginRequired { get; set; }
+
+        // Tracking: role (post name, 'Admin' for a super admin), unit, branches in scope (comma-separated) and whether they can create jobs
+        public string? Role { get; set; }
+        public string? UnitName { get; set; }
+        public string? OrganisationUnitIds { get; set; }
+        public bool CanCreateJobs { get; set; }
     }
 }

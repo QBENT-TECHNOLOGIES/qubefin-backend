@@ -35,17 +35,13 @@ public class UpdateGeoTagCommandValidator : AbstractValidator<UpdateGeoTagComman
 #endregion
 
 #region --- HANDLER ---
-// Who may set or change a location:
-//   group or member: whoever holds the group's mapped designation (the CO), and the Branch, Area or Divisional Manager above it in scope;
-//   branch: a Branch, Area or Divisional Manager whose branches include it;
-//   employee home: a super admin only (employee tagging is still to be decided).
+// Branches and employee homes. Groups and members have their own APIs (location + photo): groups/{id}/location and members/{id}/location.
 internal sealed class UpdateGeoTagCommandHandler(
     ITrackingScopeRepository scopeRepository,
     IGeoTagRepository geoTagRepository,
+    IFileStorageRepository fileStorage,
     IUnitOfWork unitOfWork) : IRequestHandler<UpdateGeoTagCommand, Result<GeoTagResponse>>
 {
-    private static readonly string[] Managers = [TrackingRole.BranchManager, TrackingRole.AreaManager, TrackingRole.DivisionalManager];
-
     public async Task<Result<GeoTagResponse>> Handle(UpdateGeoTagCommand command, CancellationToken cancellationToken)
     {
         var viewer = await scopeRepository.GetViewerAsync(command.UserId, cancellationToken);
@@ -53,33 +49,16 @@ internal sealed class UpdateGeoTagCommandHandler(
 
         var target = await geoTagRepository.FindGeoTagAsync(command.Id, viewer.EmployeeId, cancellationToken);
         if (target is null) return new RecordNotFoundError("Geo-tag not found");
-
-        var allowed = target.Kind switch
+        if (GeoTagRules.IsGroupOrMember(target))
         {
-            "Branch" => Managers.Contains(viewer.Role) && viewer.BranchIds.Contains(target.BranchId!.Value),
-            "EmployeeHome" => viewer.Role == TrackingRole.Admin,
-            _ => target.IsOwnedByViewer
-                || (Managers.Contains(viewer.Role)
-                    && target.OwnerPostName is not null
-                    && TrackingRole.Rank(viewer.Role) > TrackingRole.Rank(target.OwnerPostName)
-                    && viewer.UnitIdsInScope.Contains(target.OwnerUnitId!.Value))
-        };
-        if (!allowed) return new ForbiddenError("You cannot change this location.");
+            return new ValidationError("Group and member locations are updated with their photo through groups/{id}/location and members/{id}/location.");
+        }
+        if (!GeoTagRules.CanEdit(viewer, target)) return new ForbiddenError("You cannot change this location.");
 
-        await geoTagRepository.UpdateLocationAsync(target, command.Request.Location!, viewer.UserId, DateTime.Now, cancellationToken);
+        await geoTagRepository.UpdateLocationAsync(target, command.Request.Location!, null, viewer.UserId, DateTime.Now, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var setting = await scopeRepository.GetTrackingSettingAsync(cancellationToken);
-        var updated = (await geoTagRepository.GetGeoTagsAsync(new GeoTagFilter(
-            target.Kind,
-            null,
-            null,
-            null,
-            false,
-            setting is null ? null : setting.BranchOperatingRadiusInKm * 1000,
-            setting?.TaskLocationMatchInMeters,
-            target.RefId), cancellationToken)).Single();
-        return Result.Ok(GeoTagResponse.From(updated));
+        return Result.Ok(GeoTagResponse.From(await GeoTagRules.ReadBackAsync(scopeRepository, geoTagRepository, target, cancellationToken), fileStorage));
     }
 }
 #endregion

@@ -16,7 +16,7 @@ public static class DependencyInjection
     {
         services.AddDbContext<QubeFinDataContext>(options =>
         {
-            options.UseSqlServer(configuration.GetConnectionString("DataConnection"));
+            options.UseSqlServer(configuration.GetConnectionString("DataConnection"), sqlOptions => sqlOptions.UseNetTopologySuite());
             options.EnableSensitiveDataLogging(false);
         });
         services.AddScoped<IUnitOfWork>(options => options.GetRequiredService<QubeFinDataContext>());

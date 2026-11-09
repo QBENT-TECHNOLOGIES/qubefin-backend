@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -17,6 +17,12 @@ namespace QubeFin.App.Application.Users.Models
         public bool IsMileageEnabled { get; set; }
         public bool IsLoginRequired { get; set; }
         public List<UserAccessOrganizationUnit> AccessOrganizationUnits { get; set; } = new List<UserAccessOrganizationUnit>();
+
+        // Tracking
+        public string? Role { get; set; }
+        public string? UnitName { get; set; }
+        public List<Guid> OrganisationUnitIds { get; set; } = new List<Guid>();
+        public bool CanCreateJobs { get; set; }
     }
     public class UserAccessOrganizationUnit
     {

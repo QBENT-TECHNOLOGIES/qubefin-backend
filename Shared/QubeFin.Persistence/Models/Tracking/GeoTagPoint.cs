@@ -17,6 +17,8 @@ public record GeoTagPointRow(
     Guid? GroupId,
     string? GroupName,
     int? Dpd,
-    decimal? OverdueAmount);
+    decimal? OverdueAmount,
+    string? TaggedByName,
+    DateTime? TaggedAt);
 
 public record GeoTagPointsResult(List<GeoTagPointRow> Points, Dictionary<string, int> UntaggedByKind);
