@@ -106,7 +106,7 @@ public record JobResponse(
             summary.TransferJobRefCode,
             job.JobDescription,
             job.CreatedBy,
-            job.Tasks.Select(JobTaskResponse.From).ToList(),
+            job.Tasks.Select(t => JobTaskResponse.From(t, viewer.UserId)).ToList(),
             JobPermissionRules.For(viewer, job));
     }
 }
@@ -158,9 +158,11 @@ public record JobTaskResponse(
     bool IsLate,
     Guid? TransferredToJobId,
     string? TransferredToJobCode,
-    string? TaskCancelReason)
+    string? TaskCancelReason,
+    bool CanReject)
 {
-    public static JobTaskResponse From(JobTaskRow row)
+    // CanReject: the task is Pending and the signed-in user is the one who added it
+    public static JobTaskResponse From(JobTaskRow row, Guid viewerUserId)
     {
         var taskType = Enum.TryParse<TaskType>(row.TaskType, true, out var type) ? type : (TaskType?)null;
         var status = Enum.TryParse<JobTaskStatus>(row.Status, true, out var taskStatus) ? taskStatus : (JobTaskStatus?)null;
@@ -201,6 +203,7 @@ public record JobTaskResponse(
             row.IsLate,
             row.TransferredToJobId,
             row.TransferredToJobCode,
-            row.TaskCancelReason);
+            row.TaskCancelReason,
+            status == JobTaskStatus.Pending && row.TaskAddedBy == viewerUserId);
     }
 }

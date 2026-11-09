@@ -32,6 +32,6 @@ internal sealed class CancelTaskCommandHandler(JobTaskCloser taskCloser) : IRequ
 {
     public Task<Result<string>> Handle(CancelTaskCommand command, CancellationToken cancellationToken) =>
         taskCloser.CloseAsync(command.UserId, command.JobId, command.TaskId, command.Request.Remarks!,
-            JobTaskStatus.Cancelled, JobHistoryAction.TaskCancelled, _ => null, cancellationToken);
+            JobTaskStatus.Cancelled, JobHistoryAction.TaskCancelled, false, cancellationToken);
 }
 #endregion

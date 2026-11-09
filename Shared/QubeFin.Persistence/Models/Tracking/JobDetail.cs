@@ -32,6 +32,7 @@ public record JobTaskRow(
     int? RadiusMeters,
     string Status,
     bool IsSelfAdded,
+    Guid? TaskAddedBy,
     string? AddedByName,
     DateTime? TaskAddedOn,
     DateTime? ArrivedOn,

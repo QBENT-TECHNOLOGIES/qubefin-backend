@@ -187,6 +187,7 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
                     t.RadiusMeters,
                     status,
                     t.IsSelfAdded == true,
+                    t.TaskAddedBy,
                     x.AddedByName,
                     t.TaskAddedOn,
                     t.ArrivedOn,

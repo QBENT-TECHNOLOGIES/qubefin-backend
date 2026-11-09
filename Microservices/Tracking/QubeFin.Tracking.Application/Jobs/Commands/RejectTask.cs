@@ -27,13 +27,11 @@ public class RejectTaskCommandValidator : AbstractValidator<RejectTaskCommand>
 #endregion
 
 #region --- HANDLER ---
-// Only a Pending task the assignee added from the mobile app can be rejected; a task added on the web is cancelled instead (C6)
+// Only the person who added the task can reject it: the manager who added it on the web, or the assignee who self-added it
 internal sealed class RejectTaskCommandHandler(JobTaskCloser taskCloser) : IRequestHandler<RejectTaskCommand, Result<string>>
 {
     public Task<Result<string>> Handle(RejectTaskCommand command, CancellationToken cancellationToken) =>
         taskCloser.CloseAsync(command.UserId, command.JobId, command.TaskId, command.Request.Remarks!,
-            JobTaskStatus.Rejected, JobHistoryAction.TaskRejected,
-            task => task.IsSelfAdded == true ? null : "Only tasks added from the mobile app can be rejected. Cancel it instead.",
-            cancellationToken);
+            JobTaskStatus.Rejected, JobHistoryAction.TaskRejected, true, cancellationToken);
 }
 #endregion
