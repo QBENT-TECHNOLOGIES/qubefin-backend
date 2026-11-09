@@ -4,3 +4,18 @@ GET {{QubeFin.Tracking.Api_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+###
+
+POST {{QubeFin.Tracking.Api_HostAddress}}/groups/search
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{ "searchText": null, "organisationUnitId": null, "coEmployeeId": null, "sortOn": "name", "sortDirection": "asc", "pageIndex": 0, "pageSize": 10 }
+
+###
+
+POST {{QubeFin.Tracking.Api_HostAddress}}/members/search
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{ "searchText": null, "organisationUnitId": null, "coEmployeeId": null, "groupId": null, "sortOn": "name", "sortDirection": "asc", "pageIndex": 0, "pageSize": 10 }
