@@ -33,10 +33,6 @@ public partial class TblGroup
 
     public string? LandMark { get; set; }
 
-    public string? Latitude { get; set; }
-
-    public string? Longitude { get; set; }
-
     public string? PhotoScan { get; set; }
 
     public bool IsApproved { get; set; }

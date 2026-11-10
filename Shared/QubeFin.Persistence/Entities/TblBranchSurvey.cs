@@ -17,10 +17,6 @@ public partial class TblBranchSurvey
 
     public string? PinCode { get; set; }
 
-    public decimal? Latitude { get; set; }
-
-    public decimal? Longitude { get; set; }
-
     public string? GeoTag { get; set; }
 
     public string? NearestLandmark { get; set; }

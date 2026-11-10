@@ -49,11 +49,41 @@ public partial class TblUser
 
     public virtual ICollection<TblApprovalWorkflow> TblApprovalWorkflowLastModifiedByNavigations { get; set; } = new List<TblApprovalWorkflow>();
 
+    public virtual ICollection<TblBcgroup> TblBcgroupCreatedByNavigations { get; set; } = new List<TblBcgroup>();
+
+    public virtual ICollection<TblBcgroup> TblBcgroupTaggedByNavigations { get; set; } = new List<TblBcgroup>();
+
+    public virtual ICollection<TblBcloanCollection> TblBcloanCollections { get; set; } = new List<TblBcloanCollection>();
+
+    public virtual ICollection<TblBcloan> TblBcloanCreatedByNavigations { get; set; } = new List<TblBcloan>();
+
+    public virtual ICollection<TblBcloan> TblBcloanModifiedByNavigations { get; set; } = new List<TblBcloan>();
+
+    public virtual ICollection<TblBcmember> TblBcmemberCreatedByNavigations { get; set; } = new List<TblBcmember>();
+
+    public virtual ICollection<TblBcmember> TblBcmemberTaggedByNavigations { get; set; } = new List<TblBcmember>();
+
+    public virtual ICollection<TblEmployee> TblEmployees { get; set; } = new List<TblEmployee>();
+
     public virtual ICollection<TblInterviewCandidate> TblInterviewCandidateCreatedByNavigations { get; set; } = new List<TblInterviewCandidate>();
 
     public virtual ICollection<TblInterviewCandidate> TblInterviewCandidateModifiedByNavigations { get; set; } = new List<TblInterviewCandidate>();
 
     public virtual ICollection<TblInterviewPanel> TblInterviewPanels { get; set; } = new List<TblInterviewPanel>();
+
+    public virtual ICollection<TblJob> TblJobCanceledByNavigations { get; set; } = new List<TblJob>();
+
+    public virtual ICollection<TblJob> TblJobCreatedByNavigations { get; set; } = new List<TblJob>();
+
+    public virtual ICollection<TblJobHistory> TblJobHistories { get; set; } = new List<TblJobHistory>();
+
+    public virtual ICollection<TblJob> TblJobModifiedByNavigations { get; set; } = new List<TblJob>();
+
+    public virtual ICollection<TblJobTask> TblJobTaskTaskAddedByNavigations { get; set; } = new List<TblJobTask>();
+
+    public virtual ICollection<TblJobTask> TblJobTaskTaskCancelByNavigations { get; set; } = new List<TblJobTask>();
+
+    public virtual ICollection<TblJobTask> TblJobTaskTaskCompletedByNavigations { get; set; } = new List<TblJobTask>();
 
     public virtual ICollection<TblJoiningInfo> TblJoiningInfoApprovedRejectedByNavigations { get; set; } = new List<TblJoiningInfo>();
 
@@ -75,9 +105,15 @@ public partial class TblUser
 
     public virtual ICollection<TblOrganizationUnit> TblOrganizationUnitLastModifiedByNavigations { get; set; } = new List<TblOrganizationUnit>();
 
+    public virtual ICollection<TblOrganizationUnit> TblOrganizationUnitTaggedByNavigations { get; set; } = new List<TblOrganizationUnit>();
+
     public virtual ICollection<TblRole> TblRoleCreatedByNavigations { get; set; } = new List<TblRole>();
 
     public virtual ICollection<TblRole> TblRoleLastModifiedByNavigations { get; set; } = new List<TblRole>();
+
+    public virtual ICollection<TblTrackingSetting> TblTrackingSettingCreatedByNavigations { get; set; } = new List<TblTrackingSetting>();
+
+    public virtual ICollection<TblTrackingSetting> TblTrackingSettingModifiedByNavigations { get; set; } = new List<TblTrackingSetting>();
 
     public virtual ICollection<TblUserDevice> TblUserDevices { get; set; } = new List<TblUserDevice>();
 

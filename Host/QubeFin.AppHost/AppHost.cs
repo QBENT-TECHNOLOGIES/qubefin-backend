@@ -12,6 +12,8 @@ builder.AddProject<Projects.QubeFin_Hrms_Api>("qubefin-hrms-api");
 
 builder.AddProject<Projects.QubeFin_Payroll_Api>("qubefin-payroll-api");
 
+builder.AddProject<Projects.QubeFin_Collection_Api>("qubefin-collection-api");
+
 builder.AddProject<Projects.QubeFin_Report_Api>("qubefin-report-api");
 
 builder.Build().Run();

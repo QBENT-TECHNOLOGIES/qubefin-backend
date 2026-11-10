@@ -29,6 +29,10 @@ public partial class TblOrganizationUnit
 
     public decimal? Longitude { get; set; }
 
+    public Guid? TaggedBy { get; set; }
+
+    public DateTime? TaggedOn { get; set; }
+
     public TimeOnly? AttendanceInTime { get; set; }
 
     public TimeOnly? AttendanceOutTime { get; set; }
@@ -51,9 +55,15 @@ public partial class TblOrganizationUnit
 
     public virtual TblOrganizationUnit? Parent { get; set; }
 
+    public virtual TblUser? TaggedByNavigation { get; set; }
+
     public virtual ICollection<TblAttendance> TblAttendanceCheckinOrganizationUnits { get; set; } = new List<TblAttendance>();
 
     public virtual ICollection<TblAttendance> TblAttendanceCheckoutOrganizationUnits { get; set; } = new List<TblAttendance>();
+
+    public virtual ICollection<TblBcgroupTransfer> TblBcgroupTransfers { get; set; } = new List<TblBcgroupTransfer>();
+
+    public virtual ICollection<TblBcgroup> TblBcgroups { get; set; } = new List<TblBcgroup>();
 
     public virtual ICollection<TblDesignation> TblDesignations { get; set; } = new List<TblDesignation>();
 
@@ -66,6 +76,8 @@ public partial class TblOrganizationUnit
     public virtual ICollection<TblInterviewCandidate> TblInterviewCandidatePostedOrganizationUnits { get; set; } = new List<TblInterviewCandidate>();
 
     public virtual ICollection<TblInterviewCandidate> TblInterviewCandidateVenueOrganizationUnits { get; set; } = new List<TblInterviewCandidate>();
+
+    public virtual ICollection<TblJobTask> TblJobTasks { get; set; } = new List<TblJobTask>();
 
     public virtual ICollection<TblLoanApplication> TblLoanApplications { get; set; } = new List<TblLoanApplication>();
 

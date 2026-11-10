@@ -27,10 +27,6 @@ public partial class TblMemberAddress
 
     public int? ResidenceYear { get; set; }
 
-    public decimal? Latitude { get; set; }
-
-    public decimal? Longitude { get; set; }
-
     public bool IsDefault { get; set; }
 
     public int Sequence { get; set; }

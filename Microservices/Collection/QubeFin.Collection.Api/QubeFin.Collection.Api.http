@@ -1,0 +1,6 @@
+@QubeFin.Collection.Api_HostAddress = http://localhost:5250
+
+GET {{QubeFin.Collection.Api_HostAddress}}/collections/
+Accept: application/json
+
+###
