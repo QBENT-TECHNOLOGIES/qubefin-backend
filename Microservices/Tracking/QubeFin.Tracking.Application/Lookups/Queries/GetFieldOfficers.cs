@@ -29,8 +29,7 @@ internal sealed class GetFieldOfficersQueryHandler(ITrackingScopeRepository scop
         var viewer = await scopeRepository.GetViewerAsync(request.UserId, cancellationToken);
         if (viewer is null) return new ForbiddenError("You do not have access to Tracking.");
 
-        // Global.USP_GetFieldOfficers, scoped by Global.Fn_GetUserWiseBranches like the branch list and the group / member lists
-        var officers = await scopeRepository.GetFieldOfficersAsync(request.UserId, request.OrganizationUnitId, cancellationToken);
+        var officers = await scopeRepository.GetFieldOfficersAsync(viewer, request.OrganizationUnitId, cancellationToken);
         return Result.Ok(officers);
     }
 }

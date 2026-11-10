@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using QubeFin.Persistence.Models.App;
 using QubeFin.Persistence.Models.Global;
 using QubeFin.Persistence.Models.Hrms;
@@ -40,8 +40,8 @@ public partial class QubeFinDataContext : DbContext, IUnitOfWork
         modelBuilder.Entity<InterviewerCandidateListResult>().HasNoKey().ToView(null);
         modelBuilder.Entity<BcGroupListResult>().HasNoKey().ToView(null);
         modelBuilder.Entity<BcMemberListResult>().HasNoKey().ToView(null);
-        modelBuilder.Entity<UserWiseBranchResult>().HasNoKey().ToView(null);
-        modelBuilder.Entity<FieldOfficerResult>().HasNoKey().ToView(null);
+        modelBuilder.Entity<UserWiseBranchItem>().HasNoKey().ToView(null);
+        modelBuilder.Entity<BranchCreditOfficerItem>().HasNoKey().ToView(null);
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
