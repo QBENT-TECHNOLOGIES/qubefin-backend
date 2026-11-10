@@ -3,12 +3,11 @@ using MediatR;
 using QubeFin.App.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.App;
-using QubeFin.Persistence.Models.Global;
 
 namespace QubeFin.App.Application.Menus.Commands;
 
 #region --- COMMAND ---
-public record UpdateMenuCommand(Guid Id, string Name, string Icon, string? Target, Guid ParentId, bool IsActive, Guid UserId, List<PermissionAssigned> Permissions) : IRequest<Result<UpdateMenuResponse>>;
+public record UpdateMenuCommand(Guid Id, string Name, string Icon, string? Target, Guid? ParentId, bool IsActive, Guid UserId, List<PermissionAssigned> Permissions) : IRequest<Result<UpdateMenuResponse>>;
 #endregion
 
 #region --- RESPONSE ---

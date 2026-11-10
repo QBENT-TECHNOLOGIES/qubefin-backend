@@ -7,7 +7,7 @@ using QubeFin.Persistence.Models.App;
 namespace QubeFin.App.Application.Menus.Commands;
 
 #region --- COMMAND ---
-public record CreateMenuCommand(string Name, string Icon, string? Target, Guid ParentId, Guid UserId, List<PermissionAssigned> Permissions) : IRequest<Result<CreateMenuResponse>>;
+public record CreateMenuCommand(string Name, string Icon, string? Target, Guid? ParentId, Guid UserId, List<PermissionAssigned> Permissions) : IRequest<Result<CreateMenuResponse>>;
 #endregion
 
 #region --- RESPONSE ---
