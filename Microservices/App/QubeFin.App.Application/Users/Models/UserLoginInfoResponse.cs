@@ -21,7 +21,7 @@ namespace QubeFin.App.Application.Users.Models
         // Tracking
         public string? Role { get; set; }
         public string? UnitName { get; set; }
-        public List<Guid> OrganisationUnitIds { get; set; } = new List<Guid>();
+        //public List<Guid> OrganisationUnitIds { get; set; } = new List<Guid>();
         public bool CanCreateJobs { get; set; }
     }
     public class UserAccessOrganizationUnit

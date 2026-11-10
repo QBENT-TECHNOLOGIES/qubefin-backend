@@ -37,10 +37,10 @@ internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context) :
             IsLoginRequired = user.IsLoginRequired,
             Role = user.Role,
             UnitName = user.UnitName,
-            OrganisationUnitIds = (user.OrganisationUnitIds ?? string.Empty)
-                .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                .Select(Guid.Parse)
-                .ToList(),
+            //OrganisationUnitIds = (user.OrganisationUnitIds ?? string.Empty)
+            //    .Split(',', StringSplitOptions.RemoveEmptyEntries)
+            //    .Select(Guid.Parse)
+            //    .ToList(),
             CanCreateJobs = user.CanCreateJobs,
             AccessOrganizationUnits = rows
                 .Where(m => m.OrganizationUnitId.HasValue)
