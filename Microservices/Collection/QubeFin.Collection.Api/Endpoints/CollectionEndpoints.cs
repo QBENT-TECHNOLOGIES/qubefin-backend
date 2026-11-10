@@ -1,4 +1,5 @@
 using MediatR;
+using QubeFin.Collection.Application.Collections.Commands;
 using QubeFin.Collection.Application.Collections.Queries;
 using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
@@ -27,7 +28,7 @@ namespace QubeFin.Collection.Api.Endpoints
               .WithTags("Credit Officers")
             .RequireAuthorization();
 
-            app.MapGet("credit-officers/{designationId:guid}/groups", async (Guid designationId, ISender sender, ClaimsPrincipal principal, CancellationToken cancellationToken) =>
+            app.MapGet("bc-groups/{designationId:guid}", async (Guid designationId, ISender sender, ClaimsPrincipal principal, CancellationToken cancellationToken) =>
             {
                 if (principal.Identity is null || !principal.Identity.IsAuthenticated)
                 {
@@ -42,7 +43,7 @@ namespace QubeFin.Collection.Api.Endpoints
               .WithTags("Credit Officers")
             .RequireAuthorization();
 
-            app.MapGet("credit-officers/{designationId:guid}/loans", async (
+            app.MapGet("bc-group-loans/{designationId:guid}", async (
                 Guid designationId,
                 DateOnly collectionDate,
                 ISender sender,
@@ -77,6 +78,26 @@ namespace QubeFin.Collection.Api.Endpoints
             }).WithSummary("Search group wise loans of a credit officer for one collection date")
               .WithDescription("Paged search of the loans held by the members of the BC groups tagged to the credit officer's designation id (from the credit officer list), restricted to the logged-in user's organization unit and every unit below it. collectionDate (yyyy-MM-dd) is required and attaches that date's BC loan collection row to each loan - collectionId, collectionEmiAmount, collectedAmount, isDemandDate, isCollected and collectionRemarks are null / false when the sheet for that date has not been raised yet, so the loan still appears with nothing collected. bcGroupId is optional and narrows the search to one of the officer's groups. searchText matches loan no, member code, member name or mobile no. isClosed null returns both running and closed loans. sortOn accepts loanNo, groupName, memberName, memberCode, loanProductName, loanAmount, disburseDate, currentOutstandingAmount, overdueAmount or dpdDays; anything else falls back to group name then loan no. pageSize is capped at 200.")
               .WithTags("Group Loans")
+            .RequireAuthorization();
+
+            app.MapPost("save-bc-collection", async (
+                SaveBcCollectionRequest request,
+                ISender sender,
+                ClaimsPrincipal principal,
+                CancellationToken cancellationToken) =>
+            {
+                if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+                {
+                    return Results.Forbid();
+                }
+
+                var employeeId = principal.Identity.GetEmployeeId();
+                var userId = principal.Identity.GetUserId();
+                var result = await sender.Send(new SaveBcCollectionCommand(employeeId, userId, request), cancellationToken);
+                return result.ToHttpResult();
+            }).WithSummary("Save the collection of one BC group for one collection date")
+              .WithDescription("Saves the collected amount of each loan of a BC group (designationId and bcGroupId in the body) for collectionDate (yyyy-MM-dd) through [BC].[USP_BCLoanCollection]. Every loan must belong to the group, be running, have an EMI due on that date and not be collected already. Remarks are required when the amount is less than the EMI, and UTR No is required for a UPI collection.")
+              .WithTags("Group Collections")
             .RequireAuthorization();
         }
     }

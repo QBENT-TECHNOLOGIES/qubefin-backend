@@ -11,6 +11,7 @@ namespace QubeFin.Collection.Persistence.Repositories
         Task<List<CreditOfficer>> GetCreditOfficersAsync(Guid employeeId, CancellationToken cancellationToken = default);
         Task<List<CreditOfficerGroup>> GetCreditOfficerGroupsAsync(Guid employeeId, Guid designationId, CancellationToken cancellationToken = default);
         Task<List<BcGroupLoan>> GetGroupLoansAsync(Guid employeeId, Guid designationId, Guid? bcGroupId, DateOnly collectionDate, BcGroupLoanSearchParam search, CancellationToken cancellationToken = default);
+        Task SaveLoanCollectionsAsync(IReadOnlyList<LoanCollectionEntry> entries, CancellationToken cancellationToken = default);
     }
 
     public class CollectionRepository(QubeFinDataContext context) : ICollectionRepository
@@ -256,6 +257,43 @@ namespace QubeFin.Collection.Persistence.Repositories
                     skipParameter,
                     pageSizeParameter)
                 .ToListAsync(cancellationToken);
+        }
+
+        // Sends every collected loan of one save in a single call, as the [dbo].[UT_LoanCollection] table type.
+        // The DataTable columns must stay in the same order and types as the table type.
+        public async Task SaveLoanCollectionsAsync(IReadOnlyList<LoanCollectionEntry> entries, CancellationToken cancellationToken = default)
+        {
+            var table = new DataTable();
+            table.Columns.Add("LoanId", typeof(Guid));
+            table.Columns.Add("CollectionDate", typeof(DateTime));
+            table.Columns.Add("CollectionAmount", typeof(decimal));
+            table.Columns.Add("IsUpiCollection", typeof(bool));
+            table.Columns.Add("UtrNo", typeof(string));
+            table.Columns.Add("Remarks", typeof(string));
+            table.Columns.Add("UserId", typeof(Guid));
+
+            foreach (var entry in entries)
+            {
+                table.Rows.Add(
+                    entry.LoanId,
+                    entry.CollectionDate,
+                    entry.CollectionAmount,
+                    entry.IsUpiCollection,
+                    (object?)entry.UtrNo ?? DBNull.Value,
+                    (object?)entry.Remarks ?? DBNull.Value,
+                    entry.UserId);
+            }
+
+            var loanCollectedIdsParameter = new SqlParameter("@LoanCollectedIds", SqlDbType.Structured)
+            {
+                TypeName = "[dbo].[UT_LoanCollection]",
+                Value = table
+            };
+
+            await context.Database.ExecuteSqlRawAsync(
+                "EXEC [BC].[USP_BCLoanCollection] @LoanCollectedIds",
+                [loanCollectedIdsParameter],
+                cancellationToken);
         }
 
         private static string ResolveLoanSort(string? sortOn, string? sortDirection)
