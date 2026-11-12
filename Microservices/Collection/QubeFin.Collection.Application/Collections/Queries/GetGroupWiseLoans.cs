@@ -65,6 +65,9 @@ public record GroupWiseLoanResponse(
     decimal? CollectedAmount,
     bool IsDemandDate,
     bool IsCollected,
+    int CollectionCount,
+    bool IsUpiCollection,
+    string? CollectionUtrNo,
     string? CollectionRemarks);
 #endregion
 
@@ -115,6 +118,9 @@ internal sealed class GetGroupWiseLoansQueryHandler(ICollectionRepository collec
             m.CollectedAmount,
             m.IsDemandDate,
             m.IsCollected,
+            m.CollectionCount,
+            m.IsUpiCollection,
+            m.CollectionUtrNo,
             m.CollectionRemarks)).ToList();
 
         return Result.Ok(new GetGroupWiseLoansResponse(loans, totalRecords));

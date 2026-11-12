@@ -113,7 +113,7 @@ namespace QubeFin.Collection.Api.Endpoints
                 var result = await sender.Send(new SaveBcCollectionCommand(employeeId, userId, request), cancellationToken);
                 return result.ToHttpResult();
             }).WithSummary("Save the collection of one BC group for one collection date")
-              .WithDescription("Saves the collected amount of each loan of a BC group (designationId and bcGroupId in the body) for collectionDate (yyyy-MM-dd) through [BC].[USP_BCLoanCollection]. Every loan must belong to the group, be running, have an EMI due on that date and not be collected already. Remarks are required when the amount is less than the EMI, and UTR No is required for a UPI collection.")
+              .WithDescription("Saves the collected amount of each loan of a BC group (designationId and bcGroupId in the body) for collectionDate (yyyy-MM-dd) through [BC].[USP_BCLoanCollection]. Every loan must belong to the group, be running, have an EMI due on that date and not be collected already. UTR No is required for a UPI collection.")
               .WithTags("Group Collections")
             .RequireAuthorization();
         }

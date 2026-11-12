@@ -155,6 +155,10 @@ namespace QubeFin.Collection.Persistence.Repositories
         // BC.Tbl_BCLoan -> BC.Tbl_BCMember -> BC.Tbl_BCGroup, indexed by IX_Tbl_BCMember_BCGroupId. Search, sort and
         // paging all resolve in this one statement: COUNT(*) OVER() carries the pre-paging total, so a page and its row
         // count cost one round trip, and OFFSET/FETCH leaves the unread rows in SQL Server instead of paging in memory.
+        // One date can hold more than one collection for a loan - the group sheet, then a payment collected later the
+        // same day - so the aggregate apply sums every row of that date and CollectionCount says how many there were.
+        // EmiAmount is the demand row's, never a sum. The single row apply carries only what cannot be aggregated:
+        // the latest row's id, mode, UTR and remarks.
         public async Task<List<BcGroupLoan>> GetGroupLoansAsync(Guid employeeId, Guid designationId, Guid? bcGroupId, DateOnly collectionDate, BcGroupLoanSearchParam search, CancellationToken cancellationToken = default)
         {
             var pageSize = search.PageSize <= 0 ? DefaultPageSize : Math.Min(search.PageSize, MaxPageSize);
@@ -214,10 +218,13 @@ namespace QubeFin.Collection.Persistence.Repositories
                     l.IsClosed AS IsClosed,
                     l.ClosedDate AS ClosedDate,
                     c.Id AS CollectionId,
-                    c.EmiAmount AS CollectionEmiAmount,
-                    c.CollectionAmount AS CollectedAmount,
-                    ISNULL(c.IsDemandDate, 0) AS IsDemandDate,
-                    ISNULL(c.IsCollected, 0) AS IsCollected,
+                    ct.EmiAmount AS CollectionEmiAmount,
+                    ct.CollectedAmount AS CollectedAmount,
+                    ISNULL(ct.IsDemandDate, 0) AS IsDemandDate,
+                    ISNULL(ct.IsCollected, 0) AS IsCollected,
+                    ISNULL(ct.CollectionCount, 0) AS CollectionCount,
+                    ISNULL(c.IsUpiCollection, 0) AS IsUpiCollection,
+                    c.UtrNo AS CollectionUtrNo,
                     c.Remarks AS CollectionRemarks,
                     COUNT(*) OVER() AS TotalRecords
                 FROM BC.Tbl_BCLoan l
@@ -225,11 +232,22 @@ namespace QubeFin.Collection.Persistence.Repositories
                 INNER JOIN BC.Tbl_BCGroup g ON g.Id = m.BCGroupId
                 INNER JOIN UnitTree t ON t.Id = g.OrganizationUnitId
                 OUTER APPLY (
-                    SELECT TOP (1) lc.Id, lc.EmiAmount, lc.CollectionAmount, lc.IsDemandDate, lc.IsCollected, lc.Remarks
+                    SELECT
+                        SUM(lc.CollectionAmount) AS CollectedAmount,
+                        COALESCE(MAX(CASE WHEN lc.IsDemandDate = 1 THEN lc.EmiAmount END), MAX(lc.EmiAmount)) AS EmiAmount,
+                        CAST(MAX(CASE WHEN lc.IsDemandDate = 1 THEN 1 ELSE 0 END) AS bit) AS IsDemandDate,
+                        CAST(MAX(CASE WHEN lc.IsCollected = 1 THEN 1 ELSE 0 END) AS bit) AS IsCollected,
+                        COUNT(*) AS CollectionCount
                     FROM BC.Tbl_BCLoanCollection lc
                     WHERE lc.LoanId = l.Id
                       AND lc.CollectionDate = @CollectionDate
-                    ORDER BY lc.IsDemandDate DESC, lc.CreatedOn DESC
+                ) ct
+                OUTER APPLY (
+                    SELECT TOP (1) lc.Id, lc.IsUpiCollection, lc.UtrNo, lc.Remarks
+                    FROM BC.Tbl_BCLoanCollection lc
+                    WHERE lc.LoanId = l.Id
+                      AND lc.CollectionDate = @CollectionDate
+                    ORDER BY lc.CreatedOn DESC, lc.IsDemandDate DESC
                 ) c
                 WHERE g.DesignationId = @DesignationId
                   AND (@BcGroupId IS NULL OR m.BCGroupId = @BcGroupId)

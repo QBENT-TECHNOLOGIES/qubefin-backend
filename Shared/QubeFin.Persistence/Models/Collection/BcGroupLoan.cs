@@ -36,6 +36,10 @@ public sealed class BcGroupLoan
     public decimal? CollectedAmount { get; set; }
     public bool IsDemandDate { get; set; }
     public bool IsCollected { get; set; }
+    // How many collections were posted for the date. CollectedAmount is their sum.
+    public int CollectionCount { get; set; }
+    public bool IsUpiCollection { get; set; }
+    public string? CollectionUtrNo { get; set; }
     public string? CollectionRemarks { get; set; }
     #endregion
 
