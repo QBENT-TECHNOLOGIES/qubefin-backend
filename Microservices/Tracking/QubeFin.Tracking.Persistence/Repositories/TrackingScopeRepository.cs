@@ -21,82 +21,61 @@ public interface ITrackingScopeRepository
 
 public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScopeRepository
 {
-    private const string BranchUnitType = "Branch";
-    private const string AreaUnitType = "Area";
-    private const string DivisionUnitType = "Division";
     private const string AllBranches = "All branches";
 
+    // Tracking.USP_GetTrackingViewer: the user, their post and unit, and the units and branches in their scope
     public async Task<TrackingViewer?> GetViewerAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        var user = await context.TblUsers
-            .Where(u => u.Id == userId && u.IsActive)
-            .Select(u => new { u.Id, u.UserName, u.IsSuperAdmin, u.EmployeeId, EmployeeName = u.Employee != null ? u.Employee.FullName : null })
+        var user = (await context.Set<TrackingViewerResult>()
+            .FromSqlInterpolated($"EXEC [Tracking].[USP_GetTrackingViewer] @UserId = {userId}")
             .AsNoTracking()
-            .FirstOrDefaultAsync(cancellationToken);
+            .ToListAsync(cancellationToken))
+            .FirstOrDefault();
         if (user is null) return null;
-
-        var units = await context.TblOrganizationUnits
-            .Select(o => new UnitNode(o.Id, o.ParentId, o.Name, o.OrganizationUnitType.Name))
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
 
         if (user.IsSuperAdmin)
         {
             return new TrackingViewer(
-                user.Id,
+                user.UserId,
                 user.EmployeeId,
                 user.EmployeeName ?? user.UserName,
                 TrackingRole.Admin,
                 null,
                 AllBranches,
-                units.Select(u => u.Id).ToList(),
-                BranchIdsOf(units).ToList());
+                IdsOf(user.UnitIdsCsv),
+                IdsOf(user.BranchIdsCsv));
         }
 
         if (user.EmployeeId is null) return null;
+        if (user.PostName is null || user.UnitId is null || !TrackingRole.IsTrackingPost(user.PostName)) return null;
 
-        var position = await context.TblEmployeeDesignations
-            .Where(ed => ed.EmployeeId == user.EmployeeId && ed.EffectiveTo == null)
-            .OrderByDescending(ed => ed.EffectiveFrom)
-            .Select(ed => new { PostName = ed.Designation.Post.Name, ed.Designation.OrganizationUnitId, UnitName = ed.Designation.OrganizationUnit.Name })
-            .AsNoTracking()
-            .FirstOrDefaultAsync(cancellationToken);
-        if (position is null || !TrackingRole.IsTrackingPost(position.PostName)) return null;
-
-        var scope = DescendantsAndSelf(units, position.OrganizationUnitId);
         return new TrackingViewer(
-            user.Id,
+            user.UserId,
             user.EmployeeId,
             user.EmployeeName ?? user.UserName,
-            position.PostName,
-            position.OrganizationUnitId,
-            position.UnitName,
-            scope.Select(u => u.Id).ToList(),
-            BranchIdsOf(scope).ToList());
+            user.PostName,
+            user.UnitId,
+            user.UnitName ?? string.Empty,
+            IdsOf(user.UnitIdsCsv),
+            IdsOf(user.BranchIdsCsv));
     }
 
+    // Tracking.USP_GetTrackingBranches: the branches with code, nearest Area and Division and location, sorted by name
     public async Task<List<TrackingBranch>> GetBranchesAsync(IReadOnlyList<Guid> branchIds, CancellationToken cancellationToken = default)
     {
-        var units = await context.TblOrganizationUnits
-            .Select(o => new UnitNode(o.Id, o.ParentId, o.Name, o.OrganizationUnitType.Name))
-            .AsNoTracking()
-            .ToDictionaryAsync(u => u.Id, cancellationToken);
-
-        var branches = await context.TblOrganizationUnits
-            .Where(o => branchIds.Contains(o.Id))
-            .Select(o => new { o.Id, o.Name, o.CodeVal, o.ParentId, o.Latitude, o.Longitude })
+        var branches = await context.Set<TrackingBranchResult>()
+            .FromSqlInterpolated($"EXEC [Tracking].[USP_GetTrackingBranches] @BranchIds = {CsvOf(branchIds)}")
             .AsNoTracking()
             .ToListAsync(cancellationToken);
         var setting = await GetTrackingSettingAsync(cancellationToken);
 
         return branches
-            .OrderBy(b => b.Name)
             .Select(b => new TrackingBranch(
                 b.Id,
                 b.Name,
-                b.CodeVal.ToString(),
-                AncestorOfType(units, b.ParentId, AreaUnitType)?.Name,
-                AncestorOfType(units, b.ParentId, DivisionUnitType)?.Name,
+                b.Code,
+                b.AreaName,
+                b.DivisionName,
                 GeoCoordinates.ToGeoPoint(b.Latitude, b.Longitude),
                 setting?.BranchOperatingRadiusInKm))
             .ToList();
@@ -120,20 +99,20 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
-    // The active Tbl_TrackingSetting row (latest if more than one is active)
+    // Tracking.USP_GetTrackingSetting: the active Tbl_TrackingSetting row (latest if more than one is active)
     public async Task<TblTrackingSetting?> GetTrackingSettingAsync(CancellationToken cancellationToken = default) =>
-        await context.TblTrackingSettings
-            .Where(s => s.IsActive)
-            .OrderByDescending(s => s.ModifiedOn ?? s.CreatedOn)
+        (await context.TblTrackingSettings
+            .FromSqlRaw("EXEC [Tracking].[USP_GetTrackingSetting]")
             .AsNoTracking()
-            .FirstOrDefaultAsync(cancellationToken);
+            .ToListAsync(cancellationToken))
+            .FirstOrDefault();
 
     // Global.USP_GetFieldOfficers: everyone in a lower role inside the user's scope (plus a Branch Manager's own Assistant
     // Branch Manager), with the branches each person covers
     public async Task<List<TrackingFieldOfficer>> GetFieldOfficersAsync(TrackingViewer viewer, Guid? organizationUnitId, CancellationToken cancellationToken = default)
     {
         var rows = await context.Set<FieldOfficerResult>()
-            .FromSqlInterpolated($"EXEC [Hrms].[USP_GetFieldOfficers] @UserId = {viewer.UserId}, @OrganisationUnitId = {organizationUnitId}")
+            .FromSqlInterpolated($"EXEC [Tracking].[USP_GetFieldOfficers] @UserId = {viewer.UserId}, @OrganisationUnitId = {organizationUnitId}")
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
@@ -159,75 +138,49 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
 
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
-    // An active employee's latest open designation and the branches at or below its unit
+    // Tracking.USP_GetTrackingOfficer: an active employee's latest open designation and the branches at or below its unit
     public async Task<TrackingOfficer?> GetOfficerAsync(Guid employeeId, CancellationToken cancellationToken = default)
     {
-        var position = await context.TblEmployeeDesignations
-            .Where(ed => ed.EmployeeId == employeeId && ed.EffectiveTo == null && ed.Employee.IsActive)
-            .OrderByDescending(ed => ed.EffectiveFrom)
-            .Select(ed => new { ed.EmployeeId, ed.Employee.FullName, ed.DesignationId, PostName = ed.Designation.Post.Name, ed.Designation.OrganizationUnitId })
+        var officer = (await context.Set<TrackingOfficerResult>()
+            .FromSqlInterpolated($"EXEC [Tracking].[USP_GetTrackingOfficer] @EmployeeId = {employeeId}")
             .AsNoTracking()
-            .FirstOrDefaultAsync(cancellationToken);
-        if (position is null) return null;
-
-        var units = await context.TblOrganizationUnits
-            .Select(o => new UnitNode(o.Id, o.ParentId, o.Name, o.OrganizationUnitType.Name))
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken))
+            .FirstOrDefault();
+        if (officer is null) return null;
 
         return new TrackingOfficer(
-            position.EmployeeId,
-            position.FullName,
-            position.DesignationId,
-            position.PostName,
-            position.OrganizationUnitId,
-            BranchIdsOf(DescendantsAndSelf(units, position.OrganizationUnitId)).ToList());
+            officer.EmployeeId,
+            officer.FullName,
+            officer.DesignationId,
+            officer.PostName,
+            officer.UnitId,
+            IdsOf(officer.BranchIdsCsv));
     }
 
+    // Tracking.USP_GetBranchCodes
     public async Task<Dictionary<Guid, BranchCode>> GetBranchCodesAsync(IEnumerable<Guid> branchIds, CancellationToken cancellationToken = default)
     {
         var ids = branchIds.Distinct().ToList();
-        return await context.TblOrganizationUnits
-            .Where(o => ids.Contains(o.Id))
-            .Select(o => new BranchCode(o.Id, o.Name, o.CodeVal))
+        return (await context.Set<BranchCodeResult>()
+            .FromSqlInterpolated($"EXEC [Tracking].[USP_GetBranchCodes] @BranchIds = {CsvOf(ids)}")
             .AsNoTracking()
-            .ToDictionaryAsync(b => b.Id, cancellationToken);
+            .ToListAsync(cancellationToken))
+            .ToDictionary(b => b.Id, b => new BranchCode(b.Id, b.Name, b.CodeVal));
     }
 
-    public async Task<DateOnly?> GetFinancialYearStartAsync(DateOnly day, CancellationToken cancellationToken = default) =>
-        await context.TblFinancialYears
-            .Where(f => f.StartDate <= day && f.EndDate >= day)
-            .Select(f => (DateOnly?)f.StartDate)
-            .FirstOrDefaultAsync(cancellationToken);
-
-    private sealed record UnitNode(Guid Id, Guid? ParentId, string Name, string TypeName);
-
-    private static UnitNode? AncestorOfType(Dictionary<Guid, UnitNode> units, Guid? startId, string typeName)
+    // Tracking.USP_GetFinancialYearStart
+    public async Task<DateOnly?> GetFinancialYearStartAsync(DateOnly day, CancellationToken cancellationToken = default)
     {
-        var visited = new HashSet<Guid>();
-        while (startId.HasValue && visited.Add(startId.Value) && units.TryGetValue(startId.Value, out var unit))
-        {
-            if (unit.TypeName == typeName) return unit;
-            startId = unit.ParentId;
-        }
-        return null;
+        var starts = await context.Database
+            .SqlQuery<DateOnly>($"EXEC [Tracking].[USP_GetFinancialYearStart] @Day = {day}")
+            .ToListAsync(cancellationToken);
+        return starts.Count == 0 ? null : starts[0];
     }
 
-    private static IEnumerable<Guid> BranchIdsOf(IEnumerable<UnitNode> units) =>
-        units.Where(u => u.TypeName == BranchUnitType).OrderBy(u => u.Name).Select(u => u.Id);
+    private static string CsvOf(IEnumerable<Guid> ids) => string.Join(',', ids);
 
-    private static List<UnitNode> DescendantsAndSelf(List<UnitNode> units, Guid rootId)
-    {
-        var children = units.Where(u => u.ParentId.HasValue).ToLookup(u => u.ParentId!.Value);
-        var result = units.Where(u => u.Id == rootId).ToList();
-        var visited = new HashSet<Guid> { rootId };
-        for (var i = 0; i < result.Count; i++)
-        {
-            foreach (var child in children[result[i].Id])
-            {
-                if (visited.Add(child.Id)) result.Add(child);
-            }
-        }
-        return result;
-    }
+    private static List<Guid> IdsOf(string? csv) =>
+        string.IsNullOrEmpty(csv)
+            ? []
+            : csv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Select(Guid.Parse).ToList();
 }

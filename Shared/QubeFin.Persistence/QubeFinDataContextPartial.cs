@@ -43,6 +43,42 @@ public partial class QubeFinDataContext : DbContext, IUnitOfWork
         modelBuilder.Entity<UserWiseBranchItem>().HasNoKey().ToView(null);
         modelBuilder.Entity<BranchCreditOfficerItem>().HasNoKey().ToView(null);
         modelBuilder.Entity<FieldOfficerResult>().HasNoKey().ToView(null);
+        modelBuilder.Entity<JobSearchRowResult>().HasNoKey().ToView(null);
+        modelBuilder.Entity<TrackingViewerResult>().HasNoKey().ToView(null);
+        modelBuilder.Entity<TrackingOfficerResult>().HasNoKey().ToView(null);
+        modelBuilder.Entity<TrackingBranchResult>().HasNoKey().ToView(null);
+        modelBuilder.Entity<BranchCodeResult>().HasNoKey().ToView(null);
+        modelBuilder.Entity<JobDetailResult>().HasNoKey().ToView(null);
+        modelBuilder.Entity<JobTaskResult>(entity =>
+        {
+            entity.HasNoKey().ToView(null);
+            entity.Property(e => e.TargetLocation).HasColumnType("geography");
+            entity.Property(e => e.ArriveLocation).HasColumnType("geography");
+            entity.Property(e => e.CompletedLocation).HasColumnType("geography");
+        });
+        modelBuilder.Entity<JobHistoryResult>().HasNoKey().ToView(null);
+        modelBuilder.Entity<JobTaskPointResult>(entity =>
+        {
+            entity.HasNoKey().ToView(null);
+            entity.Property(e => e.TargetLocation).HasColumnType("geography");
+        });
+        modelBuilder.Entity<PendingPlaceTaskResult>().HasNoKey().ToView(null);
+        modelBuilder.Entity<GeoTagPointResult>(entity =>
+        {
+            entity.HasNoKey().ToView(null);
+            entity.Property(e => e.Location).HasColumnType("geography");
+        });
+        modelBuilder.Entity<TrackingPlaceResult>(entity =>
+        {
+            entity.HasNoKey().ToView(null);
+            entity.Property(e => e.Location).HasColumnType("geography");
+        });
+        modelBuilder.Entity<GeoTagResult>(entity =>
+        {
+            entity.HasNoKey().ToView(null);
+            entity.Property(e => e.Location).HasColumnType("geography");
+        });
+        modelBuilder.Entity<GeoTagTargetResult>().HasNoKey().ToView(null);
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

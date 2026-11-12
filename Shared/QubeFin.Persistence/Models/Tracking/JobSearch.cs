@@ -41,3 +41,28 @@ public record JobSummaryRow(
 public record JobStatusCounts(int Total, int Assigned, int InProgress, int Delayed, int Completed);
 
 public record JobSearchResult(List<JobSummaryRow> Jobs, int TotalRecords, JobStatusCounts Summary);
+
+// One row of Tracking.USP_SearchJobs; BranchesJson is [{ "BranchId", "Name" }] sorted by name, TypesCsv the distinct task types
+public class JobSearchRowResult
+{
+    public Guid Id { get; set; }
+    public string JobCode { get; set; } = null!;
+    public string JobTitle { get; set; } = null!;
+    public string Status { get; set; } = null!;
+    public Guid? AssigneeId { get; set; }
+    public string? AssigneeName { get; set; }
+    public string AssigneeRole { get; set; } = null!;
+    public string UnitName { get; set; } = null!;
+    public string? BranchesJson { get; set; }
+    public string CreatedByName { get; set; } = null!;
+    public DateTime? CreatedOn { get; set; }
+    public DateOnly StartDate { get; set; }
+    public DateOnly? EndDate { get; set; }
+    public int TaskCount { get; set; }
+    public int DoneCount { get; set; }
+    public int OpenCount { get; set; }
+    public int SelfAddedCount { get; set; }
+    public string? TypesCsv { get; set; }
+    public Guid? TransferJobRefId { get; set; }
+    public string? TransferJobRefCode { get; set; }
+}
