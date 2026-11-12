@@ -25,7 +25,6 @@ public interface IJobRepository
 
 public class JobRepository(QubeFinDataContext context) : IJobRepository
 {
-    // Job and task status names (D8); Tbl_JobTask.Status holds the task ones, the flags are the fallback when it is empty
     private const string Assigned = "Assigned";
     private const string InProgress = "InProgress";
     private const string Delayed = "Delayed";
@@ -35,9 +34,6 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
     private const string Transferred = "Transferred";
     private const string OdFollowUp = "OdFollowUp";
     private const string MemberVisit = "MemberVisit";
-
-    // Tracking.USP_SearchJobs: the visible jobs that pass the filters, their status, the counts for the top cards,
-    // the status filter, sorting and one page with its details
     public async Task<JobSearchResult> SearchJobsAsync(TrackingViewer viewer, JobSearchFilter filter, DateOnly today, CancellationToken cancellationToken = default)
     {
         SqlParameter Output(string name) => new(name, SqlDbType.Int) { Direction = ParameterDirection.Output };
@@ -111,7 +107,6 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
                 r.TransferJobRefCode);
         }).ToList();
 
-        // Output values are read after the result set has been read to the end
         var summary = new JobStatusCounts(
             (int)countTotal.Value,
             (int)countAssigned.Value,
@@ -122,8 +117,6 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
     }
 
     private sealed record JobBranch(Guid BranchId, string Name);
-
-    // Tracking.USP_GetJob (header, only when the user may see the job) and Tracking.USP_GetJobTasks (its tasks)
     public async Task<JobDetailRow?> GetJobAsync(TrackingViewer viewer, Guid jobId, DateOnly today, CancellationToken cancellationToken = default)
     {
         var job = (await context.Set<JobDetailResult>()
@@ -227,9 +220,6 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
             new TrackingPosition(false, job.AssigneePostName, job.AssigneeUnitId),
             taskRows);
     }
-
-    // Tracking.USP_GetJobHistory: Tbl_JobHistory is append-only; each row lists the tasks it mentions through
-    // Tbl_JobHistoryTasks. Newest first. Null when the user may not see the job.
     public async Task<List<JobHistoryRow>?> GetJobHistoryAsync(TrackingViewer viewer, Guid jobId, CancellationToken cancellationToken = default)
     {
         var isVisible = new SqlParameter("@IsVisible", SqlDbType.Bit) { Direction = ParameterDirection.Output };
@@ -238,8 +228,6 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
                 [.. ViewerParameters(viewer), new SqlParameter("@JobId", SqlDbType.UniqueIdentifier) { Value = jobId }, isVisible])
             .AsNoTracking()
             .ToListAsync(cancellationToken);
-
-        // Output values are read after the result set has been read to the end
         if (isVisible.Value is not true) return null;
 
         return rows.Select(h => new JobHistoryRow(
@@ -260,9 +248,6 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
 
     public async Task AddHistoryAsync(TblJobHistory history, CancellationToken cancellationToken = default) =>
         await context.TblJobHistories.AddAsync(history, cancellationToken);
-
-    // Tracking.USP_GetTaskPoints: task locations of open jobs (Assigned, InProgress, Delayed) the user may see, for the
-    // duplicate check in the task picker
     public async Task<List<JobTaskPointRow>> GetTaskPointsAsync(TrackingViewer viewer, Guid? organisationUnitId, Guid? assigneeId, bool pendingOnly, DateOnly today, CancellationToken cancellationToken = default)
     {
         var rows = await context.Set<JobTaskPointResult>()
@@ -302,8 +287,6 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
                 x.Status == Completed && !x.Row.IsLocationMatched))
             .ToList();
     }
-
-    // Tracking.USP_GetPendingTasksAt: pending tasks (in jobs not cancelled) at these places, with who holds each job and its window
     public async Task<List<PendingPlaceTask>> GetPendingTasksAtAsync(IEnumerable<Guid> originRefIds, CancellationToken cancellationToken = default)
     {
         var ids = originRefIds.Distinct().ToList();
@@ -316,15 +299,11 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
             .Select(t => new PendingPlaceTask(t.TaskType, t.OriginRefId, t.JobId, t.JobCode, t.AssignTo, t.AssigneeName, t.StartDate, t.EndDate))
             .ToList();
     }
-
-    // Tracking.USP_GetLastJobCode
     public async Task<string?> GetLastJobCodeAsync(string prefix, CancellationToken cancellationToken = default) =>
         (await context.Database
             .SqlQuery<string>($"EXEC [Tracking].[USP_GetLastJobCode] @Prefix = {prefix}")
             .ToListAsync(cancellationToken))
             .FirstOrDefault();
-
-    // Tracking.USP_GetLastTaskNo
     public async Task<string?> GetLastTaskNoAsync(string prefix, CancellationToken cancellationToken = default) =>
         (await context.Database
             .SqlQuery<string>($"EXEC [Tracking].[USP_GetLastTaskNo] @Prefix = {prefix}")
@@ -336,14 +315,10 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
 
     public async Task AddTasksAsync(IEnumerable<TblJobTask> tasks, CancellationToken cancellationToken = default) =>
         await context.TblJobTasks.AddRangeAsync(tasks, cancellationToken);
-
-    // Tracked, with its tasks, for the write APIs
     public async Task<TblJob?> GetJobForUpdateAsync(Guid jobId, CancellationToken cancellationToken = default) =>
         await context.TblJobs
             .Include(j => j.TblJobTasks)
             .FirstOrDefaultAsync(j => j.Id == jobId, cancellationToken);
-
-    // The user as the procedures take them (see Tracking.Fn_GetVisibleJobs); NULL scope = an Admin, who sees every job
     private const string ViewerArguments = "@UserId, @EmployeeId, @Role, @UnitId, @ScopeUnitIds";
 
     private static SqlParameter[] ViewerParameters(TrackingViewer viewer) =>
@@ -363,8 +338,6 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
 
     private static List<string> TypesOf(string? csv) =>
         (csv ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
-
-    // Pending under the same rule as the reads: the Status column, or the flags when it is empty
     public static bool IsPending(TblJobTask task) => TaskStatusOf(task) == Pending;
 
     public static string StatusOf(TblJobTask task) => TaskStatusOf(task);
@@ -380,8 +353,6 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
         if (isTaskCancel) return Cancelled;
         return Pending;
     }
-
-    // D8, first match wins
     private static string JobStatusOf(bool isCancel, int pendingCount, int doneCount, DateOnly? endDate, DateOnly today)
     {
         if (isCancel || (pendingCount == 0 && doneCount == 0)) return Cancelled;

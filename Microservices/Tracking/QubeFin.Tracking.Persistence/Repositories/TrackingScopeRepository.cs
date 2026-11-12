@@ -22,8 +22,6 @@ public interface ITrackingScopeRepository
 public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScopeRepository
 {
     private const string AllBranches = "All branches";
-
-    // Tracking.USP_GetTrackingViewer: the user, their post and unit, and the units and branches in their scope
     public async Task<TrackingViewer?> GetViewerAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var user = (await context.Set<TrackingViewerResult>()
@@ -59,8 +57,6 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
             IdsOf(user.UnitIdsCsv),
             IdsOf(user.BranchIdsCsv));
     }
-
-    // Tracking.USP_GetTrackingBranches: the branches with code, nearest Area and Division and location, sorted by name
     public async Task<List<TrackingBranch>> GetBranchesAsync(IReadOnlyList<Guid> branchIds, CancellationToken cancellationToken = default)
     {
         var branches = await context.Set<TrackingBranchResult>()
@@ -81,8 +77,6 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
             .ToList();
     }
 
-    // The branches of Global.Fn_GetUserWiseBranches (BM one branch, AM the area's, DM the division's, super admin all),
-    // with their code, sorted by name
     public async Task<List<UserWiseBranchItem>> GetUserWiseBranchesAsync(Guid userId, CancellationToken cancellationToken = default) =>
         await context.Set<UserWiseBranchItem>()
             .FromSqlInterpolated($@"SELECT DISTINCT B.Id, B.Name, CAST(OU.CodeVal AS NVARCHAR(20)) AS Code
@@ -91,24 +85,17 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
             .AsNoTracking()
             .OrderBy(b => b.Name)
             .ToListAsync(cancellationToken);
-
-    // Global.USP_GetBranchWiseCreditOfficers: Credit Officers of one branch (a Credit Officer gets only themself)
     public async Task<List<BranchCreditOfficerItem>> GetBranchWiseCreditOfficersAsync(Guid userId, Guid organisationUnitId, CancellationToken cancellationToken = default) =>
         await context.Set<BranchCreditOfficerItem>()
             .FromSqlInterpolated($"EXEC [Global].[USP_GetBranchWiseCreditOfficers] @UserId = {userId}, @OrganisationUnitId = {organisationUnitId}")
             .AsNoTracking()
             .ToListAsync(cancellationToken);
-
-    // Tracking.USP_GetTrackingSetting: the active Tbl_TrackingSetting row (latest if more than one is active)
     public async Task<TblTrackingSetting?> GetTrackingSettingAsync(CancellationToken cancellationToken = default) =>
         (await context.TblTrackingSettings
             .FromSqlRaw("EXEC [Tracking].[USP_GetTrackingSetting]")
             .AsNoTracking()
             .ToListAsync(cancellationToken))
             .FirstOrDefault();
-
-    // Global.USP_GetFieldOfficers: everyone in a lower role inside the user's scope (plus a Branch Manager's own Assistant
-    // Branch Manager), with the branches each person covers
     public async Task<List<TrackingFieldOfficer>> GetFieldOfficersAsync(TrackingViewer viewer, Guid? organizationUnitId, CancellationToken cancellationToken = default)
     {
         var rows = await context.Set<FieldOfficerResult>()
@@ -137,8 +124,6 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
     }
 
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
-
-    // Tracking.USP_GetTrackingOfficer: an active employee's latest open designation and the branches at or below its unit
     public async Task<TrackingOfficer?> GetOfficerAsync(Guid employeeId, CancellationToken cancellationToken = default)
     {
         var officer = (await context.Set<TrackingOfficerResult>()
@@ -156,8 +141,6 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
             officer.UnitId,
             IdsOf(officer.BranchIdsCsv));
     }
-
-    // Tracking.USP_GetBranchCodes
     public async Task<Dictionary<Guid, BranchCode>> GetBranchCodesAsync(IEnumerable<Guid> branchIds, CancellationToken cancellationToken = default)
     {
         var ids = branchIds.Distinct().ToList();
@@ -167,8 +150,6 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
             .ToListAsync(cancellationToken))
             .ToDictionary(b => b.Id, b => new BranchCode(b.Id, b.Name, b.CodeVal));
     }
-
-    // Tracking.USP_GetFinancialYearStart
     public async Task<DateOnly?> GetFinancialYearStartAsync(DateOnly day, CancellationToken cancellationToken = default)
     {
         var starts = await context.Database
