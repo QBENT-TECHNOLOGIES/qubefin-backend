@@ -9,8 +9,11 @@ public record TrackingFieldOfficer(
     Guid? OrganisationUnitId,
     string? OrganisationUnitName,
     string UnitName,
-    IReadOnlyList<Guid> OrganisationUnitIds,
+    IReadOnlyList<OrganizationUnits> OrganisationUnits,
     string? Phone,
     GeoPoint? PresentLocation,
     string? ReportingOfficerName,
     bool CanAssign);
+
+
+public record OrganizationUnits(Guid id, string name);

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Models.Tracking;
+using System.Text.Json;
 
 namespace QubeFin.Tracking.Persistence.Repositories;
 
@@ -127,71 +128,36 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
             .AsNoTracking()
             .FirstOrDefaultAsync(cancellationToken);
 
+    // Global.USP_GetFieldOfficers: everyone in a lower role inside the user's scope (plus a Branch Manager's own Assistant
+    // Branch Manager), with the branches each person covers
     public async Task<List<TrackingFieldOfficer>> GetFieldOfficersAsync(TrackingViewer viewer, Guid? organizationUnitId, CancellationToken cancellationToken = default)
     {
-        var units = await context.TblOrganizationUnits
-            .Select(o => new UnitNode(o.Id, o.ParentId, o.Name, o.OrganizationUnitType.Name))
+        var rows = await context.Set<FieldOfficerResult>()
+            .FromSqlInterpolated($"EXEC [Hrms].[USP_GetFieldOfficers] @UserId = {viewer.UserId}, @OrganisationUnitId = {organizationUnitId}")
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
-        var trackingPosts = TrackingRole.PostNamesBelow(TrackingRole.Admin).ToList();
-        var positions = (await context.TblEmployeeDesignations
-            .Where(ed => ed.EffectiveTo == null
-                && ed.Employee.IsActive
-                && ed.EmployeeId != viewer.EmployeeId
-                && trackingPosts.Contains(ed.Designation.Post.Name)
-                && viewer.UnitIdsInScope.Contains(ed.Designation.OrganizationUnitId))
-            .Select(ed => new
-            {
-                ed.EmployeeId,
-                ed.EffectiveFrom,
-                ed.Employee.Code,
-                ed.Employee.FullName,
-                PostName = ed.Designation.Post.Name,
-                DesignationName = ed.Designation.Name,
-                DesignationUnitId = ed.Designation.OrganizationUnitId,
-                DesignationUnitName = ed.Designation.OrganizationUnit.Name,
-                ed.Employee.OrganizationUnitId,
-                OrganizationUnitName = ed.Employee.OrganizationUnit != null ? ed.Employee.OrganizationUnit.Name : null,
-                ed.Employee.MobileNo,
-                ed.Employee.PresentLocation,
-                ReportingOfficerName = ed.Employee.Supervisor != null ? ed.Employee.Supervisor.FullName : null
-            })
-            .AsNoTracking()
-            .ToListAsync(cancellationToken))
-            .GroupBy(p => p.EmployeeId)
-            .Select(g => g.OrderByDescending(p => p.EffectiveFrom).First());
-
-        var officers = new List<TrackingFieldOfficer>();
-        foreach (var p in positions)
-        {
-            var isBelow = TrackingRole.Rank(p.PostName) < TrackingRole.Rank(viewer.Role);
-            // A Branch Manager oversees the Assistant Branch Manager of their own branch but cannot give them work
-            var isOwnBranchAbm = viewer.Role == TrackingRole.BranchManager
-                && p.PostName == TrackingRole.AssistantBranchManager
-                && p.DesignationUnitId == viewer.UnitId;
-            if (!isBelow && !isOwnBranchAbm) continue;
-
-            var officerBranchIds = BranchIdsOf(DescendantsAndSelf(units, p.DesignationUnitId)).ToList();
-            if (organizationUnitId.HasValue && !officerBranchIds.Contains(organizationUnitId.Value)) continue;
-
-            officers.Add(new TrackingFieldOfficer(
-                p.EmployeeId,
-                p.Code,
-                p.FullName,
-                p.PostName,
-                p.DesignationName,
-                p.OrganizationUnitId,
-                p.OrganizationUnitName,
-                p.DesignationUnitName,
-                officerBranchIds,
-                p.MobileNo,
-                GeoCoordinates.ToGeoPoint(p.PresentLocation),
-                p.ReportingOfficerName,
-                isBelow));
-        }
-        return officers.OrderBy(o => o.Name).ToList();
+        return rows.Select(r => new TrackingFieldOfficer(
+            r.Id,
+            r.EmployeeCode,
+            r.Name,
+            r.Role,
+            r.Designation,
+            r.OrganisationUnitId,
+            r.OrganisationUnitName,
+            r.UnitName,
+            string.IsNullOrEmpty(r.OrganisationUnitsJson)
+                ? []
+                : JsonSerializer.Deserialize<List<OrganizationUnits>>(r.OrganisationUnitsJson, JsonOptions) ?? [],
+            r.Phone,
+            r.PresentLatitude.HasValue && r.PresentLongitude.HasValue
+                ? GeoCoordinates.ToGeoPoint((decimal)r.PresentLatitude.Value, (decimal)r.PresentLongitude.Value)
+                : null,
+            r.ReportingOfficerName,
+            r.CanAssign)).ToList();
     }
+
+    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
     // An active employee's latest open designation and the branches at or below its unit
     public async Task<TrackingOfficer?> GetOfficerAsync(Guid employeeId, CancellationToken cancellationToken = default)

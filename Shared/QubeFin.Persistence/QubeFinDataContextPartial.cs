@@ -42,6 +42,7 @@ public partial class QubeFinDataContext : DbContext, IUnitOfWork
         modelBuilder.Entity<BcMemberListResult>().HasNoKey().ToView(null);
         modelBuilder.Entity<UserWiseBranchItem>().HasNoKey().ToView(null);
         modelBuilder.Entity<BranchCreditOfficerItem>().HasNoKey().ToView(null);
+        modelBuilder.Entity<FieldOfficerResult>().HasNoKey().ToView(null);
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
