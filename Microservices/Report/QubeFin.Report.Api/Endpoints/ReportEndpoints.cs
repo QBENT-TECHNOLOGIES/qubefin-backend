@@ -83,6 +83,32 @@ namespace QubeFin.Report.Api.Endpoints
             #endregion
 
             #region NPOI REPORTS
+
+            app.MapGet("/generate-employee-leave-balance-report/{year:int}/{month:int}/{companyId:guid}", [Authorize] async (int year, int month, Guid companyId, ISender sender) =>
+            {
+                var command = new GenerateNPOIReportsCommand("Hrms.USP_GetEmployeeLeaveBalanceReport",
+                    new Dictionary<string, object?>
+                    {
+                        ["@Year"] = year,
+                        ["@Month"] = month,
+                        ["@CompanyId"] = companyId
+                    },
+                    "Employee Leave Balance Report",
+                    $"Year: {year}, Month: {month}",
+                    true,
+                    companyId
+                );
+
+                var result = await sender.Send(command);
+
+                if (result.IsFailed)
+                    return result.ToHttpResult();
+
+                var file = result.Value;
+
+                return Results.File(file.FileStream, file.ContentType, $"Employee_Leave_Balance_Report_{month}_{year}.xlsx");
+            }).WithSummary("Generate Employee Leave Balance Report.");
+
             app.MapGet("/generate-pf-report/{month:int}/{year:int}/{companyId:Guid}", [Authorize] async (int month, int year, Guid companyId, ISender sender) =>
             {
                 var command = new GenerateNPOIReportsCommand("Payroll.USP_GetPFReport",
