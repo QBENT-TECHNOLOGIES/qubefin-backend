@@ -80,37 +80,21 @@ namespace QubeFin.Collection.Api.Endpoints
               .WithTags("Group Loans")
             .RequireAuthorization();
 
-            app.MapGet("bc-group-loans-payment/{designationId:guid}", async (
-    Guid designationId,
-    Guid bcGroupId,
-    Guid loanId,
-    ISender sender,
-    ClaimsPrincipal principal,
-    CancellationToken cancellationToken) =>
+            app.MapGet("bc-group-loans-payment/{loanId:guid}", async (Guid loanId, ISender sender, CancellationToken cancellationToken) =>
             {
-                if (principal.Identity is null || !principal.Identity.IsAuthenticated)
-                {
-                    return Results.Forbid();
-                }
-
-                var employeeId = principal.Identity.GetEmployeeId();
-                var result = await sender.Send(
-                    new GetGroupWiseLoanDetailQuery(employeeId, designationId, bcGroupId, loanId),
-                    cancellationToken);
-
+                var result = await sender.Send(new GetBcLoanDetailQuery(loanId), cancellationToken);
                 return result.ToHttpResult();
-            }).WithSummary("Get one group wise loan of a credit officer for one collection date")
-  .WithDescription("Returns a single loan (loanId) of the BC group (bcGroupId) tagged to the credit officer's designation id, restricted to the logged-in user's organization unit and every unit below it. collectionDate (yyyy-MM-dd) is required and attaches that date's BC loan collection row - collectionId, collectionEmiAmount, collectedAmount, isDemandDate, isCollected and collectionRemarks are null / false when the sheet for that date has not been raised yet. Returns not found when the loan does not belong to the given group / officer / unit.")
-  .WithTags("Group Loans")
-  .RequireAuthorization();
+            }).WithSummary("Get one BC loan by loan id")
+              .WithTags("Group Loans")
+              .RequireAuthorization();
 
-            app.MapPost("employees/search-loan-by-text", async (IMediator mediator, string searchText) =>
+            app.MapPost("employees/search-loan-by-text", async (IMediator mediator, Guid designationId, Guid bcGroupId, string? searchText) =>
             {
-                var result = await mediator.Send(new GetBcLoanBySearchTextQuery(searchText));
+                var result = await mediator.Send(new GetBcLoanBySearchTextQuery(designationId, bcGroupId, searchText));
                 return result.ToHttpResult();
             })
- .WithSummary("Search bc loan by Text")
- .RequireAuthorization();
+            .WithSummary("Search running loans of a credit officer's group")
+            .RequireAuthorization();
 
 
             app.MapPost("save-bc-collection", async (

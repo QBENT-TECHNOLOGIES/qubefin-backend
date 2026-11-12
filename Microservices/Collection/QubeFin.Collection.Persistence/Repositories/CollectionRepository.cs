@@ -11,7 +11,6 @@ namespace QubeFin.Collection.Persistence.Repositories
         Task<List<CreditOfficer>> GetCreditOfficersAsync(Guid employeeId, CancellationToken cancellationToken = default);
         Task<List<CreditOfficerGroup>> GetCreditOfficerGroupsAsync(Guid employeeId, Guid designationId, CancellationToken cancellationToken = default);
         Task<List<BcGroupLoan>> GetGroupLoansAsync(Guid employeeId, Guid designationId, Guid? bcGroupId, DateOnly collectionDate, BcGroupLoanSearchParam search, CancellationToken cancellationToken = default);
-        Task<BcGroupLoan?> GetGroupLoanDetailByLoanIdAsync(Guid employeeId, Guid designationId, Guid bcGroupId, Guid loanId, CancellationToken cancellationToken = default);
         Task SaveLoanCollectionsAsync(IReadOnlyList<LoanCollectionEntry> entries, CancellationToken cancellationToken = default);
     }
 
@@ -262,75 +261,7 @@ namespace QubeFin.Collection.Persistence.Repositories
 
         // Sends every collected loan of one save in a single call, as the [dbo].[UT_LoanCollection] table type.
         // The DataTable columns must stay in the same order and types as the table type.
-        public async Task<BcGroupLoan?> GetGroupLoanDetailByLoanIdAsync(Guid employeeId, Guid designationId, Guid bcGroupId, Guid loanId, CancellationToken cancellationToken = default)
-        {
-            var employeeIdParameter = new SqlParameter("@EmployeeId", employeeId);
-            var designationIdParameter = new SqlParameter("@DesignationId", designationId);
-            var bcGroupIdParameter = new SqlParameter("@BcGroupId", bcGroupId);
-            var loanIdParameter = new SqlParameter("@LoanId", loanId);
-           
-
-            var sql = $"""
-        {LoginUnitTreeCte}
-        SELECT
-            l.Id AS Id,
-            l.LoanNo AS LoanNo,
-            g.Id AS BcGroupId,
-            g.Code AS GroupCode,
-            g.Name AS GroupName,
-            m.Id AS BcMemberId,
-            m.Code AS MemberCode,
-            LTRIM(RTRIM(CONCAT(m.FirstName, ' ' + m.MiddleName, ' ', m.LastName))) AS MemberName,
-            m.MobileNo AS MemberMobileNo,
-            l.LoanProductName AS LoanProductName,
-            l.LoanPurpose AS LoanPurpose,
-            l.LoanAmount AS LoanAmount,
-            l.RateOfInterest AS RateOfInterest,
-            l.LoanTenure AS LoanTenure,
-            l.EMIAmount AS EmiAmount,
-            l.DisburseDate AS DisburseDate,
-            l.DisburseAmount AS DisburseAmount,
-            l.TotalPaidAmount AS TotalPaidAmount,
-            l.TotalPaidInstallment AS TotalPaidInstallment,
-            l.CurrentOutstadingAmount AS CurrentOutstandingAmount,
-            l.OverdueAmount AS OverdueAmount,
-            l.DPDDays AS DpdDays,
-            l.IsClosed AS IsClosed,
-            l.ClosedDate AS ClosedDate,
-            c.Id AS CollectionId,
-            c.EmiAmount AS CollectionEmiAmount,
-            c.CollectionAmount AS CollectedAmount,
-            ISNULL(c.IsDemandDate, 0) AS IsDemandDate,
-            ISNULL(c.IsCollected, 0) AS IsCollected,
-            c.Remarks AS CollectionRemarks,
-            1 AS TotalRecords
-        FROM BC.Tbl_BCLoan l
-        INNER JOIN BC.Tbl_BCMember m ON m.Id = l.BCMemberId
-        INNER JOIN BC.Tbl_BCGroup g ON g.Id = m.BCGroupId
-        INNER JOIN UnitTree t ON t.Id = g.OrganizationUnitId
-        OUTER APPLY (
-            SELECT TOP (1) lc.Id, lc.EmiAmount, lc.CollectionAmount, lc.IsDemandDate, lc.IsCollected, lc.Remarks
-            FROM BC.Tbl_BCLoanCollection lc
-            WHERE lc.LoanId = l.Id
-            ORDER BY lc.IsDemandDate DESC, lc.CreatedOn DESC
-        ) c
-        WHERE l.Id = @LoanId
-          AND g.Id = @BcGroupId
-          AND g.DesignationId = @DesignationId
-        OPTION (MAXRECURSION 100)
-        """;
-
-            var rows = await context.Database
-                .SqlQueryRaw<BcGroupLoan>(
-                    sql,
-                    employeeIdParameter,
-                    designationIdParameter,
-                    bcGroupIdParameter,
-                    loanIdParameter)
-                .ToListAsync(cancellationToken);
-
-            return rows.FirstOrDefault();
-        }
+       
         public async Task SaveLoanCollectionsAsync(IReadOnlyList<LoanCollectionEntry> entries, CancellationToken cancellationToken = default)
         {
             var table = new DataTable();
