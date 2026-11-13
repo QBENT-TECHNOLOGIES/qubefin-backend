@@ -396,6 +396,52 @@ namespace QubeFin.Report.Api.Endpoints
 
                 return Results.File(file.FileStream, file.ContentType, $"Employee_Detail_Report_{year}.xlsx");
             }).WithSummary("Generate Employee Detail Report.");
+
+            app.MapGet("/generate-leave-request-report", [Authorize] async (ISender sender) =>
+            {
+
+                var command = new GenerateNPOIReportsCommand("Hrms.USP_GetLeaveRequestReport",
+                    new Dictionary<string, object?>
+                    {
+                    },
+                    "Employee Leave Request Report",
+                    $"",
+                    false,
+                    Guid.Empty
+                );
+
+                var result = await sender.Send(command);
+
+                if (result.IsFailed)
+                    return result.ToHttpResult();
+
+                var file = result.Value;
+
+                return Results.File(file.FileStream, file.ContentType, $"Leave_Request_Report.xlsx");
+            }).WithSummary("Generate Leave Request Report.");
+
+            app.MapGet("/generate-regularization-report", [Authorize] async (ISender sender) =>
+            {
+
+                var command = new GenerateNPOIReportsCommand("Hrms.USP_GetRegularizationReport",
+                    new Dictionary<string, object?>
+                    {
+                    },
+                    "Employee Regularization Report",
+                    $"",
+                    false,
+                    Guid.Empty
+                );
+
+                var result = await sender.Send(command);
+
+                if (result.IsFailed)
+                    return result.ToHttpResult();
+
+                var file = result.Value;
+
+                return Results.File(file.FileStream, file.ContentType, $"Regularization_Report.xlsx");
+            }).WithSummary("Generate Regularization Report.");
             #endregion
         }
     }
