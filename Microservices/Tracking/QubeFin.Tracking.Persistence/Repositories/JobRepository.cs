@@ -11,6 +11,7 @@ namespace QubeFin.Tracking.Persistence.Repositories;
 public interface IJobRepository
 {
     Task<JobSearchResult> SearchJobsAsync(TrackingViewer viewer, JobSearchFilter filter, DateOnly today, CancellationToken cancellationToken = default);
+    Task<List<JobSummaryRow>> GetOpenJobsAsync(OpenJobFilter filter, DateOnly today, CancellationToken cancellationToken = default);
     Task<JobDetailRow?> GetJobAsync(TrackingViewer viewer, Guid jobId, DateOnly today, CancellationToken cancellationToken = default);
     Task<List<JobHistoryRow>?> GetJobHistoryAsync(TrackingViewer viewer, Guid jobId, CancellationToken cancellationToken = default);
     Task AddHistoryAsync(TblJobHistory history, CancellationToken cancellationToken = default);
@@ -80,32 +81,7 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
-        var jobs = rows.Select(r =>
-        {
-            var branches = BranchesOf(r.BranchesJson);
-            return new JobSummaryRow(
-                r.Id,
-                r.JobCode,
-                r.JobTitle,
-                r.Status,
-                r.AssigneeId,
-                r.AssigneeName,
-                r.AssigneeRole,
-                r.UnitName,
-                branches.Select(b => b.BranchId).ToList(),
-                branches.Select(b => b.Name).ToList(),
-                r.CreatedByName,
-                r.CreatedOn,
-                r.StartDate,
-                r.EndDate,
-                r.TaskCount,
-                r.DoneCount,
-                r.OpenCount,
-                r.SelfAddedCount,
-                TypesOf(r.TypesCsv),
-                r.TransferJobRefId,
-                r.TransferJobRefCode);
-        }).ToList();
+        var jobs = rows.Select(SummaryRowOf).ToList();
 
         var summary = new JobStatusCounts(
             (int)countTotal.Value,
@@ -116,7 +92,56 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
         return new JobSearchResult(jobs, (int)totalRecords.Value, summary);
     }
 
+    // Tracking.USP_GetOpenJobs: open jobs in the user's branches (Global.Fn_GetUserWiseBranches), soonest complete-by first
+    public async Task<List<JobSummaryRow>> GetOpenJobsAsync(OpenJobFilter filter, DateOnly today, CancellationToken cancellationToken = default)
+    {
+        var rows = await context.Set<JobSearchRowResult>()
+            .FromSqlRaw(
+                "EXEC [Tracking].[USP_GetOpenJobs] @UserId, @Today, @OrganisationUnitId, @AssigneeId, @SearchText",
+                new SqlParameter("@UserId", SqlDbType.UniqueIdentifier) { Value = filter.UserId },
+                new SqlParameter("@Today", SqlDbType.Date) { Value = today.ToDateTime(TimeOnly.MinValue) },
+                new SqlParameter("@OrganisationUnitId", SqlDbType.UniqueIdentifier) { Value = (object?)filter.OrganisationUnitId ?? DBNull.Value },
+                new SqlParameter("@AssigneeId", SqlDbType.UniqueIdentifier) { Value = (object?)filter.AssigneeId ?? DBNull.Value },
+                new SqlParameter("@SearchText", SqlDbType.NVarChar, 200)
+                {
+                    Value = string.IsNullOrWhiteSpace(filter.SearchText) ? DBNull.Value : filter.SearchText.Trim()
+                })
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        return rows.Select(SummaryRowOf).ToList();
+    }
+
+    private static JobSummaryRow SummaryRowOf(JobSearchRowResult r)
+    {
+        var branches = BranchesOf(r.BranchesJson);
+        return new JobSummaryRow(
+            r.Id,
+            r.JobCode,
+            r.JobTitle,
+            r.Status,
+            r.AssigneeId,
+            r.AssigneeName,
+            r.AssigneeRole,
+            r.UnitName,
+            branches.Select(b => b.BranchId).ToList(),
+            branches.Select(b => b.Name).ToList(),
+            r.CreatedByName,
+            r.CreatedOn,
+            r.StartDate,
+            r.EndDate,
+            r.TaskCount,
+            r.DoneCount,
+            r.OpenCount,
+            r.SelfAddedCount,
+            TypesOf(r.TypesCsv),
+            r.TransferJobRefId,
+            r.TransferJobRefCode);
+    }
+
     private sealed record JobBranch(Guid BranchId, string Name);
+
+    // Tracking.USP_GetJob (header, only when the user may see the job) and Tracking.USP_GetJobTasks (its tasks)
     public async Task<JobDetailRow?> GetJobAsync(TrackingViewer viewer, Guid jobId, DateOnly today, CancellationToken cancellationToken = default)
     {
         var job = (await context.Set<JobDetailResult>()

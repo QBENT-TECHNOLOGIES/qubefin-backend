@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
 using QubeFin.Core.Results;
@@ -130,6 +131,37 @@ public class JobEndpoints : IEndpoint
         })
         .WithSummary("Reject a self-added task")
         .WithDescription("Refuses a pending task the assignee added from the mobile app, with a reason. Tasks added on the web must be cancelled instead.")
+        .WithTags("Jobs")
+        .RequireAuthorization();
+
+        app.MapPut("jobs/{id:guid}/tasks/{taskId:guid}/complete", async (Guid id, Guid taskId, [FromForm] CompleteTaskRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Unauthorized();
+            }
+            var userId = principal.Identity.GetUserId();
+            var result = await sender.Send(new CompleteTaskCommand(userId, id, taskId, request), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .DisableAntiforgery()
+        .WithSummary("Complete a task")
+        .WithDescription("multipart/form-data with Photo, Latitude, Longitude and Remarks; OD follow-up tasks also send MemberAvailable, Paid, AmountCollected (when paid) and PtpDate (when not paid). Only the job's assignee can complete a pending task. The distance from the place is worked out and a mismatch is flagged. If it was the last pending task, the job completes.")
+        .WithTags("Jobs")
+        .RequireAuthorization();
+
+        app.MapGet("jobs/open", async (Guid? organisationUnitId, Guid? assigneeId, string? searchText, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        {
+            if (principal.Identity is null || !principal.Identity.IsAuthenticated)
+            {
+                return Results.Unauthorized();
+            }
+            var userId = principal.Identity.GetUserId();
+            var result = await sender.Send(new GetOpenJobsQuery(userId, organisationUnitId, assigneeId, searchText), cancellationToken);
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get open jobs for adding tasks")
+        .WithDescription("Open jobs (Assigned, InProgress, Delayed) in the signed-in user's branches (BM: branch, AM: area, DM: division, super admin: all), soonest complete-by first. organisationUnitId keeps jobs whose assignee covers that branch; assigneeId keeps one person's jobs; searchText matches job no, title or assignee.")
         .WithTags("Jobs")
         .RequireAuthorization();
 

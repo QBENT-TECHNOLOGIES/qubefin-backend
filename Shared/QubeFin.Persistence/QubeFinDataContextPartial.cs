@@ -79,6 +79,11 @@ public partial class QubeFinDataContext : DbContext, IUnitOfWork
             entity.Property(e => e.Location).HasColumnType("geography");
         });
         modelBuilder.Entity<GeoTagTargetResult>().HasNoKey().ToView(null);
+        modelBuilder.Entity<OdMemberSearchRowResult>(entity =>
+        {
+            entity.HasNoKey().ToView(null);
+            entity.Property(e => e.Location).HasColumnType("geography");
+        });
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

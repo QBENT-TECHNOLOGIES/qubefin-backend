@@ -24,6 +24,7 @@ public static class DependencyInjection
         services.AddScoped<IJobRepository, JobRepository>();
         services.AddScoped<IGeoTagRepository, GeoTagRepository>();
         services.AddScoped<IBcListRepository, BcListRepository>();
+        services.AddScoped<IOdMemberRepository, OdMemberRepository>();
         services.AddScoped<IFileStorageRepository, FileStorageRepository>();
         return services;
     }
