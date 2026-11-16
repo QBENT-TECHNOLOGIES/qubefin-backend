@@ -44,9 +44,11 @@ internal sealed class AddTasksCommandHandler(
         var today = TrackingClock.Today();
         var job = await jobRepository.GetJobAsync(viewer, command.JobId, today, cancellationToken);
         if (job is null) return new RecordNotFoundError("Job not found");
-        if (!JobPermissionRules.For(viewer, job).CanUpdate)
+        // The assignee adds tasks to their own job (self-added); anyone else needs the update right (D4)
+        var isAssignee = viewer.EmployeeId.HasValue && job.AssignTo == viewer.EmployeeId;
+        if (!isAssignee && !JobPermissionRules.For(viewer, job).CanUpdate)
         {
-            return new ForbiddenError("Only the person who created this job, someone above them, or a manager above the assignee can add tasks.");
+            return new ForbiddenError("Only the assignee, the person who created this job, someone above them, or a manager above the assignee can add tasks.");
         }
 
         var status = Enum.Parse<JobStatus>(job.Summary.Status);
@@ -69,11 +71,17 @@ internal sealed class AddTasksCommandHandler(
             return new ValidationError($"No task could be added: {string.Join("; ", plan.Skipped.Select(s => $"{s.Title} — {s.Reason}"))}");
         }
 
+        if (isAssignee)
+        {
+            foreach (var task in plan.Tasks) task.IsSelfAdded = true;
+        }
+
         await numberGenerator.AssignTaskNosAsync(plan.Tasks, plan.Branches, today, cancellationToken);
         await jobRepository.AddTasksAsync(plan.Tasks, cancellationToken);
-        // TasksAdded lists only the tasks that were inserted
+        // TasksAdded (or TaskSelfAdded when the assignee added them) lists only the tasks that were inserted
         await jobRepository.AddHistoryAsync(
-            JobHistoryEntries.New(job.Summary.Id, JobHistoryAction.TasksAdded, viewer.UserId, performedAt, plan.Tasks),
+            JobHistoryEntries.New(job.Summary.Id, isAssignee ? JobHistoryAction.TaskSelfAdded : JobHistoryAction.TasksAdded,
+                viewer.UserId, performedAt, plan.Tasks),
             cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
