@@ -27,7 +27,7 @@ public record JobTaskRow(
     Guid? OriginRefId,
     string? TargetName,
     GeoPoint? TargetLocation,
-    Guid OrganisationUnitId,
+    Guid OrganizationUnitId,
     string BranchName,
     int? RadiusMeters,
     string Status,

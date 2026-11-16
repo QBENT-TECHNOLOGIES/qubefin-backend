@@ -9,9 +9,9 @@ using QubeFin.Tracking.Persistence.Repositories;
 namespace QubeFin.Tracking.Application.Jobs.Queries;
 
 #region --- QUERY ---
-// OrganisationUnitId: only jobs whose assignee can take that branch's work. AssigneeId: only jobs held by this employee.
+// OrganizationUnitId: only jobs whose assignee can take that branch's work. AssigneeId: only jobs held by this employee.
 // SearchText: job code, title or assignee name.
-public record GetOpenJobsQuery(Guid UserId, Guid? OrganisationUnitId, Guid? AssigneeId, string? SearchText) : IRequest<Result<List<JobSummaryResponse>>>;
+public record GetOpenJobsQuery(Guid UserId, Guid? OrganizationUnitId, Guid? AssigneeId, string? SearchText) : IRequest<Result<List<JobSummaryResponse>>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -36,7 +36,7 @@ internal sealed class GetOpenJobsQueryHandler(ITrackingScopeRepository scopeRepo
         if (viewer is null) return new ForbiddenError("You do not have access to Tracking.");
 
         var rows = await jobRepository.GetOpenJobsAsync(
-            new OpenJobFilter(viewer.UserId, query.OrganisationUnitId, query.AssigneeId, query.SearchText),
+            new OpenJobFilter(viewer.UserId, query.OrganizationUnitId, query.AssigneeId, query.SearchText),
             TrackingClock.Today(),
             cancellationToken);
 

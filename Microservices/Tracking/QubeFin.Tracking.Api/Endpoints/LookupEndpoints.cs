@@ -41,14 +41,14 @@ public class LookupEndpoints : IEndpoint
         .WithTags("Lookups")
         .RequireAuthorization();
 
-        app.MapGet("branch-wise-credit-officers", async (Guid? organisationUnitId, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        app.MapGet("branch-wise-credit-officers", async (Guid? organizationUnitId, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)
             {
                 return Results.Unauthorized();
             }
             var userId = principal.Identity.GetUserId();
-            var result = await sender.Send(new GetBranchWiseCreditOfficersQuery(userId, organisationUnitId), cancellationToken);
+            var result = await sender.Send(new GetBranchWiseCreditOfficersQuery(userId, organizationUnitId), cancellationToken);
             return result.ToHttpResult();
         })
         .WithSummary("Get the Credit Officers of a branch")

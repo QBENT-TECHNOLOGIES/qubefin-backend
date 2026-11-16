@@ -19,7 +19,7 @@ public class NewTaskInputValidator : AbstractValidator<NewTaskInput>
             .When(t => t.Target is not null && t.Target.Kind is not null && t.Target.Kind != TaskTargetKind.Custom);
         RuleFor(t => t.Target!.TargetLocation).NotNull().WithMessage("Pick the point on the map.")
             .When(t => t.Target?.Kind == TaskTargetKind.Custom);
-        RuleFor(t => t.Target!.OrganisationUnitId).NotEmpty().WithMessage("Select the branch of the map point.")
+        RuleFor(t => t.Target!.OrganizationUnitId).NotEmpty().WithMessage("Select the branch of the map point.")
             .When(t => t.Target?.Kind == TaskTargetKind.Custom);
     }
 }

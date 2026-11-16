@@ -18,9 +18,9 @@ public class BcListRepository(QubeFinDataContext context) : IBcListRepository
     public async Task<List<BcGroupListResult>> GetGroupsAsync(BcListFilter filter, CancellationToken cancellationToken = default) =>
         await context.Set<BcGroupListResult>()
             .FromSqlRaw(
-                "EXEC [Global].[USP_GetBCGroupList] @UserId, @OrganisationUnitId, @CoEmployeeId, @SearchText, @SortOn, @SortDirection, @PageIndex, @PageSize",
+                "EXEC [Global].[USP_GetBCGroupList] @UserId, @OrganizationUnitId, @CoEmployeeId, @SearchText, @SortOn, @SortDirection, @PageIndex, @PageSize",
                 Value("@UserId", filter.UserId),
-                Value("@OrganisationUnitId", filter.OrganisationUnitId),
+                Value("@OrganizationUnitId", filter.OrganizationUnitId),
                 Value("@CoEmployeeId", filter.CoEmployeeId),
                 Text("@SearchText", filter.SearchText),
                 Text("@SortOn", filter.SortOn),
@@ -33,9 +33,9 @@ public class BcListRepository(QubeFinDataContext context) : IBcListRepository
     public async Task<List<BcMemberListResult>> GetMembersAsync(BcListFilter filter, CancellationToken cancellationToken = default) =>
         await context.Set<BcMemberListResult>()
             .FromSqlRaw(
-                "EXEC [Global].[USP_GetBCMemberList] @UserId, @OrganisationUnitId, @CoEmployeeId, @GroupId, @SearchText, @SortOn, @SortDirection, @PageIndex, @PageSize",
+                "EXEC [Global].[USP_GetBCMemberList] @UserId, @OrganizationUnitId, @CoEmployeeId, @GroupId, @SearchText, @SortOn, @SortDirection, @PageIndex, @PageSize",
                 Value("@UserId", filter.UserId),
-                Value("@OrganisationUnitId", filter.OrganisationUnitId),
+                Value("@OrganizationUnitId", filter.OrganizationUnitId),
                 Value("@CoEmployeeId", filter.CoEmployeeId),
                 Value("@GroupId", filter.GroupId),
                 Text("@SearchText", filter.SearchText),

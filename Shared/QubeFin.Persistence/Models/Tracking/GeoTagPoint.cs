@@ -6,7 +6,7 @@ public record GeoTagPointRow(
     Guid RefId,
     string Name,
     string RefCode,
-    Guid OrganisationUnitId,
+    Guid OrganizationUnitId,
     string BranchName,
     string? Address,
     GeoPoint? Location,

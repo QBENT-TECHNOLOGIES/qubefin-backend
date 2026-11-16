@@ -150,29 +150,29 @@ public class JobEndpoints : IEndpoint
         .WithTags("Jobs")
         .RequireAuthorization();
 
-        app.MapGet("jobs/open", async (Guid? organisationUnitId, Guid? assigneeId, string? searchText, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        app.MapGet("jobs/open", async (Guid? organizationUnitId, Guid? assigneeId, string? searchText, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)
             {
                 return Results.Unauthorized();
             }
             var userId = principal.Identity.GetUserId();
-            var result = await sender.Send(new GetOpenJobsQuery(userId, organisationUnitId, assigneeId, searchText), cancellationToken);
+            var result = await sender.Send(new GetOpenJobsQuery(userId, organizationUnitId, assigneeId, searchText), cancellationToken);
             return result.ToHttpResult();
         })
         .WithSummary("Get open jobs for adding tasks")
-        .WithDescription("Open jobs (Assigned, InProgress, Delayed) in the signed-in user's branches (BM: branch, AM: area, DM: division, super admin: all), soonest complete-by first. organisationUnitId keeps jobs whose assignee covers that branch; assigneeId keeps one person's jobs; searchText matches job no, title or assignee.")
+        .WithDescription("Open jobs (Assigned, InProgress, Delayed) in the signed-in user's branches (BM: branch, AM: area, DM: division, super admin: all), soonest complete-by first. organizationUnitId keeps jobs whose assignee covers that branch; assigneeId keeps one person's jobs; searchText matches job no, title or assignee.")
         .WithTags("Jobs")
         .RequireAuthorization();
 
-        app.MapGet("jobs/task-points", async (Guid? organisationUnitId, Guid? assigneeId, bool? pendingOnly, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        app.MapGet("jobs/task-points", async (Guid? organizationUnitId, Guid? assigneeId, bool? pendingOnly, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)
             {
                 return Results.Unauthorized();
             }
             var userId = principal.Identity.GetUserId();
-            var result = await sender.Send(new GetTaskPointsQuery(userId, organisationUnitId, assigneeId, pendingOnly ?? true), cancellationToken);
+            var result = await sender.Send(new GetTaskPointsQuery(userId, organizationUnitId, assigneeId, pendingOnly ?? true), cancellationToken);
             return result.ToHttpResult();
         })
         .WithSummary("Get task locations of open jobs")

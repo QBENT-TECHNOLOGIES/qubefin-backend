@@ -6,7 +6,7 @@ public record JobSearchRequest(
     string? SearchText,
     JobStatus? Status,
     bool OpenOnly,
-    Guid? OrganisationUnitId,
+    Guid? OrganizationUnitId,
     Guid? AssigneeId,
     DateOnly? DueFrom,
     DateOnly? DueTo,

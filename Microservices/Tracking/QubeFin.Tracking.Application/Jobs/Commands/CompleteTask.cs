@@ -54,7 +54,7 @@ public class CompleteTaskCommandValidator : AbstractValidator<CompleteTaskComman
 
 #region --- HANDLER ---
 // Only the job's assignee completes a Pending task of a job that is not cancelled. The server works out the distance from
-// the task's target; IsLocationMatched = distance within the task's radius (a mismatch is saved and flagged, not refused).
+// the task's target; farther than the task's radius is refused as out of range (nothing is uploaded or saved).
 // The task gets a TaskCompleted history row; if no pending task is left the job completes in the same save (no background job).
 internal sealed class CompleteTaskCommandHandler(
     ITrackingScopeRepository scopeRepository,
@@ -90,6 +90,21 @@ internal sealed class CompleteTaskCommandHandler(
             if (request.Paid == false && request.PtpDate < TrackingClock.Today()) return new ValidationError("The promise-to-pay date cannot be in the past.");
         }
 
+        // Out of range: farther from the place than the task's radius (the tracking setting's when the task has none) is refused
+        // before anything is uploaded or saved
+        var location = new GeoPoint(request.Latitude!.Value, request.Longitude!.Value);
+        var target = GeoCoordinates.ToGeoPoint(task.TargetLocation);
+        decimal? distance = target is null ? null : Math.Round((decimal)DistanceInMeters(target, location), 2);
+        if (distance.HasValue)
+        {
+            var radius = task.RadiusMeters ?? (await scopeRepository.GetTrackingSettingAsync(cancellationToken))?.TaskLocationMatchInMeters ?? MaxSavedDistance;
+            if (distance.Value > Math.Min(radius, MaxSavedDistance))
+            {
+                return new ValidationError(
+                    $"You are out of range: {distance.Value:0} m from {task.TargetName ?? "the place"}. Go within {Math.Min(radius, MaxSavedDistance):0} m of it to complete {task.TaskNo}.");
+            }
+        }
+
         var photo = request.Photo!;
         string photoKey;
         await using (var stream = photo.OpenReadStream())
@@ -99,9 +114,6 @@ internal sealed class CompleteTaskCommandHandler(
 
         var performedAt = DateTimeOffset.Now;
         var now = performedAt.DateTime;
-        var location = new GeoPoint(request.Latitude!.Value, request.Longitude!.Value);
-        var target = GeoCoordinates.ToGeoPoint(task.TargetLocation);
-        decimal? distance = target is null ? null : Math.Round((decimal)DistanceInMeters(target, location), 2);
 
         task.Status = nameof(JobTaskStatus.Completed);
         task.IsCompleted = true;
@@ -109,7 +121,8 @@ internal sealed class CompleteTaskCommandHandler(
         task.TaskCompletedOn = now;
         task.CompletedLocation = GeoCoordinates.ToGeometry(location);
         task.CompletedDistanceMeter = distance;
-        task.IsLocationMatched = distance.HasValue && task.RadiusMeters.HasValue && distance.Value <= task.RadiusMeters.Value;
+        // Within range by now; a task with no place location cannot be matched
+        task.IsLocationMatched = distance.HasValue;
         task.PhotoUrl = photoKey;
         task.Remarks = string.IsNullOrWhiteSpace(request.Remarks) ? null : request.Remarks.Trim();
         if (isOdFollowUp)
@@ -130,11 +143,12 @@ internal sealed class CompleteTaskCommandHandler(
         if (completed is not null) await jobRepository.AddHistoryAsync(completed, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var message = task.IsLocationMatched
-            ? $"Task {task.TaskNo} completed."
-            : $"Task {task.TaskNo} completed. The location does not match the place{(distance.HasValue ? $" ({distance.Value:0} m away)" : string.Empty)}.";
+        var message = $"Task {task.TaskNo} completed.";
         return Result.Ok(completed is null ? message : $"{message} {job.JobCode} is now completed.");
     }
+
+    // Tbl_JobTask.CompletedDistanceMeter is DECIMAL(9, 6): at most 999.999999 m can be stored
+    private const int MaxSavedDistance = 999;
 
     // Great-circle distance (haversine) on the WGS-84 mean radius
     private static double DistanceInMeters(GeoPoint from, GeoPoint to)

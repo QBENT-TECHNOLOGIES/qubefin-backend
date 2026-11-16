@@ -21,13 +21,13 @@ public record NewTaskInput(
     NewTaskTarget? Target);
 
 // For a group, member or branch the server copies the location and branch from the database (D1);
-// for a Custom map point it uses targetLocation and organisationUnitId as sent
+// for a Custom map point it uses targetLocation and organizationUnitId as sent
 public record NewTaskTarget(
     TaskTargetKind? Kind,
     Guid? OriginRefId,
     string? TargetName,
     GeoPoint? TargetLocation,
-    Guid? OrganisationUnitId);
+    Guid? OrganizationUnitId);
 
 public record SkippedTask(string Title, string Reason);
 

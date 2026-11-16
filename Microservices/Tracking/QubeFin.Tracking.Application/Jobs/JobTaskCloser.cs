@@ -10,8 +10,8 @@ namespace QubeFin.Tracking.Application.Jobs;
 
 // Closes one Pending task without doing it (cancel or reject): the task gets the new status and the closing columns,
 // one history row records who closed it and why, and the job completes if no pending work is left and something was done.
-// Cancel: anyone who may update the job. Reject: only the person who added the task (TaskAddedBy), whether a manager on the
-// web or the assignee who self-added it on the mobile app.
+// Cancel and reject: only the person who added the task (TaskAddedBy), whether a manager on the web or the assignee who
+// self-added it on the mobile app.
 internal sealed class JobTaskCloser(
     ITrackingScopeRepository scopeRepository,
     IJobRepository jobRepository,
@@ -41,8 +41,12 @@ internal sealed class JobTaskCloser(
         var job = (await jobRepository.GetJobForUpdateAsync(jobId, cancellationToken))!;
         var task = job.TblJobTasks.FirstOrDefault(t => t.Id == taskId);
         if (task is null) return new RecordNotFoundError("Task not found");
-        if (!JobRepository.IsPending(task)) return new ValidationError($"{task.TaskNo} is {JobRepository.StatusOf(task)}.");
-        if (onlyByAdder && task.TaskAddedBy != viewer.UserId) return new ForbiddenError("Only the person who added this task can reject it.");
+        if (!JobRepository.IsPending(task)) return new ValidationError($"{task.TaskNo} is already {JobRepository.StatusOf(task)}.");
+        if (onlyByAdder && task.TaskAddedBy != viewer.UserId)
+        {
+            var verb = closedStatus == JobTaskStatus.Rejected ? "reject" : "cancel";
+            return new ForbiddenError($"Only the person who added this task can {verb} it.");
+        }
 
         var performedAt = DateTimeOffset.Now;
         var now = performedAt.DateTime;

@@ -11,7 +11,7 @@ public interface ITrackingScopeRepository
     Task<TrackingViewer?> GetViewerAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<List<TrackingBranch>> GetBranchesAsync(IReadOnlyList<Guid> branchIds, CancellationToken cancellationToken = default);
     Task<List<UserWiseBranchItem>> GetUserWiseBranchesAsync(Guid userId, CancellationToken cancellationToken = default);
-    Task<List<BranchCreditOfficerItem>> GetBranchWiseCreditOfficersAsync(Guid userId, Guid organisationUnitId, CancellationToken cancellationToken = default);
+    Task<List<BranchCreditOfficerItem>> GetBranchWiseCreditOfficersAsync(Guid userId, Guid organizationUnitId, CancellationToken cancellationToken = default);
     Task<TblTrackingSetting?> GetTrackingSettingAsync(CancellationToken cancellationToken = default);
     Task<List<TrackingFieldOfficer>> GetFieldOfficersAsync(TrackingViewer viewer, Guid? organizationUnitId, CancellationToken cancellationToken = default);
     Task<TrackingOfficer?> GetOfficerAsync(Guid employeeId, CancellationToken cancellationToken = default);
@@ -85,9 +85,9 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
             .AsNoTracking()
             .OrderBy(b => b.Name)
             .ToListAsync(cancellationToken);
-    public async Task<List<BranchCreditOfficerItem>> GetBranchWiseCreditOfficersAsync(Guid userId, Guid organisationUnitId, CancellationToken cancellationToken = default) =>
+    public async Task<List<BranchCreditOfficerItem>> GetBranchWiseCreditOfficersAsync(Guid userId, Guid organizationUnitId, CancellationToken cancellationToken = default) =>
         await context.Set<BranchCreditOfficerItem>()
-            .FromSqlInterpolated($"EXEC [Global].[USP_GetBranchWiseCreditOfficers] @UserId = {userId}, @OrganisationUnitId = {organisationUnitId}")
+            .FromSqlInterpolated($"EXEC [Global].[USP_GetBranchWiseCreditOfficers] @UserId = {userId}, @OrganizationUnitId = {organizationUnitId}")
             .AsNoTracking()
             .ToListAsync(cancellationToken);
     public async Task<TblTrackingSetting?> GetTrackingSettingAsync(CancellationToken cancellationToken = default) =>
@@ -99,7 +99,7 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
     public async Task<List<TrackingFieldOfficer>> GetFieldOfficersAsync(TrackingViewer viewer, Guid? organizationUnitId, CancellationToken cancellationToken = default)
     {
         var rows = await context.Set<FieldOfficerResult>()
-            .FromSqlInterpolated($"EXEC [Tracking].[USP_GetFieldOfficers] @UserId = {viewer.UserId}, @OrganisationUnitId = {organizationUnitId}")
+            .FromSqlInterpolated($"EXEC [Tracking].[USP_GetFieldOfficers] @UserId = {viewer.UserId}, @OrganizationUnitId = {organizationUnitId}")
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
@@ -109,12 +109,12 @@ public class TrackingScopeRepository(QubeFinDataContext context) : ITrackingScop
             r.Name,
             r.Role,
             r.Designation,
-            r.OrganisationUnitId,
-            r.OrganisationUnitName,
+            r.OrganizationUnitId,
+            r.OrganizationUnitName,
             r.UnitName,
-            string.IsNullOrEmpty(r.OrganisationUnitsJson)
+            string.IsNullOrEmpty(r.OrganizationUnitsJson)
                 ? []
-                : JsonSerializer.Deserialize<List<OrganizationUnits>>(r.OrganisationUnitsJson, JsonOptions) ?? [],
+                : JsonSerializer.Deserialize<List<OrganizationUnits>>(r.OrganizationUnitsJson, JsonOptions) ?? [],
             r.Phone,
             r.PresentLatitude.HasValue && r.PresentLongitude.HasValue
                 ? GeoCoordinates.ToGeoPoint((decimal)r.PresentLatitude.Value, (decimal)r.PresentLongitude.Value)

@@ -15,7 +15,7 @@ public interface IJobRepository
     Task<JobDetailRow?> GetJobAsync(TrackingViewer viewer, Guid jobId, DateOnly today, CancellationToken cancellationToken = default);
     Task<List<JobHistoryRow>?> GetJobHistoryAsync(TrackingViewer viewer, Guid jobId, CancellationToken cancellationToken = default);
     Task AddHistoryAsync(TblJobHistory history, CancellationToken cancellationToken = default);
-    Task<List<JobTaskPointRow>> GetTaskPointsAsync(TrackingViewer viewer, Guid? organisationUnitId, Guid? assigneeId, bool pendingOnly, DateOnly today, CancellationToken cancellationToken = default);
+    Task<List<JobTaskPointRow>> GetTaskPointsAsync(TrackingViewer viewer, Guid? organizationUnitId, Guid? assigneeId, bool pendingOnly, DateOnly today, CancellationToken cancellationToken = default);
     Task<List<PendingPlaceTask>> GetPendingTasksAtAsync(IEnumerable<Guid> originRefIds, CancellationToken cancellationToken = default);
     Task<string?> GetLastJobCodeAsync(string prefix, CancellationToken cancellationToken = default);
     Task<string?> GetLastTaskNoAsync(string prefix, CancellationToken cancellationToken = default);
@@ -52,7 +52,7 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
         var rows = await context.Set<JobSearchRowResult>()
             .FromSqlRaw(
                 "EXEC [Tracking].[USP_SearchJobs] @UserId, @EmployeeId, @Role, @UnitId, @ScopeUnitIds, @Today, @SearchText, @Status, @OpenOnly, " +
-                "@OrganisationUnitId, @AssigneeId, @DueFrom, @DueTo, @DpdMin, @DpdMax, @SortOn, @SortDescending, @PageIndex, @PageSize, " +
+                "@OrganizationUnitId, @AssigneeId, @DueFrom, @DueTo, @DpdMin, @DpdMax, @SortOn, @SortDescending, @PageIndex, @PageSize, " +
                 "@TotalRecords OUTPUT, @CountTotal OUTPUT, @CountAssigned OUTPUT, @CountInProgress OUTPUT, @CountDelayed OUTPUT, @CountCompleted OUTPUT",
                 Value("@UserId", viewer.UserId),
                 Value("@EmployeeId", viewer.EmployeeId),
@@ -67,7 +67,7 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
                 new SqlParameter("@SearchText", SqlDbType.NVarChar, 200) { Value = (object?)filter.SearchText ?? DBNull.Value },
                 new SqlParameter("@Status", SqlDbType.NVarChar, 20) { Value = (object?)filter.Status ?? DBNull.Value },
                 Value("@OpenOnly", filter.OpenOnly),
-                Value("@OrganisationUnitId", filter.OrganisationUnitId),
+                Value("@OrganizationUnitId", filter.OrganizationUnitId),
                 Value("@AssigneeId", filter.AssigneeId),
                 Date("@DueFrom", filter.DueFrom),
                 Date("@DueTo", filter.DueTo),
@@ -97,10 +97,10 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
     {
         var rows = await context.Set<JobSearchRowResult>()
             .FromSqlRaw(
-                "EXEC [Tracking].[USP_GetOpenJobs] @UserId, @Today, @OrganisationUnitId, @AssigneeId, @SearchText",
+                "EXEC [Tracking].[USP_GetOpenJobs] @UserId, @Today, @OrganizationUnitId, @AssigneeId, @SearchText",
                 new SqlParameter("@UserId", SqlDbType.UniqueIdentifier) { Value = filter.UserId },
                 new SqlParameter("@Today", SqlDbType.Date) { Value = today.ToDateTime(TimeOnly.MinValue) },
-                new SqlParameter("@OrganisationUnitId", SqlDbType.UniqueIdentifier) { Value = (object?)filter.OrganisationUnitId ?? DBNull.Value },
+                new SqlParameter("@OrganizationUnitId", SqlDbType.UniqueIdentifier) { Value = (object?)filter.OrganizationUnitId ?? DBNull.Value },
                 new SqlParameter("@AssigneeId", SqlDbType.UniqueIdentifier) { Value = (object?)filter.AssigneeId ?? DBNull.Value },
                 new SqlParameter("@SearchText", SqlDbType.NVarChar, 200)
                 {
@@ -273,13 +273,13 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
 
     public async Task AddHistoryAsync(TblJobHistory history, CancellationToken cancellationToken = default) =>
         await context.TblJobHistories.AddAsync(history, cancellationToken);
-    public async Task<List<JobTaskPointRow>> GetTaskPointsAsync(TrackingViewer viewer, Guid? organisationUnitId, Guid? assigneeId, bool pendingOnly, DateOnly today, CancellationToken cancellationToken = default)
+    public async Task<List<JobTaskPointRow>> GetTaskPointsAsync(TrackingViewer viewer, Guid? organizationUnitId, Guid? assigneeId, bool pendingOnly, DateOnly today, CancellationToken cancellationToken = default)
     {
         var rows = await context.Set<JobTaskPointResult>()
-            .FromSqlRaw($"EXEC [Tracking].[USP_GetTaskPoints] {ViewerArguments}, @OrganisationUnitId, @AssigneeId, @Today",
+            .FromSqlRaw($"EXEC [Tracking].[USP_GetTaskPoints] {ViewerArguments}, @OrganizationUnitId, @AssigneeId, @Today",
                 [
                     .. ViewerParameters(viewer),
-                    new SqlParameter("@OrganisationUnitId", SqlDbType.UniqueIdentifier) { Value = (object?)organisationUnitId ?? DBNull.Value },
+                    new SqlParameter("@OrganizationUnitId", SqlDbType.UniqueIdentifier) { Value = (object?)organizationUnitId ?? DBNull.Value },
                     new SqlParameter("@AssigneeId", SqlDbType.UniqueIdentifier) { Value = (object?)assigneeId ?? DBNull.Value },
                     new SqlParameter("@Today", SqlDbType.Date) { Value = today.ToDateTime(TimeOnly.MinValue) }
                 ])

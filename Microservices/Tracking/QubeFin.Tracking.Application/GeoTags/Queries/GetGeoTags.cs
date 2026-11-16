@@ -9,7 +9,7 @@ using QubeFin.Tracking.Persistence.Repositories;
 namespace QubeFin.Tracking.Application.GeoTags.Queries;
 
 #region --- QUERY ---
-public record GetGeoTagsQuery(Guid UserId, GeoTagKind? Kind, string? SearchText, Guid? OrganisationUnitId, bool OnlyUntagged) : IRequest<Result<List<GeoTagResponse>>>;
+public record GetGeoTagsQuery(Guid UserId, GeoTagKind? Kind, string? SearchText, Guid? OrganizationUnitId, bool OnlyUntagged) : IRequest<Result<List<GeoTagResponse>>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -67,7 +67,7 @@ internal sealed class GetGeoTagsQueryHandler(ITrackingScopeRepository scopeRepos
         var kind = request.Kind!.Value;
         var isAdmin = viewer.Role == TrackingRole.Admin;
         if (kind == GeoTagKind.EmployeeHome && !isAdmin) return new ForbiddenError("Only an Admin can see employee homes.");
-        if (request.OrganisationUnitId.HasValue && !isAdmin && !viewer.BranchIds.Contains(request.OrganisationUnitId.Value))
+        if (request.OrganizationUnitId.HasValue && !isAdmin && !viewer.BranchIds.Contains(request.OrganizationUnitId.Value))
         {
             return new RecordNotFoundError("Branch not found");
         }
@@ -76,7 +76,7 @@ internal sealed class GetGeoTagsQueryHandler(ITrackingScopeRepository scopeRepos
         var rows = await geoTagRepository.GetGeoTagsAsync(new GeoTagFilter(
             kind.ToString(),
             isAdmin ? null : viewer.BranchIds,
-            request.OrganisationUnitId,
+            request.OrganizationUnitId,
             request.SearchText,
             request.OnlyUntagged,
             setting is null ? null : setting.BranchOperatingRadiusInKm * 1000,

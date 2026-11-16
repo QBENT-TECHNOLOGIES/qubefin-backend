@@ -55,7 +55,7 @@ internal sealed class JobTaskPlanner(ITrackingScopeRepository scopeRepository, I
             companions[companionId] = await scopeRepository.GetOfficerAsync(companionId, cancellationToken);
         }
 
-        var branchIds = inputs.Select(i => i.Target?.OrganisationUnitId).OfType<Guid>()
+        var branchIds = inputs.Select(i => i.Target?.OrganizationUnitId).OfType<Guid>()
             .Concat(places.Values.Select(p => p.BranchId))
             .Concat(assignee.BranchIds);
         var branches = await scopeRepository.GetBranchCodesAsync(branchIds, cancellationToken);
@@ -81,7 +81,7 @@ internal sealed class JobTaskPlanner(ITrackingScopeRepository scopeRepository, I
             Guid? originRefId = null;
             if (kind == TaskTargetKind.Custom)
             {
-                branchId = target.OrganisationUnitId!.Value;
+                branchId = target.OrganizationUnitId!.Value;
                 location = GeoCoordinates.ToGeometry(target.TargetLocation!);
             }
             else

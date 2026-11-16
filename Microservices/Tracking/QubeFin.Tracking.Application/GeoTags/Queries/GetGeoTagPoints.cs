@@ -9,7 +9,7 @@ using QubeFin.Tracking.Persistence.Repositories;
 namespace QubeFin.Tracking.Application.GeoTags.Queries;
 
 #region --- QUERY ---
-public record GetGeoTagPointsQuery(Guid UserId, Guid OrganisationUnitId, string? Kinds) : IRequest<Result<GeoTagPointsResponse>>;
+public record GetGeoTagPointsQuery(Guid UserId, Guid OrganizationUnitId, string? Kinds) : IRequest<Result<GeoTagPointsResponse>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -18,7 +18,7 @@ public class GetGeoTagPointsQueryValidator : AbstractValidator<GetGeoTagPointsQu
     public GetGeoTagPointsQueryValidator()
     {
         RuleFor(v => v.UserId).NotEmpty().WithMessage("User Id is required.");
-        RuleFor(v => v.OrganisationUnitId).NotEmpty().WithMessage("Select a branch.");
+        RuleFor(v => v.OrganizationUnitId).NotEmpty().WithMessage("Select a branch.");
         RuleFor(v => v.Kinds)
             .NotEmpty().WithMessage("Select at least one kind of place.");
         RuleFor(v => v.Kinds)
@@ -36,7 +36,7 @@ public record GeoTagPointResponse(
     Guid RefId,
     string Name,
     string RefCode,
-    Guid OrganisationUnitId,
+    Guid OrganizationUnitId,
     string BranchName,
     string? Address,
     GeoPoint? Location,
@@ -61,14 +61,14 @@ internal sealed class GetGeoTagPointsQueryHandler(ITrackingScopeRepository scope
     {
         var viewer = await scopeRepository.GetViewerAsync(request.UserId, cancellationToken);
         if (viewer is null) return new ForbiddenError("You do not have access to Tracking.");
-        if (!viewer.BranchIds.Contains(request.OrganisationUnitId)) return new RecordNotFoundError("Branch not found");
+        if (!viewer.BranchIds.Contains(request.OrganizationUnitId)) return new RecordNotFoundError("Branch not found");
 
         var kinds = request.Kinds!
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .ToHashSet();
         var setting = await scopeRepository.GetTrackingSettingAsync(cancellationToken);
 
-        var result = await geoTagRepository.GetPointsAsync(request.OrganisationUnitId, kinds, setting?.TaskLocationMatchInMeters, cancellationToken);
+        var result = await geoTagRepository.GetPointsAsync(request.OrganizationUnitId, kinds, setting?.TaskLocationMatchInMeters, cancellationToken);
 
         return Result.Ok(new GeoTagPointsResponse(
             result.Points.Select(p => new GeoTagPointResponse(
@@ -77,7 +77,7 @@ internal sealed class GetGeoTagPointsQueryHandler(ITrackingScopeRepository scope
                 p.RefId,
                 p.Name,
                 p.RefCode,
-                p.OrganisationUnitId,
+                p.OrganizationUnitId,
                 p.BranchName,
                 p.Address,
                 p.Location,

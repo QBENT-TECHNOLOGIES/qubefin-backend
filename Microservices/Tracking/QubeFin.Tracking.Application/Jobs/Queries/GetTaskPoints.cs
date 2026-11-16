@@ -9,7 +9,7 @@ using QubeFin.Tracking.Persistence.Repositories;
 namespace QubeFin.Tracking.Application.Jobs.Queries;
 
 #region --- QUERY ---
-public record GetTaskPointsQuery(Guid UserId, Guid? OrganisationUnitId, Guid? AssigneeId, bool PendingOnly) : IRequest<Result<List<JobTaskPointResponse>>>;
+public record GetTaskPointsQuery(Guid UserId, Guid? OrganizationUnitId, Guid? AssigneeId, bool PendingOnly) : IRequest<Result<List<JobTaskPointResponse>>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -40,7 +40,7 @@ public record JobTaskPointResponse(
     JobTaskStatus Status,
     TaskTargetKind? TargetKind,
     Guid? OriginRefId,
-    Guid OrganisationUnitId,
+    Guid OrganizationUnitId,
     GeoPoint? TargetLocation,
     bool LocationMismatch);
 #endregion
@@ -53,7 +53,7 @@ internal sealed class GetTaskPointsQueryHandler(ITrackingScopeRepository scopeRe
         var viewer = await scopeRepository.GetViewerAsync(request.UserId, cancellationToken);
         if (viewer is null) return new ForbiddenError("You do not have access to Tracking.");
 
-        var points = await jobRepository.GetTaskPointsAsync(viewer, request.OrganisationUnitId, request.AssigneeId, request.PendingOnly, TrackingClock.Today(), cancellationToken);
+        var points = await jobRepository.GetTaskPointsAsync(viewer, request.OrganizationUnitId, request.AssigneeId, request.PendingOnly, TrackingClock.Today(), cancellationToken);
 
         return Result.Ok(points.Select(p => new JobTaskPointResponse(
             p.JobId,
@@ -72,7 +72,7 @@ internal sealed class GetTaskPointsQueryHandler(ITrackingScopeRepository scopeRe
             Enum.Parse<JobTaskStatus>(p.Status, true),
             Enum.TryParse<TaskTargetKind>(p.TargetKind, true, out var kind) ? kind : null,
             p.OriginRefId,
-            p.OrganisationUnitId,
+            p.OrganizationUnitId,
             p.TargetLocation,
             p.LocationMismatch)).ToList());
     }

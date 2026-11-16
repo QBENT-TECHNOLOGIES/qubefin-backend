@@ -78,7 +78,7 @@ public class BcMemberListResult
 // Filters for both lists; the procedures work out whose groups / members the user may see from UserId
 public record BcListFilter(
     Guid UserId,
-    Guid? OrganisationUnitId,
+    Guid? OrganizationUnitId,
     Guid? CoEmployeeId,
     Guid? GroupId,
     string? SearchText,

@@ -12,7 +12,7 @@ namespace QubeFin.Tracking.Application.BcLists.Queries;
 // SortOn: name | code | branchName | formationDate | createdDate. SearchText matches the group name or code.
 public class GroupListRequest : SearchParam
 {
-    public Guid? OrganisationUnitId { get; set; }
+    public Guid? OrganizationUnitId { get; set; }
     public Guid? CoEmployeeId { get; set; }
 }
 
@@ -42,7 +42,7 @@ public record GroupListItem(
     string? PinCode,
     GeoPoint? Location,
     string? PhotoUrl,
-    Guid OrganisationUnitId,
+    Guid OrganizationUnitId,
     string BranchName,
     Guid DesignationId,
     Guid? CoEmployeeId,
@@ -77,7 +77,7 @@ internal sealed class GetGroupListQueryHandler(
         var request = query.Request;
         var rows = await listRepository.GetGroupsAsync(new BcListFilter(
             viewer.UserId,
-            request.OrganisationUnitId,
+            request.OrganizationUnitId,
             request.CoEmployeeId,
             null,
             request.SearchText,

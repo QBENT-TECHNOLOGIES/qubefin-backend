@@ -21,12 +21,12 @@ public class OdMemberRepository(QubeFinDataContext context) : IOdMemberRepositor
 
         var rows = await context.Set<OdMemberSearchRowResult>()
             .FromSqlRaw(
-                "EXEC [Tracking].[USP_SearchOdMembers] @UserId, @Today, @SearchText, @OrganisationUnitId, @CreditOfficerId, @GroupId, " +
+                "EXEC [Tracking].[USP_SearchOdMembers] @UserId, @Today, @SearchText, @OrganizationUnitId, @CreditOfficerId, @GroupId, " +
                 "@DpdMin, @DpdMax, @OnlyUnassigned, @SortOn, @SortDescending, @PageIndex, @PageSize, @TotalRecords OUTPUT, @TotalOverdueAmount OUTPUT",
                 new SqlParameter("@UserId", SqlDbType.UniqueIdentifier) { Value = filter.UserId },
                 new SqlParameter("@Today", SqlDbType.Date) { Value = today.ToDateTime(TimeOnly.MinValue) },
                 new SqlParameter("@SearchText", SqlDbType.NVarChar, 200) { Value = string.IsNullOrWhiteSpace(filter.SearchText) ? DBNull.Value : filter.SearchText.Trim() },
-                Id("@OrganisationUnitId", filter.OrganisationUnitId),
+                Id("@OrganizationUnitId", filter.OrganizationUnitId),
                 Id("@CreditOfficerId", filter.CreditOfficerId),
                 Id("@GroupId", filter.GroupId),
                 new SqlParameter("@DpdMin", SqlDbType.Int) { Value = (object?)filter.DpdMin ?? DBNull.Value },

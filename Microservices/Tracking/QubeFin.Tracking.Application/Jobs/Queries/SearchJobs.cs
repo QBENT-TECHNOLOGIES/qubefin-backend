@@ -55,7 +55,7 @@ internal sealed class SearchJobsQueryHandler(ITrackingScopeRepository scopeRepos
             request.SearchText,
             request.Status?.ToString(),
             request.OpenOnly,
-            request.OrganisationUnitId,
+            request.OrganizationUnitId,
             request.AssigneeId,
             request.DueFrom,
             request.DueTo,

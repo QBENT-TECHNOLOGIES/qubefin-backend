@@ -28,7 +28,7 @@ namespace QubeFin.Persistence.Models.App
         // Tracking: role (post name, 'Admin' for a super admin), unit, branches in scope (comma-separated) and whether they can create jobs
         public string? Role { get; set; }
         public string? UnitName { get; set; }
-        public string? OrganisationUnitIds { get; set; }
+        public string? OrganizationUnitIds { get; set; }
         public bool CanCreateJobs { get; set; }
     }
 }

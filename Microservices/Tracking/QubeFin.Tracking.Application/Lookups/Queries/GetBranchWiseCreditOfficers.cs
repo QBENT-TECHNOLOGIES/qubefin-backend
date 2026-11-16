@@ -8,7 +8,7 @@ using QubeFin.Tracking.Persistence.Repositories;
 namespace QubeFin.Tracking.Application.Lookups.Queries;
 
 #region --- QUERY ---
-public record GetBranchWiseCreditOfficersQuery(Guid UserId, Guid? OrganisationUnitId) : IRequest<Result<List<BranchCreditOfficerItem>>>;
+public record GetBranchWiseCreditOfficersQuery(Guid UserId, Guid? OrganizationUnitId) : IRequest<Result<List<BranchCreditOfficerItem>>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -17,7 +17,7 @@ public class GetBranchWiseCreditOfficersQueryValidator : AbstractValidator<GetBr
     public GetBranchWiseCreditOfficersQueryValidator()
     {
         RuleFor(v => v.UserId).NotEmpty().WithMessage("User Id is required.");
-        RuleFor(v => v.OrganisationUnitId).NotEmpty().WithMessage("Select a branch.");
+        RuleFor(v => v.OrganizationUnitId).NotEmpty().WithMessage("Select a branch.");
     }
 }
 #endregion
@@ -29,7 +29,7 @@ internal sealed class GetBranchWiseCreditOfficersQueryHandler(ITrackingScopeRepo
 {
     public async Task<Result<List<BranchCreditOfficerItem>>> Handle(GetBranchWiseCreditOfficersQuery request, CancellationToken cancellationToken)
     {
-        var branchId = request.OrganisationUnitId!.Value;
+        var branchId = request.OrganizationUnitId!.Value;
         var branches = await scopeRepository.GetUserWiseBranchesAsync(request.UserId, cancellationToken);
         if (branches.All(b => b.Id != branchId)) return new RecordNotFoundError("Branch not found");
 

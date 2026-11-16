@@ -5,7 +5,7 @@ namespace QubeFin.Persistence.Models.Tracking;
 public record OdMemberFilter(
     Guid UserId,
     string? SearchText,
-    Guid? OrganisationUnitId,
+    Guid? OrganizationUnitId,
     Guid? CreditOfficerId,
     Guid? GroupId,
     int? DpdMin,
@@ -32,7 +32,7 @@ public class OdMemberSearchRowResult
     public string GroupCode { get; set; } = null!;
     public Guid? CreditOfficerId { get; set; }
     public string? CreditOfficerName { get; set; }
-    public Guid OrganisationUnitId { get; set; }
+    public Guid OrganizationUnitId { get; set; }
     public string BranchName { get; set; } = null!;
     public string? Phone { get; set; }
     public string? Address { get; set; }
@@ -45,4 +45,4 @@ public class OdMemberSearchRowResult
 }
 
 // Open jobs for the "Add to existing job" list (Tracking.USP_GetOpenJobs)
-public record OpenJobFilter(Guid UserId, Guid? OrganisationUnitId, Guid? AssigneeId, string? SearchText);
+public record OpenJobFilter(Guid UserId, Guid? OrganizationUnitId, Guid? AssigneeId, string? SearchText);

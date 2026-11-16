@@ -18,7 +18,7 @@ public record GeoTagRow(
 public record GeoTagFilter(
     string Kind,
     IReadOnlyList<Guid>? BranchIds,
-    Guid? OrganisationUnitId,
+    Guid? OrganizationUnitId,
     string? SearchText,
     bool OnlyUntagged,
     int? BranchRadiusMeters,

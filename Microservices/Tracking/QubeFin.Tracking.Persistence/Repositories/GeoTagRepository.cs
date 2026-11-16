@@ -2,17 +2,19 @@ using System.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Models.Tracking;
 
 namespace QubeFin.Tracking.Persistence.Repositories;
 
 public interface IGeoTagRepository
 {
-    Task<GeoTagPointsResult> GetPointsAsync(Guid organisationUnitId, IReadOnlyCollection<string> kinds, int? taskLocationMatchInMeters, CancellationToken cancellationToken = default);
+    Task<GeoTagPointsResult> GetPointsAsync(Guid organizationUnitId, IReadOnlyCollection<string> kinds, int? taskLocationMatchInMeters, CancellationToken cancellationToken = default);
     Task<Dictionary<Guid, TrackingPlace>> GetPlacesAsync(IEnumerable<Guid> refIds, CancellationToken cancellationToken = default);
     Task<List<GeoTagRow>> GetGeoTagsAsync(GeoTagFilter filter, CancellationToken cancellationToken = default);
     Task<GeoTagTarget?> FindGeoTagAsync(Guid id, Guid? viewerEmployeeId, CancellationToken cancellationToken = default);
     Task UpdateLocationAsync(GeoTagTarget target, GeoPoint location, string? photoKey, Guid userId, DateTime now, CancellationToken cancellationToken = default);
+    Task<List<string>> GetPendingTasksAtAsync(GeoTagTarget target, CancellationToken cancellationToken = default);
 }
 
 public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
@@ -25,14 +27,14 @@ public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
 
     // Tracking.USP_GetGeoTagPoints: groups and member homes of one branch for the task picker. There is no verification
     // column yet, so every place counts as verified; a place without a location is only counted in UntaggedByKind.
-    public async Task<GeoTagPointsResult> GetPointsAsync(Guid organisationUnitId, IReadOnlyCollection<string> kinds, int? taskLocationMatchInMeters, CancellationToken cancellationToken = default)
+    public async Task<GeoTagPointsResult> GetPointsAsync(Guid organizationUnitId, IReadOnlyCollection<string> kinds, int? taskLocationMatchInMeters, CancellationToken cancellationToken = default)
     {
         var points = new List<GeoTagPointRow>();
         var untagged = new Dictionary<string, int>();
         var includeMembers = kinds.Contains(Member) || kinds.Contains(OdMember);
 
         var rows = await context.Set<GeoTagPointResult>()
-            .FromSqlInterpolated($"EXEC [Tracking].[USP_GetGeoTagPoints] @OrganisationUnitId = {organisationUnitId}, @IncludeMembers = {includeMembers}")
+            .FromSqlInterpolated($"EXEC [Tracking].[USP_GetGeoTagPoints] @OrganizationUnitId = {organizationUnitId}, @IncludeMembers = {includeMembers}")
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
@@ -46,7 +48,7 @@ public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
                     continue;
                 }
                 points.Add(new GeoTagPointRow(
-                    g.Id, GroupCentre, g.Id, g.GroupName, g.Code, organisationUnitId, g.BranchName, g.AddressLine1,
+                    g.Id, GroupCentre, g.Id, g.GroupName, g.Code, organizationUnitId, g.BranchName, g.AddressLine1,
                     GeoCoordinates.ToGeoPoint(g.Location), taskLocationMatchInMeters, true,
                     g.CreditOfficerId, g.CreditOfficerName, null, null, null, null, g.TaggedByName, g.TaggedOn));
             }
@@ -67,7 +69,7 @@ public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
                 points.Add(new GeoTagPointRow(
                     m.Id, kind, m.Id,
                     string.Join(' ', new[] { m.FirstName, m.MiddleName, m.LastName }.Where(n => !string.IsNullOrWhiteSpace(n))),
-                    m.Code, organisationUnitId, m.BranchName,
+                    m.Code, organizationUnitId, m.BranchName,
                     string.Join(", ", new[] { m.AddressLine1, m.AddressLine2 }.Where(a => !string.IsNullOrWhiteSpace(a))) is { Length: > 0 } address ? address : null,
                     GeoCoordinates.ToGeoPoint(m.Location), taskLocationMatchInMeters, true,
                     m.CreditOfficerId, m.CreditOfficerName, m.GroupId, m.GroupName,
@@ -116,13 +118,13 @@ public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
 
         var places = await context.Set<GeoTagResult>()
             .FromSqlRaw(
-                "EXEC [Tracking].[USP_GetGeoTags] @Kind, @BranchIds, @OrganisationUnitId, @SearchText, @OnlyUntagged, @RefId",
+                "EXEC [Tracking].[USP_GetGeoTags] @Kind, @BranchIds, @OrganizationUnitId, @SearchText, @OnlyUntagged, @RefId",
                 new SqlParameter("@Kind", SqlDbType.NVarChar, 50) { Value = kind },
                 new SqlParameter("@BranchIds", SqlDbType.NVarChar, -1)
                 {
                     Value = filter.BranchIds is null ? DBNull.Value : string.Join(',', filter.BranchIds)
                 },
-                new SqlParameter("@OrganisationUnitId", SqlDbType.UniqueIdentifier) { Value = (object?)filter.OrganisationUnitId ?? DBNull.Value },
+                new SqlParameter("@OrganizationUnitId", SqlDbType.UniqueIdentifier) { Value = (object?)filter.OrganizationUnitId ?? DBNull.Value },
                 // A branch is searched here, by name or code, as before
                 new SqlParameter("@SearchText", SqlDbType.NVarChar, 200) { Value = kind == Branch ? DBNull.Value : (object?)text ?? DBNull.Value },
                 new SqlParameter("@OnlyUntagged", SqlDbType.Bit) { Value = filter.OnlyUntagged },
@@ -224,5 +226,34 @@ public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
                 employee.TaggedOn = now;
                 break;
         }
+    }
+
+    // Pending tasks (in jobs not cancelled) at a group or member, as "TSK-… (JOB-…)", sorted by task no. A member's tasks point
+    // at the member or at one of their loans (an OD follow-up), both at the member's home. Other kinds have none here.
+    // Pending = Status 'Pending', or no Status and not completed, cancelled or transferred.
+    public async Task<List<string>> GetPendingTasksAtAsync(GeoTagTarget target, CancellationToken cancellationToken = default)
+    {
+        IQueryable<TblJobTask> tasks;
+        switch (target.Kind)
+        {
+            case GroupCentre:
+                tasks = context.TblJobTasks.Where(t => t.OriginRefId == target.RefId);
+                break;
+            case Member:
+            case OdMember:
+                tasks = context.TblJobTasks.Where(t => t.OriginRefId == target.RefId
+                    || context.TblBcloans.Any(l => l.Id == t.OriginRefId && l.BcmemberId == target.RefId));
+                break;
+            default:
+                return [];
+        }
+
+        return await tasks
+            .Where(t => !t.Job.IsCancel
+                && (t.Status == "Pending" || (t.Status == null && !t.IsCompleted && !t.IsTaskCancel && t.TransferTaskId == null)))
+            .OrderBy(t => t.TaskNo)
+            .Select(t => t.TaskNo + " (" + t.Job.JobCode + ")")
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
     }
 }

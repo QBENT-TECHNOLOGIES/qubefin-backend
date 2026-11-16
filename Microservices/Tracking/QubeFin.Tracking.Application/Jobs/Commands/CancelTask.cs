@@ -27,11 +27,12 @@ public class CancelTaskCommandValidator : AbstractValidator<CancelTaskCommand>
 #endregion
 
 #region --- HANDLER ---
-// Any Pending task can be cancelled, whether it was assigned on the web or self-added on the mobile app
+// Only the person who created the task (TaskAddedBy) can cancel it: the manager who added it on the web, or the assignee
+// who self-added it. Pending tasks only.
 internal sealed class CancelTaskCommandHandler(JobTaskCloser taskCloser) : IRequestHandler<CancelTaskCommand, Result<string>>
 {
     public Task<Result<string>> Handle(CancelTaskCommand command, CancellationToken cancellationToken) =>
         taskCloser.CloseAsync(command.UserId, command.JobId, command.TaskId, command.Request.Remarks!,
-            JobTaskStatus.Cancelled, JobHistoryAction.TaskCancelled, false, cancellationToken);
+            JobTaskStatus.Cancelled, JobHistoryAction.TaskCancelled, true, cancellationToken);
 }
 #endregion

@@ -13,14 +13,14 @@ public class GeoTagEndpoints : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("geo-tags/points", async (Guid organisationUnitId, string? kinds, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        app.MapGet("geo-tags/points", async (Guid organizationUnitId, string? kinds, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)
             {
                 return Results.Unauthorized();
             }
             var userId = principal.Identity.GetUserId();
-            var result = await sender.Send(new GetGeoTagPointsQuery(userId, organisationUnitId, kinds), cancellationToken);
+            var result = await sender.Send(new GetGeoTagPointsQuery(userId, organizationUnitId, kinds), cancellationToken);
             return result.ToHttpResult();
         })
         .WithSummary("Get geo-tagged places of a branch")
@@ -28,14 +28,14 @@ public class GeoTagEndpoints : IEndpoint
         .WithTags("Geo Tags")
         .RequireAuthorization();
 
-        app.MapGet("geo-tags", async (GeoTagKind? kind, string? searchText, Guid? organisationUnitId, bool? onlyUntagged, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        app.MapGet("geo-tags", async (GeoTagKind? kind, string? searchText, Guid? organizationUnitId, bool? onlyUntagged, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)
             {
                 return Results.Unauthorized();
             }
             var userId = principal.Identity.GetUserId();
-            var result = await sender.Send(new GetGeoTagsQuery(userId, kind, searchText, organisationUnitId, onlyUntagged ?? false), cancellationToken);
+            var result = await sender.Send(new GetGeoTagsQuery(userId, kind, searchText, organizationUnitId, onlyUntagged ?? false), cancellationToken);
             return result.ToHttpResult();
         })
         .WithSummary("List geo-tagged places of one kind")

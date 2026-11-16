@@ -13,7 +13,7 @@ namespace QubeFin.Tracking.Application.BcLists.Queries;
 // SearchText is one box: name, member code, Aadhaar / PAN / Voter no or mobile.
 public class MemberListRequest : SearchParam
 {
-    public Guid? OrganisationUnitId { get; set; }
+    public Guid? OrganizationUnitId { get; set; }
     public Guid? CoEmployeeId { get; set; }
     public Guid? GroupId { get; set; }
 }
@@ -59,7 +59,7 @@ public record MemberListItem(
     Guid GroupId,
     string GroupCode,
     string GroupName,
-    Guid OrganisationUnitId,
+    Guid OrganizationUnitId,
     string BranchName,
     Guid? CoEmployeeId,
     string? CoName,
@@ -88,7 +88,7 @@ internal sealed class GetMemberListQueryHandler(
         var request = query.Request;
         var rows = await listRepository.GetMembersAsync(new BcListFilter(
             viewer.UserId,
-            request.OrganisationUnitId,
+            request.OrganizationUnitId,
             request.CoEmployeeId,
             request.GroupId,
             request.SearchText,

@@ -69,6 +69,15 @@ internal sealed class UpdateBcLocationCommandHandler(
         if (!isExpectedPlace) return new RecordNotFoundError(command.Place == BcPlace.Group ? "Group not found" : "Member not found");
         if (!GeoTagRules.CanEdit(viewer, target!)) return new ForbiddenError("You cannot change this location.");
 
+        // A group or member with a pending task keeps its location until that work is done, cancelled or moved
+        var place = command.Place == BcPlace.Group ? "group" : "member";
+        var pendingTasks = await geoTagRepository.GetPendingTasksAtAsync(target!, cancellationToken);
+        if (pendingTasks.Count > 0)
+        {
+            return new ValidationError(
+                $"The location cannot be updated: this {place} is in pending task{(pendingTasks.Count > 1 ? "s" : string.Empty)} {string.Join(", ", pendingTasks)}.");
+        }
+
         var photo = command.Request.Photo!;
         string photoKey;
         await using (var stream = photo.OpenReadStream())
@@ -82,7 +91,7 @@ internal sealed class UpdateBcLocationCommandHandler(
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         var updated = await GeoTagRules.ReadBackAsync(scopeRepository, geoTagRepository, target!, cancellationToken);
-        return Result.Ok($"Location updated for {(command.Place == BcPlace.Group ? "group" : "member")} {updated.Name}.");
+        return Result.Ok($"Location updated for {place} {updated.Name}.");
     }
 }
 #endregion

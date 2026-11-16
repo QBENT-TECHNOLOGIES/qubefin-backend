@@ -17,7 +17,7 @@ namespace QubeFin.Tracking.Application.OdMembers.Queries;
 // OnlyUnassigned: only members without a pending OD follow-up task.
 public class OdMemberSearchRequest : SearchParam
 {
-    public Guid? OrganisationUnitId { get; set; }
+    public Guid? OrganizationUnitId { get; set; }
     public Guid? CreditOfficerId { get; set; }
     public Guid? GroupId { get; set; }
     public DpdRange? DpdRange { get; set; }
@@ -78,7 +78,7 @@ public record OdMemberResponse(
     string GroupCode,
     Guid? CreditOfficerId,
     string? CreditOfficerName,
-    Guid OrganisationUnitId,
+    Guid OrganizationUnitId,
     string BranchName,
     string? Phone,
     string? Address,
@@ -119,7 +119,7 @@ internal sealed class SearchOdMembersQueryHandler(
         var result = await odMemberRepository.SearchAsync(new OdMemberFilter(
             viewer.UserId,
             request.SearchText,
-            request.OrganisationUnitId,
+            request.OrganizationUnitId,
             request.CreditOfficerId,
             request.GroupId,
             dpdMin,
@@ -145,7 +145,7 @@ internal sealed class SearchOdMembersQueryHandler(
                 r.GroupCode,
                 r.CreditOfficerId,
                 r.CreditOfficerName,
-                r.OrganisationUnitId,
+                r.OrganizationUnitId,
                 r.BranchName,
                 r.Phone,
                 string.IsNullOrEmpty(r.Address) ? null : r.Address,
