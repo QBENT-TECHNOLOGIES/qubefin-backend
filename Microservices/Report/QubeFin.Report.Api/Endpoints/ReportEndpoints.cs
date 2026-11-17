@@ -86,6 +86,11 @@ namespace QubeFin.Report.Api.Endpoints
 
             app.MapGet("/generate-employee-leave-balance-report/{year:int}/{month:int}/{companyId:guid}", [Authorize] async (int year, int month, Guid companyId, ISender sender) =>
             {
+                if(month < 1 || month > 12)
+                {
+                    return Results.BadRequest("Invalid month. Please provide a value between 1 and 12.");
+                }
+                var monthName = new DateTime(year, month, 1).ToString("MMMM");
                 var command = new GenerateNPOIReportsCommand("Hrms.USP_GetEmployeeLeaveBalanceReport",
                     new Dictionary<string, object?>
                     {
@@ -94,7 +99,7 @@ namespace QubeFin.Report.Api.Endpoints
                         ["@CompanyId"] = companyId
                     },
                     "Employee Leave Balance Report",
-                    $"Year: {year}, Month: {month}",
+                    $"Year: {year}, Month: {monthName}",
                     true,
                     companyId
                 );
