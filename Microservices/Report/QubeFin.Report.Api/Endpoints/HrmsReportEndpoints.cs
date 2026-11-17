@@ -396,6 +396,110 @@ namespace QubeFin.Report.Api.Endpoints
 
                 return Results.File(file.FileStream, file.ContentType, $"Employee_Detail_Report_{year}.xlsx");
             }).WithSummary("Generate Employee Detail Report.");
+
+            app.MapGet("/generate-leave-request-report", [Authorize] async (ISender sender) =>
+            {
+
+                var command = new GenerateNPOIReportsCommand("Hrms.USP_GetLeaveRequestReport",
+                    new Dictionary<string, object?>
+                    {
+                    },
+                    "Employee Leave Request Report",
+                    $"",
+                    false,
+                    Guid.Empty
+                );
+
+                var result = await sender.Send(command);
+
+                if (result.IsFailed)
+                    return result.ToHttpResult();
+
+                var file = result.Value;
+
+                return Results.File(file.FileStream, file.ContentType, $"Leave_Request_Report.xlsx");
+            }).WithSummary("Generate Leave Request Report.");
+
+            app.MapGet("/generate-regularization-report", [Authorize] async (ISender sender) =>
+            {
+
+                var command = new GenerateNPOIReportsCommand("Hrms.USP_GetRegularizationReport",
+                    new Dictionary<string, object?>
+                    {
+                    },
+                    "Employee Regularization Report",
+                    $"",
+                    false,
+                    Guid.Empty
+                );
+
+                var result = await sender.Send(command);
+
+                if (result.IsFailed)
+                    return result.ToHttpResult();
+
+                var file = result.Value;
+
+                return Results.File(file.FileStream, file.ContentType, $"Regularization_Report.xlsx");
+            }).WithSummary("Generate Regularization Report.");
+
+            app.MapGet("/leave-balance-report/{year:int}/{month:int}/{companyId:guid}", [Authorize] async (int year, int month, Guid companyId, ISender sender) =>
+            {
+                if (month < 1 || month > 12)
+                {
+                    return Results.BadRequest("Invalid month. Please provide a value between 1 and 12.");
+                }
+                var monthName = new DateTime(year, month, 1).ToString("MMMM");
+                var command = new GenerateNPOIReportsCommand("Hrms.USP_GetEmployeeLeaveBalanceReport",
+                    new Dictionary<string, object?>
+                    {
+                        ["@Year"] = year,
+                        ["@Month"] = month,
+                        ["@CompanyId"] = companyId
+                    },
+                    "Employee Leave Balance Report",
+                    $"Year: {year}, Month: {monthName}",
+                    true,
+                    companyId
+                );
+
+                var result = await sender.Send(command);
+
+                if (result.IsFailed)
+                    return result.ToHttpResult();
+
+                var file = result.Value;
+
+                return Results.File(file.FileStream, file.ContentType, $"Employee_Leave_Balance_Report_{month}_{year}.xlsx");
+            }).WithSummary("Generate Employee Leave Balance Report.");
+
+            app.MapGet("/monthly-attendance-report/{year:int}/{month:int}/{companyId}", [Authorize] async (int year, int month, Guid? companyId, ISender sender) =>
+            {
+                if (month < 1 || month > 12)
+                {
+                    return Results.BadRequest("Month must be between 1 and 12.");
+                }
+                var monthName = new DateTime(year, month, 1).ToString("MMMM");
+                Guid companyIdParam = (companyId == null | companyId == Guid.Empty) ? Guid.Empty : (Guid)companyId;
+
+                var command = new GenerateNPOIReportsCommand("Hrms.USP_GetMonthlyAttendanceReport",
+                    new Dictionary<string, object?>
+                    {
+                        ["@Year"] = year,
+                        ["@Month"] = month,
+                        ["@CompanyId"] = companyIdParam
+                    },
+                    "Monthly Attendance Report",
+                    $"Year: {year}, Month: {monthName}",
+                    (companyId == null | companyId == Guid.Empty) ? false : true,
+                    companyIdParam
+                );
+                var result = await sender.Send(command);
+                if (result.IsFailed)
+                    return result.ToHttpResult();
+                var file = result.Value;
+                return Results.File(file.FileStream, file.ContentType, $"Monthly_Attendance_Report_{year}_{month}.xlsx");
+            }).WithSummary("Generate Employee Monthly Attendance Report.");
             #endregion
         }
     }

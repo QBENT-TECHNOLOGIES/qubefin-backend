@@ -83,6 +83,7 @@ namespace QubeFin.Report.Api.Endpoints
             #endregion
 
             #region NPOI REPORTS
+
             app.MapGet("/generate-pf-report/{month:int}/{year:int}/{companyId:Guid}", [Authorize] async (int month, int year, Guid companyId, ISender sender) =>
             {
                 var command = new GenerateNPOIReportsCommand("Payroll.USP_GetPFReport",
