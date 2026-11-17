@@ -80,6 +80,23 @@ namespace QubeFin.Collection.Api.Endpoints
               .WithTags("Group Loans")
             .RequireAuthorization();
 
+            app.MapGet("bc-group-loans-payment/{loanId:guid}", async (Guid loanId, ISender sender, CancellationToken cancellationToken) =>
+            {
+                var result = await sender.Send(new GetBcLoanDetailQuery(loanId), cancellationToken);
+                return result.ToHttpResult();
+            }).WithSummary("Get one BC loan by loan id")
+              .WithTags("Group Loans")
+              .RequireAuthorization();
+
+            app.MapPost("employees/search-loan-by-text", async (IMediator mediator, Guid designationId, Guid bcGroupId, string? searchText) =>
+            {
+                var result = await mediator.Send(new GetBcLoanBySearchTextQuery(designationId, bcGroupId, searchText));
+                return result.ToHttpResult();
+            })
+            .WithSummary("Search running loans of a credit officer's group")
+            .RequireAuthorization();
+
+
             app.MapPost("save-bc-collection", async (
                 SaveBcCollectionRequest request,
                 ISender sender,
@@ -96,7 +113,7 @@ namespace QubeFin.Collection.Api.Endpoints
                 var result = await sender.Send(new SaveBcCollectionCommand(employeeId, userId, request), cancellationToken);
                 return result.ToHttpResult();
             }).WithSummary("Save the collection of one BC group for one collection date")
-              .WithDescription("Saves the collected amount of each loan of a BC group (designationId and bcGroupId in the body) for collectionDate (yyyy-MM-dd) through [BC].[USP_BCLoanCollection]. Every loan must belong to the group, be running, have an EMI due on that date and not be collected already. Remarks are required when the amount is less than the EMI, and UTR No is required for a UPI collection.")
+              .WithDescription("Saves the collected amount of each loan of a BC group (designationId and bcGroupId in the body) for collectionDate (yyyy-MM-dd) through [BC].[USP_BCLoanCollection]. Every loan must belong to the group, be running, have an EMI due on that date and not be collected already. UTR No is required for a UPI collection.")
               .WithTags("Group Collections")
             .RequireAuthorization();
         }

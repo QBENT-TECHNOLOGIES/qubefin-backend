@@ -134,24 +134,18 @@ internal sealed class SaveBcCollectionCommandHandler(
                 continue;
             }
 
-            var emiAmount = loan.CollectionEmiAmount ?? loan.EmiAmount ?? 0;
-
             if (loan.IsClosed)
             {
                 errors.Add($"Loan {loan.LoanNo} is closed.");
             }
-            else if (!loan.IsDemandDate)
-            {
-                errors.Add($"Loan {loan.LoanNo} has no EMI due on {collectionDate:dd/MM/yyyy}.");
-            }
-            else if (loan.IsCollected && (loan.CollectedAmount ?? 0) > 0)
-            {
-                errors.Add($"Loan {loan.LoanNo} is already collected for {collectionDate:dd/MM/yyyy}.");
-            }
-            else if (entry.CollectionAmount < emiAmount && string.IsNullOrWhiteSpace(entry.Remarks))
-            {
-                errors.Add($"Remarks are required for loan {loan.LoanNo} as the collection is less than the EMI.");
-            }
+            //else if (!loan.IsDemandDate)
+            //{
+            //    errors.Add($"Loan {loan.LoanNo} has no EMI due on {collectionDate:dd/MM/yyyy}.");
+            //}
+            //else if (loan.IsCollected && (loan.CollectedAmount ?? 0) > 0)
+            //{
+            //    errors.Add($"Loan {loan.LoanNo} is already collected for {collectionDate:dd/MM/yyyy}.");
+            //}
         }
 
         if (errors.Count > 0)
