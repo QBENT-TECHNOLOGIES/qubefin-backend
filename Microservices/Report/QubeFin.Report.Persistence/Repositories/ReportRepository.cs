@@ -132,8 +132,12 @@ namespace QubeFin.Report.Persistence.Repositories
         #endregion
 
         #region HELPERS
-        private async Task<byte[]?> GetLogoAsync(Guid companyId, CancellationToken cancellationToken)
+        private async Task<byte[]?> GetLogoAsync(Guid? companyId, CancellationToken cancellationToken)
         {
+            if (companyId == null || companyId == Guid.Empty)
+            {
+                return null;
+            }
             var companyEntity = await context.TblCompanies.AsNoTracking().FirstOrDefaultAsync(m => m.Id == companyId) ?? throw new Exception("Company not found.");
 
             if (string.IsNullOrEmpty(companyEntity.LogoUrl))
