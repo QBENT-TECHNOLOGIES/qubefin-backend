@@ -18,6 +18,7 @@ public static class DependencyInjection
         });
         services.AddScoped<IUnitOfWork>(options => options.GetRequiredService<QubeFinDataContext>());
         services.AddHttpClient();
+        services.AddHttpContextAccessor();
 
         services.AddScoped<ITokenGenerator, TokenGenerator>();
         services.AddScoped<IReportRepository, ReportRepository>();

@@ -18,4 +18,11 @@ public static class IdentityExtensions
         var employeeIdClaim = claimsIdentity?.FindFirst("EmployeeId");
         return employeeIdClaim == null ? Guid.Empty : Guid.Parse(employeeIdClaim.Value!.ToString());
     }
+
+    public static string GetEmployeeName(this IIdentity identity)
+    {
+        var claimsIdentity = identity as ClaimsIdentity;
+        var employeeNameClaim = claimsIdentity?.FindFirst("EmployeeName");
+        return employeeNameClaim == null ? string.Empty : employeeNameClaim.Value!.ToString();
+    }
 }

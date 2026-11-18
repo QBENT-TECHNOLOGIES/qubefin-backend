@@ -5,9 +5,21 @@ namespace QubeFin.Report.Persistence.Repositories.ExcelHelpers;
 
 public static class ExcelCompanyHeaderHelper
 {
-    public static int AddCompanyHeader(IWorkbook workbook, ISheet sheet, int currentRow, int columnCount, byte[]? logoBytes)
+    // The three fixed lines of the company block. Exposed so the header card
+    // width can be measured against them without duplicating the strings.
+    public const string CompanyName = "WeGrow Financial Services Private Limited";
+    public const string CompanyAddress = "AE -592, Salt Lake City, Sector – I, Kolkata, West Bengal";
+    public const string CompanyContact = "Phone: +91 9836036541       Email ID: hr@wegrowindia.com";
+
+    /// <summary>
+    /// <paramref name="cardColumnCount"/> is how many leading columns the header
+    /// card spans. Everything inside the card stays centered; the card itself
+    /// sits at the left. Pass 0 to span the whole table, as before.
+    /// </summary>
+    public static int AddCompanyHeader(IWorkbook workbook, ISheet sheet, int currentRow, int columnCount, byte[]? logoBytes, int cardColumnCount = 0)
     {
         if (columnCount <= 0) columnCount = 1;
+        if (cardColumnCount <= 0 || cardColumnCount > columnCount) cardColumnCount = columnCount;
 
         var companyStyle = CreateCompanyStyle(workbook);
         var companyNameStyle = CreateCompanyNameStyle(workbook);
@@ -20,9 +32,9 @@ public static class ExcelCompanyHeaderHelper
 
         if (logoBytes is not null && logoBytes.Length > 0)
         {
-            AddLogo(workbook, sheet, currentRow, columnCount, logoBytes);
+            AddLogo(workbook, sheet, currentRow, columnCount, logoBytes, cardColumnCount);
 
-            // Make sure the rows exist, then merge the whole 4x(columnCount)
+            // Make sure the rows exist, then merge the whole 4x(cardColumnCount)
             // block the logo sits on into one region — merges both across
             // rows and across columns, matching the rest of the header.
             for (var i = 0; i < 4; i++)
@@ -33,7 +45,7 @@ public static class ExcelCompanyHeaderHelper
                 }
             }
 
-            MergeBlock(sheet, currentRow, currentRow + 3, columnCount);
+            MergeBlock(sheet, currentRow, currentRow + 3, cardColumnCount);
 
             currentRow += 4;
         }
@@ -50,10 +62,10 @@ public static class ExcelCompanyHeaderHelper
         companyRow.HeightInPoints = 22;
 
         var companyCell = companyRow.CreateCell(0);
-        companyCell.SetCellValue("WeGrow Financial Services Private Limited");
+        companyCell.SetCellValue(CompanyName);
         companyCell.CellStyle = companyNameStyle;
 
-        Merge(sheet, companyRow.RowNum, columnCount);
+        Merge(sheet, companyRow.RowNum, cardColumnCount);
 
         // =========================================================
         // ADDRESS
@@ -63,10 +75,10 @@ public static class ExcelCompanyHeaderHelper
         addressRow.HeightInPoints = 20;
 
         var addressCell = addressRow.CreateCell(0);
-        addressCell.SetCellValue("AE -592, Salt Lake City, Sector – I, Kolkata, West Bengal");
+        addressCell.SetCellValue(CompanyAddress);
         addressCell.CellStyle = companyStyle;
 
-        Merge(sheet, addressRow.RowNum, columnCount);
+        Merge(sheet, addressRow.RowNum, cardColumnCount);
 
         // =========================================================
         // PHONE + EMAIL
@@ -76,11 +88,11 @@ public static class ExcelCompanyHeaderHelper
         contactRow.HeightInPoints = 20;
 
         var contactCell = contactRow.CreateCell(0);
-        contactCell.SetCellValue("Phone: +91 9836036541       Email ID: hr@wegrowindia.com");
+        contactCell.SetCellValue(CompanyContact);
         contactCell.CellStyle = contactStyle;
 
         // Merge entire row
-        Merge(sheet, contactRow.RowNum, columnCount);
+        Merge(sheet, contactRow.RowNum, cardColumnCount);
 
         // =========================================================
         // SEPARATOR
@@ -91,14 +103,15 @@ public static class ExcelCompanyHeaderHelper
         var separatorCell = separatorRow.CreateCell(0);
         separatorCell.SetCellValue("");
         separatorCell.CellStyle = separatorStyle;
-        Merge(sheet, separatorRow.RowNum, columnCount);
+        Merge(sheet, separatorRow.RowNum, cardColumnCount);
 
         return currentRow;
     }
 
-    public static int AddCompanyLogo(IWorkbook workbook, ISheet sheet, int currentRow, int columnCount, byte[]? logoBytes)
+    public static int AddCompanyLogo(IWorkbook workbook, ISheet sheet, int currentRow, int columnCount, byte[]? logoBytes, int cardColumnCount = 0)
     {
         if (columnCount <= 0) columnCount = 1;
+        if (cardColumnCount <= 0 || cardColumnCount > columnCount) cardColumnCount = columnCount;
 
         var companyStyle = CreateCompanyStyle(workbook);
         var companyNameStyle = CreateCompanyNameStyle(workbook);
@@ -111,9 +124,9 @@ public static class ExcelCompanyHeaderHelper
 
         if (logoBytes is not null && logoBytes.Length > 0)
         {
-            AddLogo(workbook, sheet, currentRow, columnCount, logoBytes);
+            AddLogo(workbook, sheet, currentRow, columnCount, logoBytes, cardColumnCount);
 
-            // Make sure the rows exist, then merge the whole 4x(columnCount)
+            // Make sure the rows exist, then merge the whole 4x(cardColumnCount)
             // block the logo sits on into one region — merges both across
             // rows and across columns, matching the rest of the header.
             for (var i = 0; i < 4; i++)
@@ -124,7 +137,7 @@ public static class ExcelCompanyHeaderHelper
                 }
             }
 
-            MergeBlock(sheet, currentRow, currentRow + 3, columnCount);
+            MergeBlock(sheet, currentRow, currentRow + 3, cardColumnCount);
 
             currentRow += 4;
         }
@@ -143,15 +156,17 @@ public static class ExcelCompanyHeaderHelper
         var separatorCell = separatorRow.CreateCell(0);
         separatorCell.SetCellValue("");
         separatorCell.CellStyle = separatorStyle;
-        Merge(sheet, separatorRow.RowNum, columnCount);
+        Merge(sheet, separatorRow.RowNum, cardColumnCount);
 
         return currentRow;
     }
     private const double EmuPerPixel = 9525.0;      // 914400 EMU/inch ÷ 96 DPI
     private const double DefaultCharWidthPx = 7.0;  // ~digit width for Calibri 11 / Arial 10
 
-    private static void AddLogo(IWorkbook workbook, ISheet sheet, int currentRow, int columnCount, byte[] logoBytes)
+    private static void AddLogo(IWorkbook workbook, ISheet sheet, int currentRow, int columnCount, byte[] logoBytes, int cardColumnCount = 0)
     {
+        if (cardColumnCount <= 0 || cardColumnCount > columnCount) cardColumnCount = columnCount;
+
         var pictureType = DetectPictureType(logoBytes);
         var pictureIndex = workbook.AddPicture(logoBytes, pictureType);
         var drawing = sheet.CreateDrawingPatriarch();
@@ -168,12 +183,24 @@ public static class ExcelCompanyHeaderHelper
             totalWidthPx += columnPixelWidths[i];
         }
 
+        // Width of the header card — the leading columns the whole header
+        // block is merged across. The logo is centered inside the card, not
+        // across the full table.
+        double cardWidthPx = 0;
+
+        for (var i = 0; i < cardColumnCount; i++)
+        {
+            cardWidthPx += columnPixelWidths[i];
+        }
+
         // Keep the same "roughly 4 columns wide" footprint as before,
         // just sized from the real average column width instead of a
-        // raw column-count guess.
+        // raw column-count guess — capped so it never overflows the card.
         var logoWidthPx = columnCount > 0 ? Math.Min(totalWidthPx, (totalWidthPx / columnCount) * 2) : totalWidthPx;
 
-        var offsetXPx = Math.Max((totalWidthPx - logoWidthPx) / 2.0, 0);
+        logoWidthPx = Math.Min(logoWidthPx, cardWidthPx);
+
+        var offsetXPx = Math.Max((cardWidthPx - logoWidthPx) / 2.0, 0);
 
         var (col1, dx1) = ResolveColumnOffset(columnPixelWidths, offsetXPx);
         var (col2, dx2) = ResolveColumnOffset(columnPixelWidths, offsetXPx + logoWidthPx);
