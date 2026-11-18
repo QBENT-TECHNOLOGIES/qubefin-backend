@@ -100,6 +100,18 @@ public class ExcelParsingService : IExcelParsingService
                     continue;
                 }
 
+                if (column.IsMandatory && string.IsNullOrWhiteSpace(value))
+                {
+                    result.Errors.Add(new ImportRowError
+                    {
+                        Row = excelRowNumber,
+                        Column = column.Header,
+                        Value = rawValue?.ToString(),
+                        Message = $"'{column.Header}' is mandatory."
+                    });
+                    continue;
+                }
+
                 mappedRow[column.Param] = value;
             }
 

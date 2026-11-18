@@ -20,4 +20,7 @@ public class ImportColumnDefinition
     [JsonPropertyName("Type")]
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public ImportColumnType Type { get; set; }
+
+    [JsonPropertyName("IsMandatory")]
+    public bool IsMandatory { get; set; }
 }
