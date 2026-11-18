@@ -80,6 +80,21 @@ public class UserEndpoints : IEndpoint
         .WithSummary("Update User")
         .WithTags("Users");
 
+        app.MapPut("users/fcm-installation-id", async (ClaimsPrincipal principal, UserFcmInstallationIdRequest request, ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+            var userId = principal.Identity.GetUserId();
+
+            var result = await sender.Send(new UpdateFcmInstallationIdCommand(userId, request.FcmInstallationId));
+            return result.ToHttpResult();
+        })
+        .RequireAuthorization()
+        .WithSummary("Update Loggedin User Fcm Installation Id")
+        .WithTags("Users");
+
         app.MapPost("register-mfa", async (RegisterMfaCommand request, ISender sender, IPublisher publisher) =>
         {
             var result = await sender.Send(request);

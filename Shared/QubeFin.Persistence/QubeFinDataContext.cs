@@ -60,6 +60,8 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblBcmemberTransfer> TblBcmemberTransfers { get; set; }
 
+    public virtual DbSet<TblBcmigratedDatum> TblBcmigratedData { get; set; }
+
     public virtual DbSet<TblBranchSurvey> TblBranchSurveys { get; set; }
 
     public virtual DbSet<TblCalenderYear> TblCalenderYears { get; set; }
@@ -781,6 +783,92 @@ public partial class QubeFinDataContext : DbContext
                 .HasForeignKey(d => d.BcmemberId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_BCMemberTransfer_Tbl_BCMember");
+        });
+
+        modelBuilder.Entity<TblBcmigratedDatum>(entity =>
+        {
+            entity.ToTable("Tbl_BCMigratedData", "BC");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.AccountId).HasMaxLength(20);
+            entity.Property(e => e.AgingOfOverdue).HasMaxLength(30);
+            entity.Property(e => e.BranchId).HasMaxLength(10);
+            entity.Property(e => e.BranchName).HasMaxLength(50);
+            entity.Property(e => e.ClientId).HasMaxLength(50);
+            entity.Property(e => e.ClientName).HasMaxLength(100);
+            entity.Property(e => e.CreditOfficerId).HasMaxLength(20);
+            entity.Property(e => e.CreditOfficerName).HasMaxLength(50);
+            entity.Property(e => e.CurrentInstallmentNo).HasDefaultValue(0, "DF_Tbl_BCMigratedData_CurrentInstallmentNo");
+            entity.Property(e => e.DueDays).HasDefaultValue(0, "DF_Tbl_BCMigratedData_DueDays");
+            entity.Property(e => e.FunderId).HasMaxLength(50);
+            entity.Property(e => e.GroupId).HasMaxLength(20);
+            entity.Property(e => e.GroupName).HasMaxLength(50);
+            entity.Property(e => e.InstallmentFrequency).HasMaxLength(30);
+            entity.Property(e => e.InterestAmount)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_InterestAmount")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.InterestArrear)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_InterestArrear")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.InterestDue)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_InterestDue")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.InterestOutstanding)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_InterestOutstanding")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.InterestPaid)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_InterestPaid")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.InterestPrePaid)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_InterestPrePaid")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.LoanAmount)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_LoanAmount")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.LoanPurpose).HasMaxLength(50);
+            entity.Property(e => e.LoanSeries).HasMaxLength(5);
+            entity.Property(e => e.LoanStatus).HasMaxLength(20);
+            entity.Property(e => e.MobileNo).HasMaxLength(20);
+            entity.Property(e => e.NoOfInstallmentDue).HasDefaultValue(0, "DF_Tbl_BCMigratedData_NoOfInstallmentDue");
+            entity.Property(e => e.PrincipalArrear)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_PrincipalArrear")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.PrincipalDue)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_PrincipalDue")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.PrincipalOutstanding)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_PrincipalOutstanding")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.PrincipalPaid)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_PrincipalPaid")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.PrincipalPrePaid)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_PrincipalPrePaid")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.ProductId).HasMaxLength(10);
+            entity.Property(e => e.SectorName).HasMaxLength(50);
+            entity.Property(e => e.SubGroupName).HasMaxLength(50);
+            entity.Property(e => e.TerritoryId).HasMaxLength(5);
+            entity.Property(e => e.TerritoryName).HasMaxLength(50);
+            entity.Property(e => e.TotalAdvancePaid)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_TotalAdvancePaid")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.TotalArrear)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_TotalArrear")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.TotalDue)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_TotalDue")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.TotalOutstading)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_TotalOutstading")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.TotalPaid)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_TotalPaid")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.TotalPrePaid)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_TotalPrePaid")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.UnitName).HasMaxLength(50);
         });
 
         modelBuilder.Entity<TblBranchSurvey>(entity =>
@@ -3085,6 +3173,7 @@ public partial class QubeFinDataContext : DbContext
             entity.ToTable("Tbl_User", "Auth");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.FcmInstallationId).HasMaxLength(200);
             entity.Property(e => e.MfaSecret).HasMaxLength(50);
             entity.Property(e => e.Password).HasMaxLength(500);
             entity.Property(e => e.UserName).HasMaxLength(30);

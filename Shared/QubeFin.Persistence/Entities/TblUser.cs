@@ -23,6 +23,8 @@ public partial class TblUser
 
     public bool IsAttendanceOptional { get; set; }
 
+    public string? FcmInstallationId { get; set; }
+
     public DateTime CreatedOn { get; set; }
 
     public Guid CreatedBy { get; set; }
