@@ -1,0 +1,54 @@
+using Amazon;
+using Amazon.S3;
+using Amazon.S3.Model;
+using Amazon.S3.Transfer;
+using Microsoft.Extensions.Configuration;
+
+namespace QubeFin.ImportEngine.Persistence.Repositories;
+
+public interface IFileStorageRepository
+{
+    Task<string> UploadFileAsync(Stream stream, string key, string contentType, CancellationToken cancellationToken = default, string? folder = null);
+    Task<string> GetFileUrlAsync(string key, CancellationToken cancellationToken = default);
+}
+
+public class FileStorageRepository(IConfiguration configuration) : IFileStorageRepository
+{
+    public async Task<string> UploadFileAsync(Stream stream, string key, string contentType, CancellationToken cancellationToken = default, string? folder = null)
+    {
+        try
+        {
+            var uploadName = $"{DateTime.Now.Ticks.ToString()}_{key}";
+
+            using (var client = new AmazonS3Client($@"{configuration["aws:awsAccessKeyId"]}", $@"{configuration["aws:awsSecretAccessKey"]}", RegionEndpoint.GetBySystemName($@"{configuration["aws:region"]}")))
+            {
+                var uploadRequest = new TransferUtilityUploadRequest
+                {
+                    InputStream = stream,
+                    Key = "WeGrow/" + (!string.IsNullOrEmpty(folder) ? $"{folder}/" : "") + uploadName,
+                    BucketName = $@"{configuration["aws:bucket"]}",
+                    CannedACL = S3CannedACL.PublicRead
+                };
+                var fileTransferUtility = new TransferUtility(client);
+                await fileTransferUtility.UploadAsync(uploadRequest, cancellationToken);
+            }
+            return uploadName;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error uploading file to storage: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<string> GetFileUrlAsync(string key, CancellationToken cancellationToken = default)
+    {
+        var s3Client = new AmazonS3Client($@"{configuration["aws:awsAccessKeyId"]}", $@"{configuration["aws:awsSecretAccessKey"]}", RegionEndpoint.GetBySystemName($@"{configuration["aws:region"]}"));
+        var request = new GetPreSignedUrlRequest
+        {
+            BucketName = $@"{configuration["aws:bucket"]}",
+            Key = "WeGrow/" + key,
+            Expires = DateTime.UtcNow.AddMinutes(30)
+        };
+        return await Task.FromResult(s3Client.GetPreSignedURL(request));
+    }
+}

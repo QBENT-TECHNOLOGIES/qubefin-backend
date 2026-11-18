@@ -31,6 +31,13 @@
     <Project Path="Microservices/Hrms/QubeFin.Hrms.Infrastructure/QubeFin.Hrms.Infrastructure.csproj" Id="892df1f0-0e55-433c-8dde-53c9d6806e1a" />
     <Project Path="Microservices/Hrms/QubeFin.Hrms.Persistence/QubeFin.Hrms.Persistence.csproj" Id="8dbea010-610c-4b8f-8c22-fdc35be0df91" />
   </Folder>
+  <Folder Name="/Microservices/ImportEngine/">
+    <Project Path="Microservices/ImportEngine/QubeFin.ImportEngine.Api/QubeFin.ImportEngine.Api.csproj" />
+    <Project Path="Microservices/ImportEngine/QubeFin.ImportEngine.Application/QubeFin.ImportEngine.Application.csproj" />
+    <Project Path="Microservices/ImportEngine/QubeFin.ImportEngine.Infrastructure/QubeFin.ImportEngine.Infrastructure.csproj" />
+    <Project Path="Microservices/ImportEngine/QubeFin.ImportEngine.Persistence/QubeFin.ImportEngine.Persistence.csproj" />
+    <Project Path="Microservices/ImportEngine/QubeFin.ImportEngine.Tests/QubeFin.ImportEngine.Tests.csproj" />
+  </Folder>
   <Folder Name="/Microservices/Payroll/">
     <Project Path="Microservices/Payroll/QubeFin.Payroll.Api/QubeFin.Payroll.Api.csproj" />
     <Project Path="Microservices/Payroll/QubeFin.Payroll.Application/QubeFin.Payroll.Application.csproj" />
