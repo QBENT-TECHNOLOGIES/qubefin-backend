@@ -36,6 +36,6 @@ internal static class GeoTagRules
             false,
             setting is null ? null : setting.BranchOperatingRadiusInKm * 1000,
             setting?.TaskLocationMatchInMeters,
-            target.RefId), cancellationToken)).Single();
+            target.RefId), cancellationToken)).Rows.Single();
     }
 }

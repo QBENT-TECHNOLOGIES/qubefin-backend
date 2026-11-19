@@ -11,7 +11,7 @@ public interface IGeoTagRepository
 {
     Task<GeoTagPointsResult> GetPointsAsync(Guid organizationUnitId, IReadOnlyCollection<string> kinds, int? taskLocationMatchInMeters, CancellationToken cancellationToken = default);
     Task<Dictionary<Guid, TrackingPlace>> GetPlacesAsync(IEnumerable<Guid> refIds, CancellationToken cancellationToken = default);
-    Task<List<GeoTagRow>> GetGeoTagsAsync(GeoTagFilter filter, CancellationToken cancellationToken = default);
+    Task<GeoTagSearchResult> GetGeoTagsAsync(GeoTagFilter filter, CancellationToken cancellationToken = default);
     Task<GeoTagTarget?> FindGeoTagAsync(Guid id, Guid? viewerEmployeeId, CancellationToken cancellationToken = default);
     Task UpdateLocationAsync(GeoTagTarget target, GeoPoint location, string? photoKey, Guid userId, DateTime now, CancellationToken cancellationToken = default);
     Task<List<string>> GetPendingTasksAtAsync(GeoTagTarget target, CancellationToken cancellationToken = default);
@@ -108,72 +108,62 @@ public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
         return places;
     }
 
-    // Tracking.USP_GetGeoTags: places of one kind, with and without a location, sorted by name. BranchIds null = every
-    // branch (an Admin). Tagged by / at: TaggedBy / TaggedOn, the last user and time the location was set.
-    // They are only shown once the place has a location.
-    public async Task<List<GeoTagRow>> GetGeoTagsAsync(GeoTagFilter filter, CancellationToken cancellationToken = default)
+    // Tracking.USP_GetGeoTags: places of one kind, with and without a location, one page sorted by name (or SortOn).
+    // BranchIds null = every branch (an Admin). PageSize null = every row (used to read one place back by RefId).
+    // Tagged by / at: TaggedBy / TaggedOn, the last user and time the location was set; only shown once the place has a location.
+    public async Task<GeoTagSearchResult> GetGeoTagsAsync(GeoTagFilter filter, CancellationToken cancellationToken = default)
     {
         var text = string.IsNullOrWhiteSpace(filter.SearchText) ? null : filter.SearchText.Trim();
         var kind = filter.Kind is Branch or GroupCentre or Member or OdMember ? filter.Kind : EmployeeHome;
+        var totalRecords = new SqlParameter("@TotalRecords", SqlDbType.Int) { Direction = ParameterDirection.Output };
 
         var places = await context.Set<GeoTagResult>()
             .FromSqlRaw(
-                "EXEC [Tracking].[USP_GetGeoTags] @Kind, @BranchIds, @OrganizationUnitId, @SearchText, @OnlyUntagged, @RefId",
+                "EXEC [Tracking].[USP_GetGeoTags] @Kind, @BranchIds, @OrganizationUnitId, @SearchText, @OnlyUntagged, @RefId, " +
+                "@SortOn, @SortDescending, @PageIndex, @PageSize, @TotalRecords OUTPUT",
                 new SqlParameter("@Kind", SqlDbType.NVarChar, 50) { Value = kind },
                 new SqlParameter("@BranchIds", SqlDbType.NVarChar, -1)
                 {
                     Value = filter.BranchIds is null ? DBNull.Value : string.Join(',', filter.BranchIds)
                 },
                 new SqlParameter("@OrganizationUnitId", SqlDbType.UniqueIdentifier) { Value = (object?)filter.OrganizationUnitId ?? DBNull.Value },
-                // A branch is searched here, by name or code, as before
-                new SqlParameter("@SearchText", SqlDbType.NVarChar, 200) { Value = kind == Branch ? DBNull.Value : (object?)text ?? DBNull.Value },
+                new SqlParameter("@SearchText", SqlDbType.NVarChar, 200) { Value = (object?)text ?? DBNull.Value },
                 new SqlParameter("@OnlyUntagged", SqlDbType.Bit) { Value = filter.OnlyUntagged },
-                new SqlParameter("@RefId", SqlDbType.UniqueIdentifier) { Value = (object?)filter.RefId ?? DBNull.Value })
+                new SqlParameter("@RefId", SqlDbType.UniqueIdentifier) { Value = (object?)filter.RefId ?? DBNull.Value },
+                new SqlParameter("@SortOn", SqlDbType.NVarChar, 50) { Value = (object?)filter.SortOn ?? DBNull.Value },
+                new SqlParameter("@SortDescending", SqlDbType.Bit) { Value = filter.SortDescending },
+                new SqlParameter("@PageIndex", SqlDbType.Int) { Value = (object?)filter.PageIndex ?? DBNull.Value },
+                new SqlParameter("@PageSize", SqlDbType.Int) { Value = (object?)filter.PageSize ?? DBNull.Value },
+                totalRecords)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
-        List<GeoTagRow> rows;
-        switch (kind)
+        // The procedure has sorted and paged the rows; this only shapes them
+        var rows = kind switch
         {
-            case Branch:
-                rows = places
-                    .Where(b => text == null || b.Name!.Contains(text, StringComparison.OrdinalIgnoreCase) || b.Code!.Contains(text))
-                    .Select(b =>
-                    {
-                        var location = GeoCoordinates.ToGeoPoint(b.Latitude, b.Longitude);
-                        return new GeoTagRow(Branch, b.RefId, b.Name!, b.Code, b.RefId, b.Name, null, location,
-                            filter.BranchRadiusMeters, null, location is null ? null : b.TaggedByName, location is null ? null : b.TaggedOn);
-                    })
-                    .ToList();
-                break;
-            case GroupCentre:
-                rows = places
-                    .Select(g => new GeoTagRow(GroupCentre, g.RefId, g.Name!, g.Code, g.BranchId, g.BranchName, g.AddressLine1,
-                        GeoCoordinates.ToGeoPoint(g.Location), filter.MatchRadiusMeters, g.LocationPhoto,
-                        g.Location is null ? null : g.TaggedByName, g.Location is null ? null : g.TaggedOn))
-                    .ToList();
-                break;
-            case Member:
-            case OdMember:
-                rows = places
-                    .Select(m => new GeoTagRow(filter.Kind, m.RefId,
-                        string.Join(' ', new[] { m.FirstName, m.MiddleName, m.LastName }.Where(n => !string.IsNullOrWhiteSpace(n))),
-                        m.Code, m.BranchId, m.BranchName,
-                        string.Join(", ", new[] { m.AddressLine1, m.AddressLine2 }.Where(a => !string.IsNullOrWhiteSpace(a))) is { Length: > 0 } address ? address : null,
-                        GeoCoordinates.ToGeoPoint(m.Location), filter.MatchRadiusMeters, m.LocationPhoto,
-                        m.Location is null ? null : m.TaggedByName, m.Location is null ? null : m.TaggedOn))
-                    .ToList();
-                break;
-            default:
-                // EmployeeHome: every active employee, placed in the unit of Tbl_Employee.OrganizationUnitId
-                rows = places
-                    .Select(e => new GeoTagRow(EmployeeHome, e.RefId, e.Name!, e.Code, e.BranchId, e.BranchName, e.AddressLine1,
-                        GeoCoordinates.ToGeoPoint(e.Location), filter.MatchRadiusMeters, e.LocationPhoto,
-                        e.Location is null ? null : e.TaggedByName, e.Location is null ? null : e.TaggedOn))
-                    .ToList();
-                break;
-        }
-        return rows.OrderBy(r => r.Name).ToList();
+            Branch => places.Select(b =>
+            {
+                var location = GeoCoordinates.ToGeoPoint(b.Latitude, b.Longitude);
+                return new GeoTagRow(Branch, b.RefId, b.Name!, b.Code, b.RefId, b.Name, null, location,
+                    filter.BranchRadiusMeters, null, location is null ? null : b.TaggedByName, location is null ? null : b.TaggedOn);
+            }),
+            GroupCentre => places.Select(g => new GeoTagRow(GroupCentre, g.RefId, g.Name!, g.Code, g.BranchId, g.BranchName, g.AddressLine1,
+                GeoCoordinates.ToGeoPoint(g.Location), filter.MatchRadiusMeters, g.LocationPhoto,
+                g.Location is null ? null : g.TaggedByName, g.Location is null ? null : g.TaggedOn)),
+            Member or OdMember => places.Select(m => new GeoTagRow(filter.Kind, m.RefId,
+                string.Join(' ', new[] { m.FirstName, m.MiddleName, m.LastName }.Where(n => !string.IsNullOrWhiteSpace(n))),
+                m.Code, m.BranchId, m.BranchName,
+                string.Join(", ", new[] { m.AddressLine1, m.AddressLine2 }.Where(a => !string.IsNullOrWhiteSpace(a))) is { Length: > 0 } address ? address : null,
+                GeoCoordinates.ToGeoPoint(m.Location), filter.MatchRadiusMeters, m.LocationPhoto,
+                m.Location is null ? null : m.TaggedByName, m.Location is null ? null : m.TaggedOn)),
+            // EmployeeHome: active employees (IsActive, no SeparationDate), placed in the unit of Tbl_Employee.OrganizationUnitId
+            _ => places.Select(e => new GeoTagRow(EmployeeHome, e.RefId, e.Name!, e.Code, e.BranchId, e.BranchName, e.AddressLine1,
+                GeoCoordinates.ToGeoPoint(e.Location), filter.MatchRadiusMeters, e.LocationPhoto,
+                e.Location is null ? null : e.TaggedByName, e.Location is null ? null : e.TaggedOn))
+        };
+
+        // Output values are read after the result set has been read to the end
+        return new GeoTagSearchResult(rows.ToList(), totalRecords.Value is int count ? count : 0);
     }
 
     // Tracking.USP_FindGeoTag: the place behind a geo-tag id. A group is owned by its mapped designation (DesignationId);

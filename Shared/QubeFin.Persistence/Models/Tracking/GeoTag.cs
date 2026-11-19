@@ -23,7 +23,15 @@ public record GeoTagFilter(
     bool OnlyUntagged,
     int? BranchRadiusMeters,
     int? MatchRadiusMeters,
-    Guid? RefId = null);
+    Guid? RefId = null,
+    // name (default) | code | branchName | taggedAt
+    string? SortOn = null,
+    bool SortDescending = false,
+    // 0-based; PageSize null = every row
+    int? PageIndex = null,
+    int? PageSize = null);
+
+public record GeoTagSearchResult(List<GeoTagRow> Rows, int TotalRecords);
 
 // The place behind a geo-tag id, with the designation that owns it (a group's mapped CO; a member uses its group's)
 public record GeoTagTarget(

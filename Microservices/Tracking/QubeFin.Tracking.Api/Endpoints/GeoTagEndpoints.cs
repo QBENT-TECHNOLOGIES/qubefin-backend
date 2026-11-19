@@ -28,18 +28,18 @@ public class GeoTagEndpoints : IEndpoint
         .WithTags("Geo Tags")
         .RequireAuthorization();
 
-        app.MapGet("geo-tags", async (GeoTagKind? kind, string? searchText, Guid? organizationUnitId, bool? onlyUntagged, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
+        app.MapPost("geo-tags/search", async (GeoTagSearchRequest request, ClaimsPrincipal principal, ISender sender, CancellationToken cancellationToken) =>
         {
             if (principal.Identity is null || !principal.Identity.IsAuthenticated)
             {
                 return Results.Unauthorized();
             }
             var userId = principal.Identity.GetUserId();
-            var result = await sender.Send(new GetGeoTagsQuery(userId, kind, searchText, organizationUnitId, onlyUntagged ?? false), cancellationToken);
+            var result = await sender.Send(new GetGeoTagsQuery(userId, request), cancellationToken);
             return result.ToHttpResult();
         })
-        .WithSummary("List geo-tagged places of one kind")
-        .WithDescription("Returns places of one kind (Branch, GroupCentre, Member, OdMember or EmployeeHome) in the user's branches, with and without a location. onlyUntagged = true returns only places with no location yet. Employee homes are for an Admin only.")
+        .WithSummary("Search geo-tagged places of one kind")
+        .WithDescription("Paged list of places of one kind (Branch, GroupCentre, Member, OdMember or EmployeeHome) in the user's branches, with and without a location. Everything is in the body: kind, searchText, organizationUnitId, onlyUntagged, sortOn (name | code | branchName | taggedAt), sortDirection (asc | desc), pageIndex (0-based), pageSize. Employee homes are for an Admin only and list active employees (no separation date).")
         .WithTags("Geo Tags")
         .RequireAuthorization();
 

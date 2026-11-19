@@ -25,6 +25,18 @@ namespace QubeFin.Tracking.Application
                 }
                 problemDetails.Extensions.Add("errors", validationErrors);
             }
+            else if (exception is BadHttpRequestException badRequest)
+            {
+                // The body or query could not be read, e.g. a value that is not one of an enum's names ("kind": "Employee").
+                // That is the caller's mistake: 400 with the reason, not 500.
+                problemDetails.Title = "one or more validation errors occurred.";
+                problemDetails.Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1";
+                httpContext.Response.StatusCode = badRequest.StatusCode;
+                var reason = exception.InnerException is System.Text.Json.JsonException json
+                    ? $"Invalid value at {json.Path?.TrimStart('$', '.')}. Check the allowed values for that field."
+                    : exception.Message;
+                problemDetails.Extensions.Add("errors", new List<string> { reason });
+            }
             else
             {
                 problemDetails.Title = exception.Message;
