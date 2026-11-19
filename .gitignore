@@ -70,3 +70,5 @@ nunit-*.xml
 /Microservices/App/QubeFin.App.Api/appsettings.json
 /Microservices/Auth/QubeFin.Auth.Api/appsettings.json
 /Microservices/Global/QubeFin.Global.Api/appsettings.json
+/Microservices/Global/QubeFin.Global.Api/appsettings.json
+/Microservices/Auth/QubeFin.Auth.Api/appsettings.json

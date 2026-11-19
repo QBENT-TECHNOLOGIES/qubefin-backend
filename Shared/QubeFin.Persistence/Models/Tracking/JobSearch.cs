@@ -13,7 +13,8 @@ public record JobSearchFilter(
     int PageIndex,
     int PageSize,
     string? SortOn,
-    bool SortDescending);
+    bool SortDescending,
+    string? JobType = null);
 
 public record JobSummaryRow(
     Guid Id,

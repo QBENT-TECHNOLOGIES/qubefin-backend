@@ -14,4 +14,6 @@ public record JobSearchRequest(
     int PageIndex,
     int PageSize,
     string? SortOn,
-    SortDirection SortDirection);
+    SortDirection SortDirection,
+    // Self = jobs assigned to me; Assigned = jobs I created for others; null = every job I may see
+    JobType? JobType = null);

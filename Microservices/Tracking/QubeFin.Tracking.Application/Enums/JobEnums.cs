@@ -71,6 +71,13 @@ public enum JobHistoryAction
     Cancelled
 }
 
+// Job search: Self = jobs given to me (I am the assignee); Assigned = jobs I created for someone else
+public enum JobType
+{
+    Self,
+    Assigned
+}
+
 // Days past due, both ends included (utils/dpd.ts)
 public enum DpdRange
 {

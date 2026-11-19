@@ -53,7 +53,7 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
             .FromSqlRaw(
                 "EXEC [Tracking].[USP_SearchJobs] @UserId, @EmployeeId, @Role, @UnitId, @ScopeUnitIds, @Today, @SearchText, @Status, @OpenOnly, " +
                 "@OrganizationUnitId, @AssigneeId, @DueFrom, @DueTo, @DpdMin, @DpdMax, @SortOn, @SortDescending, @PageIndex, @PageSize, " +
-                "@TotalRecords OUTPUT, @CountTotal OUTPUT, @CountAssigned OUTPUT, @CountInProgress OUTPUT, @CountDelayed OUTPUT, @CountCompleted OUTPUT",
+                "@TotalRecords OUTPUT, @CountTotal OUTPUT, @CountAssigned OUTPUT, @CountInProgress OUTPUT, @CountDelayed OUTPUT, @CountCompleted OUTPUT, @JobType",
                 Value("@UserId", viewer.UserId),
                 Value("@EmployeeId", viewer.EmployeeId),
                 new SqlParameter("@Role", SqlDbType.NVarChar, 100) { Value = viewer.Role },
@@ -77,7 +77,9 @@ public class JobRepository(QubeFinDataContext context) : IJobRepository
                 Value("@SortDescending", filter.SortDescending),
                 Value("@PageIndex", filter.PageIndex),
                 Value("@PageSize", filter.PageSize),
-                totalRecords, countTotal, countAssigned, countInProgress, countDelayed, countCompleted)
+                totalRecords, countTotal, countAssigned, countInProgress, countDelayed, countCompleted,
+                // Self = held by the user; Assigned = created by the user; NULL = every visible job
+                new SqlParameter("@JobType", SqlDbType.NVarChar, 20) { Value = (object?)filter.JobType ?? DBNull.Value })
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 

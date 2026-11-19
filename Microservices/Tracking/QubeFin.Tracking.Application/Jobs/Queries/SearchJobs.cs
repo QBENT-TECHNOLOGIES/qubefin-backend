@@ -64,7 +64,8 @@ internal sealed class SearchJobsQueryHandler(ITrackingScopeRepository scopeRepos
             request.PageIndex,
             request.PageSize,
             request.SortOn,
-            request.SortDirection == SortDirection.Desc);
+            request.SortDirection == SortDirection.Desc,
+            request.JobType?.ToString());
         var result = await jobRepository.SearchJobsAsync(viewer, filter, TrackingClock.Today(), cancellationToken);
 
         var jobs = result.Jobs.Select(JobSummaryResponse.From).ToList();
