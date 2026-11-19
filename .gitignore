@@ -63,3 +63,6 @@ nunit-*.xml
 /Microservices/Report/QubeFin.Report.Api/appsettings.json
 /Microservices/Report/QubeFin.Report.Api
 /Microservices/Tracking/QubeFin.Tracking.Api/appsettings.json
+/Microservices/Global/QubeFin.Global.Api/appsettings.json
+/Microservices/Auth/QubeFin.Auth.Api/appsettings.json
+/Microservices/App/QubeFin.App.Api/appsettings.json
