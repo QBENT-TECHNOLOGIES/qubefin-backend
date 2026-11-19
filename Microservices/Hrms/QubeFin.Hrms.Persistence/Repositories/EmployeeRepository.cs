@@ -452,83 +452,76 @@ public class EmployeeRepository(QubeFinDataContext context, IUserRepository user
 
     public async Task SaveGrossSalary(Guid employeeId, Guid salaryGradeId, decimal grossSalary, decimal? pfAmount, DateOnly effectiveFrom, CancellationToken cancellationToken)
     {
-        var employee = await context.TblEmployees.AsNoTracking().FirstOrDefaultAsync(e => e.Id == employeeId, cancellationToken);
+        var employeeExists = await context.TblEmployees
+            .AsNoTracking()
+            .AnyAsync(e => e.Id == employeeId, cancellationToken);
 
-        if (employee is null)
+        if (!employeeExists)
             throw new Exception("Employee not found.");
 
-        var currentGrossSalary = await context.TblEmployeeGrossSalaries.FirstOrDefaultAsync(s => s.EmployeeId == employeeId && s.EffectiveTill == null, cancellationToken);
+        var currentGrossSalary = await context.TblEmployeeGrossSalaries
+            .FirstOrDefaultAsync(s => s.EmployeeId == employeeId && s.EffectiveTill == null, cancellationToken)
+            ?? throw new Exception("Employee gross salary is not mapped.");
 
-        if (currentGrossSalary is null)
-            throw new Exception("Employee gross salary is not mapped.");
+        // Running designation when there is one, otherwise the latest.
+        var currentEmployeeDesignation = await context.TblEmployeeDesignations
+            .Where(d => d.EmployeeId == employeeId)
+            .OrderBy(d => d.EffectiveTo == null ? 0 : 1)
+            .ThenByDescending(d => d.EffectiveFrom)
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new Exception("Designation is not mapped with the employee.");
 
-        var employeeDesignations = await context.TblEmployeeDesignations.Where(d => d.EmployeeId == employeeId).ToListAsync(cancellationToken);
+        var designationSalaryGrade = await context.TblDesignationGradeMappings
+            .FirstOrDefaultAsync(d => d.DesignationId == currentEmployeeDesignation.DesignationId && d.IsActive, cancellationToken)
+            ?? throw new Exception("Employee designation is not mapped with salary grade.");
 
-        if (!employeeDesignations.Any())
-            throw new Exception("Designation is not mapped with the employee.");
+        var isGrossChanged = currentGrossSalary.GrossSalary != grossSalary;
+        var isGradeChanged = designationSalaryGrade.GradeId != salaryGradeId;
+        var isPfChanged = currentGrossSalary.PfAmount != pfAmount;
 
-        // Employee last designation
-        var currentEmployeeDesignation = employeeDesignations.Any(d => d.EffectiveTo == null) ?
-            employeeDesignations.First(d => d.EffectiveTo == null) :
-            employeeDesignations.OrderByDescending(d => d.EffectiveFrom).First();
+        if (!isGrossChanged && !isGradeChanged && !isPfChanged)
+            throw new InvalidOperationException("No changes found. The employee is already assigned to the selected gross salary, salary grade and PF amount.");
 
-        var designationSalaryGrade = await context.TblDesignationGradeMappings.FirstOrDefaultAsync(d => d.DesignationId == currentEmployeeDesignation.DesignationId && d.IsActive, cancellationToken);
-
-        if (designationSalaryGrade is null)
-            throw new Exception("Employee designation is not mapped with salary grade.");
-
-        if (currentGrossSalary.GrossSalary == grossSalary && designationSalaryGrade.GradeId == salaryGradeId)
-            throw new InvalidOperationException("No changes found. The employee is already assigned to the selected gross salary and salary grade.");
-
-        if (currentGrossSalary.GrossSalary != grossSalary && effectiveFrom <= currentGrossSalary.EffectiveFrom)
+        // Effective From only matters when a new gross salary row has to be opened.
+        if (isGrossChanged && effectiveFrom <= currentGrossSalary.EffectiveFrom)
             throw new InvalidOperationException($"Effective From must be later than the current effective from date ({currentGrossSalary.EffectiveFrom:dd-MM-yyyy}).");
 
-        await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
-
-        try
+        if (isGrossChanged)
         {
-            if (currentGrossSalary.GrossSalary != grossSalary)
+            // Close the running gross salary one day before the new effective date, then open the new one.
+            currentGrossSalary.EffectiveTill = effectiveFrom.AddDays(-1);
+
+            context.TblEmployeeGrossSalaries.Add(new TblEmployeeGrossSalary
             {
-                // Close the running gross salary one day before the new effective date
-                currentGrossSalary.EffectiveTill = effectiveFrom.AddDays(-1);
-
-                // Create new gross salary
-                await context.TblEmployeeGrossSalaries.AddAsync(
-                    new TblEmployeeGrossSalary
-                    {
-                        Id = Guid.NewGuid(),
-                        EmployeeId = employeeId,
-                        GrossSalary = grossSalary,
-                        PfAmount = pfAmount,
-                        EffectiveFrom = effectiveFrom,
-                        EffectiveTill = null
-                    },
-                    cancellationToken);
-            }
-
-            if (designationSalaryGrade.GradeId != salaryGradeId)
-            {
-                designationSalaryGrade.IsActive = false;
-
-                await context.TblDesignationGradeMappings.AddAsync(
-                    new TblDesignationGradeMapping
-                    {
-                        Id = Guid.NewGuid(),
-                        DesignationId = currentEmployeeDesignation.DesignationId,
-                        GradeId = salaryGradeId,
-                        IsActive = true
-                    },
-                    cancellationToken);
-            }
-
-            await context.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
+                Id = Guid.NewGuid(),
+                EmployeeId = employeeId,
+                GrossSalary = grossSalary,
+                PfAmount = pfAmount,
+                EffectiveFrom = effectiveFrom,
+                EffectiveTill = null
+            });
         }
-        catch
+        else if (isPfChanged)
         {
-            await transaction.RollbackAsync(cancellationToken);
-            throw;
+            // Gross is unchanged, so correct the PF on the running row instead of opening a new one.
+            currentGrossSalary.PfAmount = pfAmount;
         }
+
+        if (isGradeChanged)
+        {
+            designationSalaryGrade.IsActive = false;
+
+            context.TblDesignationGradeMappings.Add(new TblDesignationGradeMapping
+            {
+                Id = Guid.NewGuid(),
+                DesignationId = currentEmployeeDesignation.DesignationId,
+                GradeId = salaryGradeId,
+                IsActive = true
+            });
+        }
+
+        // One SaveChangesAsync, so EF already wraps every change above in a single transaction.
+        await context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<List<EmployeeSalaryStructure>> GetSalaryStructureByGrossAsync(Guid employeeId, Guid salaryGradeId, decimal grossSalary, decimal? fixedPFAmount, CancellationToken cancellationToken)
