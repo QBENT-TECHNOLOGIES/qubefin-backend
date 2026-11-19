@@ -37,10 +37,10 @@ public class BcGroupListResult
 public class BcMemberListResult
 {
     public Guid Id { get; set; }
-    public string Code { get; set; } = null!;
-    public string FirstName { get; set; } = null!;
+    public string? Code { get; set; }
+    public string? FirstName { get; set; }
     public string? MiddleName { get; set; }
-    public string LastName { get; set; } = null!;
+    public string? LastName { get; set; }
     public string? FatherName { get; set; }
     public DateOnly? DateOfBirth { get; set; }
     public string? Gender { get; set; }
@@ -59,10 +59,10 @@ public class BcMemberListResult
     public double? Longitude { get; set; }
     public string? LocationPhoto { get; set; }
     public Guid GroupId { get; set; }
-    public string GroupCode { get; set; } = null!;
-    public string GroupName { get; set; } = null!;
-    public Guid OrganizationUnitId { get; set; }
-    public string BranchName { get; set; } = null!;
+    public string? GroupCode { get; set; }
+    public string? GroupName { get; set; }
+    public Guid? OrganizationUnitId { get; set; }
+    public string? BranchName { get; set; }
     public Guid? CoEmployeeId { get; set; }
     public string? CoName { get; set; }
     public bool IsOverdueMember { get; set; }
