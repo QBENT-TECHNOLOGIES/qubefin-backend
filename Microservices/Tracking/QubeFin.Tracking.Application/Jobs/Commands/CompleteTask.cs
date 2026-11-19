@@ -109,7 +109,8 @@ internal sealed class CompleteTaskCommandHandler(
         string photoKey;
         await using (var stream = photo.OpenReadStream())
         {
-            photoKey = await fileStorage.UploadFileAsync(stream, "Tracking/Tasks", photo.FileName, photo.ContentType, cancellationToken);
+            // Saved as WeGrow/Tracking/{ticks}_{file name}; PhotoUrl keeps "{ticks}_{file name}"
+            photoKey = await fileStorage.UploadFileAsync(stream, photo.FileName, photo.ContentType, cancellationToken);
         }
 
         var performedAt = DateTimeOffset.Now;

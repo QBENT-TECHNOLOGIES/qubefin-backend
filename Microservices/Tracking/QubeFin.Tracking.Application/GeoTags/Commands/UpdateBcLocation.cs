@@ -82,8 +82,8 @@ internal sealed class UpdateBcLocationCommandHandler(
         string photoKey;
         await using (var stream = photo.OpenReadStream())
         {
-            var folder = command.Place == BcPlace.Group ? "Tracking/Groups" : "Tracking/Members";
-            photoKey = await fileStorage.UploadFileAsync(stream, folder, photo.FileName, photo.ContentType, cancellationToken);
+            // Saved as WeGrow/Tracking/{ticks}_{file name}; LocationPhoto keeps "{ticks}_{file name}"
+            photoKey = await fileStorage.UploadFileAsync(stream, photo.FileName, photo.ContentType, cancellationToken);
         }
 
         var location = new GeoPoint(command.Request.Latitude!.Value, command.Request.Longitude!.Value);

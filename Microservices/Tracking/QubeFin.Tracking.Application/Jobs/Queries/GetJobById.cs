@@ -23,7 +23,7 @@ public class GetJobByIdQueryValidator : AbstractValidator<GetJobByIdQuery>
 #endregion
 
 #region --- HANDLER ---
-internal sealed class GetJobByIdQueryHandler(ITrackingScopeRepository scopeRepository, IJobRepository jobRepository) : IRequestHandler<GetJobByIdQuery, Result<JobResponse>>
+internal sealed class GetJobByIdQueryHandler(ITrackingScopeRepository scopeRepository, IJobRepository jobRepository, IFileStorageRepository fileStorage) : IRequestHandler<GetJobByIdQuery, Result<JobResponse>>
 {
     public async Task<Result<JobResponse>> Handle(GetJobByIdQuery request, CancellationToken cancellationToken)
     {
@@ -33,6 +33,8 @@ internal sealed class GetJobByIdQueryHandler(ITrackingScopeRepository scopeRepos
         var job = await jobRepository.GetJobAsync(viewer, request.JobId, TrackingClock.Today(), cancellationToken);
         if (job is null) return new RecordNotFoundError("Job not found");
 
+        // Tbl_JobTask.PhotoUrl holds the stored file name; the completion photo is sent as a signed link
+        job = job with { Tasks = job.Tasks.Select(t => t with { PhotoUrl = fileStorage.GetFileUrl(t.PhotoUrl) }).ToList() };
         return Result.Ok(JobResponse.From(viewer, job));
     }
 }
