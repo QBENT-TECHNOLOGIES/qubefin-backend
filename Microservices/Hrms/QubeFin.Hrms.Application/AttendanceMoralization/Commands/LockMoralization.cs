@@ -52,13 +52,13 @@ internal sealed class LockMoralizationCommandHandler(QubeFinDataContext context)
             var message = messageParam.Value as string;
             if (!string.IsNullOrWhiteSpace(message))
             {
-                return new ValidationError(message);
+                return Result.Fail(message);
             }
             return Result.Ok($"Moralization locked successfully for {request.month}/{request.year}.");
         }
         catch (SqlException ex)
         {
-            return new ValidationError(ex.Errors[0].Message);
+            return Result.Fail(ex.Errors[0].Message);
         }
     }
 }
