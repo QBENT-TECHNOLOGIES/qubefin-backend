@@ -1,8 +1,11 @@
 ﻿using FluentResults;
 using FluentValidation;
 using MediatR;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using QubeFin.Core.Results;
 using QubeFin.Persistence;
+using System.Data;
 
 namespace QubeFin.Hrms.Application.AttendanceMoralization.Commands;
 
@@ -22,33 +25,40 @@ public class LockMoralizationCommandValidator : AbstractValidator<LockMoralizati
 #endregion
 
 #region --- HANDLER ---
-internal sealed class LockMoralizationCommandHandler(QubeFinDataContext context, IUnitOfWork unitOfWork)
+internal sealed class LockMoralizationCommandHandler(QubeFinDataContext context)
     : IRequestHandler<LockMoralizationCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(LockMoralizationCommand request, CancellationToken cancellationToken)
     {
         try
         {
-            var existingRecords = await context.TblEmployeeLops
-                 .Where(m => m.LopMonth == request.month && m.LopYear == request.year)
-                 .ToListAsync(cancellationToken);
-            if (existingRecords == null)
+            var messageParam = new SqlParameter("@p_Message", SqlDbType.VarChar, 500) { Direction = ParameterDirection.Output };
+            var parameters = new[]
             {
-                return Result.Fail($"No records found for {request.month}/{request.year}");
-            }
+                new SqlParameter("@p_Month", SqlDbType.Int) { Value = request.month },
+                new SqlParameter("@p_Year", SqlDbType.Int) { Value = request.year },
+                new SqlParameter("@p_UserId", SqlDbType.UniqueIdentifier) { Value = DBNull.Value },
+                messageParam
+            };
+            await context.Database.ExecuteSqlRawAsync(
+                @"EXEC [Hrms].[USP_EmployeeLOPLock]
+                    @p_Month,
+                    @p_Year,
+                    @p_UserId,
+                    @p_Message OUTPUT",
+                parameters,
+                cancellationToken);
 
-            foreach (var record in existingRecords)
+            var message = messageParam.Value as string;
+            if (!string.IsNullOrWhiteSpace(message))
             {
-                record.IsLocked = true;
-                context.TblEmployeeLops.Update(record);
+                return new ValidationError(message);
             }
-
-            await unitOfWork.SaveChangesAsync(cancellationToken);
-            return Result.Ok($"Moralization locked successfully for {request.month}/{request.year}");
+            return Result.Ok($"Moralization locked successfully for {request.month}/{request.year}.");
         }
-        catch (Exception ex)
+        catch (SqlException ex)
         {
-            return Result.Fail($"{ex.Message}");
+            return new ValidationError(ex.Errors[0].Message);
         }
     }
 }
