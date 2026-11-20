@@ -79,9 +79,14 @@ public record GeoTagSearchResponse(List<GeoTagResponse> Items, int TotalRecords)
 #endregion
 
 #region --- HANDLER ---
-// Places of one kind with and without a location, in the user's branches. Employee homes are for an Admin only.
+// Places of one kind with and without a location, in the user's branches.
+// Employee homes: super admin sees every active employee; a Divisional, Area or Branch Manager sees the active employees
+// posted (Tbl_Employee.OrganizationUnitId) at their unit or any unit under it — DM: the division, its areas and branches;
+// AM: the area and its branches; BM: their branch. Nobody else sees employee homes.
 internal sealed class GetGeoTagsQueryHandler(ITrackingScopeRepository scopeRepository, IGeoTagRepository geoTagRepository, IFileStorageRepository fileStorage) : IRequestHandler<GetGeoTagsQuery, Result<GeoTagSearchResponse>>
 {
+    private static readonly string[] EmployeeHomeRoles = [TrackingRole.DivisionalManager, TrackingRole.AreaManager, TrackingRole.BranchManager];
+
     public async Task<Result<GeoTagSearchResponse>> Handle(GetGeoTagsQuery query, CancellationToken cancellationToken)
     {
         var request = query.Request;
@@ -90,8 +95,16 @@ internal sealed class GetGeoTagsQueryHandler(ITrackingScopeRepository scopeRepos
 
         var kind = request.Kind!.Value;
         var isAdmin = viewer.Role == TrackingRole.Admin;
-        if (kind == GeoTagKind.EmployeeHome && !isAdmin) return new ForbiddenError("Only an Admin can see employee homes.");
-        if (request.OrganizationUnitId.HasValue && !isAdmin && !viewer.BranchIds.Contains(request.OrganizationUnitId.Value))
+        var isEmployeeHome = kind == GeoTagKind.EmployeeHome;
+        if (isEmployeeHome && !isAdmin && !EmployeeHomeRoles.Contains(viewer.Role))
+        {
+            return new ForbiddenError("Only a super admin, Divisional Manager, Area Manager or Branch Manager can see employee homes.");
+        }
+
+        // Employees can be posted at an area or division office too, so their scope is every unit at or under the user's unit;
+        // the other kinds belong to branches
+        var unitsInScope = isEmployeeHome ? viewer.UnitIdsInScope : viewer.BranchIds;
+        if (request.OrganizationUnitId.HasValue && !isAdmin && !unitsInScope.Contains(request.OrganizationUnitId.Value))
         {
             return new RecordNotFoundError("Branch not found");
         }
@@ -99,7 +112,7 @@ internal sealed class GetGeoTagsQueryHandler(ITrackingScopeRepository scopeRepos
         var setting = await scopeRepository.GetTrackingSettingAsync(cancellationToken);
         var result = await geoTagRepository.GetGeoTagsAsync(new GeoTagFilter(
             kind.ToString(),
-            isAdmin ? null : viewer.BranchIds,
+            isAdmin ? null : unitsInScope,
             request.OrganizationUnitId,
             request.SearchText,
             request.OnlyUntagged,

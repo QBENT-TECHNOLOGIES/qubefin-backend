@@ -39,7 +39,7 @@ public class GeoTagEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         .WithSummary("Search geo-tagged places of one kind")
-        .WithDescription("Paged list of places of one kind (Branch, GroupCentre, Member, OdMember or EmployeeHome) in the user's branches, with and without a location. Everything is in the body: kind, searchText, organizationUnitId, onlyUntagged, sortOn (name | code | branchName | taggedAt), sortDirection (asc | desc), pageIndex (0-based), pageSize. Employee homes are for an Admin only and list active employees (no separation date).")
+        .WithDescription("Paged list of places of one kind (Branch, GroupCentre, Member, OdMember or EmployeeHome) in the user's branches, with and without a location. Everything is in the body: kind, searchText, organizationUnitId, onlyUntagged, sortOn (name | code | branchName | taggedAt), sortDirection (asc | desc), pageIndex (0-based), pageSize. Employee homes list active employees (no separation date): a super admin sees all, a Divisional, Area or Branch Manager sees those posted in their division, area or branch.")
         .WithTags("Geo Tags")
         .RequireAuthorization();
 
