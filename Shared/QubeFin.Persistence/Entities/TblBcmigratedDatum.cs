@@ -98,4 +98,16 @@ public partial class TblBcmigratedDatum
     public DateOnly? LoanMaturityDate { get; set; }
 
     public string? FunderId { get; set; }
+
+    public Guid? OurganizationUnitId { get; set; }
+
+    public Guid? GoupMasterId { get; set; }
+
+    public Guid? EmployeeId { get; set; }
+
+    public Guid? MemberId { get; set; }
+
+    public Guid? LoanId { get; set; }
+
+    public DateTime UploadDate { get; set; }
 }

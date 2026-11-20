@@ -18,6 +18,8 @@ public partial class TblEmployee
 
     public string FullName { get; set; } = null!;
 
+    public string? Esafcode { get; set; }
+
     public string? Code { get; set; }
 
     public string? FatherName { get; set; }

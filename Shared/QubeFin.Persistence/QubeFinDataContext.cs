@@ -130,6 +130,10 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblHoliday> TblHolidays { get; set; }
 
+    public virtual DbSet<TblImportJob> TblImportJobs { get; set; }
+
+    public virtual DbSet<TblImportType> TblImportTypes { get; set; }
+
     public virtual DbSet<TblInterviewCandidate> TblInterviewCandidates { get; set; }
 
     public virtual DbSet<TblInterviewPanel> TblInterviewPanels { get; set; }
@@ -737,6 +741,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.FatherName).HasMaxLength(50);
             entity.Property(e => e.FirstName).HasMaxLength(50);
+            entity.Property(e => e.FullName).HasMaxLength(50);
             entity.Property(e => e.Gender).HasMaxLength(10);
             entity.Property(e => e.LastName).HasMaxLength(50);
             entity.Property(e => e.LocationPhoto).HasMaxLength(50);
@@ -869,6 +874,9 @@ public partial class QubeFinDataContext : DbContext
                 .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_TotalPrePaid")
                 .HasColumnType("numeric(18, 2)");
             entity.Property(e => e.UnitName).HasMaxLength(50);
+            entity.Property(e => e.UploadDate)
+                .HasComputedColumnSql("(getdate())", false)
+                .HasColumnType("datetime");
         });
 
         modelBuilder.Entity<TblBranchSurvey>(entity =>
@@ -1317,6 +1325,9 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.EmergencyContactRelation1).HasMaxLength(20);
             entity.Property(e => e.EmergencyContactRelation2).HasMaxLength(20);
             entity.Property(e => e.EmployementType).HasMaxLength(20);
+            entity.Property(e => e.Esafcode)
+                .HasMaxLength(50)
+                .HasColumnName("ESAFCode");
             entity.Property(e => e.Esiipno)
                 .HasMaxLength(20)
                 .HasColumnName("ESIIPNo");
@@ -1729,6 +1740,50 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.RowVersion)
                 .IsRowVersion()
                 .IsConcurrencyToken();
+        });
+
+        modelBuilder.Entity<TblImportJob>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Tbl_Impo__3214EC075CE4EE7A");
+
+            entity.ToTable("Tbl_ImportJob", "Global");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
+            entity.Property(e => e.OriginalFileName)
+                .HasMaxLength(260)
+                .IsUnicode(false);
+            entity.Property(e => e.Status)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.StoredFilePath)
+                .HasMaxLength(500)
+                .IsUnicode(false);
+
+            entity.HasOne(d => d.ImportType).WithMany(p => p.TblImportJobs)
+                .HasForeignKey(d => d.ImportTypeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_ImportJob_ImportType");
+        });
+
+        modelBuilder.Entity<TblImportType>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Tbl_Impo__3214EC070A538455");
+
+            entity.ToTable("Tbl_ImportType", "Global");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Columns).IsUnicode(false);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.Name)
+                .HasMaxLength(200)
+                .IsUnicode(false);
+            entity.Property(e => e.SpName)
+                .HasMaxLength(200)
+                .IsUnicode(false);
+            entity.Property(e => e.TemplateUrl)
+                .HasMaxLength(500)
+                .IsUnicode(false);
         });
 
         modelBuilder.Entity<TblInterviewCandidate>(entity =>
@@ -2747,6 +2802,9 @@ public partial class QubeFinDataContext : DbContext
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())", "DF_Tbl_OrganizationUnit_Id");
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.Esafcode)
+                .HasMaxLength(50)
+                .HasColumnName("ESAFCode");
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
             entity.Property(e => e.Latitude).HasColumnType("numeric(19, 15)");
             entity.Property(e => e.Longitude).HasColumnType("numeric(19, 15)");

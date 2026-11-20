@@ -13,6 +13,8 @@ public partial class TblOrganizationUnit
 
     public int CodeVal { get; set; }
 
+    public string? Esafcode { get; set; }
+
     public Guid? ParentId { get; set; }
 
     public Guid? DistrictId { get; set; }
