@@ -48,7 +48,23 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblAttendanceRegularization> TblAttendanceRegularizations { get; set; }
 
+    public virtual DbSet<TblBcgroup> TblBcgroups { get; set; }
+
+    public virtual DbSet<TblBcgroupTransfer> TblBcgroupTransfers { get; set; }
+
+    public virtual DbSet<TblBcloan> TblBcloans { get; set; }
+
+    public virtual DbSet<TblBcloanCollection> TblBcloanCollections { get; set; }
+
+    public virtual DbSet<TblBcmember> TblBcmembers { get; set; }
+
+    public virtual DbSet<TblBcmemberTransfer> TblBcmemberTransfers { get; set; }
+
+    public virtual DbSet<TblBcmigratedDatum> TblBcmigratedData { get; set; }
+
     public virtual DbSet<TblBranchSurvey> TblBranchSurveys { get; set; }
+
+    public virtual DbSet<TblBranchSurveyCompetitor> TblBranchSurveyCompetitors { get; set; }
 
     public virtual DbSet<TblCalenderYear> TblCalenderYears { get; set; }
 
@@ -110,13 +126,25 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblFinancialYear> TblFinancialYears { get; set; }
 
+    public virtual DbSet<TblGpsTracking> TblGpsTrackings { get; set; }
+
     public virtual DbSet<TblGroup> TblGroups { get; set; }
 
     public virtual DbSet<TblHoliday> TblHolidays { get; set; }
 
+    public virtual DbSet<TblImportJob> TblImportJobs { get; set; }
+
+    public virtual DbSet<TblImportType> TblImportTypes { get; set; }
+
     public virtual DbSet<TblInterviewCandidate> TblInterviewCandidates { get; set; }
 
     public virtual DbSet<TblInterviewPanel> TblInterviewPanels { get; set; }
+
+    public virtual DbSet<TblJob> TblJobs { get; set; }
+
+    public virtual DbSet<TblJobHistory> TblJobHistories { get; set; }
+
+    public virtual DbSet<TblJobTask> TblJobTasks { get; set; }
 
     public virtual DbSet<TblJoiningInfo> TblJoiningInfos { get; set; }
 
@@ -168,6 +196,8 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblMobileAppVersion> TblMobileAppVersions { get; set; }
 
+    public virtual DbSet<TblMotionHistory> TblMotionHistories { get; set; }
+
     public virtual DbSet<TblNotification> TblNotifications { get; set; }
 
     public virtual DbSet<TblOrganizationUnit> TblOrganizationUnits { get; set; }
@@ -204,6 +234,8 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblSurvey> TblSurveys { get; set; }
 
+    public virtual DbSet<TblSurveyApproval> TblSurveyApprovals { get; set; }
+
     public virtual DbSet<TblSurveyAssigned> TblSurveyAssigneds { get; set; }
 
     public virtual DbSet<TblSurveyCommittee> TblSurveyCommittees { get; set; }
@@ -215,6 +247,8 @@ public partial class QubeFinDataContext : DbContext
     public virtual DbSet<TblSystemValue> TblSystemValues { get; set; }
 
     public virtual DbSet<TblTempBranch> TblTempBranches { get; set; }
+
+    public virtual DbSet<TblTrackingSetting> TblTrackingSettings { get; set; }
 
     public virtual DbSet<TblUser> TblUsers { get; set; }
 
@@ -549,9 +583,311 @@ public partial class QubeFinDataContext : DbContext
                 .HasConstraintName("FK_Tbl_AttendanceRegularization_Tbl_Employee");
         });
 
+        modelBuilder.Entity<TblBcgroup>(entity =>
+        {
+            entity.ToTable("Tbl_BCGroup", "BC");
+
+            entity.HasIndex(e => e.DesignationId, "IX_Tbl_BCGroup_DesignationId");
+
+            entity.HasIndex(e => new { e.OrganizationUnitId, e.DesignationId }, "IX_Tbl_BCGroup_OrganizationUnitId_DesignationId");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.AddressLine1).HasMaxLength(50);
+            entity.Property(e => e.Code).HasMaxLength(50);
+            entity.Property(e => e.CollectionDay).HasMaxLength(20);
+            entity.Property(e => e.ContactNo).HasMaxLength(10);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.LocationPhoto).HasMaxLength(50);
+            entity.Property(e => e.Name).HasMaxLength(50);
+            entity.Property(e => e.PinCode).HasMaxLength(10);
+            entity.Property(e => e.TaggedOn).HasColumnType("datetime");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.TblBcgroupCreatedByNavigations)
+                .HasForeignKey(d => d.CreatedBy)
+                .HasConstraintName("FK_Tbl_BCGroup_Tbl_User");
+
+            entity.HasOne(d => d.Designation).WithMany(p => p.TblBcgroups)
+                .HasForeignKey(d => d.DesignationId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_BCGroup_Tbl_Designation");
+
+            entity.HasOne(d => d.OrganizationUnit).WithMany(p => p.TblBcgroups)
+                .HasForeignKey(d => d.OrganizationUnitId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_BCGroup_Tbl_OrganizationUnit");
+
+            entity.HasOne(d => d.TaggedByNavigation).WithMany(p => p.TblBcgroupTaggedByNavigations)
+                .HasForeignKey(d => d.TaggedBy)
+                .HasConstraintName("FK_Tbl_BCGroup_Tbl_User1");
+        });
+
+        modelBuilder.Entity<TblBcgroupTransfer>(entity =>
+        {
+            entity.ToTable("Tbl_BCGroupTransfer", "BC");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.BcgroupId).HasColumnName("BCGroupId");
+
+            entity.HasOne(d => d.Bcgroup).WithMany(p => p.TblBcgroupTransfers)
+                .HasForeignKey(d => d.BcgroupId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_BCGroupTransfer_Tbl_BCGroup");
+
+            entity.HasOne(d => d.Designation).WithMany(p => p.TblBcgroupTransfers)
+                .HasForeignKey(d => d.DesignationId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_BCGroupTransfer_Tbl_Designation");
+
+            entity.HasOne(d => d.OrganizationUnit).WithMany(p => p.TblBcgroupTransfers)
+                .HasForeignKey(d => d.OrganizationUnitId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_BCGroupTransfer_Tbl_OrganizationUnit");
+        });
+
+        modelBuilder.Entity<TblBcloan>(entity =>
+        {
+            entity.ToTable("Tbl_BCLoan", "BC");
+
+            entity.HasIndex(e => e.Id, "IX_Tbl_BCLoan").IsUnique();
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.BcmemberId).HasColumnName("BCMemberId");
+            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.CurrentOutstadingAmount)
+                .HasDefaultValue(0m, "DF_Tbl_BCLoan_CurrentOutstadingAmount")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.DisburseAmount)
+                .HasDefaultValue(0m, "DF_Tbl_BCLoan_DisburseAmount")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.Dpddays)
+                .HasDefaultValue(0, "DF_Tbl_BCLoan_DPDDays")
+                .HasColumnName("DPDDays");
+            entity.Property(e => e.Emiamount)
+                .HasDefaultValue(0m, "DF_Tbl_BCLoan_EMIAmount")
+                .HasColumnType("numeric(18, 2)")
+                .HasColumnName("EMIAmount");
+            entity.Property(e => e.LoanAmount)
+                .HasDefaultValue(0m, "DF_Tbl_BCLoan_LoanAmount")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.LoanNo).HasMaxLength(50);
+            entity.Property(e => e.LoanProductName).HasMaxLength(50);
+            entity.Property(e => e.LoanPurpose).HasMaxLength(50);
+            entity.Property(e => e.LoanTenure).HasDefaultValue(0, "DF_Tbl_BCLoan_LoanTenure");
+            entity.Property(e => e.ModifiedOn).HasColumnType("datetime");
+            entity.Property(e => e.OverdueAmount)
+                .HasDefaultValue(0m, "DF_Tbl_BCLoan_OverdueAmount")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.RateOfInterest)
+                .HasDefaultValue(0m, "DF_Tbl_BCLoan_RateOfInterest")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.TotalPaidAmount)
+                .HasDefaultValue(0m, "DF_Tbl_BCLoan_TotalPaidAmount")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.TotalPaidInstallment).HasDefaultValue(0, "DF_Tbl_BCLoan_TotalPaidInstallment");
+
+            entity.HasOne(d => d.Bcmember).WithMany(p => p.TblBcloans)
+                .HasForeignKey(d => d.BcmemberId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_BCLoan_Tbl_BCMember");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.TblBcloanCreatedByNavigations)
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_BCLoan_Tbl_User1");
+
+            entity.HasOne(d => d.ModifiedByNavigation).WithMany(p => p.TblBcloanModifiedByNavigations)
+                .HasForeignKey(d => d.ModifiedBy)
+                .HasConstraintName("FK_Tbl_BCLoan_Tbl_User");
+        });
+
+        modelBuilder.Entity<TblBcloanCollection>(entity =>
+        {
+            entity.ToTable("Tbl_BCLoanCollection", "BC");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.CollectionAmount).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.EmiAmount).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.LessCollection)
+                .HasComputedColumnSql("(case when [CollectionAmount]<[EmiAmount] then [CollectionAmount]-[EmiAmount] else (0) end)", false)
+                .HasColumnType("numeric(19, 2)");
+            entity.Property(e => e.MoreCollection)
+                .HasComputedColumnSql("(case when [CollectionAmount]>[EmiAmount] then [CollectionAmount]-[EmiAmount] else (0) end)", false)
+                .HasColumnType("numeric(19, 2)");
+            entity.Property(e => e.PostedOn).HasColumnType("datetime");
+            entity.Property(e => e.Remarks).HasMaxLength(50);
+            entity.Property(e => e.UtrNo).HasMaxLength(50);
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.TblBcloanCollections)
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_BCLoanCollection_Tbl_User");
+
+            entity.HasOne(d => d.Loan).WithMany(p => p.TblBcloanCollections)
+                .HasForeignKey(d => d.LoanId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_BCLoanCollection_Tbl_BCLoan");
+        });
+
+        modelBuilder.Entity<TblBcmember>(entity =>
+        {
+            entity.ToTable("Tbl_BCMember", "BC");
+
+            entity.HasIndex(e => e.BcgroupId, "IX_Tbl_BCMember_BCGroupId");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.AadharNo).HasMaxLength(20);
+            entity.Property(e => e.AddressLine1).HasMaxLength(50);
+            entity.Property(e => e.AddressLine2).HasMaxLength(50);
+            entity.Property(e => e.BcgroupId).HasColumnName("BCGroupId");
+            entity.Property(e => e.Caste).HasMaxLength(20);
+            entity.Property(e => e.Code).HasMaxLength(50);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.FatherName).HasMaxLength(50);
+            entity.Property(e => e.FirstName).HasMaxLength(50);
+            entity.Property(e => e.FullName).HasMaxLength(50);
+            entity.Property(e => e.Gender).HasMaxLength(10);
+            entity.Property(e => e.LastName).HasMaxLength(50);
+            entity.Property(e => e.LocationPhoto).HasMaxLength(50);
+            entity.Property(e => e.MaritalStatus).HasMaxLength(10);
+            entity.Property(e => e.MiddleName).HasMaxLength(50);
+            entity.Property(e => e.MobileNo).HasMaxLength(20);
+            entity.Property(e => e.Pan)
+                .HasMaxLength(20)
+                .HasColumnName("PAN");
+            entity.Property(e => e.PinCode).HasMaxLength(10);
+            entity.Property(e => e.Qualification).HasMaxLength(50);
+            entity.Property(e => e.Religion).HasMaxLength(20);
+            entity.Property(e => e.TaggedOn).HasColumnType("datetime");
+            entity.Property(e => e.VoterNo).HasMaxLength(30);
+
+            entity.HasOne(d => d.Bcgroup).WithMany(p => p.TblBcmembers)
+                .HasForeignKey(d => d.BcgroupId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_BCMember_Tbl_BCGroup");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.TblBcmemberCreatedByNavigations)
+                .HasForeignKey(d => d.CreatedBy)
+                .HasConstraintName("FK_Tbl_BCMember_Tbl_User");
+
+            entity.HasOne(d => d.TaggedByNavigation).WithMany(p => p.TblBcmemberTaggedByNavigations)
+                .HasForeignKey(d => d.TaggedBy)
+                .HasConstraintName("FK_Tbl_BCMember_Tbl_User1");
+        });
+
+        modelBuilder.Entity<TblBcmemberTransfer>(entity =>
+        {
+            entity.ToTable("Tbl_BCMemberTransfer", "BC");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.BcgroupId).HasColumnName("BCGroupId");
+            entity.Property(e => e.BcmemberId).HasColumnName("BCMemberId");
+
+            entity.HasOne(d => d.Bcgroup).WithMany(p => p.TblBcmemberTransfers)
+                .HasForeignKey(d => d.BcgroupId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_BCMemberTransfer_Tbl_BCGroup");
+
+            entity.HasOne(d => d.Bcmember).WithMany(p => p.TblBcmemberTransfers)
+                .HasForeignKey(d => d.BcmemberId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_BCMemberTransfer_Tbl_BCMember");
+        });
+
+        modelBuilder.Entity<TblBcmigratedDatum>(entity =>
+        {
+            entity.ToTable("Tbl_BCMigratedData", "BC");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.AccountId).HasMaxLength(20);
+            entity.Property(e => e.AgingOfOverdue).HasMaxLength(30);
+            entity.Property(e => e.BranchId).HasMaxLength(10);
+            entity.Property(e => e.BranchName).HasMaxLength(50);
+            entity.Property(e => e.ClientId).HasMaxLength(50);
+            entity.Property(e => e.ClientName).HasMaxLength(100);
+            entity.Property(e => e.CreditOfficerId).HasMaxLength(20);
+            entity.Property(e => e.CreditOfficerName).HasMaxLength(50);
+            entity.Property(e => e.CurrentInstallmentNo).HasDefaultValue(0, "DF_Tbl_BCMigratedData_CurrentInstallmentNo");
+            entity.Property(e => e.DueDays).HasDefaultValue(0, "DF_Tbl_BCMigratedData_DueDays");
+            entity.Property(e => e.FunderId).HasMaxLength(50);
+            entity.Property(e => e.GroupId).HasMaxLength(20);
+            entity.Property(e => e.GroupName).HasMaxLength(50);
+            entity.Property(e => e.InstallmentFrequency).HasMaxLength(30);
+            entity.Property(e => e.InterestAmount)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_InterestAmount")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.InterestArrear)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_InterestArrear")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.InterestDue)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_InterestDue")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.InterestOutstanding)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_InterestOutstanding")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.InterestPaid)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_InterestPaid")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.InterestPrePaid)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_InterestPrePaid")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.LoanAmount)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_LoanAmount")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.LoanPurpose).HasMaxLength(50);
+            entity.Property(e => e.LoanSeries).HasMaxLength(5);
+            entity.Property(e => e.LoanStatus).HasMaxLength(20);
+            entity.Property(e => e.MobileNo).HasMaxLength(20);
+            entity.Property(e => e.NoOfInstallmentDue).HasDefaultValue(0, "DF_Tbl_BCMigratedData_NoOfInstallmentDue");
+            entity.Property(e => e.PrincipalArrear)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_PrincipalArrear")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.PrincipalDue)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_PrincipalDue")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.PrincipalOutstanding)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_PrincipalOutstanding")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.PrincipalPaid)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_PrincipalPaid")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.PrincipalPrePaid)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_PrincipalPrePaid")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.ProductId).HasMaxLength(10);
+            entity.Property(e => e.SectorName).HasMaxLength(50);
+            entity.Property(e => e.SubGroupName).HasMaxLength(50);
+            entity.Property(e => e.TerritoryId).HasMaxLength(5);
+            entity.Property(e => e.TerritoryName).HasMaxLength(50);
+            entity.Property(e => e.TotalAdvancePaid)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_TotalAdvancePaid")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.TotalArrear)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_TotalArrear")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.TotalDue)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_TotalDue")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.TotalOutstading)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_TotalOutstading")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.TotalPaid)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_TotalPaid")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.TotalPrePaid)
+                .HasDefaultValue(0m, "DF_Tbl_BCMigratedData_TotalPrePaid")
+                .HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.UnitName).HasMaxLength(50);
+            entity.Property(e => e.UploadDate)
+                .HasComputedColumnSql("(getdate())", false)
+                .HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<TblBranchSurvey>(entity =>
         {
             entity.ToTable("Tbl_BranchSurvey", "Global");
+
+            entity.HasIndex(e => e.SurveyId, "UQ_Tbl_BranchSurvey_SurveyId").IsUnique();
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.AccessibilityByMotorCycle).HasMaxLength(10);
@@ -595,11 +931,9 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Jlgpotential).HasColumnName("JLGPotential");
             entity.Property(e => e.LandslideRisk).HasMaxLength(20);
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
-            entity.Property(e => e.Latitude).HasColumnType("decimal(10, 8)");
             entity.Property(e => e.LeanSeason).HasMaxLength(200);
             entity.Property(e => e.LiteracyRate).HasColumnType("decimal(5, 2)");
             entity.Property(e => e.LocalReferencesVerified).HasMaxLength(10);
-            entity.Property(e => e.Longitude).HasColumnType("decimal(11, 8)");
             entity.Property(e => e.MainCrop).HasMaxLength(200);
             entity.Property(e => e.MigrationRisk).HasMaxLength(20);
             entity.Property(e => e.MigrationTrend).HasMaxLength(100);
@@ -632,6 +966,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.SafetyOfArea).HasMaxLength(100);
             entity.Property(e => e.ScheduledCastePercent).HasColumnType("decimal(5, 2)");
             entity.Property(e => e.ScheduledTribePercent).HasColumnType("decimal(5, 2)");
+            entity.Property(e => e.SurveyorComments).HasMaxLength(1000);
             entity.Property(e => e.SurveyorSubmitOn).HasColumnType("datetime");
 
             entity.HasOne(d => d.AdministrativeUnit).WithMany(p => p.TblBranchSurveys)
@@ -639,10 +974,35 @@ public partial class QubeFinDataContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_BranchSurvey_Tbl_AdministrativeUnit");
 
-            entity.HasOne(d => d.Survey).WithMany(p => p.TblBranchSurveys)
-                .HasForeignKey(d => d.SurveyId)
+            entity.HasOne(d => d.CreatedOrganizationUnit).WithMany(p => p.TblBranchSurveys)
+                .HasForeignKey(d => d.CreatedOrganizationUnitId)
+                .HasConstraintName("FK_Tbl_BranchSurvey_Tbl_OrganizationUnit");
+
+            entity.HasOne(d => d.Survey).WithOne(p => p.TblBranchSurvey)
+                .HasForeignKey<TblBranchSurvey>(d => d.SurveyId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_BranchSurvey_Tbl_Survey");
+        });
+
+        modelBuilder.Entity<TblBranchSurveyCompetitor>(entity =>
+        {
+            entity.ToTable("Tbl_BranchSurveyCompetitor", "Global");
+
+            entity.HasIndex(e => e.BranchSurveyId, "IX_Tbl_BranchSurveyCompetitor_BranchSurveyId");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.ApproxPortfolio).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
+            entity.Property(e => e.NameOfInstitution).HasMaxLength(200);
+            entity.Property(e => e.Parpercent)
+                .HasColumnType("decimal(5, 2)")
+                .HasColumnName("PARPercent");
+
+            entity.HasOne(d => d.BranchSurvey).WithMany(p => p.TblBranchSurveyCompetitors)
+                .HasForeignKey(d => d.BranchSurveyId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_BranchSurveyCompetitor_Tbl_BranchSurvey");
         });
 
         modelBuilder.Entity<TblCalenderYear>(entity =>
@@ -972,6 +1332,8 @@ public partial class QubeFinDataContext : DbContext
         {
             entity.ToTable("Tbl_Employee", "Hrms");
 
+            entity.HasIndex(e => e.OrganizationUnitId, "IX_Tbl_Employee_OrganizationUnitId");
+
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.BankAccountType).HasMaxLength(10);
             entity.Property(e => e.BankBranch).HasMaxLength(50);
@@ -995,6 +1357,9 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.EmergencyContactRelation1).HasMaxLength(20);
             entity.Property(e => e.EmergencyContactRelation2).HasMaxLength(20);
             entity.Property(e => e.EmployementType).HasMaxLength(20);
+            entity.Property(e => e.Esafcode)
+                .HasMaxLength(50)
+                .HasColumnName("ESAFCode");
             entity.Property(e => e.Esiipno)
                 .HasMaxLength(20)
                 .HasColumnName("ESIIPNo");
@@ -1011,6 +1376,7 @@ public partial class QubeFinDataContext : DbContext
                 .IsUnicode(false);
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
             entity.Property(e => e.LastName).HasMaxLength(30);
+            entity.Property(e => e.LocationPhoto).HasMaxLength(50);
             entity.Property(e => e.MaritalStatus)
                 .HasMaxLength(10)
                 .IsFixedLength();
@@ -1042,6 +1408,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Religion).HasMaxLength(25);
             entity.Property(e => e.RetirementDate).HasComputedColumnSql("(dateadd(year,(60),[DateOfBirth]))", false);
             entity.Property(e => e.Salutation).HasMaxLength(20);
+            entity.Property(e => e.TaggedOn).HasColumnType("datetime");
             entity.Property(e => e.UniversalAccountNo).HasMaxLength(50);
 
             entity.HasOne(d => d.Bank).WithMany(p => p.TblEmployees)
@@ -1075,6 +1442,10 @@ public partial class QubeFinDataContext : DbContext
             entity.HasOne(d => d.Supervisor).WithMany(p => p.InverseSupervisor)
                 .HasForeignKey(d => d.SupervisorId)
                 .HasConstraintName("FK_Tbl_Employee_Tbl_Employee1");
+
+            entity.HasOne(d => d.TaggedByNavigation).WithMany(p => p.TblEmployees)
+                .HasForeignKey(d => d.TaggedBy)
+                .HasConstraintName("FK_Tbl_Employee_Tbl_User");
         });
 
         modelBuilder.Entity<TblEmployeeAttendanceException>(entity =>
@@ -1131,6 +1502,10 @@ public partial class QubeFinDataContext : DbContext
         modelBuilder.Entity<TblEmployeeDesignation>(entity =>
         {
             entity.ToTable("Tbl_EmployeeDesignation", "Hrms");
+
+            entity.HasIndex(e => new { e.DesignationId, e.EffectiveTo }, "IX_Tbl_EmployeeDesignation_DesignationId_EffectiveTo");
+
+            entity.HasIndex(e => new { e.EmployeeId, e.EffectiveTo }, "IX_Tbl_EmployeeDesignation_EmployeeId_EffectiveTo");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
 
@@ -1322,6 +1697,36 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Caption).HasMaxLength(20);
         });
 
+        modelBuilder.Entity<TblGpsTracking>(entity =>
+        {
+            entity.HasKey(e => new { e.Id, e.GpsTime });
+
+            entity.ToTable("Tbl_GpsTracking", "Tracking");
+
+            entity.HasIndex(e => new { e.GpsTime, e.LocationId }, "IX_Tbl_GpsTracking_Location_ID");
+
+            entity.HasIndex(e => new { e.UserId, e.GpsTime }, "IX_Tbl_GpsTracking_User_Time");
+
+            entity.HasIndex(e => new { e.LocationId, e.GpsTime }, "UQ_Tbl_GpsTracking_Location_Time").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.GpsTime).HasColumnName("gps_time");
+            entity.Property(e => e.Accuracy).HasColumnName("accuracy");
+            entity.Property(e => e.BatteryPercentage).HasColumnName("battery_percentage");
+            entity.Property(e => e.CourseDegree).HasColumnName("course_degree");
+            entity.Property(e => e.IsMockLocation).HasColumnName("is_mock_location");
+            entity.Property(e => e.LocationId)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("location_id");
+            entity.Property(e => e.ReceivedAt).HasColumnName("received_at");
+            entity.Property(e => e.Speed).HasColumnName("speed");
+            entity.Property(e => e.UserId)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("user_id");
+        });
+
         modelBuilder.Entity<TblGroup>(entity =>
         {
             entity.ToTable("Tbl_Group", "Global");
@@ -1337,8 +1742,6 @@ public partial class QubeFinDataContext : DbContext
                 .IsFixedLength();
             entity.Property(e => e.LandMark).HasMaxLength(100);
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
-            entity.Property(e => e.Latitude).HasMaxLength(100);
-            entity.Property(e => e.Longitude).HasMaxLength(100);
             entity.Property(e => e.MobileNo).HasMaxLength(15);
             entity.Property(e => e.Name).HasMaxLength(50);
             entity.Property(e => e.PhotoScan).HasMaxLength(500);
@@ -1369,6 +1772,50 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.RowVersion)
                 .IsRowVersion()
                 .IsConcurrencyToken();
+        });
+
+        modelBuilder.Entity<TblImportJob>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Tbl_Impo__3214EC075CE4EE7A");
+
+            entity.ToTable("Tbl_ImportJob", "Global");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
+            entity.Property(e => e.OriginalFileName)
+                .HasMaxLength(260)
+                .IsUnicode(false);
+            entity.Property(e => e.Status)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.StoredFilePath)
+                .HasMaxLength(500)
+                .IsUnicode(false);
+
+            entity.HasOne(d => d.ImportType).WithMany(p => p.TblImportJobs)
+                .HasForeignKey(d => d.ImportTypeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_ImportJob_ImportType");
+        });
+
+        modelBuilder.Entity<TblImportType>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Tbl_Impo__3214EC070A538455");
+
+            entity.ToTable("Tbl_ImportType", "Global");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Columns).IsUnicode(false);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.Name)
+                .HasMaxLength(200)
+                .IsUnicode(false);
+            entity.Property(e => e.SpName)
+                .HasMaxLength(200)
+                .IsUnicode(false);
+            entity.Property(e => e.TemplateUrl)
+                .HasMaxLength(500)
+                .IsUnicode(false);
         });
 
         modelBuilder.Entity<TblInterviewCandidate>(entity =>
@@ -1503,6 +1950,147 @@ public partial class QubeFinDataContext : DbContext
                 .HasForeignKey(d => d.ModifiedBy)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_InterviewPanel_Tbl_User");
+        });
+
+        modelBuilder.Entity<TblJob>(entity =>
+        {
+            entity.ToTable("Tbl_Job", "Tracking");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.CancelReason).HasMaxLength(200);
+            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.JobCode).HasMaxLength(50);
+            entity.Property(e => e.JobDescription).HasMaxLength(500);
+            entity.Property(e => e.JobTitle).HasMaxLength(300);
+            entity.Property(e => e.ModifiedOn).HasColumnType("datetime");
+
+            entity.HasOne(d => d.AssignToNavigation).WithMany(p => p.TblJobs)
+                .HasForeignKey(d => d.AssignTo)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_Job_Tbl_Employee");
+
+            entity.HasOne(d => d.CanceledByNavigation).WithMany(p => p.TblJobCanceledByNavigations)
+                .HasForeignKey(d => d.CanceledBy)
+                .HasConstraintName("FK_Tbl_Job_Tbl_User2");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.TblJobCreatedByNavigations)
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_Job_Tbl_User");
+
+            entity.HasOne(d => d.ModifiedByNavigation).WithMany(p => p.TblJobModifiedByNavigations)
+                .HasForeignKey(d => d.ModifiedBy)
+                .HasConstraintName("FK_Tbl_Job_Tbl_User1");
+
+            entity.HasOne(d => d.TransferJobRef).WithMany(p => p.InverseTransferJobRef)
+                .HasForeignKey(d => d.TransferJobRefId)
+                .HasConstraintName("FK_Tbl_Job_Tbl_Job");
+        });
+
+        modelBuilder.Entity<TblJobHistory>(entity =>
+        {
+            entity.ToTable("Tbl_JobHistory", "Tracking");
+
+            entity.HasIndex(e => new { e.JobId, e.PerformedAt }, "IX_Tbl_JobHistory_JobId_PerformedAt").IsDescending(false, true);
+
+            entity.Property(e => e.Id).HasDefaultValueSql("(newsequentialid())", "DF_Tbl_JobHistory_Id");
+            entity.Property(e => e.Actions)
+                .HasMaxLength(30)
+                .IsUnicode(false);
+            entity.Property(e => e.PerformedAt).HasDefaultValueSql("(sysdatetimeoffset())", "DF_Tbl_JobHistory_PerformedAt");
+            entity.Property(e => e.Remarks).HasMaxLength(1000);
+
+            entity.HasOne(d => d.FromAssignee).WithMany(p => p.TblJobHistoryFromAssignees)
+                .HasForeignKey(d => d.FromAssigneeId)
+                .HasConstraintName("FK_Tbl_JobHistory_Tbl_Employee");
+
+            entity.HasOne(d => d.Job).WithMany(p => p.TblJobHistoryJobs)
+                .HasForeignKey(d => d.JobId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_JobHistory_Job");
+
+            entity.HasOne(d => d.PerformedBy).WithMany(p => p.TblJobHistories)
+                .HasForeignKey(d => d.PerformedById)
+                .HasConstraintName("FK_Tbl_JobHistory_Tbl_User");
+
+            entity.HasOne(d => d.RelatedJob).WithMany(p => p.TblJobHistoryRelatedJobs)
+                .HasForeignKey(d => d.RelatedJobId)
+                .HasConstraintName("FK_Tbl_JobHistory_RelatedJob");
+
+            entity.HasOne(d => d.ToAssignee).WithMany(p => p.TblJobHistoryToAssignees)
+                .HasForeignKey(d => d.ToAssigneeId)
+                .HasConstraintName("FK_Tbl_JobHistory_Tbl_Employee1");
+
+            entity.HasMany(d => d.Tasks).WithMany(p => p.Histories)
+                .UsingEntity<Dictionary<string, object>>(
+                    "TblJobHistoryTask",
+                    r => r.HasOne<TblJobTask>().WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("FK_Tbl_JobHistoryTasks_Task"),
+                    l => l.HasOne<TblJobHistory>().WithMany()
+                        .HasForeignKey("HistoryId")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("FK_Tbl_JobHistoryTasks_History"),
+                    j =>
+                    {
+                        j.HasKey("HistoryId", "TaskId");
+                        j.ToTable("Tbl_JobHistoryTasks", "Tracking");
+                        j.HasIndex(new[] { "TaskId" }, "IX_Tbl_JobHistoryTasks_TaskId");
+                    });
+        });
+
+        modelBuilder.Entity<TblJobTask>(entity =>
+        {
+            entity.ToTable("Tbl_JobTask", "Tracking");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.ArriveDistanceMeters).HasColumnType("decimal(9, 6)");
+            entity.Property(e => e.ArrivedOn).HasColumnType("datetime");
+            entity.Property(e => e.CompletedDistanceMeter).HasColumnType("decimal(9, 6)");
+            entity.Property(e => e.IsEmireceived).HasColumnName("IsEMIReceived");
+            entity.Property(e => e.ModifiedOn).HasColumnType("datetime");
+            entity.Property(e => e.Notes).HasMaxLength(100);
+            entity.Property(e => e.Odptpdate).HasColumnName("ODPtpdate");
+            entity.Property(e => e.PhotoUrl).HasMaxLength(500);
+            entity.Property(e => e.Priority).HasMaxLength(50);
+            entity.Property(e => e.ReceivedAmount).HasColumnType("numeric(18, 2)");
+            entity.Property(e => e.Remarks).HasMaxLength(500);
+            entity.Property(e => e.Status).HasMaxLength(30);
+            entity.Property(e => e.TargetName).HasMaxLength(50);
+            entity.Property(e => e.TaskAddedOn).HasColumnType("datetime");
+            entity.Property(e => e.TaskCancelDate).HasColumnType("datetime");
+            entity.Property(e => e.TaskCancelReason).HasMaxLength(50);
+            entity.Property(e => e.TaskCompletedOn).HasColumnType("datetime");
+            entity.Property(e => e.TaskNo).HasMaxLength(20);
+            entity.Property(e => e.TaskTitle).HasMaxLength(200);
+            entity.Property(e => e.TaskType).HasMaxLength(50);
+
+            entity.HasOne(d => d.Branch).WithMany(p => p.TblJobTasks)
+                .HasForeignKey(d => d.BranchId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_JobTask_Tbl_OrganizationUnit");
+
+            entity.HasOne(d => d.CoOrdinatedByNavigation).WithMany(p => p.TblJobTasks)
+                .HasForeignKey(d => d.CoOrdinatedBy)
+                .HasConstraintName("FK_Tbl_JobTask_Tbl_Employee");
+
+            entity.HasOne(d => d.Job).WithMany(p => p.TblJobTasks)
+                .HasForeignKey(d => d.JobId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_JobTask_Tbl_Job");
+
+            entity.HasOne(d => d.TaskAddedByNavigation).WithMany(p => p.TblJobTaskTaskAddedByNavigations)
+                .HasForeignKey(d => d.TaskAddedBy)
+                .HasConstraintName("FK_Tbl_JobTask_Tbl_User1");
+
+            entity.HasOne(d => d.TaskCancelByNavigation).WithMany(p => p.TblJobTaskTaskCancelByNavigations)
+                .HasForeignKey(d => d.TaskCancelBy)
+                .HasConstraintName("FK_Tbl_JobTask_Tbl_User2");
+
+            entity.HasOne(d => d.TaskCompletedByNavigation).WithMany(p => p.TblJobTaskTaskCompletedByNavigations)
+                .HasForeignKey(d => d.TaskCompletedBy)
+                .HasConstraintName("FK_Tbl_JobTask_Tbl_User");
         });
 
         modelBuilder.Entity<TblJoiningInfo>(entity =>
@@ -2090,8 +2678,6 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.City).HasMaxLength(50);
             entity.Property(e => e.HouseNo).HasMaxLength(100);
-            entity.Property(e => e.Latitude).HasColumnType("numeric(18, 16)");
-            entity.Property(e => e.Longitude).HasColumnType("numeric(18, 16)");
             entity.Property(e => e.NearestLandmark).HasMaxLength(100);
             entity.Property(e => e.PinCode).HasMaxLength(10);
             entity.Property(e => e.PostOffice).HasMaxLength(100);
@@ -2196,6 +2782,28 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Version).HasMaxLength(50);
         });
 
+        modelBuilder.Entity<TblMotionHistory>(entity =>
+        {
+            entity.ToTable("Tbl_MotionHistory", "Tracking");
+
+            entity.HasIndex(e => new { e.EmployeeId, e.EndedAt, e.StartedAt }, "IX_Tbl_MotionHistory_Active").IsDescending(false, false, true);
+
+            entity.Property(e => e.Id)
+                .ValueGeneratedNever()
+                .HasColumnName("id");
+            entity.Property(e => e.EmployeeId).HasColumnName("employeeId");
+            entity.Property(e => e.EndedAt).HasColumnName("endedAt");
+            entity.Property(e => e.Motion)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasColumnName("motion");
+            entity.Property(e => e.Source)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasColumnName("source");
+            entity.Property(e => e.StartedAt).HasColumnName("startedAt");
+        });
+
         modelBuilder.Entity<TblNotification>(entity =>
         {
             entity.ToTable("Tbl_Notification", "Global");
@@ -2226,10 +2834,14 @@ public partial class QubeFinDataContext : DbContext
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())", "DF_Tbl_OrganizationUnit_Id");
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.Esafcode)
+                .HasMaxLength(50)
+                .HasColumnName("ESAFCode");
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
             entity.Property(e => e.Latitude).HasColumnType("numeric(19, 15)");
             entity.Property(e => e.Longitude).HasColumnType("numeric(19, 15)");
             entity.Property(e => e.Name).HasMaxLength(50);
+            entity.Property(e => e.TaggedOn).HasColumnType("datetime");
 
             entity.HasOne(d => d.Company).WithMany(p => p.TblOrganizationUnits)
                 .HasForeignKey(d => d.CompanyId)
@@ -2256,6 +2868,10 @@ public partial class QubeFinDataContext : DbContext
             entity.HasOne(d => d.Parent).WithMany(p => p.InverseParent)
                 .HasForeignKey(d => d.ParentId)
                 .HasConstraintName("FK_Tbl_OrganizationUnit_Tbl_OrganizationUnit");
+
+            entity.HasOne(d => d.TaggedByNavigation).WithMany(p => p.TblOrganizationUnitTaggedByNavigations)
+                .HasForeignKey(d => d.TaggedBy)
+                .HasConstraintName("FK_Tbl_OrganizationUnit_Tbl_User2");
         });
 
         modelBuilder.Entity<TblOrganizationUnitType>(entity =>
@@ -2524,12 +3140,48 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
             entity.Property(e => e.ProposedArea).HasMaxLength(200);
             entity.Property(e => e.Sequence).ValueGeneratedOnAdd();
+            entity.Property(e => e.Status)
+                .HasMaxLength(30)
+                .IsUnicode(false)
+                .HasDefaultValue("Assigned", "DF_Tbl_Survey_Status");
             entity.Property(e => e.SurveyType).HasMaxLength(50);
 
             entity.HasOne(d => d.AdministrativeUnit).WithMany(p => p.TblSurveys)
                 .HasForeignKey(d => d.AdministrativeUnitId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_Survey_Tbl_AdministrativeUnit");
+
+            entity.HasOne(d => d.BranchOrganizationUnit).WithMany(p => p.TblSurveys)
+                .HasForeignKey(d => d.BranchOrganizationUnitId)
+                .HasConstraintName("FK_Tbl_Survey_Tbl_OrganizationUnit");
+
+            entity.HasOne(d => d.PreviousSurvey).WithMany(p => p.InversePreviousSurvey)
+                .HasForeignKey(d => d.PreviousSurveyId)
+                .HasConstraintName("FK_Tbl_Survey_Tbl_Survey_Previous");
+        });
+
+        modelBuilder.Entity<TblSurveyApproval>(entity =>
+        {
+            entity.ToTable("Tbl_SurveyApproval", "Global");
+
+            entity.HasIndex(e => e.SurveyId, "IX_Tbl_SurveyApproval_SurveyId");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Action)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.ActionOn).HasColumnType("datetime");
+            entity.Property(e => e.Comments).HasMaxLength(500);
+
+            entity.HasOne(d => d.AuthorityEmployee).WithMany(p => p.TblSurveyApprovals)
+                .HasForeignKey(d => d.AuthorityEmployeeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_SurveyApproval_Tbl_Employee");
+
+            entity.HasOne(d => d.Survey).WithMany(p => p.TblSurveyApprovals)
+                .HasForeignKey(d => d.SurveyId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_SurveyApproval_Tbl_Survey");
         });
 
         modelBuilder.Entity<TblSurveyAssigned>(entity =>
@@ -2568,7 +3220,16 @@ public partial class QubeFinDataContext : DbContext
         {
             entity.ToTable("Tbl_SurveyCommitteeEvaluation", "Global");
 
+            entity.HasIndex(e => new { e.SurveyId, e.EmployeeId }, "UX_Tbl_SurveyCommitteeEvaluation_Active")
+                .IsUnique()
+                .HasFilter("([IsArchived]=(0))");
+
+            entity.HasIndex(e => e.SurveyId, "UX_Tbl_SurveyCommitteeEvaluation_Final")
+                .IsUnique()
+                .HasFilter("([IsFinal]=(1) AND [IsArchived]=(0))");
+
             entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.ArchivedOn).HasColumnType("datetime");
             entity.Property(e => e.Comments).HasMaxLength(500);
             entity.Property(e => e.EvaluationDate).HasColumnType("datetime");
             entity.Property(e => e.Status)
@@ -2580,8 +3241,8 @@ public partial class QubeFinDataContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_SurveyCommitteeEvaluation_Tbl_Employee");
 
-            entity.HasOne(d => d.Survey).WithMany(p => p.TblSurveyCommitteeEvaluations)
-                .HasForeignKey(d => d.SurveyId)
+            entity.HasOne(d => d.Survey).WithOne(p => p.TblSurveyCommitteeEvaluation)
+                .HasForeignKey<TblSurveyCommitteeEvaluation>(d => d.SurveyId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_SurveyCommitteeEvaluation_Tbl_Survey");
         });
@@ -2591,6 +3252,11 @@ public partial class QubeFinDataContext : DbContext
             entity.ToTable("Tbl_SurveyDocument", "Global");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.DocumentType)
+                .HasMaxLength(30)
+                .IsUnicode(false)
+                .HasDefaultValue("Photograph", "DF_Tbl_SurveyDocument_DocumentType");
             entity.Property(e => e.FileName).HasMaxLength(300);
             entity.Property(e => e.FileSequence).HasMaxLength(300);
             entity.Property(e => e.Sequence).ValueGeneratedOnAdd();
@@ -2624,11 +3290,30 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.Name).HasMaxLength(200);
         });
 
+        modelBuilder.Entity<TblTrackingSetting>(entity =>
+        {
+            entity.ToTable("Tbl_TrackingSetting", "Tracking");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.ModifiedOn).HasColumnType("datetime");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.TblTrackingSettingCreatedByNavigations)
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_TrackingSetting_Tbl_User");
+
+            entity.HasOne(d => d.ModifiedByNavigation).WithMany(p => p.TblTrackingSettingModifiedByNavigations)
+                .HasForeignKey(d => d.ModifiedBy)
+                .HasConstraintName("FK_Tbl_TrackingSetting_Tbl_User1");
+        });
+
         modelBuilder.Entity<TblUser>(entity =>
         {
             entity.ToTable("Tbl_User", "Auth");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.FcmInstallationId).HasMaxLength(200);
             entity.Property(e => e.MfaSecret).HasMaxLength(50);
             entity.Property(e => e.Password).HasMaxLength(500);
             entity.Property(e => e.UserName).HasMaxLength(30);

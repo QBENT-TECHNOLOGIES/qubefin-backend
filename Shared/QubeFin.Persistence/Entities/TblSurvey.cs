@@ -29,13 +29,29 @@ public partial class TblSurvey
 
     public DateTime? LastModifiedOn { get; set; }
 
+    public string Status { get; set; } = null!;
+
+    public bool SurveyFormAttached { get; set; }
+
+    public Guid? BranchOrganizationUnitId { get; set; }
+
+    public Guid? PreviousSurveyId { get; set; }
+
     public virtual TblAdministrativeUnit AdministrativeUnit { get; set; } = null!;
 
-    public virtual ICollection<TblBranchSurvey> TblBranchSurveys { get; set; } = new List<TblBranchSurvey>();
+    public virtual TblOrganizationUnit? BranchOrganizationUnit { get; set; }
+
+    public virtual ICollection<TblSurvey> InversePreviousSurvey { get; set; } = new List<TblSurvey>();
+
+    public virtual TblSurvey? PreviousSurvey { get; set; }
+
+    public virtual TblBranchSurvey? TblBranchSurvey { get; set; }
+
+    public virtual ICollection<TblSurveyApproval> TblSurveyApprovals { get; set; } = new List<TblSurveyApproval>();
 
     public virtual ICollection<TblSurveyAssigned> TblSurveyAssigneds { get; set; } = new List<TblSurveyAssigned>();
 
-    public virtual ICollection<TblSurveyCommitteeEvaluation> TblSurveyCommitteeEvaluations { get; set; } = new List<TblSurveyCommitteeEvaluation>();
+    public virtual TblSurveyCommitteeEvaluation? TblSurveyCommitteeEvaluation { get; set; }
 
     public virtual ICollection<TblSurveyDocument> TblSurveyDocuments { get; set; } = new List<TblSurveyDocument>();
 }

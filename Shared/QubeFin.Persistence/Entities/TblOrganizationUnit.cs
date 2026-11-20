@@ -13,6 +13,8 @@ public partial class TblOrganizationUnit
 
     public int CodeVal { get; set; }
 
+    public string? Esafcode { get; set; }
+
     public Guid? ParentId { get; set; }
 
     public Guid? DistrictId { get; set; }
@@ -28,6 +30,10 @@ public partial class TblOrganizationUnit
     public decimal? Latitude { get; set; }
 
     public decimal? Longitude { get; set; }
+
+    public Guid? TaggedBy { get; set; }
+
+    public DateTime? TaggedOn { get; set; }
 
     public TimeOnly? AttendanceInTime { get; set; }
 
@@ -51,9 +57,17 @@ public partial class TblOrganizationUnit
 
     public virtual TblOrganizationUnit? Parent { get; set; }
 
+    public virtual TblUser? TaggedByNavigation { get; set; }
+
     public virtual ICollection<TblAttendance> TblAttendanceCheckinOrganizationUnits { get; set; } = new List<TblAttendance>();
 
     public virtual ICollection<TblAttendance> TblAttendanceCheckoutOrganizationUnits { get; set; } = new List<TblAttendance>();
+
+    public virtual ICollection<TblBcgroupTransfer> TblBcgroupTransfers { get; set; } = new List<TblBcgroupTransfer>();
+
+    public virtual ICollection<TblBcgroup> TblBcgroups { get; set; } = new List<TblBcgroup>();
+
+    public virtual ICollection<TblBranchSurvey> TblBranchSurveys { get; set; } = new List<TblBranchSurvey>();
 
     public virtual ICollection<TblDesignation> TblDesignations { get; set; } = new List<TblDesignation>();
 
@@ -67,7 +81,11 @@ public partial class TblOrganizationUnit
 
     public virtual ICollection<TblInterviewCandidate> TblInterviewCandidateVenueOrganizationUnits { get; set; } = new List<TblInterviewCandidate>();
 
+    public virtual ICollection<TblJobTask> TblJobTasks { get; set; } = new List<TblJobTask>();
+
     public virtual ICollection<TblLoanApplication> TblLoanApplications { get; set; } = new List<TblLoanApplication>();
 
     public virtual ICollection<TblPayRoll> TblPayRolls { get; set; } = new List<TblPayRoll>();
+
+    public virtual ICollection<TblSurvey> TblSurveys { get; set; } = new List<TblSurvey>();
 }

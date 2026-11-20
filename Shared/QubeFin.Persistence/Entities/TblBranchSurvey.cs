@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using NetTopologySuite.Geometries;
 
 namespace QubeFin.Persistence.Entities;
 
@@ -17,10 +18,6 @@ public partial class TblBranchSurvey
 
     public string? PinCode { get; set; }
 
-    public decimal? Latitude { get; set; }
-
-    public decimal? Longitude { get; set; }
-
     public string? GeoTag { get; set; }
 
     public string? NearestLandmark { get; set; }
@@ -30,6 +27,8 @@ public partial class TblBranchSurvey
     public decimal? DistanceFromExistingWeGrowBranch { get; set; }
 
     public decimal? DistanceFromDistrictHeadquarters { get; set; }
+
+    public Geometry? Location { get; set; }
 
     public string? RoadCondition { get; set; }
 
@@ -217,7 +216,15 @@ public partial class TblBranchSurvey
 
     public DateTime? LastModifiedOn { get; set; }
 
+    public string? SurveyorComments { get; set; }
+
+    public Guid? CreatedOrganizationUnitId { get; set; }
+
     public virtual TblAdministrativeUnit AdministrativeUnit { get; set; } = null!;
 
+    public virtual TblOrganizationUnit? CreatedOrganizationUnit { get; set; }
+
     public virtual TblSurvey Survey { get; set; } = null!;
+
+    public virtual ICollection<TblBranchSurveyCompetitor> TblBranchSurveyCompetitors { get; set; } = new List<TblBranchSurveyCompetitor>();
 }

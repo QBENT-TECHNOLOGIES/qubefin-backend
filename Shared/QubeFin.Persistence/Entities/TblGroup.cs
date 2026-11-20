@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using NetTopologySuite.Geometries;
 
 namespace QubeFin.Persistence.Entities;
 
@@ -31,11 +32,9 @@ public partial class TblGroup
 
     public string? Address { get; set; }
 
+    public Geometry? Location { get; set; }
+
     public string? LandMark { get; set; }
-
-    public string? Latitude { get; set; }
-
-    public string? Longitude { get; set; }
 
     public string? PhotoScan { get; set; }
 

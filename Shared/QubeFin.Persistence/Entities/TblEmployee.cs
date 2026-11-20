@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using NetTopologySuite.Geometries;
 
 namespace QubeFin.Persistence.Entities;
 
@@ -16,6 +17,8 @@ public partial class TblEmployee
     public string LastName { get; set; } = null!;
 
     public string FullName { get; set; } = null!;
+
+    public string? Esafcode { get; set; }
 
     public string? Code { get; set; }
 
@@ -93,6 +96,8 @@ public partial class TblEmployee
 
     public int? PermanentDurationOfStayInMonths { get; set; }
 
+    public Geometry? PermanentLocation { get; set; }
+
     public bool PresentPermanentAddressSame { get; set; }
 
     public string? PresentHouseNo { get; set; }
@@ -114,6 +119,14 @@ public partial class TblEmployee
     public string? PresentOwnerShipOfHouse { get; set; }
 
     public int? PresentDurationOfStayInMonths { get; set; }
+
+    public Geometry? PresentLocation { get; set; }
+
+    public string? LocationPhoto { get; set; }
+
+    public Guid? TaggedBy { get; set; }
+
+    public DateTime? TaggedOn { get; set; }
 
     public string? OfficialEmail { get; set; }
 
@@ -175,6 +188,8 @@ public partial class TblEmployee
 
     public virtual TblEmployee? Supervisor { get; set; }
 
+    public virtual TblUser? TaggedByNavigation { get; set; }
+
     public virtual ICollection<TblAttendanceRegularization> TblAttendanceRegularizations { get; set; } = new List<TblAttendanceRegularization>();
 
     public virtual ICollection<TblAttendance> TblAttendances { get; set; } = new List<TblAttendance>();
@@ -201,6 +216,14 @@ public partial class TblEmployee
 
     public virtual ICollection<TblInterviewPanel> TblInterviewPanels { get; set; } = new List<TblInterviewPanel>();
 
+    public virtual ICollection<TblJobHistory> TblJobHistoryFromAssignees { get; set; } = new List<TblJobHistory>();
+
+    public virtual ICollection<TblJobHistory> TblJobHistoryToAssignees { get; set; } = new List<TblJobHistory>();
+
+    public virtual ICollection<TblJobTask> TblJobTasks { get; set; } = new List<TblJobTask>();
+
+    public virtual ICollection<TblJob> TblJobs { get; set; } = new List<TblJob>();
+
     public virtual ICollection<TblJoiningInfo> TblJoiningInfos { get; set; } = new List<TblJoiningInfo>();
 
     public virtual ICollection<TblLeavePrayer> TblLeavePrayers { get; set; } = new List<TblLeavePrayer>();
@@ -210,6 +233,8 @@ public partial class TblEmployee
     public virtual ICollection<TblLeaveTransaction> TblLeaveTransactions { get; set; } = new List<TblLeaveTransaction>();
 
     public virtual ICollection<TblPayRoll> TblPayRolls { get; set; } = new List<TblPayRoll>();
+
+    public virtual ICollection<TblSurveyApproval> TblSurveyApprovals { get; set; } = new List<TblSurveyApproval>();
 
     public virtual ICollection<TblSurveyAssigned> TblSurveyAssigneds { get; set; } = new List<TblSurveyAssigned>();
 

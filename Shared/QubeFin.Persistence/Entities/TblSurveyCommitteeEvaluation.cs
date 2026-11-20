@@ -17,6 +17,12 @@ public partial class TblSurveyCommitteeEvaluation
 
     public DateTime EvaluationDate { get; set; }
 
+    public bool IsFinal { get; set; }
+
+    public bool IsArchived { get; set; }
+
+    public DateTime? ArchivedOn { get; set; }
+
     public virtual TblEmployee Employee { get; set; } = null!;
 
     public virtual TblSurvey Survey { get; set; } = null!;

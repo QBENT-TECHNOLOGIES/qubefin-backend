@@ -15,5 +15,11 @@ public partial class TblSurveyDocument
 
     public int Sequence { get; set; }
 
+    public string DocumentType { get; set; } = null!;
+
+    public Guid? CreatedBy { get; set; }
+
+    public DateTime? CreatedOn { get; set; }
+
     public virtual TblSurvey Survey { get; set; } = null!;
 }
