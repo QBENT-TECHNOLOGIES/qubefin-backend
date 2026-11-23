@@ -957,6 +957,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.PinCode)
                 .HasMaxLength(6)
                 .IsUnicode(false);
+            entity.Property(e => e.PoliceStation).HasMaxLength(100);
             entity.Property(e => e.PoliticalDisturbanceRisk).HasMaxLength(20);
             entity.Property(e => e.PortfolioYear1).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.PortfolioYear2).HasColumnType("decimal(18, 2)");

@@ -220,6 +220,8 @@ public partial class TblBranchSurvey
 
     public Guid? CreatedOrganizationUnitId { get; set; }
 
+    public string? PoliceStation { get; set; }
+
     public virtual TblAdministrativeUnit AdministrativeUnit { get; set; } = null!;
 
     public virtual TblOrganizationUnit? CreatedOrganizationUnit { get; set; }
