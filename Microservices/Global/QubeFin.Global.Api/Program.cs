@@ -1,4 +1,5 @@
 using QubeFin.Core.Endpoint;
+using QubeFin.Core.OpenApi;
 using QubeFin.Core.Settings;
 using QubeFin.Global.Application;
 using QubeFin.Global.Infrastructure;
@@ -7,7 +8,7 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddOpenApi();
+builder.Services.AddQubeFinOpenApi("QubeFin Global API");
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
@@ -28,6 +29,7 @@ var app = builder.Build();
 
 // app.UseHttpsRedirection();
 
+app.UseQubeFinSwaggerUi("QubeFin Global API");
 app.MapEndpoints();
 
 app.MapScalarApiReference(options =>

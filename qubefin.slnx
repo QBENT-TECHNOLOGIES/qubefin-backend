@@ -43,6 +43,12 @@
     <Project Path="Microservices/Report/QubeFin.Report.Infrastructure/QubeFin.Report.Infrastructure.csproj" Id="ab98ec8b-e86c-4842-9bcb-33e171cb6d88" />
     <Project Path="Microservices/Report/QubeFin.Report.Persistence/QubeFin.Report.Persistence.csproj" Id="a1d8c826-fb74-4645-8f86-380bf796e37c" />
   </Folder>
+  <Folder Name="/Microservices/Tracking/">
+    <Project Path="Microservices/Tracking/QubeFin.Tracking.Api/QubeFin.Tracking.Api.csproj" />
+    <Project Path="Microservices/Tracking/QubeFin.Tracking.Application/QubeFin.Tracking.Application.csproj" Id="192a47d5-2922-45b6-a284-d0fe8aca7e5d" />
+    <Project Path="Microservices/Tracking/QubeFin.Tracking.Infrastructure/QubeFin.Tracking.Infrastructure.csproj" Id="35655f0f-5c8a-4146-87bc-1ba0ddf209a9" />
+    <Project Path="Microservices/Tracking/QubeFin.Tracking.Persistence/QubeFin.Tracking.Persistence.csproj" Id="dc9f263e-0587-44ae-95ac-19549817e5f9" />
+  </Folder>
   <Folder Name="/Shared/">
     <Project Path="Shared/QubeFin.Core/QubeFin.Core.csproj" Id="62c1de18-e482-453c-9a21-7026846522c6" />
     <Project Path="Shared/QubeFin.Persistence/QubeFin.Persistence.csproj" Id="85068673-5466-4a06-8539-f22197f39896" />

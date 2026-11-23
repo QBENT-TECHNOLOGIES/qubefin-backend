@@ -19,6 +19,7 @@ public interface IUserRepository
     Task<User> GetExistingUser(Guid? id, CancellationToken cancellation);
     Task<bool> GetExsitingEmployeeById(Guid? employeeId);
     Task UnbindDeviceAsync(Guid DeviceId, Guid UserId);
+    Task UpdateFcmInstallationIdAsync(Guid userId, string? fcmInstallationId);
 }
 
 public class UserRepository(QubeFinDataContext context) : IUserRepository
@@ -120,5 +121,16 @@ public class UserRepository(QubeFinDataContext context) : IUserRepository
             context.TblUserSessions.RemoveRange(userSessionEntities);
         }
         context.TblUserDevices.Update(userDeviceEntity);
+    }
+
+    public async Task UpdateFcmInstallationIdAsync(Guid userId, string? fcmInstallationId)
+    {
+        var userEntity = await context.TblUsers.FirstOrDefaultAsync(m => m.Id == userId) ?? throw new Exception($"User not found for the given Id");
+
+        userEntity.FcmInstallationId = fcmInstallationId;
+        userEntity.LastModifiedBy = userId;
+        userEntity.LastModifiedOn = DateTime.Now;
+
+        context.TblUsers.Update(userEntity);
     }
 }

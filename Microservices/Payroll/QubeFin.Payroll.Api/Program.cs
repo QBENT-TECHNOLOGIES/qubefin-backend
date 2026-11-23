@@ -1,11 +1,12 @@
 using QubeFin.Core.Endpoint;
+using QubeFin.Core.OpenApi;
 using QubeFin.Core.Settings;
 using QubeFin.Payroll.Application;
 using QubeFin.Payroll.Persistence;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddOpenApi();
+builder.Services.AddQubeFinOpenApi("QubeFin Payroll API");
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services
     .AddApplication()
@@ -21,6 +22,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseQubeFinSwaggerUi("QubeFin Payroll API");
 app.MapEndpoints();
 app.MapScalarApiReference(options =>
 {

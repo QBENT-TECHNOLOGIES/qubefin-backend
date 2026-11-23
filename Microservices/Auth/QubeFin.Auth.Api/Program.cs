@@ -2,12 +2,13 @@ using QubeFin.Auth.Application;
 using QubeFin.Auth.Infrastructure;
 using QubeFin.Auth.Persistence;
 using QubeFin.Core.Endpoint;
+using QubeFin.Core.OpenApi;
 using QubeFin.Core.Settings;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddOpenApi();
+builder.Services.AddQubeFinOpenApi("QubeFin Auth API");
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
@@ -28,6 +29,7 @@ var app = builder.Build();
 
 //app.UseHttpsRedirection();
 
+app.UseQubeFinSwaggerUi("QubeFin Auth API");
 app.MapEndpoints();
 
 app.MapScalarApiReference(options =>

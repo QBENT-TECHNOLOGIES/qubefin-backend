@@ -1,4 +1,5 @@
 using QubeFin.Core.Endpoint;
+using QubeFin.Core.OpenApi;
 using QubeFin.Core.Settings;
 using QubeFin.Hrms.Application;
 using QubeFin.Hrms.Infrastructure;
@@ -7,7 +8,7 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddOpenApi();
+builder.Services.AddQubeFinOpenApi("QubeFin Hrms API");
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
@@ -27,6 +28,7 @@ var app = builder.Build();
 
 //app.UseHttpsRedirection();
 
+app.UseQubeFinSwaggerUi("QubeFin Hrms API");
 app.MapEndpoints();
 
 app.MapScalarApiReference(options =>

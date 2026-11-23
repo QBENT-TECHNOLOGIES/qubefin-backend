@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.RateLimiting;
+using QubeFin.Gateway;
 using System.Net.Http.Headers;
 using Yarp.ReverseProxy.Transforms;
 
@@ -28,7 +29,8 @@ builder.Services.AddRateLimiter(rateLimiterOptions =>
 });
 
 builder.Services.AddReverseProxy()
-    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
+    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"))
+    .AddOpenApiServerRewrite();
     //.AddTransforms(builderContext =>
     //{
     //    builderContext.AddRequestTransform(async transformContext =>
@@ -59,6 +61,8 @@ var app = builder.Build();
 // app.UsePathBase("/gateway");
 
 app.UseCors("QubeFinCorsPolicy");
+
+app.UseGatewaySwaggerUi();
 
 app.UseRateLimiter();
 

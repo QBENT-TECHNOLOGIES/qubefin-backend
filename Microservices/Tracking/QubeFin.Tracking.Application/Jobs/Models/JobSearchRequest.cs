@@ -1,0 +1,19 @@
+using QubeFin.Tracking.Application.Enums;
+
+namespace QubeFin.Tracking.Application.Jobs.Models;
+
+public record JobSearchRequest(
+    string? SearchText,
+    JobStatus? Status,
+    bool OpenOnly,
+    Guid? OrganizationUnitId,
+    Guid? AssigneeId,
+    DateOnly? DueFrom,
+    DateOnly? DueTo,
+    DpdRange? DpdRange,
+    int PageIndex,
+    int PageSize,
+    string? SortOn,
+    SortDirection SortDirection,
+    // Self = jobs assigned to me; Assigned = jobs I created for others; null = every job I may see
+    JobType? JobType = null);

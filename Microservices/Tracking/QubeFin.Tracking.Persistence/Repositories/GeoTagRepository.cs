@@ -1,0 +1,249 @@
+using System.Data;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using QubeFin.Persistence;
+using QubeFin.Persistence.Entities;
+using QubeFin.Persistence.Models.Tracking;
+
+namespace QubeFin.Tracking.Persistence.Repositories;
+
+public interface IGeoTagRepository
+{
+    Task<GeoTagPointsResult> GetPointsAsync(Guid organizationUnitId, IReadOnlyCollection<string> kinds, int? taskLocationMatchInMeters, CancellationToken cancellationToken = default);
+    Task<Dictionary<Guid, TrackingPlace>> GetPlacesAsync(IEnumerable<Guid> refIds, CancellationToken cancellationToken = default);
+    Task<GeoTagSearchResult> GetGeoTagsAsync(GeoTagFilter filter, CancellationToken cancellationToken = default);
+    Task<GeoTagTarget?> FindGeoTagAsync(Guid id, Guid? viewerEmployeeId, CancellationToken cancellationToken = default);
+    Task UpdateLocationAsync(GeoTagTarget target, GeoPoint location, string? photoKey, Guid userId, DateTime now, CancellationToken cancellationToken = default);
+    Task<List<string>> GetPendingTasksAtAsync(GeoTagTarget target, CancellationToken cancellationToken = default);
+}
+
+public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
+{
+    private const string GroupCentre = "GroupCentre";
+    private const string Member = "Member";
+    private const string OdMember = "OdMember";
+    private const string Branch = "Branch";
+    private const string EmployeeHome = "EmployeeHome";
+
+    // Tracking.USP_GetGeoTagPoints: groups and member homes of one branch for the task picker. There is no verification
+    // column yet, so every place counts as verified; a place without a location is only counted in UntaggedByKind.
+    public async Task<GeoTagPointsResult> GetPointsAsync(Guid organizationUnitId, IReadOnlyCollection<string> kinds, int? taskLocationMatchInMeters, CancellationToken cancellationToken = default)
+    {
+        var points = new List<GeoTagPointRow>();
+        var untagged = new Dictionary<string, int>();
+        var includeMembers = kinds.Contains(Member) || kinds.Contains(OdMember);
+
+        var rows = await context.Set<GeoTagPointResult>()
+            .FromSqlInterpolated($"EXEC [Tracking].[USP_GetGeoTagPoints] @OrganizationUnitId = {organizationUnitId}, @IncludeMembers = {includeMembers}")
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        if (kinds.Contains(GroupCentre))
+        {
+            foreach (var g in rows.Where(r => r.Kind == GroupCentre))
+            {
+                if (g.Location is null)
+                {
+                    untagged[GroupCentre] = untagged.GetValueOrDefault(GroupCentre) + 1;
+                    continue;
+                }
+                points.Add(new GeoTagPointRow(
+                    g.Id, GroupCentre, g.Id, g.GroupName, g.Code, organizationUnitId, g.BranchName, g.AddressLine1,
+                    GeoCoordinates.ToGeoPoint(g.Location), taskLocationMatchInMeters, true,
+                    g.CreditOfficerId, g.CreditOfficerName, null, null, null, null, g.TaggedByName, g.TaggedOn));
+            }
+        }
+
+        if (includeMembers)
+        {
+            foreach (var m in rows.Where(r => r.Kind != GroupCentre))
+            {
+                // An overdue member is returned once, as OdMember
+                var kind = m.Kind;
+                if (!kinds.Contains(kind)) continue;
+                if (m.Location is null)
+                {
+                    untagged[kind] = untagged.GetValueOrDefault(kind) + 1;
+                    continue;
+                }
+                points.Add(new GeoTagPointRow(
+                    m.Id, kind, m.Id,
+                    string.Join(' ', new[] { m.FirstName, m.MiddleName, m.LastName }.Where(n => !string.IsNullOrWhiteSpace(n))),
+                    m.Code, organizationUnitId, m.BranchName,
+                    string.Join(", ", new[] { m.AddressLine1, m.AddressLine2 }.Where(a => !string.IsNullOrWhiteSpace(a))) is { Length: > 0 } address ? address : null,
+                    GeoCoordinates.ToGeoPoint(m.Location), taskLocationMatchInMeters, true,
+                    m.CreditOfficerId, m.CreditOfficerName, m.GroupId, m.GroupName,
+                    m.Dpd, m.OverdueAmount, m.TaggedByName, m.TaggedOn));
+            }
+        }
+
+        return new GeoTagPointsResult(points.OrderBy(p => p.Kind).ThenBy(p => p.Name).ToList(), untagged);
+    }
+
+    // Tracking.USP_GetTrackingPlaces: the place behind each id: a group, a member (also found through one of their loans)
+    // or a branch, with its current location. Where one id matches more than one place the later kind wins, as before.
+    public async Task<Dictionary<Guid, TrackingPlace>> GetPlacesAsync(IEnumerable<Guid> refIds, CancellationToken cancellationToken = default)
+    {
+        var ids = refIds.Distinct().ToList();
+        var places = new Dictionary<Guid, TrackingPlace>();
+        if (ids.Count == 0) return places;
+
+        var rows = await context.Set<TrackingPlaceResult>()
+            .FromSqlInterpolated($"EXEC [Tracking].[USP_GetTrackingPlaces] @RefIds = {string.Join(',', ids)}")
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        foreach (var p in rows.OrderBy(r => r.Priority))
+        {
+            if (p.Kind == Branch)
+            {
+                var point = GeoCoordinates.ToGeoPoint(p.Latitude, p.Longitude);
+                places[p.RefId] = new TrackingPlace(p.RefId, Branch, p.BranchId, point is null ? null : GeoCoordinates.ToGeometry(point));
+            }
+            else
+            {
+                places[p.RefId] = new TrackingPlace(p.RefId, p.Kind, p.BranchId, p.Location);
+            }
+        }
+        return places;
+    }
+
+    // Tracking.USP_GetGeoTags: places of one kind, with and without a location, one page sorted by name (or SortOn).
+    // BranchIds null = every branch (an Admin). PageSize null = every row (used to read one place back by RefId).
+    // Tagged by / at: TaggedBy / TaggedOn, the last user and time the location was set; only shown once the place has a location.
+    public async Task<GeoTagSearchResult> GetGeoTagsAsync(GeoTagFilter filter, CancellationToken cancellationToken = default)
+    {
+        var text = string.IsNullOrWhiteSpace(filter.SearchText) ? null : filter.SearchText.Trim();
+        var kind = filter.Kind is Branch or GroupCentre or Member or OdMember ? filter.Kind : EmployeeHome;
+        var totalRecords = new SqlParameter("@TotalRecords", SqlDbType.Int) { Direction = ParameterDirection.Output };
+
+        var places = await context.Set<GeoTagResult>()
+            .FromSqlRaw(
+                "EXEC [Tracking].[USP_GetGeoTags] @Kind, @BranchIds, @OrganizationUnitId, @SearchText, @OnlyUntagged, @RefId, " +
+                "@SortOn, @SortDescending, @PageIndex, @PageSize, @TotalRecords OUTPUT",
+                new SqlParameter("@Kind", SqlDbType.NVarChar, 50) { Value = kind },
+                new SqlParameter("@BranchIds", SqlDbType.NVarChar, -1)
+                {
+                    Value = filter.BranchIds is null ? DBNull.Value : string.Join(',', filter.BranchIds)
+                },
+                new SqlParameter("@OrganizationUnitId", SqlDbType.UniqueIdentifier) { Value = (object?)filter.OrganizationUnitId ?? DBNull.Value },
+                new SqlParameter("@SearchText", SqlDbType.NVarChar, 200) { Value = (object?)text ?? DBNull.Value },
+                new SqlParameter("@OnlyUntagged", SqlDbType.Bit) { Value = filter.OnlyUntagged },
+                new SqlParameter("@RefId", SqlDbType.UniqueIdentifier) { Value = (object?)filter.RefId ?? DBNull.Value },
+                new SqlParameter("@SortOn", SqlDbType.NVarChar, 50) { Value = (object?)filter.SortOn ?? DBNull.Value },
+                new SqlParameter("@SortDescending", SqlDbType.Bit) { Value = filter.SortDescending },
+                new SqlParameter("@PageIndex", SqlDbType.Int) { Value = (object?)filter.PageIndex ?? DBNull.Value },
+                new SqlParameter("@PageSize", SqlDbType.Int) { Value = (object?)filter.PageSize ?? DBNull.Value },
+                totalRecords)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        // The procedure has sorted and paged the rows; this only shapes them
+        var rows = kind switch
+        {
+            Branch => places.Select(b =>
+            {
+                var location = GeoCoordinates.ToGeoPoint(b.Latitude, b.Longitude);
+                return new GeoTagRow(Branch, b.RefId, b.Name!, b.Code, b.RefId, b.Name, null, location,
+                    filter.BranchRadiusMeters, null, location is null ? null : b.TaggedByName, location is null ? null : b.TaggedOn);
+            }),
+            GroupCentre => places.Select(g => new GeoTagRow(GroupCentre, g.RefId, g.Name!, g.Code, g.BranchId, g.BranchName, g.AddressLine1,
+                GeoCoordinates.ToGeoPoint(g.Location), filter.MatchRadiusMeters, g.LocationPhoto,
+                g.Location is null ? null : g.TaggedByName, g.Location is null ? null : g.TaggedOn)),
+            Member or OdMember => places.Select(m => new GeoTagRow(filter.Kind, m.RefId,
+                string.Join(' ', new[] { m.FirstName, m.MiddleName, m.LastName }.Where(n => !string.IsNullOrWhiteSpace(n))),
+                m.Code, m.BranchId, m.BranchName,
+                string.Join(", ", new[] { m.AddressLine1, m.AddressLine2 }.Where(a => !string.IsNullOrWhiteSpace(a))) is { Length: > 0 } address ? address : null,
+                GeoCoordinates.ToGeoPoint(m.Location), filter.MatchRadiusMeters, m.LocationPhoto,
+                m.Location is null ? null : m.TaggedByName, m.Location is null ? null : m.TaggedOn)),
+            // EmployeeHome: active employees (IsActive, no SeparationDate), placed in the unit of Tbl_Employee.OrganizationUnitId
+            _ => places.Select(e => new GeoTagRow(EmployeeHome, e.RefId, e.Name!, e.Code, e.BranchId, e.BranchName, e.AddressLine1,
+                GeoCoordinates.ToGeoPoint(e.Location), filter.MatchRadiusMeters, e.LocationPhoto,
+                e.Location is null ? null : e.TaggedByName, e.Location is null ? null : e.TaggedOn))
+        };
+
+        // Output values are read after the result set has been read to the end
+        return new GeoTagSearchResult(rows.ToList(), totalRecords.Value is int count ? count : 0);
+    }
+
+    // Tracking.USP_FindGeoTag: the place behind a geo-tag id. A group is owned by its mapped designation (DesignationId);
+    // a member by its group's.
+    public async Task<GeoTagTarget?> FindGeoTagAsync(Guid id, Guid? viewerEmployeeId, CancellationToken cancellationToken = default)
+    {
+        var target = (await context.Set<GeoTagTargetResult>()
+            .FromSqlInterpolated($"EXEC [Tracking].[USP_FindGeoTag] @Id = {id}, @ViewerEmployeeId = {viewerEmployeeId}")
+            .AsNoTracking()
+            .ToListAsync(cancellationToken))
+            .FirstOrDefault();
+        return target is null
+            ? null
+            : new GeoTagTarget(target.Kind, id, target.BranchId, target.OwnerDesignationId, target.OwnerPostName, target.OwnerUnitId, target.IsOwnedByViewer);
+    }
+
+    // Saves a new location and who set it (TaggedBy / TaggedOn). Branches keep decimal latitude / longitude, the others a
+    // geography point. The photo key is stored only when a photo was uploaded.
+    public async Task UpdateLocationAsync(GeoTagTarget target, GeoPoint location, string? photoKey, Guid userId, DateTime now, CancellationToken cancellationToken = default)
+    {
+        switch (target.Kind)
+        {
+            case Branch:
+                var branch = await context.TblOrganizationUnits.FirstAsync(o => o.Id == target.RefId, cancellationToken);
+                branch.Latitude = location.Lat;
+                branch.Longitude = location.Lng;
+                branch.TaggedBy = userId;
+                branch.TaggedOn = now;
+                break;
+            case GroupCentre:
+                var group = await context.TblBcgroups.FirstAsync(g => g.Id == target.RefId, cancellationToken);
+                group.Location = GeoCoordinates.ToGeometry(location);
+                if (photoKey is not null) group.LocationPhoto = photoKey;
+                group.TaggedBy = userId;
+                group.TaggedOn = now;
+                break;
+            case Member:
+            case OdMember:
+                var member = await context.TblBcmembers.FirstAsync(m => m.Id == target.RefId, cancellationToken);
+                member.Location = GeoCoordinates.ToGeometry(location);
+                if (photoKey is not null) member.LocationPhoto = photoKey;
+                member.TaggedBy = userId;
+                member.TaggedOn = now;
+                break;
+            default:
+                var employee = await context.TblEmployees.FirstAsync(e => e.Id == target.RefId, cancellationToken);
+                employee.PresentLocation = GeoCoordinates.ToGeometry(location);
+                if (photoKey is not null) employee.LocationPhoto = photoKey;
+                employee.TaggedBy = userId;
+                employee.TaggedOn = now;
+                break;
+        }
+    }
+
+    // Pending tasks (in jobs not cancelled) at a group or member, as "TSK-… (JOB-…)", sorted by task no. A member's tasks point
+    // at the member or at one of their loans (an OD follow-up), both at the member's home. Other kinds have none here.
+    // Pending = Status 'Pending', or no Status and not completed, cancelled or transferred.
+    public async Task<List<string>> GetPendingTasksAtAsync(GeoTagTarget target, CancellationToken cancellationToken = default)
+    {
+        IQueryable<TblJobTask> tasks;
+        switch (target.Kind)
+        {
+            case GroupCentre:
+                tasks = context.TblJobTasks.Where(t => t.OriginRefId == target.RefId);
+                break;
+            case Member:
+            case OdMember:
+                tasks = context.TblJobTasks.Where(t => t.OriginRefId == target.RefId
+                    || context.TblBcloans.Any(l => l.Id == t.OriginRefId && l.BcmemberId == target.RefId));
+                break;
+            default:
+                return [];
+        }
+
+        return await tasks
+            .Where(t => !t.Job.IsCancel
+                && (t.Status == "Pending" || (t.Status == null && !t.IsCompleted && !t.IsTaskCancel && t.TransferTaskId == null)))
+            .OrderBy(t => t.TaskNo)
+            .Select(t => t.TaskNo + " (" + t.Job.JobCode + ")")
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+    }
+}
