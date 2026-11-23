@@ -70,21 +70,21 @@ public partial class TblBranchSurvey
 
     public decimal? AgriculturePercent { get; set; }
 
-    public int? AgriculturalLabour { get; set; }
+    public decimal? AgriculturalLabour { get; set; }
 
-    public int? DairyLivestock { get; set; }
+    public decimal? DairyLivestock { get; set; }
 
-    public int? SmallBusiness { get; set; }
+    public decimal? SmallBusiness { get; set; }
 
-    public int? PettyTrade { get; set; }
+    public decimal? PettyTrade { get; set; }
 
-    public int? CottageSmallIndustries { get; set; }
+    public decimal? CottageSmallIndustries { get; set; }
 
-    public int? TransportActivities { get; set; }
+    public decimal? TransportActivities { get; set; }
 
-    public int? ServiceHolders { get; set; }
+    public decimal? ServiceHolders { get; set; }
 
-    public int? DailyWageEarners { get; set; }
+    public decimal? DailyWageEarners { get; set; }
 
     public string? OtherIncomeGeneratingActivities { get; set; }
 

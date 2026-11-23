@@ -893,6 +893,7 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.AccessibilityByMotorCycle).HasMaxLength(10);
             entity.Property(e => e.ActionOn).HasColumnType("datetime");
             entity.Property(e => e.AdministrativeStatus).HasMaxLength(30);
+            entity.Property(e => e.AgriculturalLabour).HasColumnType("decimal(5, 2)");
             entity.Property(e => e.AgriculturePercent).HasColumnType("decimal(5, 2)");
             entity.Property(e => e.ApproxPortfolio).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.AreaVisitedPhysically).HasMaxLength(10);
@@ -907,8 +908,11 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.CommunalIssuesRisk).HasMaxLength(20);
             entity.Property(e => e.CompetitionRisk).HasMaxLength(20);
             entity.Property(e => e.CompetitorVerificationCompleted).HasMaxLength(10);
+            entity.Property(e => e.CottageSmallIndustries).HasColumnType("decimal(5, 2)");
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.CycloneRisk).HasMaxLength(20);
+            entity.Property(e => e.DailyWageEarners).HasColumnType("decimal(5, 2)");
+            entity.Property(e => e.DairyLivestock).HasColumnType("decimal(5, 2)");
             entity.Property(e => e.DigitalPaymentAcceptance).HasMaxLength(100);
             entity.Property(e => e.DistanceFromDistrictHeadquarters).HasColumnType("decimal(8, 2)");
             entity.Property(e => e.DistanceFromExistingWeGrowBranch).HasColumnType("decimal(8, 2)");
@@ -948,6 +952,7 @@ public partial class QubeFinDataContext : DbContext
                 .HasColumnType("decimal(5, 2)")
                 .HasColumnName("PARPercent");
             entity.Property(e => e.PeakBusinessSeason).HasMaxLength(200);
+            entity.Property(e => e.PettyTrade).HasColumnType("decimal(5, 2)");
             entity.Property(e => e.PhotographsAttached).HasMaxLength(10);
             entity.Property(e => e.PinCode)
                 .HasMaxLength(6)
@@ -966,8 +971,11 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.SafetyOfArea).HasMaxLength(100);
             entity.Property(e => e.ScheduledCastePercent).HasColumnType("decimal(5, 2)");
             entity.Property(e => e.ScheduledTribePercent).HasColumnType("decimal(5, 2)");
+            entity.Property(e => e.ServiceHolders).HasColumnType("decimal(5, 2)");
+            entity.Property(e => e.SmallBusiness).HasColumnType("decimal(5, 2)");
             entity.Property(e => e.SurveyorComments).HasMaxLength(1000);
             entity.Property(e => e.SurveyorSubmitOn).HasColumnType("datetime");
+            entity.Property(e => e.TransportActivities).HasColumnType("decimal(5, 2)");
 
             entity.HasOne(d => d.AdministrativeUnit).WithMany(p => p.TblBranchSurveys)
                 .HasForeignKey(d => d.AdministrativeUnitId)
