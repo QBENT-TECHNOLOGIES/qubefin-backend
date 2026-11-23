@@ -10,7 +10,7 @@ using QubeFin.Persistence.Models.Global;
 namespace QubeFin.Global.Application.SurveyUnit.Queries;
 
 #region --- QUERY ---
-public record GetSurveyByIdQuery(Guid Id, Guid EmployeeId) : IRequest<Result<SurveyResponse>>;
+public record GetSurveyByIdQuery(Guid Id, Guid EmployeeId, Guid UserId) : IRequest<Result<SurveyResponse>>;
 #endregion
 
 #region --- VALIDATOR ---
@@ -36,6 +36,35 @@ internal sealed class GetSurveyByIdQueryHandler(QubeFinDataContext context) : IR
             return new RecordNotFoundError($"Survey not found for the given Id");
         }
         var users = await context.TblUsers.Where(u => u.Id == surveyEntity.CreatedBy || u.Id == surveyEntity.LastModifiedBy).AsNoTracking().ToListAsync(cancellationToken);
+
+        // The assignment can be edited by the Committee Lead who created it, until the Lead Surveyor submits.
+        var isEditableStatus = surveyEntity.Status == SurveyStatuses.Assigned || surveyEntity.Status == SurveyStatuses.Draft;
+        bool canCreatorEdit;
+        string? branchName = null;
+        if (surveyEntity.SurveyType == SurveyTypes.Group)
+        {
+            // A Group Survey is edited by the person in charge of its branch (who created it).
+            canCreatorEdit = surveyEntity.BranchOrganizationUnitId.HasValue
+                && await context.TblEmployeeDesignations.AnyAsync(ed =>
+                    ed.EmployeeId == request.EmployeeId && ed.EffectiveTo == null
+                    && ed.Designation.IsActive && ed.Designation.IsIncharge
+                    && ed.Designation.OrganizationUnitId == surveyEntity.BranchOrganizationUnitId, cancellationToken);
+            branchName = surveyEntity.BranchOrganizationUnitId.HasValue
+                ? await context.TblOrganizationUnits.AsNoTracking()
+                    .Where(o => o.Id == surveyEntity.BranchOrganizationUnitId).Select(o => o.Name).FirstOrDefaultAsync(cancellationToken)
+                : null;
+        }
+        else
+        {
+            canCreatorEdit = await context.TblSurveyCommittees
+                .AnyAsync(c => c.EmployeeId == request.EmployeeId && c.IsActive && c.IsLead, cancellationToken);
+        }
+        var canEditGeneral = isEditableStatus && canCreatorEdit && surveyEntity.CreatedBy == request.UserId;
+
+        // The survey form is filled in by the Lead Surveyor.
+        var isLeadSurveyor = surveyEntity.TblSurveyAssigneds.Any(s => s.EmployeeId == request.EmployeeId && s.IsLead);
+        var canEditForm = isEditableStatus && isLeadSurveyor && surveyEntity.SurveyType == SurveyTypes.Branch;
+
         return new SurveyResponse
         {
             Id = surveyEntity.Id,
@@ -48,8 +77,11 @@ internal sealed class GetSurveyByIdQueryHandler(QubeFinDataContext context) : IR
             Status = surveyEntity.Status,
             SurveyFormAttached = surveyEntity.SurveyFormAttached,
             BranchOrganizationUnitId = surveyEntity.BranchOrganizationUnitId,
+            BranchName = branchName,
             PreviousSurveyId = surveyEntity.PreviousSurveyId,
             IsSurveyAccessed = surveyEntity.TblSurveyAssigneds.Any(s => s.EmployeeId == request.EmployeeId),
+            CanEditGeneral = canEditGeneral,
+            CanEditForm = canEditForm,
             AuditInfo = new AuditInfo
             {
                 CreatedBy = users.FirstOrDefault(u => u.Id == surveyEntity.CreatedBy)?.UserName ?? string.Empty,

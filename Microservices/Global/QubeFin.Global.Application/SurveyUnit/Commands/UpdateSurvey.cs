@@ -11,7 +11,7 @@ namespace QubeFin.Global.Application.SurveyUnit.Commands;
 
 
 #region --- COMMAND ---
-public record UpdateSurveyCommand(SurveyRequest SurveyRequest, Guid userId) : IRequest<Result<string>>;
+public record UpdateSurveyCommand(SurveyRequest SurveyRequest, Guid userId, Guid employeeId) : IRequest<Result<string>>;
 #endregion
 
 #region --- VALIDATION ---
@@ -48,10 +48,28 @@ internal sealed class UpdateSurveyCommandHandler(
         if (survey.Status != SurveyStatuses.Assigned && survey.Status != SurveyStatuses.Draft)
             return new ValidationError("The survey cannot be edited after it is submitted.");
 
-        // A Survey Committee member cannot also be a surveyor.
         var assignedEmployeeIds = surveyRequest.SurveyAssigneds.Select(x => x.EmployeeId).ToList();
-        if (await surveyCommitteeRepository.AnyActiveMemberAsync(assignedEmployeeIds))
-            return new ValidationError("A Survey Committee member cannot be assigned as a surveyor.");
+        if (survey.SurveyType == SurveyTypes.Group)
+        {
+            // Only the person in charge of the survey's branch can change a Group Survey.
+            var branch = await surveyRepository.GetInchargeBranchAsync(request.employeeId);
+            if (branch is null || branch.Id != survey.BranchOrganizationUnitId)
+                return new ForbiddenError("Only the person in charge of the branch can edit this Group Survey.");
+
+            // Credit Officers who are already on the survey are not checked again.
+            var currentEmployeeIds = survey.SurveyAssigneds.Select(x => x.EmployeeId).ToHashSet();
+            var newEmployeeIds = assignedEmployeeIds.Where(id => !currentEmployeeIds.Contains(id)).ToList();
+            var problem = await GroupSurveyRules.CheckCreditOfficersAsync(
+                surveyRepository, surveyCommitteeRepository, branch.Id, request.employeeId, newEmployeeIds);
+            if (problem is not null)
+                return new ValidationError(problem);
+        }
+        else
+        {
+            // A Survey Committee member cannot also be a surveyor.
+            if (await surveyCommitteeRepository.AnyActiveMemberAsync(assignedEmployeeIds))
+                return new ValidationError("A Survey Committee member cannot be assigned as a surveyor.");
+        }
 
         // Employees already assigned keep their original "assigned by" and date. Only new ones get the current user.
         var surveyAssigneds = new List<SurveyAssigned>();

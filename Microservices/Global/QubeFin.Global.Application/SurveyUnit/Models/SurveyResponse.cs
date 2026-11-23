@@ -17,8 +17,14 @@ namespace QubeFin.Global.Application.SurveyUnit.Models
         public string Status { get; set; } = string.Empty;
         public bool SurveyFormAttached { get; set; }
         public Guid? BranchOrganizationUnitId { get; set; }
+        // Group Survey only.
+        public string? BranchName { get; set; }
         public Guid? PreviousSurveyId { get; set; }
         public bool IsSurveyAccessed { get; set; }
+        // True only for the Committee Lead who created the survey, until the Lead Surveyor submits it.
+        public bool CanEditGeneral { get; set; }
+        // True only for the Lead Surveyor of a Branch Survey, until the survey is submitted.
+        public bool CanEditForm { get; set; }
         public AuditInfo? AuditInfo { get; set; } = new AuditInfo();
         public List<SurveyAssignedResponse> SurveyAssigneds { get; set; } = new List<SurveyAssignedResponse>();
     }

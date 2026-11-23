@@ -26,6 +26,11 @@ public static class DependencyInjection
         services.AddScoped<IBankRepository, BankRepository>();
         services.AddScoped<ISurveyCommitteeRepository, SurveyCommitteeRepository>();
         services.AddScoped<ISurveyRepository, SurveyRepository>();
+        services.AddScoped<IBranchSurveyRepository, BranchSurveyRepository>();
+        services.AddScoped<ISurveyDocumentRepository, SurveyDocumentRepository>();
+        services.AddScoped<ISurveyEvaluationRepository, SurveyEvaluationRepository>();
+        services.AddScoped<ISurveyApprovalRepository, SurveyApprovalRepository>();
+        services.AddScoped<IFileStorageRepository, FileStorageRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
         return services;
     }

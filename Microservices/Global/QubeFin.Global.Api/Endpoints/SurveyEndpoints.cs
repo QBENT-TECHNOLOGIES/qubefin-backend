@@ -24,10 +24,31 @@ namespace QubeFin.Global.Api.Endpoints
             .WithTags("Surveys")
             .RequireAuthorization();
 
-            app.MapGet("surveys/{id:guid}", async (Guid id, ClaimsPrincipal principal, ISender sender) =>
+            app.MapGet("surveys/can-create", async (ClaimsPrincipal principal, ISender sender) =>
             {
                 var employeeId = principal.Identity.GetEmployeeId();
-                var result = await sender.Send(new GetSurveyByIdQuery(id, employeeId));
+                var result = await sender.Send(new CanCreateSurveyQuery(employeeId));
+                return result.ToHttpResult();
+            })
+            .WithSummary("Can The Current User Create A Survey")
+            .WithTags("Surveys")
+            .RequireAuthorization();
+
+            app.MapGet("surveys/credit-officers", async (ClaimsPrincipal principal, ISender sender) =>
+            {
+                var employeeId = principal.Identity.GetEmployeeId();
+                var result = await sender.Send(new GetCreditOfficersQuery(employeeId));
+                return result.ToHttpResult();
+            })
+            .WithSummary("Credit Officers Who Can Be Assigned To A Group Survey Of My Branch")
+            .WithTags("Surveys")
+            .RequireAuthorization();
+
+            app.MapGet("surveys/{id:guid}",async (Guid id, ClaimsPrincipal principal, ISender sender) =>
+            {
+                var employeeId = principal.Identity.GetEmployeeId();
+                var userId = principal.Identity.GetUserId();
+                var result = await sender.Send(new GetSurveyByIdQuery(id, employeeId, userId));
                 return result.ToHttpResult();
             })
             .WithSummary("Get Survey By Id")
@@ -60,7 +81,7 @@ namespace QubeFin.Global.Api.Endpoints
                 }
                 var userId = principal.Identity.GetUserId();
 
-                var command = new UpdateSurveyCommand(request, userId);
+                var command = new UpdateSurveyCommand(request, userId, principal.Identity.GetEmployeeId());
                 var result = await sender.Send(command);
                 return result.ToHttpResult();
             })

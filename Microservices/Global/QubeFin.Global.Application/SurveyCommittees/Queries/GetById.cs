@@ -28,7 +28,7 @@ internal sealed class GetByIdQueryHandler(QubeFinDataContext context) : IRequest
 {
     public async Task<Result<SurveyCommitteeMemberResponse>> Handle(GetByIdQuery request, CancellationToken cancellationToken)
     {
-        var SurveyCommitteeMember = await context.TblSurveyCommittees.Include(m => m.Employee).AsNoTracking().FirstOrDefaultAsync(m => m.Id == request.Id, cancellationToken: cancellationToken);
+        var SurveyCommitteeMember = await context.TblSurveyCommittees.Include(m => m.Employee).Include(m => m.CreatedByNavigation).Include(m => m.LastModifiedByNavigation).AsNoTracking().FirstOrDefaultAsync(m => m.Id == request.Id, cancellationToken: cancellationToken);
 
         if (SurveyCommitteeMember is null)
         {
@@ -45,9 +45,9 @@ internal sealed class GetByIdQueryHandler(QubeFinDataContext context) : IRequest
             AssignedTo = SurveyCommitteeMember.AssignedTo,
             AuditInfo = new AuditInfo
             {
-                CreatedBy = SurveyCommitteeMember.CreatedBy.ToString(),
+                CreatedBy = SurveyCommitteeMember.CreatedByNavigation.UserName,
                 CreatedOn = SurveyCommitteeMember.CreatedOn,
-                LastModifiedBy = SurveyCommitteeMember.LastModifiedBy != null ? SurveyCommitteeMember.LastModifiedBy.ToString() : null,
+                LastModifiedBy = SurveyCommitteeMember.LastModifiedByNavigation != null ? SurveyCommitteeMember.LastModifiedByNavigation.UserName : null,
                 LastModifiedOn = SurveyCommitteeMember.LastModifiedOn
             }
         };

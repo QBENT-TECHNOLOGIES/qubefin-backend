@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AWSSDK.S3" Version="4.0.101.7" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\..\Shared\QubeFin.Core\QubeFin.Core.csproj" />
     <ProjectReference Include="..\..\..\Shared\QubeFin.Persistence\QubeFin.Persistence.csproj" />
   </ItemGroup>

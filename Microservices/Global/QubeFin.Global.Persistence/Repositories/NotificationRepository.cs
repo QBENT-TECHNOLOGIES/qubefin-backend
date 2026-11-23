@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using QubeFin.Persistence;
+using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Mappers.Global;
 using QubeFin.Persistence.Models.Global;
 
@@ -11,6 +12,7 @@ namespace QubeFin.Global.Persistence.Repositories
         Task<bool> MarkAsReadAsync(Guid id);
         Task<bool> MarkAllReadAsync(Guid employeeId);
         Task<int> GetCountAsync(Guid employeeId);
+        Task AddForEmployeesAsync(IEnumerable<Guid> employeeIds, string title, string message, string icon, Guid referenceId, string referenceType, string actionUrl, Guid createdBy);
     }
     public class NotificationRepository(QubeFinDataContext context) : INotificationRepository
     {
@@ -63,6 +65,37 @@ namespace QubeFin.Global.Persistence.Repositories
             await context.SaveChangesAsync();
             return true;
         }
+        // Notifications belong to a designation, so each employee is mapped to the designation he or she holds now.
+        // An employee without a current designation gets no notification. The caller saves the changes.
+        public async Task AddForEmployeesAsync(IEnumerable<Guid> employeeIds, string title, string message, string icon, Guid referenceId, string referenceType, string actionUrl, Guid createdBy)
+        {
+            var employeeIdList = employeeIds.ToList();
+            var designationIds = await context.TblEmployeeDesignations.AsNoTracking()
+                .Where(ed => employeeIdList.Contains(ed.EmployeeId) && ed.EffectiveTo == null)
+                .Select(ed => ed.DesignationId)
+                .Distinct()
+                .ToListAsync();
+
+            foreach (var designationId in designationIds)
+            {
+                await context.TblNotifications.AddAsync(new TblNotification
+                {
+                    Id = Guid.NewGuid(),
+                    DesignationId = designationId,
+                    Title = title,
+                    Icon = icon,
+                    Message = message,
+                    NotificationType = "info",
+                    ReferenceId = referenceId,
+                    ReferenceType = referenceType,
+                    ActionUrl = actionUrl,
+                    IsRead = false,
+                    CreatedBy = createdBy,
+                    CreatedOn = DateTime.Now
+                });
+            }
+        }
+
         public async Task<int> GetCountAsync(Guid employeeId)
         {
             var employeeDesignationId = context.TblEmployeeDesignations

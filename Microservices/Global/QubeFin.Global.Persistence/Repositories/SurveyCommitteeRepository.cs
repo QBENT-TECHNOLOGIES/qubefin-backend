@@ -15,6 +15,10 @@ namespace QubeFin.Global.Persistence.Repositories
         Task<bool> IsActiveLeadAsync(Guid employeeId);
         Task<bool> AnyActiveMemberAsync(IEnumerable<Guid> employeeIds);
         Task<bool> IsSuperAdminAsync(Guid userId);
+        Task<List<Guid>> GetActiveMemberEmployeeIdsAsync();
+        Task<List<Guid>> GetRequiredEvaluatorEmployeeIdsAsync();
+        Task<bool> IsActiveEvaluatorAsync(Guid employeeId);
+        Task<List<Guid>> GetActiveLeadEmployeeIdsAsync();
     }
     public class SurveyCommitteeRepository(QubeFinDataContext context) : ISurveyCommitteeRepository
     {
@@ -44,6 +48,32 @@ namespace QubeFin.Global.Persistence.Repositories
         {
             var ids = employeeIds.ToList();
             return await context.TblSurveyCommittees.AsNoTracking().AnyAsync(x => x.IsActive && ids.Contains(x.EmployeeId));
+        }
+        public async Task<List<Guid>> GetActiveMemberEmployeeIdsAsync()
+        {
+            return await context.TblSurveyCommittees.AsNoTracking()
+                .Where(x => x.IsActive)
+                .Select(x => x.EmployeeId)
+                .ToListAsync();
+        }
+        // The members who must evaluate: active members who are not Leads (the Lead gives the final decision).
+        public async Task<List<Guid>> GetRequiredEvaluatorEmployeeIdsAsync()
+        {
+            return await context.TblSurveyCommittees.AsNoTracking()
+                .Where(x => x.IsActive && !x.IsLead)
+                .Select(x => x.EmployeeId)
+                .ToListAsync();
+        }
+        public async Task<bool> IsActiveEvaluatorAsync(Guid employeeId)
+        {
+            return await context.TblSurveyCommittees.AsNoTracking().AnyAsync(x => x.EmployeeId == employeeId && x.IsActive && !x.IsLead);
+        }
+        public async Task<List<Guid>> GetActiveLeadEmployeeIdsAsync()
+        {
+            return await context.TblSurveyCommittees.AsNoTracking()
+                .Where(x => x.IsActive && x.IsLead)
+                .Select(x => x.EmployeeId)
+                .ToListAsync();
         }
         public async Task<bool> IsSuperAdminAsync(Guid userId)
         {

@@ -13,7 +13,13 @@ namespace QubeFin.Global.Persistence.Repositories
         Task<Survey?> GetByIdAsync(Guid id);
         Task<string> GenerateAssignmentNoAsync(string surveyType, int year);
         Task<bool> IsAssignedToOpenSurveyAsync(Guid employeeId);
+        Task UpdateStatusAsync(Guid surveyId, string status, Guid modifiedBy);
+        Task<Guid?> GetCreatorEmployeeIdAsync(Guid surveyId);
+        Task<BranchInfo?> GetInchargeBranchAsync(Guid employeeId);
+        Task<List<CreditOfficerInfo>> GetCreditOfficersOfBranchAsync(Guid branchId);
     }
+    public record BranchInfo(Guid Id, string Name);
+    public record CreditOfficerInfo(Guid EmployeeId, string EmployeeName);
     public class SurveyRepository(QubeFinDataContext context) : ISurveyRepository
     {
         public async Task AddSurvey(Survey survey)
@@ -92,6 +98,54 @@ namespace QubeFin.Global.Persistence.Repositories
                 nextNumber = lastNumber + 1;
             }
             return $"{prefix}{nextNumber:D4}";
+        }
+
+        public async Task UpdateStatusAsync(Guid surveyId, string status, Guid modifiedBy)
+        {
+            var entity = await context.TblSurveys.FirstOrDefaultAsync(x => x.Id == surveyId);
+            if (entity == null)
+                throw new Exception("Survey not found.");
+
+            entity.Status = status;
+            entity.LastModifiedBy = modifiedBy;
+            entity.LastModifiedOn = DateTime.Now;
+        }
+
+        // The employee behind the user who created the survey (null if that user has no employee).
+        public async Task<Guid?> GetCreatorEmployeeIdAsync(Guid surveyId)
+        {
+            return await context.TblSurveys.AsNoTracking()
+                .Where(s => s.Id == surveyId)
+                .Join(context.TblUsers, s => s.CreatedBy, u => u.Id, (s, u) => u.EmployeeId)
+                .FirstOrDefaultAsync();
+        }
+
+        // The branch the employee is in charge of: his current, active designation has IsIncharge = true
+        // and belongs to an organization unit of type "Branch".
+        public async Task<BranchInfo?> GetInchargeBranchAsync(Guid employeeId)
+        {
+            return await context.TblEmployeeDesignations.AsNoTracking()
+                .Where(ed => ed.EmployeeId == employeeId
+                    && ed.EffectiveTo == null
+                    && ed.Designation.IsActive
+                    && ed.Designation.IsIncharge
+                    && ed.Designation.OrganizationUnit.OrganizationUnitType.Name == "Branch")
+                .Select(ed => new BranchInfo(ed.Designation.OrganizationUnitId, ed.Designation.OrganizationUnit.Name))
+                .FirstOrDefaultAsync();
+        }
+
+        // Employees whose current designation has the post "Credit Officer" at this branch.
+        public async Task<List<CreditOfficerInfo>> GetCreditOfficersOfBranchAsync(Guid branchId)
+        {
+            return await context.TblEmployeeDesignations.AsNoTracking()
+                .Where(ed => ed.EffectiveTo == null
+                    && ed.Designation.IsActive
+                    && ed.Designation.OrganizationUnitId == branchId
+                    && ed.Designation.Post.Name == "Credit Officer")
+                .Select(ed => new CreditOfficerInfo(ed.EmployeeId, ed.Employee.FullName + " (" + ed.Employee.Code + ")"))
+                .Distinct()
+                .OrderBy(x => x.EmployeeName)
+                .ToListAsync();
         }
 
         // "Open" means the survey is not finished yet (not Approved, Rejected or Branch Created).
