@@ -11,6 +11,8 @@ namespace QubeFin.Global.Persistence.Repositories
         Task AddSurvey(Survey survey);
         Task UpdateSurvey(Survey survey);
         Task<Survey?> GetByIdAsync(Guid id);
+        Task<string> GenerateAssignmentNoAsync(string surveyType, int year);
+        Task<bool> IsAssignedToOpenSurveyAsync(Guid employeeId);
     }
     public class SurveyRepository(QubeFinDataContext context) : ISurveyRepository
     {
@@ -28,11 +30,12 @@ namespace QubeFin.Global.Persistence.Repositories
                 throw new Exception("Survey not found.");
 
             // Update parent
-            entity.SurveyType = survey.SurveyType;
             entity.AssignmentDate = survey.AssignmentDate;
             entity.ProposedArea = survey.ProposedArea;
             entity.AdministrativeUnitId = survey.AdministrativeUnitId;
             entity.TentativeSubmissionDate = survey.TentativeSubmissionDate;
+            entity.SurveyFormAttached = survey.SurveyFormAttached;
+            entity.BranchOrganizationUnitId = survey.BranchOrganizationUnitId;
             entity.LastModifiedBy = survey.LastModifiedBy;
             entity.LastModifiedOn = survey.LastModifiedOn;
 
@@ -57,11 +60,9 @@ namespace QubeFin.Global.Persistence.Repositories
                 }
                 else
                 {
-                    // Existing assignment
+                    // Existing assignment: AssignedBy and AssignedDate stay as they were
                     existing.EmployeeId = assignment.EmployeeId;
                     existing.IsLead = assignment.IsLead;
-                    existing.AssignedBy = assignment.AssignedBy;
-                    existing.AssignedDate = assignment.AssignedDate;
                 }
             }
         }
@@ -70,6 +71,35 @@ namespace QubeFin.Global.Persistence.Repositories
         {
             var entity = await context.TblSurveys.Include(m => m.TblSurveyAssigneds).AsNoTracking().FirstOrDefaultAsync(m => m.Id == id);
             return entity?.ToDomain();
+        }
+
+        // Format: BS-2026-0001 (Branch Survey) or GS-2026-0001 (Group Survey). The number restarts every year.
+        public async Task<string> GenerateAssignmentNoAsync(string surveyType, int year)
+        {
+            string typeCode = surveyType == SurveyTypes.Branch ? "BS" : "GS";
+            string prefix = $"{typeCode}-{year}-";
+
+            // The running number is zero-padded to 4 digits, so the highest text is also the highest number.
+            var lastAssignmentNo = await context.TblSurveys
+                .Where(s => s.AssignmentNo.StartsWith(prefix))
+                .OrderByDescending(s => s.AssignmentNo)
+                .Select(s => s.AssignmentNo)
+                .FirstOrDefaultAsync();
+
+            int nextNumber = 1;
+            if (lastAssignmentNo != null && int.TryParse(lastAssignmentNo.Substring(prefix.Length), out int lastNumber))
+            {
+                nextNumber = lastNumber + 1;
+            }
+            return $"{prefix}{nextNumber:D4}";
+        }
+
+        // "Open" means the survey is not finished yet (not Approved, Rejected or Branch Created).
+        public async Task<bool> IsAssignedToOpenSurveyAsync(Guid employeeId)
+        {
+            var closedStatuses = new[] { SurveyStatuses.Approved, SurveyStatuses.Rejected, SurveyStatuses.BranchCreated };
+            return await context.TblSurveyAssigneds.AsNoTracking()
+                .AnyAsync(a => a.EmployeeId == employeeId && !closedStatuses.Contains(a.Survey.Status));
         }
     }
 }

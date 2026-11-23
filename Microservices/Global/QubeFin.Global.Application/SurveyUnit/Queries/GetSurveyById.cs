@@ -45,6 +45,10 @@ internal sealed class GetSurveyByIdQueryHandler(QubeFinDataContext context) : IR
             ProposedArea = surveyEntity.ProposedArea,
             AdministrativeUnitId = surveyEntity.AdministrativeUnitId,
             TentativeSubmissionDate = surveyEntity.TentativeSubmissionDate,
+            Status = surveyEntity.Status,
+            SurveyFormAttached = surveyEntity.SurveyFormAttached,
+            BranchOrganizationUnitId = surveyEntity.BranchOrganizationUnitId,
+            PreviousSurveyId = surveyEntity.PreviousSurveyId,
             IsSurveyAccessed = surveyEntity.TblSurveyAssigneds.Any(s => s.EmployeeId == request.EmployeeId),
             AuditInfo = new AuditInfo
             {

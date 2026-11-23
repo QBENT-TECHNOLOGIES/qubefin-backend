@@ -10,37 +10,20 @@
         public string ProposedArea { get; private set; } = string.Empty;
         public Guid AdministrativeUnitId { get; private set; }
         public DateOnly TentativeSubmissionDate { get; private set; }
+        public string Status { get; private set; } = SurveyStatuses.Assigned;
+        public bool SurveyFormAttached { get; private set; }
+        // Only used by Group Survey: the branch the survey belongs to.
+        public Guid? BranchOrganizationUnitId { get; private set; }
+        // Set when a rejected survey is created again.
+        public Guid? PreviousSurveyId { get; private set; }
         public Guid CreatedBy { get; private set; }
         public DateTime CreatedOn { get; private set; }
         public Guid? LastModifiedBy { get; private set; }
         public DateTime? LastModifiedOn { get; private set; }
         public IReadOnlyCollection<SurveyAssigned> SurveyAssigneds => _surveyAssigneds;
         private Survey() { }
-        public Survey
-            (
-                Guid id,
-                string surveyType,
-                DateOnly assignmentDate,
-                string proposedArea,
-                Guid administrativeUnitId,
-                DateOnly tentativeSubmissionDate,
-                Guid createdBy,
-                List<SurveyAssigned> surveyAssigneds
-            )
-        {
-            Id = id;
-            SurveyType = surveyType;
-            AssignmentDate = assignmentDate;
-            ProposedArea = proposedArea;
-            AdministrativeUnitId = administrativeUnitId;
-            TentativeSubmissionDate = tentativeSubmissionDate;
-            CreatedBy = createdBy;
-            LastModifiedBy = createdBy;
-            if (surveyAssigneds != null && surveyAssigneds.Any())
-            {
-                _surveyAssigneds.AddRange(surveyAssigneds);
-            }
-        }
+
+        // Used when a survey is loaded from the database.
         public Survey
             (
                 Guid id,
@@ -50,6 +33,10 @@
                 string proposedArea,
                 Guid administrativeUnitId,
                 DateOnly tentativeSubmissionDate,
+                string status,
+                bool surveyFormAttached,
+                Guid? branchOrganizationUnitId,
+                Guid? previousSurveyId,
                 Guid createdBy,
                 DateTime createdOn,
                 Guid? lastModifiedBy,
@@ -64,6 +51,10 @@
             ProposedArea = proposedArea;
             AdministrativeUnitId = administrativeUnitId;
             TentativeSubmissionDate = tentativeSubmissionDate;
+            Status = status;
+            SurveyFormAttached = surveyFormAttached;
+            BranchOrganizationUnitId = branchOrganizationUnitId;
+            PreviousSurveyId = previousSurveyId;
             CreatedBy = createdBy;
             CreatedOn = createdOn;
             LastModifiedBy = lastModifiedBy;
@@ -73,11 +64,62 @@
                 _surveyAssigneds.AddRange(surveyAssigneds);
             }
         }
-        public static Survey Create(Guid id, string surveyType, DateOnly assignmentDate, string proposedArea, Guid administrativeUnitId, DateOnly tentativeSubmissionDate, IEnumerable<SurveyAssigned> surveyAssigneds, Guid createdBy)
+
+        public static Survey Create(
+            Guid id,
+            string surveyType,
+            string assignmentNo,
+            DateOnly assignmentDate,
+            string proposedArea,
+            Guid administrativeUnitId,
+            DateOnly tentativeSubmissionDate,
+            bool surveyFormAttached,
+            Guid? branchOrganizationUnitId,
+            Guid? previousSurveyId,
+            IEnumerable<SurveyAssigned> surveyAssigneds,
+            Guid createdBy)
         {
-            var survey = new Survey(id, surveyType, assignmentDate, proposedArea, administrativeUnitId, tentativeSubmissionDate, createdBy, surveyAssigneds.ToList());
-            survey.AssignmentNo = new Random().Next(100000, 999999).ToString();
+            var survey = new Survey
+            {
+                Id = id,
+                SurveyType = surveyType,
+                AssignmentNo = assignmentNo,
+                AssignmentDate = assignmentDate,
+                ProposedArea = proposedArea,
+                AdministrativeUnitId = administrativeUnitId,
+                TentativeSubmissionDate = tentativeSubmissionDate,
+                Status = SurveyStatuses.Assigned,
+                SurveyFormAttached = surveyFormAttached,
+                BranchOrganizationUnitId = branchOrganizationUnitId,
+                PreviousSurveyId = previousSurveyId,
+                CreatedBy = createdBy,
+                CreatedOn = DateTime.Now
+            };
+            survey._surveyAssigneds.AddRange(surveyAssigneds);
             return survey;
+        }
+
+        // Survey type, assignment number and status are not changed here.
+        public void Update(
+            DateOnly assignmentDate,
+            string proposedArea,
+            Guid administrativeUnitId,
+            DateOnly tentativeSubmissionDate,
+            bool surveyFormAttached,
+            Guid? branchOrganizationUnitId,
+            IEnumerable<SurveyAssigned> surveyAssigneds,
+            Guid modifiedBy)
+        {
+            AssignmentDate = assignmentDate;
+            ProposedArea = proposedArea;
+            AdministrativeUnitId = administrativeUnitId;
+            TentativeSubmissionDate = tentativeSubmissionDate;
+            SurveyFormAttached = surveyFormAttached;
+            BranchOrganizationUnitId = branchOrganizationUnitId;
+            LastModifiedBy = modifiedBy;
+            LastModifiedOn = DateTime.Now;
+            _surveyAssigneds.Clear();
+            _surveyAssigneds.AddRange(surveyAssigneds);
         }
     }
 }

@@ -12,6 +12,11 @@ namespace QubeFin.Global.Application.SurveyUnit.Models
         public string ProposedArea { get; set; } = string.Empty;
         public Guid AdministrativeUnitId { get; set; }
         public DateOnly TentativeSubmissionDate { get; set; }
+        public bool SurveyFormAttached { get; set; }
+        // Group Survey only.
+        public Guid? BranchOrganizationUnitId { get; set; }
+        // Set when a rejected survey is created again.
+        public Guid? PreviousSurveyId { get; set; }
         public List<SurveyAssignedRequest> SurveyAssigneds { get; set; } = new List<SurveyAssignedRequest>();
     }
     public class SurveyAssignedRequest

@@ -24,15 +24,23 @@ public class AddMemberCommandValidator : AbstractValidator<AddMemberCommand>
 #endregion
 
 #region --- HANDLER ---
-internal sealed class AddMemberCommandHandler(ISurveyCommitteeRepository surveyCommitteeRepository, IUnitOfWork unitOfWork) : 
+internal sealed class AddMemberCommandHandler(ISurveyCommitteeRepository surveyCommitteeRepository, ISurveyRepository surveyRepository, IUnitOfWork unitOfWork) :
     IRequestHandler<AddMemberCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(AddMemberCommand request, CancellationToken cancellationToken)
     {
         DateOnly toDay = DateOnly.FromDateTime(DateTime.UtcNow);
 
+        // Only the super admin can manage the committee.
+        if (!await surveyCommitteeRepository.IsSuperAdminAsync(request.UserId))
+            return new ForbiddenError("Only the super admin can manage the Survey Committee.");
+
         var duplicateMember = await surveyCommitteeRepository.ExistsByEmployeeIdAsync(request.member.EmployeeId);
         if (duplicateMember) return new ValidationError("This member is already in survey committee.");
+
+        // An employee who is assigned to an open survey as a surveyor cannot join the committee.
+        if (await surveyRepository.IsAssignedToOpenSurveyAsync(request.member.EmployeeId))
+            return new ValidationError("This employee is assigned to an open survey and cannot join the committee.");
 
         var surveyCommitte = SurveyCommittee.Create(Guid.NewGuid(), request.member.EmployeeId, request.member.IsLead, toDay, request.UserId);
 

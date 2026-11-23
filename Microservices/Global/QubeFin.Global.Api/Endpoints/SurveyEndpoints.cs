@@ -42,7 +42,9 @@ namespace QubeFin.Global.Api.Endpoints
                 }
                 var userId = principal.Identity.GetUserId();
 
-                var command = new CreateSurveyCommand(request, userId);
+                var employeeId = principal.Identity.GetEmployeeId();
+
+                var command = new CreateSurveyCommand(request, userId, employeeId);
                 var result = await sender.Send(command);
                 return result.ToHttpResult();
             })

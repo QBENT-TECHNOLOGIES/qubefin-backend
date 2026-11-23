@@ -24,13 +24,26 @@ public class UpdateMemberCommandValidator : AbstractValidator<UpdateMemberComman
 #endregion
 
 #region --- HANDLER ---
-internal sealed class UpdateMemberCommandHandler(ISurveyCommitteeRepository surveyCommitteeRepository, IUnitOfWork unitOfWork) : 
+internal sealed class UpdateMemberCommandHandler(ISurveyCommitteeRepository surveyCommitteeRepository, ISurveyRepository surveyRepository, IUnitOfWork unitOfWork) :
     IRequestHandler<UpdateMemberCommand, Result<string>>
 {
     public async Task<Result<string>> Handle(UpdateMemberCommand request, CancellationToken cancellationToken)
     {
+        // Only the super admin can manage the committee.
+        if (!await surveyCommitteeRepository.IsSuperAdminAsync(request.UserId))
+            return new ForbiddenError("Only the super admin can manage the Survey Committee.");
+
         var existingSurveyCommitteeMember = await surveyCommitteeRepository.GetByIdAsync(request.member.Id);
         if (existingSurveyCommitteeMember is null) return new RecordNotFoundError("Member not found");
+
+        // Making a former member active again follows the same rules as adding a new member.
+        if (!existingSurveyCommitteeMember.IsActive && request.member.IsActive)
+        {
+            if (await surveyCommitteeRepository.ExistsByEmployeeIdAsync(existingSurveyCommitteeMember.EmployeeId))
+                return new ValidationError("This member is already in survey committee.");
+            if (await surveyRepository.IsAssignedToOpenSurveyAsync(existingSurveyCommitteeMember.EmployeeId))
+                return new ValidationError("This employee is assigned to an open survey and cannot join the committee.");
+        }
 
         existingSurveyCommitteeMember.Update(
             isActive: request.member.IsActive, 

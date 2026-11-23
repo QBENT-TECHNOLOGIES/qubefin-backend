@@ -41,7 +41,7 @@
         }
         public static SurveyCommittee Create(Guid id, Guid employeeId, bool isLead, DateOnly assignedFrom, Guid createdBy)
         {
-            var salaryComponent = new SurveyCommittee
+            var surveyCommittee = new SurveyCommittee
             {
                 Id = id,
                 EmployeeId = employeeId,
@@ -51,7 +51,7 @@
                 CreatedBy = createdBy,
                 CreatedOn = DateTime.Now,
             };
-            return salaryComponent;
+            return surveyCommittee;
         }
         public void Update(bool isLead, bool isActive, DateOnly? assignedTo, Guid? lastModifiedBy)
         {
