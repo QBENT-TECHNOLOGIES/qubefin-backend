@@ -3210,10 +3210,19 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
             entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
 
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.TblSurveyCommitteeCreatedByNavigations)
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_SurveyCommittee_Tbl_User");
+
             entity.HasOne(d => d.Employee).WithMany(p => p.TblSurveyCommittees)
                 .HasForeignKey(d => d.EmployeeId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_SurveyCommittee_Tbl_Employee");
+
+            entity.HasOne(d => d.LastModifiedByNavigation).WithMany(p => p.TblSurveyCommitteeLastModifiedByNavigations)
+                .HasForeignKey(d => d.LastModifiedBy)
+                .HasConstraintName("FK_Tbl_SurveyCommittee_Tbl_User1");
         });
 
         modelBuilder.Entity<TblSurveyCommitteeEvaluation>(entity =>

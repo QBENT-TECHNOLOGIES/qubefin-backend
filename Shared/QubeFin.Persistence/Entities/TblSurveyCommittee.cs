@@ -25,5 +25,9 @@ public partial class TblSurveyCommittee
 
     public DateTime? LastModifiedOn { get; set; }
 
+    public virtual TblUser CreatedByNavigation { get; set; } = null!;
+
     public virtual TblEmployee Employee { get; set; } = null!;
+
+    public virtual TblUser? LastModifiedByNavigation { get; set; }
 }

@@ -113,6 +113,10 @@ public partial class TblUser
 
     public virtual ICollection<TblRole> TblRoleLastModifiedByNavigations { get; set; } = new List<TblRole>();
 
+    public virtual ICollection<TblSurveyCommittee> TblSurveyCommitteeCreatedByNavigations { get; set; } = new List<TblSurveyCommittee>();
+
+    public virtual ICollection<TblSurveyCommittee> TblSurveyCommitteeLastModifiedByNavigations { get; set; } = new List<TblSurveyCommittee>();
+
     public virtual ICollection<TblTrackingSetting> TblTrackingSettingCreatedByNavigations { get; set; } = new List<TblTrackingSetting>();
 
     public virtual ICollection<TblTrackingSetting> TblTrackingSettingModifiedByNavigations { get; set; } = new List<TblTrackingSetting>();
