@@ -46,6 +46,8 @@ namespace QubeFin.Persistence.Models.Global
         public const string PendingEvaluation = "PendingEvaluation";
         public const string EvaluationInProgress = "EvaluationInProgress";
         public const string PendingLeadEvaluation = "PendingLeadEvaluation";
+        // Group Survey: submitted by the Lead Credit Officer, waiting for the Head of Branch to recommend it.
+        public const string PendingRecommendation = "PendingRecommendation";
         public const string PendingApproval = "PendingApproval";
         public const string Approved = "Approved";
         public const string Rejected = "Rejected";

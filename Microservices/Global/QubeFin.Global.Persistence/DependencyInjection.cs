@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using QubeFin.Core.Security;
@@ -30,6 +30,8 @@ public static class DependencyInjection
         services.AddScoped<ISurveyDocumentRepository, SurveyDocumentRepository>();
         services.AddScoped<ISurveyEvaluationRepository, SurveyEvaluationRepository>();
         services.AddScoped<ISurveyApprovalRepository, SurveyApprovalRepository>();
+        services.AddScoped<IGroupSurveyRepository, GroupSurveyRepository>();
+        services.AddScoped<IGroupRepository, GroupRepository>();
         services.AddScoped<IFileStorageRepository, FileStorageRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
         return services;

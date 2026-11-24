@@ -25,6 +25,11 @@ namespace QubeFin.Global.Application.SurveyUnit.Models
         public bool CanEditGeneral { get; set; }
         // True only for the Lead Surveyor of a Branch Survey, until the survey is submitted.
         public bool CanEditForm { get; set; }
+        // Group Survey only: the group made from this survey (if any), and whether the user can create it now.
+        public Guid? GroupId { get; set; }
+        public string? GroupName { get; set; }
+        public string? GroupCode { get; set; }
+        public bool CanCreateGroup { get; set; }
         public AuditInfo? AuditInfo { get; set; } = new AuditInfo();
         public List<SurveyAssignedResponse> SurveyAssigneds { get; set; } = new List<SurveyAssignedResponse>();
     }

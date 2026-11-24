@@ -10,6 +10,8 @@ public interface IFileStorageRepository
 {
     Task<string> UploadFileAsync(Stream stream, string fileName, string folder, CancellationToken cancellationToken = default);
     Task<string> GetFileUrlAsync(string key, string folder);
+    // For files stored directly under WeGrow/ (employee documents such as the signature).
+    Task<string> GetRootFileUrlAsync(string key);
     Task DeleteFileAsync(string key, string folder, CancellationToken cancellationToken = default);
 }
 
@@ -44,6 +46,18 @@ public class FileStorageRepository(IConfiguration configuration) : IFileStorageR
         {
             BucketName = configuration["aws:bucket"],
             Key = BuildKey(folder, key),
+            Expires = DateTime.UtcNow.AddMinutes(30)
+        };
+        return Task.FromResult(client.GetPreSignedURL(request));
+    }
+
+    public Task<string> GetRootFileUrlAsync(string key)
+    {
+        using var client = CreateClient();
+        var request = new GetPreSignedUrlRequest
+        {
+            BucketName = configuration["aws:bucket"],
+            Key = $"{RootFolder}{key}",
             Expires = DateTime.UtcNow.AddMinutes(30)
         };
         return Task.FromResult(client.GetPreSignedURL(request));

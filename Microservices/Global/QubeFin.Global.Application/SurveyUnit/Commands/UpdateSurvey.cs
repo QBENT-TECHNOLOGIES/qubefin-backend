@@ -52,9 +52,9 @@ internal sealed class UpdateSurveyCommandHandler(
         if (survey.SurveyType == SurveyTypes.Group)
         {
             // Only the person in charge of the survey's branch can change a Group Survey.
-            var branch = await surveyRepository.GetInchargeBranchAsync(request.employeeId);
+            var branch = await surveyRepository.GetHeadBranchAsync(request.employeeId);
             if (branch is null || branch.Id != survey.BranchOrganizationUnitId)
-                return new ForbiddenError("Only the person in charge of the branch can edit this Group Survey.");
+                return new ForbiddenError("Only the Head of the branch can edit this Group Survey.");
 
             // Credit Officers who are already on the survey are not checked again.
             var currentEmployeeIds = survey.SurveyAssigneds.Select(x => x.EmployeeId).ToHashSet();

@@ -42,9 +42,9 @@ internal sealed class CreateSurveyCommandHandler(
         if (surveyRequest.SurveyType == SurveyTypes.Group)
         {
             // Only whoever is in charge of the branch can assign a Group Survey, and only for that branch.
-            var branch = await surveyRepository.GetInchargeBranchAsync(request.employeeId);
+            var branch = await surveyRepository.GetHeadBranchAsync(request.employeeId);
             if (branch is null)
-                return new ForbiddenError("Only the person in charge of a branch can create a Group Survey.");
+                return new ForbiddenError("Only the Head of a branch (the person in charge, or the Branch Manager when nobody is in charge) can create a Group Survey.");
             if (surveyRequest.BranchOrganizationUnitId != branch.Id)
                 return new ForbiddenError("A Group Survey can only be created for the branch you are in charge of.");
             branchId = branch.Id;

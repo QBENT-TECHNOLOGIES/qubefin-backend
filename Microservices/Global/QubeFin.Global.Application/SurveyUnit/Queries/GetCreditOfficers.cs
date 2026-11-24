@@ -22,7 +22,7 @@ internal sealed class GetCreditOfficersQueryHandler(
 {
     public async Task<Result<List<CreditOfficerResponse>>> Handle(GetCreditOfficersQuery request, CancellationToken cancellationToken)
     {
-        var branch = await surveyRepository.GetInchargeBranchAsync(request.EmployeeId);
+        var branch = await surveyRepository.GetHeadBranchAsync(request.EmployeeId);
         if (branch is null)
             return Result.Ok(new List<CreditOfficerResponse>());
 

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using QubeFin.Global.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Models.Global;
@@ -40,6 +41,9 @@ namespace QubeFin.Global.Application.SurveyUnit
         {
             if (survey.BranchOrganizationUnitId is null) return false;
             var branchId = survey.BranchOrganizationUnitId.Value;
+
+            // The approver (head of the unit above the branch) may not hold the Area Manager post, so he is checked directly.
+            if (await BranchHierarchy.IsApproverAsync(context, employeeId, branchId)) return true;
 
             // The branch and every unit above it (parent, grandparent ...).
             var chain = new List<Guid>();

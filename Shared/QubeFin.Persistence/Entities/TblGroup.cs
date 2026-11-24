@@ -58,9 +58,13 @@ public partial class TblGroup
 
     public DateTime? LastModifiedOn { get; set; }
 
+    public Guid? SurveyId { get; set; }
+
     public virtual TblAdministrativeUnit AdministrativeUnit { get; set; } = null!;
 
     public virtual TblDesignation? Designation { get; set; }
+
+    public virtual TblSurvey? Survey { get; set; }
 
     public virtual ICollection<TblLoanApplication> TblLoanApplications { get; set; } = new List<TblLoanApplication>();
 

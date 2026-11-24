@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
 using QubeFin.Global.Application.SurveyUnit.Models;
+using QubeFin.Global.Persistence.Repositories;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Models.Global;
 
@@ -24,7 +25,7 @@ public class GetSurveyByIdQueryValidator : AbstractValidator<GetSurveyByIdQuery>
 #endregion
 
 #region --- HANDLER ---
-internal sealed class GetSurveyByIdQueryHandler(QubeFinDataContext context) : IRequestHandler<GetSurveyByIdQuery, Result<SurveyResponse>>
+internal sealed class GetSurveyByIdQueryHandler(QubeFinDataContext context, ISurveyRepository surveyRepository) : IRequestHandler<GetSurveyByIdQuery, Result<SurveyResponse>>
 {
     public async Task<Result<SurveyResponse>> Handle(GetSurveyByIdQuery request, CancellationToken cancellationToken)
     {
@@ -43,12 +44,9 @@ internal sealed class GetSurveyByIdQueryHandler(QubeFinDataContext context) : IR
         string? branchName = null;
         if (surveyEntity.SurveyType == SurveyTypes.Group)
         {
-            // A Group Survey is edited by the person in charge of its branch (who created it).
+            // A Group Survey is edited by the Head of its branch (who created it).
             canCreatorEdit = surveyEntity.BranchOrganizationUnitId.HasValue
-                && await context.TblEmployeeDesignations.AnyAsync(ed =>
-                    ed.EmployeeId == request.EmployeeId && ed.EffectiveTo == null
-                    && ed.Designation.IsActive && ed.Designation.IsIncharge
-                    && ed.Designation.OrganizationUnitId == surveyEntity.BranchOrganizationUnitId, cancellationToken);
+                && await surveyRepository.IsHeadOfBranchAsync(request.EmployeeId, surveyEntity.BranchOrganizationUnitId.Value);
             branchName = surveyEntity.BranchOrganizationUnitId.HasValue
                 ? await context.TblOrganizationUnits.AsNoTracking()
                     .Where(o => o.Id == surveyEntity.BranchOrganizationUnitId).Select(o => o.Name).FirstOrDefaultAsync(cancellationToken)
@@ -61,12 +59,36 @@ internal sealed class GetSurveyByIdQueryHandler(QubeFinDataContext context) : IR
         }
         var canEditGeneral = isEditableStatus && canCreatorEdit && surveyEntity.CreatedBy == request.UserId;
 
-        // The survey form is filled in by the Lead Surveyor.
+        // The survey form is filled in by the Lead Surveyor (Branch Survey) or the Lead Credit Officer (Group Survey).
         var isLeadSurveyor = surveyEntity.TblSurveyAssigneds.Any(s => s.EmployeeId == request.EmployeeId && s.IsLead);
-        var canEditForm = isEditableStatus && isLeadSurveyor && surveyEntity.SurveyType == SurveyTypes.Branch;
+        var canEditForm = isEditableStatus && isLeadSurveyor;
+
+        // Group Survey: once Approved, a group is created from it (Group Master). Show the group, or the right to create it.
+        Guid? groupId = null;
+        string? groupName = null, groupCode = null;
+        var canCreateGroup = false;
+        if (surveyEntity.SurveyType == SurveyTypes.Group)
+        {
+            var group = await context.TblGroups.AsNoTracking()
+                .Where(g => g.SurveyId == surveyEntity.Id)
+                .Select(g => new { g.Id, g.Name, g.Code })
+                .FirstOrDefaultAsync(cancellationToken);
+            groupId = group?.Id;
+            groupName = group?.Name;
+            groupCode = group?.Code;
+
+            // Only the Credit Officers of the survey create the group (not the Head of the branch).
+            canCreateGroup = group is null
+                && surveyEntity.Status == SurveyStatuses.Approved
+                && surveyEntity.TblSurveyAssigneds.Any(s => s.EmployeeId == request.EmployeeId);
+        }
 
         return new SurveyResponse
         {
+            GroupId = groupId,
+            GroupName = groupName,
+            GroupCode = groupCode,
+            CanCreateGroup = canCreateGroup,
             Id = surveyEntity.Id,
             SurveyType = surveyEntity.SurveyType,
             AssignmentNo = surveyEntity.AssignmentNo,

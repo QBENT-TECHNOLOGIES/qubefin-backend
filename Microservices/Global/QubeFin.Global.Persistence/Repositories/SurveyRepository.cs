@@ -15,7 +15,11 @@ namespace QubeFin.Global.Persistence.Repositories
         Task<bool> IsAssignedToOpenSurveyAsync(Guid employeeId);
         Task UpdateStatusAsync(Guid surveyId, string status, Guid modifiedBy);
         Task<Guid?> GetCreatorEmployeeIdAsync(Guid surveyId);
-        Task<BranchInfo?> GetInchargeBranchAsync(Guid employeeId);
+        Task<BranchInfo?> GetHeadBranchAsync(Guid employeeId);
+        Task<bool> IsHeadOfBranchAsync(Guid employeeId, Guid branchId);
+        Task<List<Guid>> GetHeadEmployeeIdsOfBranchAsync(Guid branchId);
+        Task<List<Guid>> GetApproverEmployeeIdsOfBranchAsync(Guid branchId);
+        Task<bool> IsApproverOfBranchAsync(Guid employeeId, Guid branchId);
         Task<List<CreditOfficerInfo>> GetCreditOfficersOfBranchAsync(Guid branchId);
         Task SetBranchCreatedAsync(Guid surveyId, Guid branchOrganizationUnitId, Guid modifiedBy);
     }
@@ -134,32 +138,79 @@ namespace QubeFin.Global.Persistence.Repositories
             entity.LastModifiedOn = DateTime.Now;
         }
 
-        // The branch the employee is in charge of: his current, active designation has IsIncharge = true
-        // and belongs to an organization unit of type "Branch".
-        public async Task<BranchInfo?> GetInchargeBranchAsync(Guid employeeId)
+        // The Head of Branch: the person in charge of the branch (current, active designation with IsIncharge = true).
+        // If nobody is in charge, the Branch Manager of the branch is the head. The head creates the Group Survey and recommends it.
+        private IQueryable<TblEmployeeDesignation> HeadDesignations(Guid employeeId)
         {
-            return await context.TblEmployeeDesignations.AsNoTracking()
+            return context.TblEmployeeDesignations.AsNoTracking()
                 .Where(ed => ed.EmployeeId == employeeId
                     && ed.EffectiveTo == null
                     && ed.Designation.IsActive
-                    && ed.Designation.IsIncharge
-                    && ed.Designation.OrganizationUnit.OrganizationUnitType.Name == "Branch")
+                    && ed.Designation.OrganizationUnit.OrganizationUnitType.Name == "Branch"
+                    && (ed.Designation.IsIncharge
+                        || (ed.Designation.Post.Name == "Branch Manager"
+                            && !context.TblEmployeeDesignations.Any(x => x.EffectiveTo == null
+                                && x.Designation.IsActive
+                                && x.Designation.IsIncharge
+                                && x.Designation.OrganizationUnitId == ed.Designation.OrganizationUnitId))));
+        }
+
+        public async Task<BranchInfo?> GetHeadBranchAsync(Guid employeeId)
+        {
+            return await HeadDesignations(employeeId)
                 .Select(ed => new BranchInfo(ed.Designation.OrganizationUnitId, ed.Designation.OrganizationUnit.Name))
                 .FirstOrDefaultAsync();
+        }
+
+        // Everyone who is Head of this branch (normally one person).
+        public async Task<List<Guid>> GetHeadEmployeeIdsOfBranchAsync(Guid branchId)
+        {
+            var inCharge = await context.TblEmployeeDesignations.AsNoTracking()
+                .Where(ed => ed.EffectiveTo == null && ed.Designation.IsActive && ed.Designation.IsIncharge
+                    && ed.Designation.OrganizationUnitId == branchId)
+                .Select(ed => ed.EmployeeId).Distinct().ToListAsync();
+            if (inCharge.Count > 0)
+                return inCharge;
+
+            return await context.TblEmployeeDesignations.AsNoTracking()
+                .Where(ed => ed.EffectiveTo == null && ed.Designation.IsActive && ed.Designation.Post.Name == "Branch Manager"
+                    && ed.Designation.OrganizationUnitId == branchId)
+                .Select(ed => ed.EmployeeId).Distinct().ToListAsync();
+        }
+
+        // The Area Manager side: the head of the unit above the branch (see BranchHierarchy).
+        public Task<List<Guid>> GetApproverEmployeeIdsOfBranchAsync(Guid branchId)
+        {
+            return BranchHierarchy.GetApproverEmployeeIdsAsync(context, branchId);
+        }
+
+        public Task<bool> IsApproverOfBranchAsync(Guid employeeId, Guid branchId)
+        {
+            return BranchHierarchy.IsApproverAsync(context, employeeId, branchId);
+        }
+
+        public async Task<bool> IsHeadOfBranchAsync(Guid employeeId, Guid branchId)
+        {
+            return await HeadDesignations(employeeId).AnyAsync(ed => ed.Designation.OrganizationUnitId == branchId);
         }
 
         // Employees whose current designation has the post "Credit Officer" at this branch.
         public async Task<List<CreditOfficerInfo>> GetCreditOfficersOfBranchAsync(Guid branchId)
         {
-            return await context.TblEmployeeDesignations.AsNoTracking()
+            var rows = await context.TblEmployeeDesignations.AsNoTracking()
                 .Where(ed => ed.EffectiveTo == null
                     && ed.Designation.IsActive
                     && ed.Designation.OrganizationUnitId == branchId
                     && ed.Designation.Post.Name == "Credit Officer")
-                .Select(ed => new CreditOfficerInfo(ed.EmployeeId, ed.Employee.FullName + " (" + ed.Employee.Code + ")"))
-                .Distinct()
-                .OrderBy(x => x.EmployeeName)
+                .Select(ed => new { ed.EmployeeId, ed.Employee.FullName, ed.Employee.Code })
                 .ToListAsync();
+
+            // Distinct and sorting are done here, because EF cannot translate them on the built name.
+            return rows
+                .GroupBy(r => r.EmployeeId)
+                .Select(g => new CreditOfficerInfo(g.Key, g.First().FullName + " (" + g.First().Code + ")"))
+                .OrderBy(x => x.EmployeeName)
+                .ToList();
         }
 
         // "Open" means the survey is not finished yet (not Approved, Rejected or Branch Created).
