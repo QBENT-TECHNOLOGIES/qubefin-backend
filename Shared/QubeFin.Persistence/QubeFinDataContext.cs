@@ -130,6 +130,8 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblGroup> TblGroups { get; set; }
 
+    public virtual DbSet<TblGroupSurvey> TblGroupSurveys { get; set; }
+
     public virtual DbSet<TblHoliday> TblHolidays { get; set; }
 
     public virtual DbSet<TblImportJob> TblImportJobs { get; set; }
@@ -1768,6 +1770,104 @@ public partial class QubeFinDataContext : DbContext
             entity.HasOne(d => d.Designation).WithMany(p => p.TblGroups)
                 .HasForeignKey(d => d.DesignationId)
                 .HasConstraintName("FK_Tbl_Group_Tbl_Designation");
+        });
+
+        modelBuilder.Entity<TblGroupSurvey>(entity =>
+        {
+            entity.ToTable("Tbl_GroupSurvey", "Global");
+
+            entity.HasIndex(e => e.SurveyId, "UX_Tbl_GroupSurvey_SurveyId").IsUnique();
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.AutoTotoAvailability)
+                .HasMaxLength(3)
+                .IsUnicode(false);
+            entity.Property(e => e.Block).HasMaxLength(100);
+            entity.Property(e => e.BranchManagerActionOn).HasColumnType("datetime");
+            entity.Property(e => e.BranchManagerComments).HasMaxLength(1000);
+            entity.Property(e => e.BranchManagerRecommendation)
+                .HasMaxLength(30)
+                .IsUnicode(false);
+            entity.Property(e => e.CommunityHarmony)
+                .HasMaxLength(10)
+                .IsUnicode(false);
+            entity.Property(e => e.CommunityResponseTowardsWeGrow)
+                .HasMaxLength(10)
+                .IsUnicode(false);
+            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.CycloneRisk)
+                .HasMaxLength(3)
+                .IsUnicode(false);
+            entity.Property(e => e.DistanceFromBranchKm).HasColumnType("decimal(7, 2)");
+            entity.Property(e => e.DistanceFromNearestCompetingCentreKm).HasColumnType("decimal(7, 2)");
+            entity.Property(e => e.DistanceFromNearestWeGrowCentreKm).HasColumnType("decimal(7, 2)");
+            entity.Property(e => e.DroughtProne)
+                .HasMaxLength(3)
+                .IsUnicode(false);
+            entity.Property(e => e.ElectionRelatedIssues)
+                .HasMaxLength(10)
+                .IsUnicode(false);
+            entity.Property(e => e.FlashFloodRisk)
+                .HasMaxLength(3)
+                .IsUnicode(false);
+            entity.Property(e => e.FloodProne)
+                .HasMaxLength(3)
+                .IsUnicode(false);
+            entity.Property(e => e.GramPanchayatMunicipality).HasMaxLength(100);
+            entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
+            entity.Property(e => e.Latitude).HasColumnType("decimal(9, 6)");
+            entity.Property(e => e.LocalInfluenceOnLending)
+                .HasMaxLength(10)
+                .IsUnicode(false);
+            entity.Property(e => e.Longitude).HasColumnType("decimal(9, 6)");
+            entity.Property(e => e.MainOccupation)
+                .HasMaxLength(40)
+                .IsUnicode(false);
+            entity.Property(e => e.MainOccupationOther).HasMaxLength(100);
+            entity.Property(e => e.NearestLandmark).HasMaxLength(200);
+            entity.Property(e => e.OtherNaturalRisks)
+                .HasMaxLength(3)
+                .IsUnicode(false);
+            entity.Property(e => e.OtherObservations).HasMaxLength(1000);
+            entity.Property(e => e.PoliticalDisturbance)
+                .HasMaxLength(10)
+                .IsUnicode(false);
+            entity.Property(e => e.PoliticalStability)
+                .HasMaxLength(10)
+                .IsUnicode(false);
+            entity.Property(e => e.RiverErosion)
+                .HasMaxLength(3)
+                .IsUnicode(false);
+            entity.Property(e => e.RoadAccessibility)
+                .HasMaxLength(3)
+                .IsUnicode(false);
+            entity.Property(e => e.SocialAcceptanceOfMicrofinance)
+                .HasMaxLength(10)
+                .IsUnicode(false);
+            entity.Property(e => e.SuitableMeetingPlaces)
+                .HasMaxLength(3)
+                .IsUnicode(false);
+            entity.Property(e => e.SurveyorComments).HasMaxLength(1000);
+            entity.Property(e => e.SurveyorRecommendation)
+                .HasMaxLength(30)
+                .IsUnicode(false);
+            entity.Property(e => e.SurveyorSubmitOn).HasColumnType("datetime");
+            entity.Property(e => e.VillageLocality).HasMaxLength(100);
+            entity.Property(e => e.WaterLogging)
+                .HasMaxLength(3)
+                .IsUnicode(false);
+            entity.Property(e => e.WomenEconomicParticipation)
+                .HasMaxLength(10)
+                .IsUnicode(false);
+
+            entity.HasOne(d => d.BranchManagerEmployee).WithMany(p => p.TblGroupSurveys)
+                .HasForeignKey(d => d.BranchManagerEmployeeId)
+                .HasConstraintName("FK_Tbl_GroupSurvey_Tbl_Employee_BranchManager");
+
+            entity.HasOne(d => d.Survey).WithOne(p => p.TblGroupSurvey)
+                .HasForeignKey<TblGroupSurvey>(d => d.SurveyId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_GroupSurvey_Tbl_Survey");
         });
 
         modelBuilder.Entity<TblHoliday>(entity =>

@@ -47,6 +47,8 @@ public partial class TblSurvey
 
     public virtual TblBranchSurvey? TblBranchSurvey { get; set; }
 
+    public virtual TblGroupSurvey? TblGroupSurvey { get; set; }
+
     public virtual ICollection<TblSurveyApproval> TblSurveyApprovals { get; set; } = new List<TblSurveyApproval>();
 
     public virtual ICollection<TblSurveyAssigned> TblSurveyAssigneds { get; set; } = new List<TblSurveyAssigned>();
