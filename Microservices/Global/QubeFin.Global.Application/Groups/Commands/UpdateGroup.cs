@@ -68,6 +68,9 @@ internal sealed class UpdateGroupCommandHandler(
             ? new Point((double)input.Longitude.Value, (double)input.Latitude.Value) { SRID = GpsSrid }
             : null;
         group.LandMark = string.IsNullOrWhiteSpace(input.LandMark) ? null : input.LandMark.Trim();
+        group.SittingPlace = string.IsNullOrWhiteSpace(input.SittingPlace) ? null : input.SittingPlace.Trim();
+        group.PoliceStation = string.IsNullOrWhiteSpace(input.PoliceStation) ? null : input.PoliceStation.Trim();
+        group.PostOffice = string.IsNullOrWhiteSpace(input.PostOffice) ? null : input.PostOffice.Trim();
         group.LastModifiedBy = request.UserId;
         group.LastModifiedOn = DateTime.Now;
 

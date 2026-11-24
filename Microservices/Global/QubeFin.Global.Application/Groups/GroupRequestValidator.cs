@@ -17,6 +17,9 @@ namespace QubeFin.Global.Application.Groups
             RuleFor(v => v.PinCode).Matches(@"^\d{6}$").When(v => !string.IsNullOrWhiteSpace(v.PinCode)).WithMessage("PIN Code must be 6 digits.");
             RuleFor(v => v.Address).MaximumLength(500).WithMessage("Address can be 500 characters at most.");
             RuleFor(v => v.LandMark).MaximumLength(100).WithMessage("Landmark can be 100 characters at most.");
+            RuleFor(v => v.SittingPlace).MaximumLength(200).WithMessage("Sitting Place can be 200 characters at most.");
+            RuleFor(v => v.PoliceStation).MaximumLength(100).WithMessage("Police Station can be 100 characters at most.");
+            RuleFor(v => v.PostOffice).MaximumLength(100).WithMessage("Post Office can be 100 characters at most.");
             RuleFor(v => v.Latitude).InclusiveBetween(-90m, 90m).When(v => v.Latitude.HasValue).WithMessage("Latitude must be between -90 and 90.");
             RuleFor(v => v.Longitude).InclusiveBetween(-180m, 180m).When(v => v.Longitude.HasValue).WithMessage("Longitude must be between -180 and 180.");
             RuleFor(v => v).Must(v => v.Latitude.HasValue == v.Longitude.HasValue).WithMessage("Enter both Latitude and Longitude, or neither.");

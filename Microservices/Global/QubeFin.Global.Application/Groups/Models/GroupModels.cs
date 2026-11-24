@@ -18,8 +18,6 @@ public static class GroupDays
 // The columns of Tbl_Group that the user fills in.
 public class GroupRequest
 {
-    // Set when the group is added from an Approved Group Survey; empty for a manual group.
-    public Guid? SurveyId { get; set; }
     // The Credit Officer's designation: the group belongs to it.
     public Guid DesignationId { get; set; }
     public string Name { get; set; } = string.Empty;
@@ -34,6 +32,9 @@ public class GroupRequest
     public decimal? Latitude { get; set; }
     public decimal? Longitude { get; set; }
     public string? LandMark { get; set; }
+    public string? SittingPlace { get; set; }
+    public string? PoliceStation { get; set; }
+    public string? PostOffice { get; set; }
 }
 
 public class GroupListItem
@@ -80,6 +81,9 @@ public class GroupDetailResponse
     public decimal? Latitude { get; set; }
     public decimal? Longitude { get; set; }
     public string? LandMark { get; set; }
+    public string? SittingPlace { get; set; }
+    public string? PoliceStation { get; set; }
+    public string? PostOffice { get; set; }
     public string Status { get; set; } = string.Empty;
     public string? VerifiedByName { get; set; }
     public DateTime? VerifiedOn { get; set; }
@@ -97,18 +101,6 @@ public class GroupCreditOfficerOption
     public string Name { get; set; } = string.Empty;
 }
 
-// An Approved Group Survey that has no group yet. The area, location and landmark fill the form.
-public class GroupSurveyOption
-{
-    public Guid Id { get; set; }
-    public string AssignmentNo { get; set; } = string.Empty;
-    public string ProposedArea { get; set; } = string.Empty;
-    public Guid AdministrativeUnitId { get; set; }
-    public decimal? Latitude { get; set; }
-    public decimal? Longitude { get; set; }
-    public string? LandMark { get; set; }
-}
-
 // What the Add Group screen needs: whether the user can add, for which branch, and the choices.
 public class GroupAddInfoResponse
 {
@@ -117,7 +109,6 @@ public class GroupAddInfoResponse
     public Guid? BranchId { get; set; }
     public string? BranchName { get; set; }
     public List<GroupCreditOfficerOption> CreditOfficers { get; set; } = new();
-    public List<GroupSurveyOption> Surveys { get; set; } = new();
 }
 
 public class GroupDecisionRequest

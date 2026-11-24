@@ -27,8 +27,8 @@ public class CreateGroupCommandValidator : AbstractValidator<CreateGroupCommand>
 #endregion
 
 #region --- HANDLER ---
-// The Credit Officer (for himself) or the Head of the branch (for a Credit Officer of the branch) adds a group,
-// from an Approved Group Survey or manually. The group starts as Pending and waits for approval.
+// The Credit Officer (for himself) or the Head of the branch (for a Credit Officer of the branch) adds a group manually.
+// The group starts as Pending and waits for approval. A group made from a survey is created by the Group Creation command.
 internal sealed class CreateGroupCommandHandler(
     QubeFinDataContext context,
     ISurveyRepository surveyRepository,
@@ -55,26 +55,6 @@ internal sealed class CreateGroupCommandHandler(
         if (branchCode is null)
             return new ValidationError("The branch has no code.");
 
-        if (input.SurveyId.HasValue)
-        {
-            if (adder.IsHead)
-                return new ForbiddenError("Only a Credit Officer of the survey can create a group from it. The Head of the branch adds groups manually.");
-
-            var survey = await context.TblSurveys.AsNoTracking()
-                .Include(s => s.TblSurveyAssigneds)
-                .FirstOrDefaultAsync(s => s.Id == input.SurveyId.Value, cancellationToken);
-            if (survey is null)
-                return new RecordNotFoundError("Survey not found.");
-            if (survey.SurveyType != SurveyTypes.Group || survey.Status != SurveyStatuses.Approved)
-                return new ValidationError("A group can be added only from an Approved Group Survey.");
-            if (survey.BranchOrganizationUnitId != adder.BranchId)
-                return new ValidationError("This survey belongs to another branch.");
-            if (!survey.TblSurveyAssigneds.Any(a => a.EmployeeId == request.EmployeeId))
-                return new ForbiddenError("You were not assigned to this survey.");
-            if (await context.TblGroups.AnyAsync(g => g.SurveyId == survey.Id, cancellationToken))
-                return new ValidationError("A group is already added for this survey.");
-        }
-
         if (!await context.TblAdministrativeUnits.AnyAsync(a => a.Id == input.AdministrativeUnitId, cancellationToken))
             return new ValidationError("The selected area was not found.");
 
@@ -86,7 +66,6 @@ internal sealed class CreateGroupCommandHandler(
         var group = new TblGroup
         {
             Id = Guid.NewGuid(),
-            SurveyId = input.SurveyId,
             BranchCode = branchCode.Value,
             // The sequence (1, 2, 3 ...) restarts for each branch; the database builds Code from BranchCode and CodeVal.
             CodeVal = await groupRepository.GetNextCodeValAsync(branchCode.Value),
@@ -103,10 +82,12 @@ internal sealed class CreateGroupCommandHandler(
                 ? new Point((double)input.Longitude.Value, (double)input.Latitude.Value) { SRID = GpsSrid }
                 : null,
             LandMark = string.IsNullOrWhiteSpace(input.LandMark) ? null : input.LandMark.Trim(),
-            // A group made from an Approved Group Survey is already approved with the survey.
-            // Only a manually added group waits for approval.
-            IsApproved = input.SurveyId.HasValue,
-            CurrentStatus = input.SurveyId.HasValue ? GroupStatuses.Approved : GroupStatuses.Pending,
+            SittingPlace = string.IsNullOrWhiteSpace(input.SittingPlace) ? null : input.SittingPlace.Trim(),
+            PoliceStation = string.IsNullOrWhiteSpace(input.PoliceStation) ? null : input.PoliceStation.Trim(),
+            PostOffice = string.IsNullOrWhiteSpace(input.PostOffice) ? null : input.PostOffice.Trim(),
+            // A manually added group waits for approval. A group made from a survey is created in the Group Creation window.
+            IsApproved = false,
+            CurrentStatus = GroupStatuses.Pending,
             DesignationId = input.DesignationId,
             CreatedBy = request.UserId,
             CreatedOn = now
@@ -123,10 +104,6 @@ internal sealed class CreateGroupCommandHandler(
             // Two people took the same next number, or the same survey, at the same moment.
             return new ValidationError("The group could not be saved. Please try again.");
         }
-
-        // A group made from a survey needs no approval, so nobody is asked to approve it.
-        if (input.SurveyId.HasValue)
-            return Result.Ok("Group created successfully.");
 
         // The Head and the approver of the branch are told (not the person who added it).
         var recipients = (await surveyRepository.GetHeadEmployeeIdsOfBranchAsync(adder.BranchId))

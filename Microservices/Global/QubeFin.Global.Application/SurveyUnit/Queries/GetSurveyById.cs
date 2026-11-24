@@ -3,6 +3,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QubeFin.Core.Results;
+using QubeFin.Global.Application.Grt;
 using QubeFin.Global.Application.SurveyUnit.Models;
 using QubeFin.Global.Persistence.Repositories;
 using QubeFin.Persistence;
@@ -77,10 +78,13 @@ internal sealed class GetSurveyByIdQueryHandler(QubeFinDataContext context, ISur
             groupName = group?.Name;
             groupCode = group?.Code;
 
-            // Only the Credit Officers of the survey create the group (not the Head of the branch).
+            // Only the Credit Officers of the survey create the group (not the Head of the branch),
+            // after the GRT was submitted as Pass.
             canCreateGroup = group is null
                 && surveyEntity.Status == SurveyStatuses.Approved
-                && surveyEntity.TblSurveyAssigneds.Any(s => s.EmployeeId == request.EmployeeId);
+                && surveyEntity.TblSurveyAssigneds.Any(s => s.EmployeeId == request.EmployeeId)
+                && await context.TblGroupGrts.AsNoTracking().AnyAsync(g => g.SurveyId == surveyEntity.Id
+                    && g.Status == GrtStatuses.Completed && g.OverallRecommendation == "Pass", cancellationToken);
         }
 
         return new SurveyResponse

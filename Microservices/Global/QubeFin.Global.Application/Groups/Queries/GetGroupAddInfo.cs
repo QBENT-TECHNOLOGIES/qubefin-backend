@@ -9,13 +9,12 @@ using QubeFin.Persistence.Models.Global;
 namespace QubeFin.Global.Application.Groups.Queries;
 
 #region --- QUERY ---
-// Tells the screen whether to show "Add Group", for which branch, and the Credit Officers and approved surveys to choose from.
+// Tells the screen whether to show "Add Group", for which branch, and the Credit Officers to choose from.
 public record GetGroupAddInfoQuery(Guid EmployeeId) : IRequest<Result<GroupAddInfoResponse>>;
 #endregion
 
 #region --- HANDLER ---
 internal sealed class GetGroupAddInfoQueryHandler(
-    QubeFinDataContext context,
     ISurveyRepository surveyRepository,
     IGroupRepository groupRepository) : IRequestHandler<GetGroupAddInfoQuery, Result<GroupAddInfoResponse>>
 {
@@ -50,37 +49,6 @@ internal sealed class GetGroupAddInfoQueryHandler(
         }
 
         response.CanAdd = true;
-
-        // Approved Group Surveys of the branch that have no group yet (a Credit Officer sees the ones he was assigned to).
-        var isHead = response.IsHead;
-        var employeeId = request.EmployeeId;
-        var surveys = await context.TblSurveys.AsNoTracking()
-            .Where(s => s.SurveyType == SurveyTypes.Group
-                && s.Status == SurveyStatuses.Approved
-                && s.BranchOrganizationUnitId == branchId
-                && !context.TblGroups.Any(g => g.SurveyId == s.Id)
-                // Only the Credit Officers of the survey create a group from it; the Head adds manually.
-                && !isHead
-                && s.TblSurveyAssigneds.Any(a => a.EmployeeId == employeeId))
-            .OrderByDescending(s => s.AssignmentDate)
-            .Select(s => new
-            {
-                s.Id, s.AssignmentNo, s.ProposedArea, s.AdministrativeUnitId,
-                Form = context.TblGroupSurveys.Where(f => f.SurveyId == s.Id)
-                    .Select(f => new { f.Location, f.NearestLandmark }).FirstOrDefault()
-            })
-            .ToListAsync(cancellationToken);
-
-        response.Surveys = surveys.Select(s => new GroupSurveyOption
-        {
-            Id = s.Id,
-            AssignmentNo = s.AssignmentNo,
-            ProposedArea = s.ProposedArea,
-            AdministrativeUnitId = s.AdministrativeUnitId,
-            Latitude = s.Form?.Location != null ? (decimal)s.Form.Location.Coordinate.Y : null,
-            Longitude = s.Form?.Location != null ? (decimal)s.Form.Location.Coordinate.X : null,
-            LandMark = s.Form?.NearestLandmark
-        }).ToList();
 
         return Result.Ok(response);
     }
