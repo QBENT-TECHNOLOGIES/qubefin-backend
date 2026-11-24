@@ -1742,6 +1742,12 @@ public partial class QubeFinDataContext : DbContext
         {
             entity.ToTable("Tbl_Group", "Global");
 
+            entity.HasIndex(e => new { e.BranchCode, e.CodeVal }, "UX_Tbl_Group_BranchCode_CodeVal").IsUnique();
+
+            entity.HasIndex(e => e.SurveyId, "UX_Tbl_Group_SurveyId")
+                .IsUnique()
+                .HasFilter("([SurveyId] IS NOT NULL)");
+
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Address).HasMaxLength(500);
             entity.Property(e => e.Code)
@@ -1770,6 +1776,10 @@ public partial class QubeFinDataContext : DbContext
             entity.HasOne(d => d.Designation).WithMany(p => p.TblGroups)
                 .HasForeignKey(d => d.DesignationId)
                 .HasConstraintName("FK_Tbl_Group_Tbl_Designation");
+
+            entity.HasOne(d => d.Survey).WithOne(p => p.TblGroup)
+                .HasForeignKey<TblGroup>(d => d.SurveyId)
+                .HasConstraintName("FK_Tbl_Group_Tbl_Survey");
         });
 
         modelBuilder.Entity<TblGroupSurvey>(entity =>
