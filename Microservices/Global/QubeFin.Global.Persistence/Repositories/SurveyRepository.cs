@@ -17,6 +17,7 @@ namespace QubeFin.Global.Persistence.Repositories
         Task<Guid?> GetCreatorEmployeeIdAsync(Guid surveyId);
         Task<BranchInfo?> GetInchargeBranchAsync(Guid employeeId);
         Task<List<CreditOfficerInfo>> GetCreditOfficersOfBranchAsync(Guid branchId);
+        Task SetBranchCreatedAsync(Guid surveyId, Guid branchOrganizationUnitId, Guid modifiedBy);
     }
     public record BranchInfo(Guid Id, string Name);
     public record CreditOfficerInfo(Guid EmployeeId, string EmployeeName);
@@ -118,6 +119,19 @@ namespace QubeFin.Global.Persistence.Repositories
                 .Where(s => s.Id == surveyId)
                 .Join(context.TblUsers, s => s.CreatedBy, u => u.Id, (s, u) => u.EmployeeId)
                 .FirstOrDefaultAsync();
+        }
+
+        // The branch was created from this survey: link it and finish the survey.
+        public async Task SetBranchCreatedAsync(Guid surveyId, Guid branchOrganizationUnitId, Guid modifiedBy)
+        {
+            var entity = await context.TblSurveys.FirstOrDefaultAsync(x => x.Id == surveyId);
+            if (entity == null)
+                throw new Exception("Survey not found.");
+
+            entity.BranchOrganizationUnitId = branchOrganizationUnitId;
+            entity.Status = SurveyStatuses.BranchCreated;
+            entity.LastModifiedBy = modifiedBy;
+            entity.LastModifiedOn = DateTime.Now;
         }
 
         // The branch the employee is in charge of: his current, active designation has IsIncharge = true

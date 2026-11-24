@@ -6,6 +6,9 @@ using QubeFin.Persistence.Models.Global;
 
 namespace QubeFin.Global.Persistence.Repositories;
 
+// The State and District above an administrative unit (Ward / Village / Block ...).
+public record AreaOfUnit(Guid? StateId, string? StateName, Guid? DistrictId, string? DistrictName);
+
 public interface IOrganizationUnitRepository
 {
     Task<IEnumerable<OrganizationUnitTree>> GetAllAsync(CancellationToken cancellationToken);
@@ -20,6 +23,8 @@ public interface IOrganizationUnitRepository
     Task<bool> ExistsByNameAsync(string name, Guid? parentId, Guid? excludedId, CancellationToken cancellationToken);
     Task<bool> IsSelfOrDescendantAsync(Guid candidateParentId, Guid organizationUnitId, CancellationToken cancellationToken);
     Task<bool> IsDistrictAsync(Guid administrativeUnitId, CancellationToken cancellationToken);
+    Task<Guid?> GetBranchTypeIdAsync(CancellationToken cancellationToken);
+    Task<AreaOfUnit?> GetAreaOfAsync(Guid administrativeUnitId, CancellationToken cancellationToken);
 }
 
 internal class OrganizationUnitRepository(QubeFinDataContext context) : IOrganizationUnitRepository
@@ -110,6 +115,36 @@ internal class OrganizationUnitRepository(QubeFinDataContext context) : IOrganiz
         return await context.TblAdministrativeUnits
             .AsNoTracking()
             .AnyAsync(m => m.Id == administrativeUnitId && m.AdministrativeUnitType.Name == "District", cancellationToken);
+    }
+
+    // The organization unit type named "Branch".
+    public async Task<Guid?> GetBranchTypeIdAsync(CancellationToken cancellationToken)
+    {
+        return await context.TblOrganizationUnitTypes.AsNoTracking()
+            .Where(t => t.Name == "Branch")
+            .Select(t => (Guid?)t.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    // Walks up from an administrative unit (ward, village, block ...) to the District and the State above it.
+    public async Task<AreaOfUnit?> GetAreaOfAsync(Guid administrativeUnitId, CancellationToken cancellationToken)
+    {
+        var units = await context.TblAdministrativeUnits.AsNoTracking()
+            .Select(m => new { m.Id, m.Name, m.ParentId, TypeName = m.AdministrativeUnitType.Name })
+            .ToDictionaryAsync(m => m.Id, cancellationToken);
+
+        Guid? stateId = null, districtId = null;
+        string? stateName = null, districtName = null;
+
+        var visitedIds = new HashSet<Guid>();
+        var currentId = (Guid?)administrativeUnitId;
+        while (currentId.HasValue && visitedIds.Add(currentId.Value) && units.TryGetValue(currentId.Value, out var unit))
+        {
+            if (unit.TypeName == "District") { districtId = unit.Id; districtName = unit.Name; }
+            else if (unit.TypeName == "State") { stateId = unit.Id; stateName = unit.Name; }
+            currentId = unit.ParentId;
+        }
+        return districtId is null && stateId is null ? null : new AreaOfUnit(stateId, stateName, districtId, districtName);
     }
 
     public async Task AddDesignationAsync(string name, Guid organizationUnitId, Guid postId, Guid roleId, Guid salaryGradeId, Guid userId)

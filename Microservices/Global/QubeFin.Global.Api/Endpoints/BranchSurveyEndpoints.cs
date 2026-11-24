@@ -45,6 +45,28 @@ namespace QubeFin.Global.Api.Endpoints
             .WithSummary("Submit Branch Survey To The Survey Committee")
             .WithTags("BranchSurveys")
             .RequireAuthorization();
+
+            app.MapGet("surveys/{id:guid}/branch-create", async (Guid id, ClaimsPrincipal principal, ISender sender) =>
+            {
+                var userId = principal.Identity.GetUserId();
+                var employeeId = principal.Identity.GetEmployeeId();
+                var result = await sender.Send(new GetBranchCreateInfoQuery(id, userId, employeeId));
+                return result.ToHttpResult();
+            })
+            .WithSummary("Get Create Branch Information Of An Approved Branch Survey")
+            .WithTags("BranchSurveys")
+            .RequireAuthorization();
+
+            app.MapPost("surveys/{id:guid}/branch-create", async (Guid id, CreateBranchRequest request, ClaimsPrincipal principal, ISender sender) =>
+            {
+                var userId = principal.Identity.GetUserId();
+                var employeeId = principal.Identity.GetEmployeeId();
+                var result = await sender.Send(new CreateBranchFromSurveyCommand(id, request, userId, employeeId));
+                return result.ToHttpResult();
+            })
+            .WithSummary("Create The Branch From An Approved Branch Survey")
+            .WithTags("BranchSurveys")
+            .RequireAuthorization();
         }
     }
 }
