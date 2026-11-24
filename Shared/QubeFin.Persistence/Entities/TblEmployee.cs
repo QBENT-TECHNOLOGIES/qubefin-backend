@@ -214,6 +214,10 @@ public partial class TblEmployee
 
     public virtual ICollection<TblEmployeeTransfer> TblEmployeeTransfers { get; set; } = new List<TblEmployeeTransfer>();
 
+    public virtual ICollection<TblGroupCgt> TblGroupCgts { get; set; } = new List<TblGroupCgt>();
+
+    public virtual ICollection<TblGroupGrt> TblGroupGrts { get; set; } = new List<TblGroupGrt>();
+
     public virtual ICollection<TblGroupSurvey> TblGroupSurveys { get; set; } = new List<TblGroupSurvey>();
 
     public virtual ICollection<TblInterviewPanel> TblInterviewPanels { get; set; } = new List<TblInterviewPanel>();

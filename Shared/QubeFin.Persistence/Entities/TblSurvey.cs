@@ -49,6 +49,12 @@ public partial class TblSurvey
 
     public virtual TblGroup? TblGroup { get; set; }
 
+    public virtual ICollection<TblGroupBorrower> TblGroupBorrowers { get; set; } = new List<TblGroupBorrower>();
+
+    public virtual TblGroupCgt? TblGroupCgt { get; set; }
+
+    public virtual TblGroupGrt? TblGroupGrt { get; set; }
+
     public virtual TblGroupSurvey? TblGroupSurvey { get; set; }
 
     public virtual ICollection<TblSurveyApproval> TblSurveyApprovals { get; set; } = new List<TblSurveyApproval>();

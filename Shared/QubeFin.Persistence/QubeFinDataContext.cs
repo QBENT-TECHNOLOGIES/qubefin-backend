@@ -130,6 +130,16 @@ public partial class QubeFinDataContext : DbContext
 
     public virtual DbSet<TblGroup> TblGroups { get; set; }
 
+    public virtual DbSet<TblGroupBorrower> TblGroupBorrowers { get; set; }
+
+    public virtual DbSet<TblGroupCgt> TblGroupCgts { get; set; }
+
+    public virtual DbSet<TblGroupCgtTopic> TblGroupCgtTopics { get; set; }
+
+    public virtual DbSet<TblGroupGrt> TblGroupGrts { get; set; }
+
+    public virtual DbSet<TblGroupGrtComponent> TblGroupGrtComponents { get; set; }
+
     public virtual DbSet<TblGroupSurvey> TblGroupSurveys { get; set; }
 
     public virtual DbSet<TblHoliday> TblHolidays { get; set; }
@@ -1765,6 +1775,9 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.PinCode)
                 .HasMaxLength(6)
                 .IsFixedLength();
+            entity.Property(e => e.PoliceStation).HasMaxLength(100);
+            entity.Property(e => e.PostOffice).HasMaxLength(100);
+            entity.Property(e => e.SittingPlace).HasMaxLength(200);
             entity.Property(e => e.VerifiedOn).HasColumnType("datetime");
             entity.Property(e => e.VerifiedRemarks).HasMaxLength(200);
 
@@ -1780,6 +1793,142 @@ public partial class QubeFinDataContext : DbContext
             entity.HasOne(d => d.Survey).WithOne(p => p.TblGroup)
                 .HasForeignKey<TblGroup>(d => d.SurveyId)
                 .HasConstraintName("FK_Tbl_Group_Tbl_Survey");
+        });
+
+        modelBuilder.Entity<TblGroupBorrower>(entity =>
+        {
+            entity.ToTable("Tbl_GroupBorrower", "Global");
+
+            entity.HasIndex(e => e.GroupId, "IX_Tbl_GroupBorrower_GroupId");
+
+            entity.HasIndex(e => e.SurveyId, "IX_Tbl_GroupBorrower_SurveyId");
+
+            entity.HasIndex(e => new { e.GroupId, e.GroupRole }, "UX_Tbl_GroupBorrower_Group_Role")
+                .IsUnique()
+                .HasFilter("([GroupRole] IS NOT NULL)");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.DecisionReason).HasMaxLength(500);
+            entity.Property(e => e.EligibleRemarks).HasMaxLength(500);
+            entity.Property(e => e.FlagReasons).HasMaxLength(500);
+            entity.Property(e => e.GroupRole).HasMaxLength(20);
+            entity.Property(e => e.GuardianName).HasMaxLength(100);
+            entity.Property(e => e.Income).HasColumnType("decimal(14, 2)");
+            entity.Property(e => e.IncomeActivity).HasMaxLength(200);
+            entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
+            entity.Property(e => e.LoanAmount).HasColumnType("decimal(14, 2)");
+            entity.Property(e => e.LoanPurpose).HasMaxLength(200);
+            entity.Property(e => e.MaritalStatus).HasMaxLength(20);
+            entity.Property(e => e.MobileNo).HasMaxLength(15);
+            entity.Property(e => e.Name).HasMaxLength(100);
+            entity.Property(e => e.ProposedLoanAmount).HasColumnType("decimal(14, 2)");
+            entity.Property(e => e.RejectReason).HasMaxLength(500);
+            entity.Property(e => e.Status)
+                .HasMaxLength(20)
+                .HasDefaultValue("Pending", "DF_Tbl_GroupBorrower_Status");
+
+            entity.HasOne(d => d.Group).WithMany(p => p.TblGroupBorrowers)
+                .HasForeignKey(d => d.GroupId)
+                .HasConstraintName("FK_Tbl_GroupBorrower_Tbl_Group");
+
+            entity.HasOne(d => d.Member).WithMany(p => p.TblGroupBorrowers)
+                .HasForeignKey(d => d.MemberId)
+                .HasConstraintName("FK_Tbl_GroupBorrower_Tbl_Member");
+
+            entity.HasOne(d => d.Survey).WithMany(p => p.TblGroupBorrowers)
+                .HasForeignKey(d => d.SurveyId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_GroupBorrower_Tbl_Survey");
+        });
+
+        modelBuilder.Entity<TblGroupCgt>(entity =>
+        {
+            entity.ToTable("Tbl_GroupCgt", "Global");
+
+            entity.HasIndex(e => e.SurveyId, "UQ_Tbl_GroupCgt_SurveyId").IsUnique();
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.CompletedOn).HasColumnType("datetime");
+            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
+            entity.Property(e => e.Status)
+                .HasMaxLength(20)
+                .HasDefaultValue("In Progress", "DF_Tbl_GroupCgt_Status");
+
+            entity.HasOne(d => d.ConductedByEmployee).WithMany(p => p.TblGroupCgts)
+                .HasForeignKey(d => d.ConductedByEmployeeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_GroupCgt_Tbl_Employee");
+
+            entity.HasOne(d => d.Survey).WithOne(p => p.TblGroupCgt)
+                .HasForeignKey<TblGroupCgt>(d => d.SurveyId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_GroupCgt_Tbl_Survey");
+        });
+
+        modelBuilder.Entity<TblGroupCgtTopic>(entity =>
+        {
+            entity.ToTable("Tbl_GroupCgtTopic", "Global");
+
+            entity.HasIndex(e => new { e.CgtId, e.TopicNo }, "UQ_Tbl_GroupCgtTopic_Cgt_Topic").IsUnique();
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Remarks).HasMaxLength(500);
+
+            entity.HasOne(d => d.Cgt).WithMany(p => p.TblGroupCgtTopics)
+                .HasForeignKey(d => d.CgtId)
+                .HasConstraintName("FK_Tbl_GroupCgtTopic_Tbl_GroupCgt");
+        });
+
+        modelBuilder.Entity<TblGroupGrt>(entity =>
+        {
+            entity.ToTable("Tbl_GroupGrt", "Global");
+
+            entity.HasIndex(e => e.SurveyId, "UQ_Tbl_GroupGrt_SurveyId").IsUnique();
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.ClientProtectionAwareness).HasMaxLength(20);
+            entity.Property(e => e.CompletedOn).HasColumnType("datetime");
+            entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+            entity.Property(e => e.FinancialLiteracy).HasMaxLength(20);
+            entity.Property(e => e.GrievanceAwareness).HasMaxLength(20);
+            entity.Property(e => e.GroupDiscipline).HasMaxLength(20);
+            entity.Property(e => e.KnowledgeOfJointLiability).HasMaxLength(20);
+            entity.Property(e => e.LastModifiedOn).HasColumnType("datetime");
+            entity.Property(e => e.LeadershipQuality).HasMaxLength(20);
+            entity.Property(e => e.LoanUtilizationAwareness).HasMaxLength(20);
+            entity.Property(e => e.MeetingConduct).HasMaxLength(20);
+            entity.Property(e => e.OverallRecommendation).HasMaxLength(10);
+            entity.Property(e => e.ParticipationOfMembers).HasMaxLength(20);
+            entity.Property(e => e.Status)
+                .HasMaxLength(20)
+                .HasDefaultValue("In Progress", "DF_Tbl_GroupGrt_Status");
+            entity.Property(e => e.UnderstandingOfLoanPolicies).HasMaxLength(20);
+
+            entity.HasOne(d => d.ConductedByEmployee).WithMany(p => p.TblGroupGrts)
+                .HasForeignKey(d => d.ConductedByEmployeeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_GroupGrt_Tbl_Employee");
+
+            entity.HasOne(d => d.Survey).WithOne(p => p.TblGroupGrt)
+                .HasForeignKey<TblGroupGrt>(d => d.SurveyId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_GroupGrt_Tbl_Survey");
+        });
+
+        modelBuilder.Entity<TblGroupGrtComponent>(entity =>
+        {
+            entity.ToTable("Tbl_GroupGrtComponent", "Global");
+
+            entity.HasIndex(e => new { e.GrtId, e.ComponentNo }, "UQ_Tbl_GroupGrtComponent_Grt_No").IsUnique();
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Remarks).HasMaxLength(500);
+
+            entity.HasOne(d => d.Grt).WithMany(p => p.TblGroupGrtComponents)
+                .HasForeignKey(d => d.GrtId)
+                .HasConstraintName("FK_Tbl_GroupGrtComponent_Tbl_GroupGrt");
         });
 
         modelBuilder.Entity<TblGroupSurvey>(entity =>
