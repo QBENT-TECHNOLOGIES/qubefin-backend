@@ -37,9 +37,13 @@ public partial class TblSurvey
 
     public Guid? PreviousSurveyId { get; set; }
 
+    public Guid? CompanyId { get; set; }
+
     public virtual TblAdministrativeUnit AdministrativeUnit { get; set; } = null!;
 
     public virtual TblOrganizationUnit? BranchOrganizationUnit { get; set; }
+
+    public virtual TblCompany? Company { get; set; }
 
     public virtual ICollection<TblSurvey> InversePreviousSurvey { get; set; } = new List<TblSurvey>();
 

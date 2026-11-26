@@ -24,4 +24,6 @@ public partial class TblCompany
     public virtual ICollection<TblOrganizationUnit> TblOrganizationUnits { get; set; } = new List<TblOrganizationUnit>();
 
     public virtual ICollection<TblPayRoll> TblPayRolls { get; set; } = new List<TblPayRoll>();
+
+    public virtual ICollection<TblSurvey> TblSurveys { get; set; } = new List<TblSurvey>();
 }

@@ -10,35 +10,59 @@ public partial class TblMemberAddress
 
     public Guid MemberId { get; set; }
 
-    public string? HouseNo { get; set; }
+    public string? ParmanentHouseNo { get; set; }
 
-    public string? StreetName { get; set; }
+    public string? ParmanentStreetName { get; set; }
 
-    public string? City { get; set; }
+    public string? ParmanentCity { get; set; }
 
-    public Guid AdministrativeUnitId { get; set; }
+    public Guid ParmanentAdministrativeUnitId { get; set; }
 
-    public Guid PoliceStationId { get; set; }
+    public Guid ParmanentPoliceStationId { get; set; }
 
-    public string? PostOffice { get; set; }
+    public string? ParmanentPostOffice { get; set; }
 
-    public string? PinCode { get; set; }
+    public string? ParmanentPinCode { get; set; }
+
+    public string? ParmanentNearestLandmark { get; set; }
+
+    public int? ParmanentResidenceYear { get; set; }
+
+    public bool PresentPermanentAddressSame { get; set; }
+
+    public string? PresentHouseNo { get; set; }
+
+    public string? PresentStreetName { get; set; }
+
+    public string? PresentCity { get; set; }
+
+    public Guid PresentAdministrativeUnitId { get; set; }
+
+    public Guid PresentPoliceStationId { get; set; }
+
+    public string? PresentPostOffice { get; set; }
+
+    public string? PresentPinCode { get; set; }
+
+    public string? PresentNearestLandmark { get; set; }
+
+    public int? PresentResidenceYear { get; set; }
 
     public Geometry? Location { get; set; }
-
-    public string? NearestLandmark { get; set; }
-
-    public int? ResidenceYear { get; set; }
 
     public bool IsDefault { get; set; }
 
     public int Sequence { get; set; }
 
-    public virtual TblAdministrativeUnit AdministrativeUnit { get; set; } = null!;
-
     public virtual TblMember Member { get; set; } = null!;
 
-    public virtual TblPoliceStation PoliceStation { get; set; } = null!;
+    public virtual TblAdministrativeUnit ParmanentAdministrativeUnit { get; set; } = null!;
+
+    public virtual TblPoliceStation ParmanentPoliceStation { get; set; } = null!;
+
+    public virtual TblAdministrativeUnit PresentAdministrativeUnit { get; set; } = null!;
+
+    public virtual TblPoliceStation PresentPoliceStation { get; set; } = null!;
 
     public virtual ICollection<TblLoanApplication> TblLoanApplicationBorrowerAddresses { get; set; } = new List<TblLoanApplication>();
 

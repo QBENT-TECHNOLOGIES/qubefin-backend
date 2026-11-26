@@ -45,9 +45,13 @@ public partial class TblMember
 
     public string? Occupation { get; set; }
 
+    public string? Nationality { get; set; }
+
     public string MobileNo { get; set; } = null!;
 
     public bool IsMobileVerified { get; set; }
+
+    public string? AlternateMobileNo { get; set; }
 
     public string AadharNo { get; set; } = null!;
 
@@ -62,6 +66,8 @@ public partial class TblMember
     public Guid? GroupId { get; set; }
 
     public Guid? DesignationId { get; set; }
+
+    public DateTime? AdmissionDate { get; set; }
 
     public Guid CreatedBy { get; set; }
 

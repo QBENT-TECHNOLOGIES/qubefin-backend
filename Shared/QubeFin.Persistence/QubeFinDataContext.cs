@@ -2892,6 +2892,8 @@ public partial class QubeFinDataContext : DbContext
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.AadharNo).HasMaxLength(12);
+            entity.Property(e => e.AdmissionDate).HasColumnType("datetime");
+            entity.Property(e => e.AlternateMobileNo).HasMaxLength(20);
             entity.Property(e => e.Caste)
                 .HasMaxLength(50)
                 .IsUnicode(false);
@@ -2917,6 +2919,9 @@ public partial class QubeFinDataContext : DbContext
             entity.Property(e => e.MiddleName).HasMaxLength(30);
             entity.Property(e => e.MobileNo).HasMaxLength(20);
             entity.Property(e => e.MotherName).HasMaxLength(200);
+            entity.Property(e => e.Nationality)
+                .HasMaxLength(20)
+                .IsUnicode(false);
             entity.Property(e => e.Occupation)
                 .HasMaxLength(50)
                 .IsUnicode(false);
@@ -2944,28 +2949,44 @@ public partial class QubeFinDataContext : DbContext
             entity.ToTable("Tbl_MemberAddress", "Global");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.City).HasMaxLength(50);
-            entity.Property(e => e.HouseNo).HasMaxLength(100);
-            entity.Property(e => e.NearestLandmark).HasMaxLength(100);
-            entity.Property(e => e.PinCode).HasMaxLength(10);
-            entity.Property(e => e.PostOffice).HasMaxLength(100);
+            entity.Property(e => e.ParmanentCity).HasMaxLength(50);
+            entity.Property(e => e.ParmanentHouseNo).HasMaxLength(100);
+            entity.Property(e => e.ParmanentNearestLandmark).HasMaxLength(100);
+            entity.Property(e => e.ParmanentPinCode).HasMaxLength(10);
+            entity.Property(e => e.ParmanentPostOffice).HasMaxLength(100);
+            entity.Property(e => e.ParmanentStreetName).HasMaxLength(100);
+            entity.Property(e => e.PresentCity).HasMaxLength(50);
+            entity.Property(e => e.PresentHouseNo).HasMaxLength(100);
+            entity.Property(e => e.PresentNearestLandmark).HasMaxLength(100);
+            entity.Property(e => e.PresentPinCode).HasMaxLength(10);
+            entity.Property(e => e.PresentPostOffice).HasMaxLength(100);
+            entity.Property(e => e.PresentStreetName).HasMaxLength(100);
             entity.Property(e => e.Sequence).ValueGeneratedOnAdd();
-            entity.Property(e => e.StreetName).HasMaxLength(100);
-
-            entity.HasOne(d => d.AdministrativeUnit).WithMany(p => p.TblMemberAddresses)
-                .HasForeignKey(d => d.AdministrativeUnitId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Tbl_MemberAddress_Tbl_AdministrativeUnit");
 
             entity.HasOne(d => d.Member).WithMany(p => p.TblMemberAddresses)
                 .HasForeignKey(d => d.MemberId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_MemberAddress_Tbl_Member");
 
-            entity.HasOne(d => d.PoliceStation).WithMany(p => p.TblMemberAddresses)
-                .HasForeignKey(d => d.PoliceStationId)
+            entity.HasOne(d => d.ParmanentAdministrativeUnit).WithMany(p => p.TblMemberAddressParmanentAdministrativeUnits)
+                .HasForeignKey(d => d.ParmanentAdministrativeUnitId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_MemberAddress_Tbl_AdministrativeUnit");
+
+            entity.HasOne(d => d.ParmanentPoliceStation).WithMany(p => p.TblMemberAddressParmanentPoliceStations)
+                .HasForeignKey(d => d.ParmanentPoliceStationId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tbl_MemberAddress_Tbl_PoliceStation");
+
+            entity.HasOne(d => d.PresentAdministrativeUnit).WithMany(p => p.TblMemberAddressPresentAdministrativeUnits)
+                .HasForeignKey(d => d.PresentAdministrativeUnitId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_MemberAddress_Tbl_AdministrativeUnit1");
+
+            entity.HasOne(d => d.PresentPoliceStation).WithMany(p => p.TblMemberAddressPresentPoliceStations)
+                .HasForeignKey(d => d.PresentPoliceStationId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tbl_MemberAddress_Tbl_PoliceStation1");
         });
 
         modelBuilder.Entity<TblMemberDocument>(entity =>
@@ -3402,6 +3423,8 @@ public partial class QubeFinDataContext : DbContext
         {
             entity.ToTable("Tbl_Survey", "Global");
 
+            entity.HasIndex(e => e.CompanyId, "IX_Tbl_Survey_CompanyId");
+
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.AssignmentNo).HasMaxLength(50);
             entity.Property(e => e.CreatedOn).HasColumnType("datetime");
@@ -3422,6 +3445,10 @@ public partial class QubeFinDataContext : DbContext
             entity.HasOne(d => d.BranchOrganizationUnit).WithMany(p => p.TblSurveys)
                 .HasForeignKey(d => d.BranchOrganizationUnitId)
                 .HasConstraintName("FK_Tbl_Survey_Tbl_OrganizationUnit");
+
+            entity.HasOne(d => d.Company).WithMany(p => p.TblSurveys)
+                .HasForeignKey(d => d.CompanyId)
+                .HasConstraintName("FK_Tbl_Survey_Tbl_Company");
 
             entity.HasOne(d => d.PreviousSurvey).WithMany(p => p.InversePreviousSurvey)
                 .HasForeignKey(d => d.PreviousSurveyId)
