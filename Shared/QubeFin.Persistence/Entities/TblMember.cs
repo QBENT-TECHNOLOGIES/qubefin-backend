@@ -45,9 +45,13 @@ public partial class TblMember
 
     public string? Occupation { get; set; }
 
+    public string? Nationality { get; set; }
+
     public string MobileNo { get; set; } = null!;
 
     public bool IsMobileVerified { get; set; }
+
+    public string? AlternateMobileNo { get; set; }
 
     public string AadharNo { get; set; } = null!;
 
@@ -62,6 +66,8 @@ public partial class TblMember
     public Guid? GroupId { get; set; }
 
     public Guid? DesignationId { get; set; }
+
+    public DateTime? AdmissionDate { get; set; }
 
     public Guid CreatedBy { get; set; }
 
@@ -78,6 +84,8 @@ public partial class TblMember
     public virtual ICollection<TblCoBorrower> TblCoBorrowers { get; set; } = new List<TblCoBorrower>();
 
     public virtual ICollection<TblCreditDatum> TblCreditData { get; set; } = new List<TblCreditDatum>();
+
+    public virtual ICollection<TblGroupBorrower> TblGroupBorrowers { get; set; } = new List<TblGroupBorrower>();
 
     public virtual ICollection<TblLoanApplication> TblLoanApplications { get; set; } = new List<TblLoanApplication>();
 

@@ -60,11 +60,19 @@ public partial class TblGroup
 
     public Guid? SurveyId { get; set; }
 
+    public string? SittingPlace { get; set; }
+
+    public string? PoliceStation { get; set; }
+
+    public string? PostOffice { get; set; }
+
     public virtual TblAdministrativeUnit AdministrativeUnit { get; set; } = null!;
 
     public virtual TblDesignation? Designation { get; set; }
 
     public virtual TblSurvey? Survey { get; set; }
+
+    public virtual ICollection<TblGroupBorrower> TblGroupBorrowers { get; set; } = new List<TblGroupBorrower>();
 
     public virtual ICollection<TblLoanApplication> TblLoanApplications { get; set; } = new List<TblLoanApplication>();
 
