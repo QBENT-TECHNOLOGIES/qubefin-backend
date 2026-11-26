@@ -7,8 +7,10 @@ namespace QubeFin.Global.Persistence.Repositories
 {
     public interface ISurveyApprovalRepository
     {
-        Task<List<Guid>> GetManagingDirectorEmployeeIdsAsync();
-        Task<bool> IsManagingDirectorAsync(Guid employeeId);
+        // companyId: the Managing Director of that company (the post held at an organization unit of the company).
+        // null (a survey from before companies): any holder of the post.
+        Task<List<Guid>> GetManagingDirectorEmployeeIdsAsync(Guid? companyId);
+        Task<bool> IsManagingDirectorAsync(Guid employeeId, Guid? companyId);
         Task<TblSurveyApproval?> GetLatestAsync(Guid surveyId);
         Task<TblSurveyApproval?> GetLatestRecheckAsync(Guid surveyId);
         Task AddAsync(TblSurveyApproval approval);
@@ -18,19 +20,21 @@ namespace QubeFin.Global.Persistence.Repositories
     {
         private const string ManagingDirectorPost = "Managing Director";
 
-        public async Task<List<Guid>> GetManagingDirectorEmployeeIdsAsync()
+        public async Task<List<Guid>> GetManagingDirectorEmployeeIdsAsync(Guid? companyId)
         {
             return await context.TblEmployeeDesignations.AsNoTracking()
-                .Where(ed => ed.EffectiveTo == null && ed.Designation.IsActive && ed.Designation.Post.Name == ManagingDirectorPost)
+                .Where(ed => ed.EffectiveTo == null && ed.Designation.IsActive && ed.Designation.Post.Name == ManagingDirectorPost
+                    && (companyId == null || ed.Designation.OrganizationUnit.CompanyId == companyId))
                 .Select(ed => ed.EmployeeId)
                 .Distinct()
                 .ToListAsync();
         }
-        public async Task<bool> IsManagingDirectorAsync(Guid employeeId)
+        public async Task<bool> IsManagingDirectorAsync(Guid employeeId, Guid? companyId)
         {
             return await context.TblEmployeeDesignations.AsNoTracking()
                 .AnyAsync(ed => ed.EmployeeId == employeeId && ed.EffectiveTo == null && ed.Designation.IsActive
-                    && ed.Designation.Post.Name == ManagingDirectorPost);
+                    && ed.Designation.Post.Name == ManagingDirectorPost
+                    && (companyId == null || ed.Designation.OrganizationUnit.CompanyId == companyId));
         }
         public async Task<TblSurveyApproval?> GetLatestAsync(Guid surveyId)
         {

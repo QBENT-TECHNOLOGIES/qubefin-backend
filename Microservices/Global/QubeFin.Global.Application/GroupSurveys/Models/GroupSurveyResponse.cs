@@ -6,6 +6,8 @@ namespace QubeFin.Global.Application.GroupSurveys.Models
         public string Status { get; set; } = string.Empty;
         // True only for the Lead Credit Officer while the survey is still Assigned or Draft.
         public bool CanEditForm { get; set; }
+        // False when the branch has no location, so the distance from the branch cannot be worked out.
+        public bool BranchHasLocation { get; set; }
         // False until the Lead Credit Officer saves the form for the first time.
         public bool IsSaved { get; set; }
         public DateTime? LastSavedOn { get; set; }

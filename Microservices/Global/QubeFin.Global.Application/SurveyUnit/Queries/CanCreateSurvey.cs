@@ -1,4 +1,4 @@
-﻿using FluentResults;
+using FluentResults;
 using MediatR;
 using QubeFin.Global.Persistence.Repositories;
 
@@ -16,6 +16,9 @@ public class CanCreateSurveyResponse
     public bool CanCreateGroupSurvey { get; set; }
     public Guid? InchargeBranchId { get; set; }
     public string? InchargeBranchName { get; set; }
+    // The company of that branch: a Group Survey takes it (the form shows it and it cannot be changed).
+    public Guid? InchargeBranchCompanyId { get; set; }
+    public string? InchargeBranchCompanyName { get; set; }
 }
 #endregion
 
@@ -27,12 +30,15 @@ internal sealed class CanCreateSurveyQueryHandler(
     public async Task<Result<CanCreateSurveyResponse>> Handle(CanCreateSurveyQuery request, CancellationToken cancellationToken)
     {
         var branch = await surveyRepository.GetHeadBranchAsync(request.EmployeeId);
+        var company = branch is null ? null : await surveyRepository.GetBranchCompanyAsync(branch.Id);
         return Result.Ok(new CanCreateSurveyResponse
         {
             CanCreateBranchSurvey = await surveyCommitteeRepository.IsActiveLeadAsync(request.EmployeeId),
             CanCreateGroupSurvey = branch is not null,
             InchargeBranchId = branch?.Id,
-            InchargeBranchName = branch?.Name
+            InchargeBranchName = branch?.Name,
+            InchargeBranchCompanyId = company?.Id,
+            InchargeBranchCompanyName = company?.Name
         });
     }
 }

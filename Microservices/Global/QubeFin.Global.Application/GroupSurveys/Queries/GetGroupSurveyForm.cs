@@ -64,6 +64,13 @@ internal sealed class GetGroupSurveyFormQueryHandler(
                 : await CreateEmptyFormAsync(survey)
         };
 
+        // Distance from the branch: worked out from the saved location and the branch location (not typed).
+        var branchPoint = survey.BranchOrganizationUnitId.HasValue
+            ? await groupSurveyRepository.GetBranchPointAsync(survey.BranchOrganizationUnitId.Value)
+            : null;
+        response.BranchHasLocation = branchPoint?.Latitude != null && branchPoint?.Longitude != null;
+        response.Form.Market.DistanceFromBranchKm = GroupSurveyDistance.Between(groupSurvey?.Location, branchPoint?.Latitude, branchPoint?.Longitude);
+
         // The "Surveyed By" block is filled once the Lead Credit Officer has submitted the form.
         if (groupSurvey is { IsSurveyorSubmit: true })
         {

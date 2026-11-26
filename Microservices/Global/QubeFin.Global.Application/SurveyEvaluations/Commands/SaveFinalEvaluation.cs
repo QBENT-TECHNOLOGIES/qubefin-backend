@@ -74,7 +74,7 @@ internal sealed class SaveFinalEvaluationCommandHandler(
         var managingDirectorIds = new List<Guid>();
         if (decision == EvaluationDecisions.Approve)
         {
-            managingDirectorIds = await approvalRepository.GetManagingDirectorEmployeeIdsAsync();
+            managingDirectorIds = await approvalRepository.GetManagingDirectorEmployeeIdsAsync(survey.CompanyId);
             if (managingDirectorIds.Count == 0)
                 return new ValidationError("No Managing Director is assigned, so the survey cannot be sent for approval.");
         }

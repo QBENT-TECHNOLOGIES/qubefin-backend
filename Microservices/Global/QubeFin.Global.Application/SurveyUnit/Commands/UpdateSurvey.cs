@@ -1,4 +1,4 @@
-﻿using FluentResults;
+using FluentResults;
 using FluentValidation;
 using MediatR;
 using QubeFin.Core.Results;
@@ -49,6 +49,7 @@ internal sealed class UpdateSurveyCommandHandler(
             return new ValidationError("The survey cannot be edited after it is submitted.");
 
         var assignedEmployeeIds = surveyRequest.SurveyAssigneds.Select(x => x.EmployeeId).ToList();
+        var companyId = survey.CompanyId;
         if (survey.SurveyType == SurveyTypes.Group)
         {
             // Only the person in charge of the survey's branch can change a Group Survey.
@@ -63,12 +64,18 @@ internal sealed class UpdateSurveyCommandHandler(
                 surveyRepository, surveyCommitteeRepository, branch.Id, request.employeeId, newEmployeeIds);
             if (problem is not null)
                 return new ValidationError(problem);
+
+            // The company of a Group Survey is the company of its branch (a survey from before companies gets it now).
+            companyId ??= await surveyRepository.GetBranchCompanyIdAsync(branch.Id);
         }
         else
         {
-            // A Survey Committee member cannot also be a surveyor.
-            if (await surveyCommitteeRepository.AnyActiveMemberAsync(assignedEmployeeIds))
-                return new ValidationError("A Survey Committee member cannot be assigned as a surveyor.");
+            // A Survey Committee member can also be a surveyor of a Branch Survey (and then evaluates it like the others).
+
+            // The Committee Lead can change the company of a Branch Survey while it can still be edited.
+            companyId = surveyRequest.CompanyId;
+            if (!companyId.HasValue || !await surveyRepository.CompanyExistsAsync(companyId.Value))
+                return new ValidationError("Select the company of the survey.");
         }
 
         // Employees already assigned keep their original "assigned by" and date. Only new ones get the current user.
@@ -89,6 +96,7 @@ internal sealed class UpdateSurveyCommandHandler(
             surveyRequest.TentativeSubmissionDate,
             surveyRequest.SurveyFormAttached,
             survey.BranchOrganizationUnitId,    // branch is not changed here
+            companyId,
             surveyAssigneds,
             request.userId);
 

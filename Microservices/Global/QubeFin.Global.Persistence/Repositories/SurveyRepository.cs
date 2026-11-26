@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using QubeFin.Persistence;
 using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Mappers.Global;
@@ -22,8 +22,12 @@ namespace QubeFin.Global.Persistence.Repositories
         Task<bool> IsApproverOfBranchAsync(Guid employeeId, Guid branchId);
         Task<List<CreditOfficerInfo>> GetCreditOfficersOfBranchAsync(Guid branchId);
         Task SetBranchCreatedAsync(Guid surveyId, Guid branchOrganizationUnitId, Guid modifiedBy);
+        Task<Guid?> GetBranchCompanyIdAsync(Guid branchId);
+        Task<CompanyInfo?> GetBranchCompanyAsync(Guid branchId);
+        Task<bool> CompanyExistsAsync(Guid companyId);
     }
     public record BranchInfo(Guid Id, string Name);
+    public record CompanyInfo(Guid Id, string Name);
     public record CreditOfficerInfo(Guid EmployeeId, string EmployeeName);
     public class SurveyRepository(QubeFinDataContext context) : ISurveyRepository
     {
@@ -47,6 +51,7 @@ namespace QubeFin.Global.Persistence.Repositories
             entity.TentativeSubmissionDate = survey.TentativeSubmissionDate;
             entity.SurveyFormAttached = survey.SurveyFormAttached;
             entity.BranchOrganizationUnitId = survey.BranchOrganizationUnitId;
+            entity.CompanyId = survey.CompanyId;
             entity.LastModifiedBy = survey.LastModifiedBy;
             entity.LastModifiedOn = survey.LastModifiedOn;
 
@@ -136,6 +141,28 @@ namespace QubeFin.Global.Persistence.Repositories
             entity.Status = SurveyStatuses.BranchCreated;
             entity.LastModifiedBy = modifiedBy;
             entity.LastModifiedOn = DateTime.Now;
+        }
+
+        // The company of a branch (a Group Survey takes it).
+        public async Task<Guid?> GetBranchCompanyIdAsync(Guid branchId)
+        {
+            return await context.TblOrganizationUnits.AsNoTracking()
+                .Where(o => o.Id == branchId)
+                .Select(o => o.CompanyId)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<CompanyInfo?> GetBranchCompanyAsync(Guid branchId)
+        {
+            return await context.TblOrganizationUnits.AsNoTracking()
+                .Where(o => o.Id == branchId && o.CompanyId != null)
+                .Select(o => new CompanyInfo(o.Company!.Id, o.Company.Name))
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<bool> CompanyExistsAsync(Guid companyId)
+        {
+            return await context.TblCompanies.AsNoTracking().AnyAsync(c => c.Id == companyId);
         }
 
         // The Head of Branch: the person in charge of the branch (current, active designation with IsIncharge = true).

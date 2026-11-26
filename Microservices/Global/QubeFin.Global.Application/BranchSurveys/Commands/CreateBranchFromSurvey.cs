@@ -49,6 +49,10 @@ internal sealed class CreateBranchFromSurveyCommandHandler(
         if (!await committeeRepository.IsActiveLeadAsync(request.EmployeeId))
             return new ForbiddenError("Only the Committee Lead can create the branch.");
 
+        // The branch is created for the company of the survey (a survey from before companies has none and is not checked).
+        if (survey.CompanyId.HasValue && request.Branch.CompanyId != survey.CompanyId.Value)
+            return new ValidationError("The branch must belong to the company of the survey.");
+
         var branchTypeId = await organizationUnitRepository.GetBranchTypeIdAsync(cancellationToken);
         if (branchTypeId is null)
             return new ValidationError("The organization unit type \"Branch\" was not found.");

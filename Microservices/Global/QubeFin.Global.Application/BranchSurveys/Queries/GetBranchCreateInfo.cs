@@ -68,6 +68,10 @@ internal sealed class GetBranchCreateInfoQueryHandler(
 
         // Values the Lead starts with in the window.
         response.SuggestedName = survey.ProposedArea;
+        response.CompanyId = survey.CompanyId;
+        response.CompanyName = survey.CompanyId.HasValue
+            ? await context.TblCompanies.AsNoTracking().Where(c => c.Id == survey.CompanyId).Select(c => c.Name).FirstOrDefaultAsync(cancellationToken)
+            : null;
         var area = await organizationUnitRepository.GetAreaOfAsync(survey.AdministrativeUnitId, cancellationToken);
         response.StateId = area?.StateId;
         response.StateName = area?.StateName;

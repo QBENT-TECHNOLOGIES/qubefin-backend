@@ -76,6 +76,12 @@ internal sealed class SaveGroupSurveyDraftCommandHandler(
         groupSurvey.GramPanchayatMunicipality = places.GramPanchayatMunicipality;
         groupSurvey.Block = places.Block;
 
+        // The distance from the branch is worked out here (straight line), not taken from the screen.
+        var branchPoint = survey.BranchOrganizationUnitId.HasValue
+            ? await groupSurveyRepository.GetBranchPointAsync(survey.BranchOrganizationUnitId.Value)
+            : null;
+        groupSurvey.DistanceFromBranchKm = GroupSurveyDistance.Between(groupSurvey.Location, branchPoint?.Latitude, branchPoint?.Longitude);
+
         // The first save moves the survey from Assigned to Draft.
         await surveyRepository.UpdateStatusAsync(request.SurveyId, SurveyStatuses.Draft, request.UserId);
 

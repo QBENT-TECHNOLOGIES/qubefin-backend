@@ -52,6 +52,14 @@ internal sealed class SaveCgtCommandHandler(
         if (cgt is not null && cgt.Status == CgtStatuses.Completed)
             return new ValidationError("This CGT is completed and cannot be changed.");
 
+        // The CGT starts (is saved the first time) only when Community Mobilization has enough borrowers.
+        if (cgt is null)
+        {
+            var borrowerCount = await context.TblGroupBorrowers.AsNoTracking().CountAsync(b => b.SurveyId == request.SurveyId, cancellationToken);
+            if (borrowerCount < CgtRules.MinBorrowers)
+                return new ValidationError($"Add at least {CgtRules.MinBorrowers} borrowers in Community Mobilization before starting the CGT. There are {borrowerCount} now.");
+        }
+
         // Completing needs the end date and an answer (Yes / No) for every topic.
         if (input.Complete)
         {

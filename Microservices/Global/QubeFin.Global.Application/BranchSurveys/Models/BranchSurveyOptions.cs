@@ -4,6 +4,7 @@ namespace QubeFin.Global.Application.BranchSurveys.Models
     public static class BranchSurveyOptions
     {
         public static readonly string[] Rating = ["Excellent", "Good", "Average", "Poor"];
+        public static readonly string[] MigrationTrend = ["Low", "Moderate", "High"];
         public static readonly string[] AdministrativeStatus = ["Rural", "Semi Urban", "Urban"];
         public static readonly string[] EconomicCondition = ["Good", "Average", "Poor"];
         public static readonly string[] NaturalRisk = ["High", "Medium", "Low"];

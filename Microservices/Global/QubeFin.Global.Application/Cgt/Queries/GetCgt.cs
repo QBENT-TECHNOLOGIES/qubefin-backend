@@ -51,6 +51,7 @@ internal sealed class GetCgtQueryHandler(
             SurveyId = survey.Id,
             IsOpen = isOpen,
             IsSaved = cgt is not null,
+            BorrowerCount = await context.TblGroupBorrowers.AsNoTracking().CountAsync(b => b.SurveyId == survey.Id, cancellationToken),
             Status = cgt?.Status ?? CgtStatuses.InProgress,
             ProposedArea = survey.ProposedArea,
             BranchName = survey.BranchOrganizationUnitId.HasValue

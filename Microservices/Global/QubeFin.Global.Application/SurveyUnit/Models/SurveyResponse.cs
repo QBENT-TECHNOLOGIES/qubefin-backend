@@ -1,4 +1,4 @@
-﻿using QubeFin.Persistence.Models.Global;
+using QubeFin.Persistence.Models.Global;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -30,6 +30,16 @@ namespace QubeFin.Global.Application.SurveyUnit.Models
         public string? GroupName { get; set; }
         public string? GroupCode { get; set; }
         public bool CanCreateGroup { get; set; }
+        // The company of the survey.
+        public Guid? CompanyId { get; set; }
+        public string? CompanyName { get; set; }
+        // Group Survey progress: the index of the step the survey is on (0 = Assigned ... 7 = Group Created, 8 = all done),
+        // and true when the GRT was failed (the process stops).
+        public int GroupStep { get; set; }
+        public bool GroupStopped { get; set; }
+        // Where the survey was done (from the survey form, step 1); null until the form has a location. Shown on a map.
+        public decimal? Latitude { get; set; }
+        public decimal? Longitude { get; set; }
         public AuditInfo? AuditInfo { get; set; } = new AuditInfo();
         public List<SurveyAssignedResponse> SurveyAssigneds { get; set; } = new List<SurveyAssignedResponse>();
     }

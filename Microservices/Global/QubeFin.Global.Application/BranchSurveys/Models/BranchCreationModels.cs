@@ -39,6 +39,9 @@ namespace QubeFin.Global.Application.BranchSurveys.Models
         public bool CanCreate { get; set; }
         // Pre-filled values for the window.
         public string SuggestedName { get; set; } = string.Empty;
+        // The company of the survey: the branch is created for it.
+        public Guid? CompanyId { get; set; }
+        public string? CompanyName { get; set; }
         public Guid? StateId { get; set; }
         public string? StateName { get; set; }
         public Guid? DistrictId { get; set; }

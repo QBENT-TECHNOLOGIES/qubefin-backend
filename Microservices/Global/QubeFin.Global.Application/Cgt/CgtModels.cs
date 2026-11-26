@@ -2,6 +2,12 @@ using FluentValidation;
 
 namespace QubeFin.Global.Application.Cgt;
 
+public static class CgtRules
+{
+    // The CGT can start only when Community Mobilization has at least this many borrowers (every borrower counts).
+    public const int MinBorrowers = 5;
+}
+
 public static class CgtStatuses
 {
     public const string InProgress = "In Progress";
@@ -133,6 +139,9 @@ public class CgtResponse
     public bool CanEdit { get; set; }
     // False until a Credit Officer saves it the first time.
     public bool IsSaved { get; set; }
+    // Borrowers in Community Mobilization now, and how many are needed before the CGT can start.
+    public int BorrowerCount { get; set; }
+    public int MinBorrowers { get; set; } = CgtRules.MinBorrowers;
     public string Status { get; set; } = string.Empty;
     public string? BranchName { get; set; }
     public string ProposedArea { get; set; } = string.Empty;

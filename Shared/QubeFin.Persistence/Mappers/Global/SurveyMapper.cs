@@ -1,4 +1,4 @@
-﻿using QubeFin.Persistence.Entities;
+using QubeFin.Persistence.Entities;
 using QubeFin.Persistence.Models.Global;
 using System;
 using System.Collections.Generic;
@@ -23,6 +23,7 @@ namespace QubeFin.Persistence.Mappers.Global
                 entity.SurveyFormAttached,
                 entity.BranchOrganizationUnitId,
                 entity.PreviousSurveyId,
+                entity.CompanyId,
                 entity.CreatedBy,
                 entity.CreatedOn,
                 entity.LastModifiedBy,
@@ -46,6 +47,7 @@ namespace QubeFin.Persistence.Mappers.Global
                 SurveyFormAttached = domain.SurveyFormAttached,
                 BranchOrganizationUnitId = domain.BranchOrganizationUnitId,
                 PreviousSurveyId = domain.PreviousSurveyId,
+                CompanyId = domain.CompanyId,
                 CreatedBy = domain.CreatedBy,
                 CreatedOn = domain.CreatedOn,
                 LastModifiedBy = domain.LastModifiedBy,

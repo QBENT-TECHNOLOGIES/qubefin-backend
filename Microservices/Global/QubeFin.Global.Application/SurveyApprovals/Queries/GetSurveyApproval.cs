@@ -47,7 +47,7 @@ internal sealed class GetSurveyApprovalQueryHandler(
             SurveyId = survey.Id,
             Status = survey.Status,
             CanDecide = survey.Status == SurveyStatuses.PendingApproval
-                && await approvalRepository.IsManagingDirectorAsync(request.EmployeeId)
+                && await approvalRepository.IsManagingDirectorAsync(request.EmployeeId, survey.CompanyId)
         };
 
         // After a Recheck the survey starts again, so an old decision is not shown. (The note is shown by the evaluation card.)

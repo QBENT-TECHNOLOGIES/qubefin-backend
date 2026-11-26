@@ -1,4 +1,4 @@
-﻿using FluentResults;
+using FluentResults;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -68,6 +68,8 @@ internal sealed class GetSurveyByIdQueryHandler(QubeFinDataContext context, ISur
         Guid? groupId = null;
         string? groupName = null, groupCode = null;
         var canCreateGroup = false;
+        var groupStep = 0;
+        var groupStopped = false;
         if (surveyEntity.SurveyType == SurveyTypes.Group)
         {
             var group = await context.TblGroups.AsNoTracking()
@@ -85,10 +87,46 @@ internal sealed class GetSurveyByIdQueryHandler(QubeFinDataContext context, ISur
                 && surveyEntity.TblSurveyAssigneds.Any(s => s.EmployeeId == request.EmployeeId)
                 && await context.TblGroupGrts.AsNoTracking().AnyAsync(g => g.SurveyId == surveyEntity.Id
                     && g.Status == GrtStatuses.Completed && g.OverallRecommendation == "Pass", cancellationToken);
+
+            // The 8 steps of a Group Survey: Assigned, Draft, Recommendation, Approval, Mobilization, CGT, GRT, Group Created.
+            var cgtStatus = await context.TblGroupCgts.AsNoTracking().Where(c => c.SurveyId == surveyEntity.Id).Select(c => c.Status).FirstOrDefaultAsync(cancellationToken);
+            var grt = await context.TblGroupGrts.AsNoTracking().Where(g => g.SurveyId == surveyEntity.Id)
+                .Select(g => new { g.Status, g.OverallRecommendation }).FirstOrDefaultAsync(cancellationToken);
+            var grtDone = grt is { Status: "Completed" };
+            groupStopped = grtDone && grt!.OverallRecommendation == "Fail";
+
+            groupStep = surveyEntity.Status switch
+            {
+                SurveyStatuses.Assigned => 0,
+                SurveyStatuses.Draft => 1,
+                SurveyStatuses.PendingRecommendation => 2,
+                SurveyStatuses.PendingApproval => 3,
+                SurveyStatuses.Approved when groupId.HasValue => 8,
+                SurveyStatuses.Approved when grtDone && !groupStopped => 7,
+                SurveyStatuses.Approved when cgtStatus == "Completed" => 6,
+                SurveyStatuses.Approved when cgtStatus != null => 5,
+                SurveyStatuses.Approved => 4,
+                _ => 0
+            };
         }
+
+        // The location of the survey form (Branch Survey or Group Survey), for the map on the view page.
+        NetTopologySuite.Geometries.Geometry? formLocation = surveyEntity.SurveyType == SurveyTypes.Group
+            ? await context.TblGroupSurveys.AsNoTracking().Where(g => g.SurveyId == surveyEntity.Id).Select(g => g.Location).FirstOrDefaultAsync(cancellationToken)
+            : await context.TblBranchSurveys.AsNoTracking().Where(b => b.SurveyId == surveyEntity.Id).Select(b => b.Location).FirstOrDefaultAsync(cancellationToken);
+
+        var companyName = surveyEntity.CompanyId.HasValue
+            ? await context.TblCompanies.AsNoTracking().Where(c => c.Id == surveyEntity.CompanyId).Select(c => c.Name).FirstOrDefaultAsync(cancellationToken)
+            : null;
 
         return new SurveyResponse
         {
+            CompanyId = surveyEntity.CompanyId,
+            CompanyName = companyName,
+            GroupStep = groupStep,
+            GroupStopped = groupStopped,
+            Latitude = formLocation != null ? (decimal)formLocation.Coordinate.Y : null,
+            Longitude = formLocation != null ? (decimal)formLocation.Coordinate.X : null,
             GroupId = groupId,
             GroupName = groupName,
             GroupCode = groupCode,

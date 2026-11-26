@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -13,6 +13,8 @@ namespace QubeFin.Global.Application.SurveyUnit.Models
         public Guid AdministrativeUnitId { get; set; }
         public DateOnly TentativeSubmissionDate { get; set; }
         public bool SurveyFormAttached { get; set; }
+        // Branch Survey: the company chosen in the dropdown (required). Group Survey: ignored, the branch's company is used.
+        public Guid? CompanyId { get; set; }
         // Group Survey only.
         public Guid? BranchOrganizationUnitId { get; set; }
         // Set when a rejected survey is created again.

@@ -27,7 +27,8 @@ public class SaveBorrowerCommandValidator : AbstractValidator<SaveBorrowerComman
 
 #region --- HANDLER ---
 // The Credit Officers of an Approved Group Survey add and edit the prospective borrowers.
-// A person who breaks an eligibility rule needs a decision (Add / Block) and a reason; the rules are checked here, not trusted from the screen.
+// A person with NPA or a Write-off needs a decision (Add / Block) and a reason; this is checked here, not trusted from the screen.
+// Income and pending loan only set the two Yes / No fields (they never block).
 internal sealed class SaveBorrowerCommandHandler(
     QubeFinDataContext context,
     IUnitOfWork unitOfWork) : IRequestHandler<SaveBorrowerCommand, Result<string>>
@@ -58,7 +59,7 @@ internal sealed class SaveBorrowerCommandHandler(
                 return new ValidationError("This borrower can no longer be changed.");
         }
 
-        var breaches = BorrowerEligibility.GetBreaches(input.Income, input.LoanAmount, input.HasNpa, input.HasWriteOff);
+        var breaches = BorrowerEligibility.GetBreaches(input.HasNpa, input.HasWriteOff);
         var reason = (input.DecisionReason ?? string.Empty).Trim();
         if (breaches.Count > 0)
         {

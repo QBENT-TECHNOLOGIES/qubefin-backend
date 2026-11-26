@@ -32,7 +32,8 @@ namespace QubeFin.Global.Application.SurveyUnit
                 ed.EmployeeId == employeeId
                 && ed.EffectiveTo == null
                 && ed.Designation.IsActive
-                && ed.Designation.Post.Name == "Managing Director", cancellationToken);
+                && ed.Designation.Post.Name == "Managing Director"
+                && (survey.CompanyId == null || ed.Designation.OrganizationUnit.CompanyId == survey.CompanyId), cancellationToken);
         }
 
         // Group Survey: the person in charge of the branch, its Branch Manager, and the Area Manager and

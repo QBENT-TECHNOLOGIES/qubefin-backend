@@ -1,4 +1,4 @@
-﻿using FluentResults;
+using FluentResults;
 using FluentValidation;
 using MediatR;
 using QubeFin.Core.Results;
@@ -38,6 +38,7 @@ internal sealed class CreateSurveyCommandHandler(
 
         var assignedEmployeeIds = surveyRequest.SurveyAssigneds.Select(x => x.EmployeeId).ToList();
         Guid? branchId = null;
+        Guid? companyId = null;
 
         if (surveyRequest.SurveyType == SurveyTypes.Group)
         {
@@ -48,6 +49,11 @@ internal sealed class CreateSurveyCommandHandler(
             if (surveyRequest.BranchOrganizationUnitId != branch.Id)
                 return new ForbiddenError("A Group Survey can only be created for the branch you are in charge of.");
             branchId = branch.Id;
+
+            // A Group Survey takes the company of its branch.
+            companyId = await surveyRepository.GetBranchCompanyIdAsync(branch.Id);
+            if (companyId is null)
+                return new ValidationError("The branch has no company, so a Group Survey cannot be created for it.");
 
             var problem = await GroupSurveyRules.CheckCreditOfficersAsync(
                 surveyRepository, surveyCommitteeRepository, branch.Id, request.employeeId, assignedEmployeeIds);
@@ -61,9 +67,12 @@ internal sealed class CreateSurveyCommandHandler(
             if (!isCommitteeLead)
                 return new ForbiddenError("Only the Committee Lead can create a Branch Survey.");
 
-            // A Survey Committee member cannot also be a surveyor.
-            if (await surveyCommitteeRepository.AnyActiveMemberAsync(assignedEmployeeIds))
-                return new ValidationError("A Survey Committee member cannot be assigned as a surveyor.");
+            // A Survey Committee member can also be a surveyor of a Branch Survey (and then evaluates it like the others).
+
+            // A Branch Survey is created for the company chosen in the dropdown.
+            companyId = surveyRequest.CompanyId;
+            if (!companyId.HasValue || !await surveyRepository.CompanyExistsAsync(companyId.Value))
+                return new ValidationError("Select the company of the survey.");
         }
 
         // When a rejected survey is created again, the earlier survey must really be a rejected one.
@@ -92,6 +101,7 @@ internal sealed class CreateSurveyCommandHandler(
             surveyRequest.SurveyFormAttached,
             branchId,                           // branch is only used by Group Survey
             surveyRequest.PreviousSurveyId,
+            companyId,
             surveyAssigneds,
             request.userId
         );

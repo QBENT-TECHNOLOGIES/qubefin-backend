@@ -10,7 +10,11 @@ namespace QubeFin.Global.Persistence.Repositories
         Task AddAsync(TblGroupSurvey groupSurvey);
         Task<PlaceNames> GetPlaceNamesAsync(Guid administrativeUnitId);
         Task<SignOffInfo?> GetSignOffAsync(Guid employeeId);
+        Task<BranchPoint?> GetBranchPointAsync(Guid branchId);
     }
+
+    // Where the branch is (null when the branch has no location yet).
+    public record BranchPoint(decimal? Latitude, decimal? Longitude);
 
     // Village / Locality, Gram Panchayat / Municipality and Block above an administrative unit.
     public record PlaceNames(string? VillageLocality, string? GramPanchayatMunicipality, string? Block);
@@ -52,6 +56,14 @@ namespace QubeFin.Global.Persistence.Repositories
                 currentId = unit.ParentId;
             }
             return new PlaceNames(village, panchayat, block);
+        }
+
+        public async Task<BranchPoint?> GetBranchPointAsync(Guid branchId)
+        {
+            return await context.TblOrganizationUnits.AsNoTracking()
+                .Where(o => o.Id == branchId)
+                .Select(o => new BranchPoint(o.Latitude, o.Longitude))
+                .FirstOrDefaultAsync();
         }
 
         // The signature is the employee document with DocumentCategory = 'SIGNATURE'.

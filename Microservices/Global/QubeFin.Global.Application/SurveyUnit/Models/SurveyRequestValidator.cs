@@ -17,6 +17,8 @@ namespace QubeFin.Global.Application.SurveyUnit.Models
             RuleFor(v => v.ProposedArea).NotEmpty().WithMessage("Proposed area is required.");
             RuleFor(v => v.AdministrativeUnitId).NotEmpty().WithMessage("Administrative unit ID is required.");
             RuleFor(v => v.TentativeSubmissionDate).NotEmpty().WithMessage("Tentative submission date is required.");
+            RuleFor(v => v.CompanyId).NotNull().WithMessage("Company is required for a Branch Survey.")
+                .When(v => v.SurveyType == SurveyTypes.Branch);
             RuleFor(v => v.BranchOrganizationUnitId).NotNull().WithMessage("Branch is required for a Group Survey.")
                 .When(v => v.SurveyType == SurveyTypes.Group);
 

@@ -1,4 +1,4 @@
-﻿namespace QubeFin.Persistence.Models.Global
+namespace QubeFin.Persistence.Models.Global
 {
     public class Survey
     {
@@ -16,6 +16,8 @@
         public Guid? BranchOrganizationUnitId { get; private set; }
         // Set when a rejected survey is created again.
         public Guid? PreviousSurveyId { get; private set; }
+        // The company of the survey: chosen for a Branch Survey, the branch's company for a Group Survey.
+        public Guid? CompanyId { get; private set; }
         public Guid CreatedBy { get; private set; }
         public DateTime CreatedOn { get; private set; }
         public Guid? LastModifiedBy { get; private set; }
@@ -37,6 +39,7 @@
                 bool surveyFormAttached,
                 Guid? branchOrganizationUnitId,
                 Guid? previousSurveyId,
+                Guid? companyId,
                 Guid createdBy,
                 DateTime createdOn,
                 Guid? lastModifiedBy,
@@ -55,6 +58,7 @@
             SurveyFormAttached = surveyFormAttached;
             BranchOrganizationUnitId = branchOrganizationUnitId;
             PreviousSurveyId = previousSurveyId;
+            CompanyId = companyId;
             CreatedBy = createdBy;
             CreatedOn = createdOn;
             LastModifiedBy = lastModifiedBy;
@@ -76,6 +80,7 @@
             bool surveyFormAttached,
             Guid? branchOrganizationUnitId,
             Guid? previousSurveyId,
+            Guid? companyId,
             IEnumerable<SurveyAssigned> surveyAssigneds,
             Guid createdBy)
         {
@@ -92,6 +97,7 @@
                 SurveyFormAttached = surveyFormAttached,
                 BranchOrganizationUnitId = branchOrganizationUnitId,
                 PreviousSurveyId = previousSurveyId,
+                CompanyId = companyId,
                 CreatedBy = createdBy,
                 CreatedOn = DateTime.Now
             };
@@ -107,6 +113,7 @@
             DateOnly tentativeSubmissionDate,
             bool surveyFormAttached,
             Guid? branchOrganizationUnitId,
+            Guid? companyId,
             IEnumerable<SurveyAssigned> surveyAssigneds,
             Guid modifiedBy)
         {
@@ -116,6 +123,7 @@
             TentativeSubmissionDate = tentativeSubmissionDate;
             SurveyFormAttached = surveyFormAttached;
             BranchOrganizationUnitId = branchOrganizationUnitId;
+            CompanyId = companyId;
             LastModifiedBy = modifiedBy;
             LastModifiedOn = DateTime.Now;
             _surveyAssigneds.Clear();

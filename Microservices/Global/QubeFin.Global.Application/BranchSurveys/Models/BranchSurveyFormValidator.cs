@@ -74,7 +74,7 @@ namespace QubeFin.Global.Application.BranchSurveys.Models
             ValidatePercent(f => f.Demographic.MinorityPopulationPercent, "Minority population");
             ValidatePercent(f => f.Demographic.ScheduledCastePercent, "Scheduled caste");
             ValidatePercent(f => f.Demographic.ScheduledTribePercent, "Scheduled tribe");
-            ValidateOption(f => f.Demographic.MigrationTrend, BranchSurveyOptions.Rating, "Migration trend");
+            ValidateOption(f => f.Demographic.MigrationTrend, BranchSurveyOptions.MigrationTrend, "Migration trend");
         }
 
         private void ValidateEconomic()
@@ -88,6 +88,12 @@ namespace QubeFin.Global.Application.BranchSurveys.Models
             ValidatePercent(f => f.Economic.TransportActivities, "Transport activities");
             ValidatePercent(f => f.Economic.ServiceHolders, "Service holders");
             ValidatePercent(f => f.Economic.DailyWageEarners, "Daily wage earners");
+            // The nine activity shares are parts of 100 percent, so together they can be at most 100.
+            RuleFor(f => f.Economic).Must(e =>
+                (e.AgriculturePercent ?? 0) + (e.AgriculturalLabour ?? 0) + (e.DairyLivestock ?? 0) + (e.SmallBusiness ?? 0)
+                + (e.PettyTrade ?? 0) + (e.CottageSmallIndustries ?? 0) + (e.TransportActivities ?? 0)
+                + (e.ServiceHolders ?? 0) + (e.DailyWageEarners ?? 0) <= 100m)
+                .WithMessage("The nine economic activity shares (Agriculture to Daily wage earners) can add up to at most 100.");
             RuleFor(f => f.Economic.OtherIncomeGeneratingActivities).MaximumLength(500).WithMessage("Other income generating activities can have at most 500 characters.");
             RuleFor(f => f.Economic.MainCrop).MaximumLength(200).WithMessage("Main crop can have at most 200 characters.");
             RuleFor(f => f.Economic.PeakBusinessSeason).MaximumLength(200).WithMessage("Peak business season can have at most 200 characters.");

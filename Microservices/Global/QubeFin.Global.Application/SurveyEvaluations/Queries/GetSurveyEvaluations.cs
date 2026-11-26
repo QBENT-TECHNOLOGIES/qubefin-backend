@@ -73,9 +73,19 @@ internal sealed class GetSurveyEvaluationsQueryHandler(
         };
 
         // The Committee Lead sees everything. A member sees only his own evaluation (above).
-        if (isCommitteeLead)
+        // After the Lead's final decision the Managing Director also sees every member's evaluation and remarks.
+        var isManagingDirector = finalEvaluation is not null && await context.TblEmployeeDesignations.AsNoTracking().AnyAsync(ed =>
+            ed.EmployeeId == request.EmployeeId
+            && ed.EffectiveTo == null
+            && ed.Designation.IsActive
+            && ed.Designation.Post.Name == "Managing Director"
+            && (survey.CompanyId == null || ed.Designation.OrganizationUnit.CompanyId == survey.CompanyId), cancellationToken);
+        if (isCommitteeLead || isManagingDirector)
         {
             response.Evaluations = memberEvaluations.Select(ToItem).ToList();
+        }
+        if (isCommitteeLead)
+        {
             response.PendingMembers = await GetEmployeeNamesAsync(pendingEmployeeIds, cancellationToken);
         }
 

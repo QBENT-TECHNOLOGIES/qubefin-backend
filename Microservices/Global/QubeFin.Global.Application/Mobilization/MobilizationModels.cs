@@ -16,8 +16,11 @@ public static class BorrowerDecisions
     public const string Block = "Block";
 }
 
-// The eligibility rules printed on the Community Mobilization form (R-05). A person who breaks any rule is "flagged":
-// the Credit Officer must choose Add or Block and give a reason; the Head of the branch can change the choice.
+// The eligibility checks of the Community Mobilization form.
+// - Yearly family income <= 3.00 lakh and Indebtedness <= 2.00 lakh are only Yes / No fields that fill in by themselves
+//   (stored as YearlyIncome and Indebtedness bits). They are information: they never block and never raise an alert.
+// - A person with NPA or a Write-off is "flagged": the Credit Officer must choose Add or Block and give a reason,
+//   and the Head of the branch can change the choice (R-05, R-14).
 public static class BorrowerEligibility
 {
     public const decimal MaxYearlyIncome = 300000m;   // 3.00 lakh
@@ -25,18 +28,15 @@ public static class BorrowerEligibility
 
     public static readonly string[] MaritalStatuses = ["Single", "Married", "Divorced", "Widow"];
 
-    // Every breached rule, as text.
-    public static List<string> GetBreaches(decimal income, decimal loanAmount, bool hasNpa, bool hasWriteOff)
+    // Every breached rule, as text (only NPA and Write-off count).
+    public static List<string> GetBreaches(bool hasNpa, bool hasWriteOff)
     {
         var breaches = new List<string>();
         if (hasWriteOff) breaches.Add("Write-off is not Nil");
         if (hasNpa) breaches.Add("NPA is not Nil");
-        if (income > MaxYearlyIncome) breaches.Add("Yearly income is more than 3.00 lakh");
-        if (loanAmount > MaxIndebtedness) breaches.Add("Indebtedness is more than 2.00 lakh");
         return breaches;
     }
 }
-
 // What the Credit Officer types for one prospective borrower.
 public class BorrowerRequest
 {

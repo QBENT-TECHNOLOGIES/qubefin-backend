@@ -50,7 +50,7 @@ internal sealed class SaveSurveyApprovalCommandHandler(
         if (survey.Status != SurveyStatuses.PendingApproval)
             return new ValidationError("This survey is not waiting for approval.");
 
-        if (!await approvalRepository.IsManagingDirectorAsync(request.EmployeeId))
+        if (!await approvalRepository.IsManagingDirectorAsync(request.EmployeeId, survey.CompanyId))
             return new ForbiddenError("Only the Managing Director can approve the survey.");
 
         var branchSurvey = await branchSurveyRepository.GetBySurveyIdAsync(request.SurveyId);
