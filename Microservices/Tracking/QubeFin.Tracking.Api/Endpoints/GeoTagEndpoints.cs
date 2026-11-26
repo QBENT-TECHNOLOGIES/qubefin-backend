@@ -2,7 +2,6 @@ using MediatR;
 using QubeFin.Core.Endpoint;
 using QubeFin.Core.Identity;
 using QubeFin.Core.Results;
-using QubeFin.Tracking.Application.Enums;
 using QubeFin.Tracking.Application.GeoTags.Commands;
 using QubeFin.Tracking.Application.GeoTags.Queries;
 using System.Security.Claims;

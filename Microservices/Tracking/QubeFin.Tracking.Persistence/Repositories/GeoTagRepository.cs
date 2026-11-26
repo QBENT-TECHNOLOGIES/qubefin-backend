@@ -45,12 +45,12 @@ public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
                 if (g.Location is null)
                 {
                     untagged[GroupCentre] = untagged.GetValueOrDefault(GroupCentre) + 1;
-                    continue;
+                    //continue;
                 }
                 points.Add(new GeoTagPointRow(
                     g.Id, GroupCentre, g.Id, g.GroupName, g.Code, organizationUnitId, g.BranchName, g.AddressLine1,
                     GeoCoordinates.ToGeoPoint(g.Location), taskLocationMatchInMeters, true,
-                    g.CreditOfficerId, g.CreditOfficerName, null, null, null, null, g.TaggedByName, g.TaggedOn));
+                    g.CreditOfficerId, g.CreditOfficerName, null, null, null, null, g.TaggedByName, g.TaggedOn, null));
             }
         }
 
@@ -64,7 +64,7 @@ public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
                 if (m.Location is null)
                 {
                     untagged[kind] = untagged.GetValueOrDefault(kind) + 1;
-                    continue;
+                    //continue;
                 }
                 points.Add(new GeoTagPointRow(
                     m.Id, kind, m.Id,
@@ -73,7 +73,7 @@ public class GeoTagRepository(QubeFinDataContext context) : IGeoTagRepository
                     string.Join(", ", new[] { m.AddressLine1, m.AddressLine2 }.Where(a => !string.IsNullOrWhiteSpace(a))) is { Length: > 0 } address ? address : null,
                     GeoCoordinates.ToGeoPoint(m.Location), taskLocationMatchInMeters, true,
                     m.CreditOfficerId, m.CreditOfficerName, m.GroupId, m.GroupName,
-                    m.Dpd, m.OverdueAmount, m.TaggedByName, m.TaggedOn));
+                    m.Dpd, m.OverdueAmount, m.TaggedByName, m.TaggedOn, m.MemberPhoto));
             }
         }
 

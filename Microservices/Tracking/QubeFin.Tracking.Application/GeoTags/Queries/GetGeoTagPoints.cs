@@ -49,13 +49,14 @@ public record GeoTagPointResponse(
     int? Dpd,
     decimal? OverdueAmount,
     string? TaggedByName,
-    DateTimeOffset? TaggedAt);
+    DateTimeOffset? TaggedAt, 
+    string? MemberPhotoUrl);
 
 public record GeoTagPointsResponse(List<GeoTagPointResponse> Points, Dictionary<string, int> UntaggedByKind);
 #endregion
 
 #region --- HANDLER ---
-internal sealed class GetGeoTagPointsQueryHandler(ITrackingScopeRepository scopeRepository, IGeoTagRepository geoTagRepository) : IRequestHandler<GetGeoTagPointsQuery, Result<GeoTagPointsResponse>>
+internal sealed class GetGeoTagPointsQueryHandler(ITrackingScopeRepository scopeRepository, IGeoTagRepository geoTagRepository, IFileStorageRepository fileStorageRepository) : IRequestHandler<GetGeoTagPointsQuery, Result<GeoTagPointsResponse>>
 {
     public async Task<Result<GeoTagPointsResponse>> Handle(GetGeoTagPointsQuery request, CancellationToken cancellationToken)
     {
@@ -90,7 +91,8 @@ internal sealed class GetGeoTagPointsQueryHandler(ITrackingScopeRepository scope
                 p.Dpd,
                 p.OverdueAmount,
                 p.TaggedByName,
-                TrackingClock.WithIndiaOffset(p.TaggedAt))).ToList(),
+                TrackingClock.WithIndiaOffset(p.TaggedAt),
+                !string.IsNullOrEmpty(p.MemberPhotoUrl) ? fileStorageRepository.GetFileUrl(p.MemberPhotoUrl) : null)).ToList(),
             result.UntaggedByKind));
     }
 }

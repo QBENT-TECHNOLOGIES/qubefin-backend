@@ -205,6 +205,7 @@ public class GeoTagPointResult
     public int? Dpd { get; set; }
     public decimal? OverdueAmount { get; set; }
     public string BranchName { get; set; } = null!;
+    public string? MemberPhoto { get; set; }
 }
 
 // Tracking.USP_GetTrackingPlaces; a branch fills Latitude / Longitude, the others Location
