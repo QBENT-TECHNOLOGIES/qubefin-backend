@@ -34,6 +34,7 @@ public static class DependencyInjection
         services.AddScoped<IGroupRepository, GroupRepository>();
         services.AddScoped<IFileStorageRepository, FileStorageRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<IMemberRepository, MemberRepository>();
         return services;
     }
 }

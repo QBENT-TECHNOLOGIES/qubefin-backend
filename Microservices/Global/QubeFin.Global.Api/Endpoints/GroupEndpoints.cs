@@ -5,6 +5,7 @@ using QubeFin.Core.Results;
 using QubeFin.Global.Application.Groups.Commands;
 using QubeFin.Global.Application.Groups.Models;
 using QubeFin.Global.Application.Groups.Queries;
+using QubeFin.Global.Application.Members.Models;
 using System.Security.Claims;
 
 namespace QubeFin.Global.Api.Endpoints
@@ -79,6 +80,20 @@ namespace QubeFin.Global.Api.Endpoints
             })
             .WithSummary("Approve Or Reject A Group")
             .WithTags("Groups")
+            .RequireAuthorization();
+
+            app.MapPost("groups/userwise-search-by-text", async (ClaimsPrincipal principal, SearchTextRequest request, ISender sender) =>
+            {
+                if (principal.Identity is null)
+                {
+                    return Results.Forbid();
+                }
+
+                var employeeId = principal.Identity.GetEmployeeId();
+                var result = await sender.Send(new GetUserWiseGroupBySearchTextQuery(employeeId, request.SearchText));
+                return result.ToHttpResult();
+            })
+            .WithSummary("Search Groups by Credit Officer and Text")
             .RequireAuthorization();
         }
     }

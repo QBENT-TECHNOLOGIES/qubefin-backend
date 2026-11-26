@@ -29,8 +29,8 @@ internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context) :
             UserName = user.UserName,
             EmployeeId = user.EmployeeId,
             Employee = user.Employee,
-            Gender = user.Gender,
             EmployeeCode = user.EmployeeCode,
+            Gender = user.Gender,
             Designation = user.Designation,
             CompanyLogoUrl = user.CompanyLogoUrl,
             IsMileageEnabled = user.IsMileageEnabled,
@@ -48,6 +48,8 @@ internal sealed class GetUserLoginInfoQueryHandler(QubeFinDataContext context) :
                 {
                     Id = m.OrganizationUnitId!.Value,
                     Name = m.OrganizationUnitName ?? string.Empty,
+                    Code = "007",                                       // Need To Update the SP
+                    Type = "Branch",                                    // Need To Update the SP
                     Latitude = m.Latitude,
                     Longitude = m.Longitude,
                     AttendanceInTime = m.AttendanceInTime,
