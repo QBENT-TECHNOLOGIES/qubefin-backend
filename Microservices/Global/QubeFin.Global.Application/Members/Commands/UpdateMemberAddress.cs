@@ -39,7 +39,6 @@ public class UpdateMemberAddressCommandValidator : AbstractValidator<UpdateMembe
 
         RuleForEach(x => x.Addresses).ChildRules(address =>
         {
-            // Present Address (All Required)
             address.RuleFor(a => a.PresentHouseNo).NotEmpty().WithMessage("Present House/Plot No is required.");
             address.RuleFor(a => a.PresentStreetName).NotEmpty().WithMessage("Present Road/Street Name is required.");
             address.RuleFor(a => a.PresentCity).NotEmpty().WithMessage("Present City/Village is required.");
@@ -50,7 +49,6 @@ public class UpdateMemberAddressCommandValidator : AbstractValidator<UpdateMembe
             address.RuleFor(a => a.PresentNearestLandmark).NotEmpty().WithMessage("Present Nearest Landmark is required.");
             address.RuleFor(a => a.PresentResidenceYear).NotNull().GreaterThanOrEqualTo(0).WithMessage("Present Residence Year is required.");
 
-            // Permanent Address (All Required)
             address.RuleFor(a => a.ParmanentHouseNo).NotEmpty().WithMessage("Permanent House/Plot No is required.");
             address.RuleFor(a => a.ParmanentStreetName).NotEmpty().WithMessage("Permanent Road/Street Name is required.");
             address.RuleFor(a => a.ParmanentCity).NotEmpty().WithMessage("Permanent City/Village is required.");
@@ -91,7 +89,6 @@ internal sealed class UpdateMemberAddressCommandHandler(
             .Select(a => a.Id!.Value)
             .ToHashSet();
 
-        // Remove deleted rows
         var toRemove = existingAddresses
             .Where(a => !incomingIds.Contains(a.Id))
             .ToList();
@@ -101,7 +98,6 @@ internal sealed class UpdateMemberAddressCommandHandler(
             context.TblMemberAddresses.RemoveRange(toRemove);
         }
 
-        // Kono address default na thakle prothom-take default kore dao
         var hasAnyDefault = request.Addresses.Any(a => a.IsDefault);
 
         for (int i = 0; i < request.Addresses.Count; i++)

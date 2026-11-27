@@ -15,13 +15,7 @@ public class MemberEndpoints : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("members/search", async (ISender sender, MemberSearchParam searchParam) =>
-        {
-            var result = await sender.Send(new GetMembersBySearchQuery(searchParam));
-            return TypedResults.Ok(result);
-        })
-        .WithSummary("Search Members ")
-        .RequireAuthorization();
+       
 
         app.MapGet("members/personal-details/{id:guid}", async ([FromRoute] Guid id, ISender sender) =>
         {
@@ -30,6 +24,32 @@ public class MemberEndpoints : IEndpoint
         })
         .WithSummary("Get Member Personal Details")
         .RequireAuthorization();
+
+        app.MapGet("members/addresses/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new GetMemberAddressesQuery(id));
+            return result.ToHttpResult();
+        })
+       .WithSummary("Get Member Addresses")
+       .WithTags("Members")
+       .RequireAuthorization();
+
+        app.MapGet("members/documents/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new GetMemberDocumentsQuery(id));
+            return result.ToHttpResult();
+        })
+       .WithSummary("Get Member KYC Documents")
+       .WithTags("Members")
+       .RequireAuthorization();
+
+        app.MapPost("members/search", async (ISender sender, MemberSearchParam searchParam) =>
+        {
+            var result = await sender.Send(new GetMembersBySearchQuery(searchParam));
+            return TypedResults.Ok(result);
+        })
+       .WithSummary("Search Members ")
+       .RequireAuthorization();
 
         app.MapPost("members", async (ClaimsPrincipal principal, PersonalInfoRequest request, ISender sender) =>
         {
@@ -106,14 +126,7 @@ public class MemberEndpoints : IEndpoint
         .WithSummary("Update Member Personal data")
         .RequireAuthorization();
 
-        app.MapGet("members/addresses/{id:guid}", async (Guid id, ISender sender) =>
-        {
-            var result = await sender.Send(new GetMemberAddressesQuery(id));
-            return result.ToHttpResult();
-        })
-        .WithSummary("Get Member Addresses")
-        .WithTags("Members")
-        .RequireAuthorization();
+       
 
         app.MapPut("members/addresses/{id:guid}", async (
             Guid id,
@@ -131,15 +144,6 @@ public class MemberEndpoints : IEndpoint
             return result.ToHttpResult();
         })
         .WithSummary("Update Member Addresses")
-        .WithTags("Members")
-        .RequireAuthorization();
-
-        app.MapGet("members/documents/{id:guid}", async (Guid id, ISender sender) =>
-        {
-            var result = await sender.Send(new GetMemberDocumentsQuery(id));
-            return result.ToHttpResult();
-        })
-        .WithSummary("Get Member KYC Documents")
         .WithTags("Members")
         .RequireAuthorization();
 

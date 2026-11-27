@@ -115,7 +115,6 @@ internal sealed class UpdateMemberDocumentCommandHandler(
                 ? existingDocs.FirstOrDefault(d => d.Id == req.Id.Value)
                 : existingDocs.FirstOrDefault(d => d.KycDocumentId == req.KycDocumentId);
 
-            // Front Side File Upload / Preserve / Clear
             string? fontFileName = string.IsNullOrWhiteSpace(req.FontSideFileName)
                 ? null
                 : Path.GetFileName(req.FontSideFileName.Trim());
@@ -137,7 +136,6 @@ internal sealed class UpdateMemberDocumentCommandHandler(
                 fontFileName = displayName;
             }
 
-            // Back Side File Upload / Preserve / Clear
             string? backFileName = string.IsNullOrWhiteSpace(req.BackSideFileName)
                 ? null
                 : Path.GetFileName(req.BackSideFileName.Trim());
@@ -206,7 +204,6 @@ internal sealed class UpdateMemberDocumentCommandHandler(
             }
         }
 
-        // Remove deleted documents (block if verified)
         var toRemove = existingDocs
             .Where(d => !matchedExistingIds.Contains(d.Id))
             .ToList();
@@ -223,6 +220,34 @@ internal sealed class UpdateMemberDocumentCommandHandler(
 
         existingMember.SetModified(request.LastModifiedBy);
         await memberRepository.UpdateAsync(existingMember);
+        var kycDocIds = request.Documents
+            .Select(d => d.KycDocumentId)
+            .Distinct()
+            .ToList();
+
+        var kycDocNames = await context.TblKycDocuments
+            .AsNoTracking()
+            .Where(k => kycDocIds.Contains(k.Id))
+            .ToDictionaryAsync(k => k.Id, k => k.Name, cancellationToken);
+
+        var aadharDoc = request.Documents.FirstOrDefault(d =>
+            kycDocNames.TryGetValue(d.KycDocumentId, out var docName) &&
+            !string.IsNullOrWhiteSpace(docName) &&
+            (docName.Contains("aadhaar", StringComparison.OrdinalIgnoreCase) ||
+             docName.Contains("aadhar", StringComparison.OrdinalIgnoreCase) ||
+             docName.Contains("adhar", StringComparison.OrdinalIgnoreCase)));
+
+        existingMember.SetModified(request.LastModifiedBy);
+        await memberRepository.UpdateAsync(existingMember);
+
+        var memberEntity = await context.TblMembers.FindAsync([request.MemberId], cancellationToken);
+        if (memberEntity is not null)
+        {
+            memberEntity.AadharNo = aadharDoc is not null
+                ? aadharDoc.DocumentNo.Trim()
+                : string.Empty;
+        }
+
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         var fullName = $"{existingMember.PersonalInfo.FirstName} {existingMember.PersonalInfo.LastName}".Trim();
