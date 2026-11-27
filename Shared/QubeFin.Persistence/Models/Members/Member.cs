@@ -10,9 +10,8 @@
         public DateTime? LastModifiedOn { get; private set; }
         public Guid? LastModifiedBy { get; private set; }
         public PersonalInfo PersonalInfo { get; private set; } = default!;
-        public AddressInfo? PresentAddressInfo { get; private set; }
-        public AddressInfo? PermanentAddressInfo { get; private set; }
-        public bool PresentPermanentAddressSame { get; private set; }
+        public List<MemberAddress> Addresses { get; private set; } = [];
+        public List<MemberDocument> Documents { get; private set; } = [];
 
         private Member() { }
 
@@ -24,9 +23,8 @@
             DateTime createdOn,
             Guid? lastModifiedBy,
             DateTime? lastModifiedOn,
-            AddressInfo? presentAddressInfo = null,
-            AddressInfo? permanentAddressInfo = null,
-            bool presentPermanentAddressSame = false,
+            List<MemberAddress>? addresses = null,
+            List<MemberDocument>? documents = null,
             Guid? designationId = null)
         {
             Id = id;
@@ -36,9 +34,8 @@
             CreatedDate = createdOn;
             LastModifiedBy = lastModifiedBy;
             LastModifiedOn = lastModifiedOn;
-            PresentAddressInfo = presentAddressInfo;
-            PermanentAddressInfo = permanentAddressInfo;
-            PresentPermanentAddressSame = presentPermanentAddressSame;
+            Addresses = addresses ?? [];
+            Documents = documents ?? [];
             DesignationId = designationId;
         }
 
@@ -69,17 +66,17 @@
             SetModified(modifiedBy);
         }
 
-        public void UpdateAddressInfo(
-            AddressInfo presentAddress,
-            AddressInfo permanentAddress,
-            bool presentPermanentAddressSame,
-            Guid modifiedBy)
+        public void UpdateAddresses(List<MemberAddress> addresses, Guid modifiedBy)
         {
-            ArgumentNullException.ThrowIfNull(presentAddress);
-            ArgumentNullException.ThrowIfNull(permanentAddress);
-            PresentAddressInfo = presentAddress;
-            PermanentAddressInfo = permanentAddress;
-            PresentPermanentAddressSame = presentPermanentAddressSame;
+            ArgumentNullException.ThrowIfNull(addresses);
+            Addresses = addresses;
+            SetModified(modifiedBy);
+        }
+
+        public void UpdateDocuments(List<MemberDocument> documents, Guid modifiedBy)
+        {
+            ArgumentNullException.ThrowIfNull(documents);
+            Documents = documents;
             SetModified(modifiedBy);
         }
 

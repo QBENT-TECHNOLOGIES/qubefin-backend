@@ -69,11 +69,7 @@ public class MemberEndpoints : IEndpoint
         .WithSummary("Create Member")
         .RequireAuthorization();
 
-        app.MapPut("members/update/personal/{id:guid}", async (
-    ClaimsPrincipal principal,
-    [FromRoute] Guid id,
-    PersonalInfoRequest request,
-    ISender sender) =>
+        app.MapPut("members/update/personal/{id:guid}", async ( ClaimsPrincipal principal, [FromRoute] Guid id, PersonalInfoRequest request,  ISender sender) =>
         {
             if (principal.Identity is null)
             {
@@ -107,7 +103,67 @@ public class MemberEndpoints : IEndpoint
             var result = await sender.Send(command);
             return result.ToHttpResult();
         })
-.WithSummary("Update Member Personal data")
-.RequireAuthorization();
+        .WithSummary("Update Member Personal data")
+        .RequireAuthorization();
+
+        app.MapGet("members/addresses/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new GetMemberAddressesQuery(id));
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get Member Addresses")
+        .WithTags("Members")
+        .RequireAuthorization();
+
+        app.MapPut("members/addresses/{id:guid}", async (
+            Guid id,
+            List<MemberAddressRequest> request,
+            ClaimsPrincipal principal,
+            ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+
+            var userId = principal.Identity.GetUserId();
+            var result = await sender.Send(new UpdateMemberAddressCommand(id, request, userId));
+            return result.ToHttpResult();
+        })
+        .WithSummary("Update Member Addresses")
+        .WithTags("Members")
+        .RequireAuthorization();
+
+        app.MapGet("members/documents/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new GetMemberDocumentsQuery(id));
+            return result.ToHttpResult();
+        })
+        .WithSummary("Get Member KYC Documents")
+        .WithTags("Members")
+        .RequireAuthorization();
+
+        app.MapPut("members/documents/{id:guid}", async (
+            Guid id,
+            [FromForm] MemberDocumentsFormRequest request,
+            ClaimsPrincipal principal,
+            ISender sender) =>
+        {
+            if (principal.Identity is null)
+            {
+                return Results.Forbid();
+            }
+
+            var userId = principal.Identity.GetUserId();
+            var result = await sender.Send(new UpdateMemberDocumentCommand(
+                id,
+                request.Documents,
+                userId));
+            return result.ToHttpResult();
+        })
+        .WithSummary("Update Member KYC Documents")
+        .WithTags("Members")
+        .DisableAntiforgery()
+        .RequireAuthorization();
     }
 }

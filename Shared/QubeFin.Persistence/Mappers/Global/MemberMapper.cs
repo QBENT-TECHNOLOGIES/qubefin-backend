@@ -15,7 +15,9 @@ public static class MemberMapper
             entity.CreatedOn,
             entity.LastModifiedBy,
             entity.LastModifiedOn,
-            designationId: entity.DesignationId
+            MapAddressInfo(entity),
+            MapDocumentInfo(entity),
+            entity.DesignationId
         );
     }
 
@@ -65,7 +67,6 @@ public static class MemberMapper
     private static PersonalInfo MapPersonalInfo(Entity entity)
     {
         return new PersonalInfo(
-            
             entity.BranchCode,
             entity.GroupId,
             entity.Code,
@@ -86,5 +87,61 @@ public static class MemberMapper
             entity.MobileNo,
             entity.AlternateMobileNo
         );
+    }
+
+    private static List<MemberAddress> MapAddressInfo(Entity entity)
+    {
+        return [.. entity.TblMemberAddresses
+            .Select(a => new MemberAddress(
+                a.Id,
+                a.MemberId,
+                a.ParmanentHouseNo,
+                a.ParmanentStreetName,
+                a.ParmanentCity,
+                a.ParmanentAdministrativeUnitId,
+                a.ParmanentPoliceStationId,
+                a.ParmanentPostOffice,
+                a.ParmanentPinCode,
+                a.ParmanentNearestLandmark,
+                a.ParmanentResidenceYear,
+                a.PresentPermanentAddressSame,
+                a.PresentHouseNo,
+                a.PresentStreetName,
+                a.PresentCity,
+                a.PresentAdministrativeUnitId,
+                a.PresentPoliceStationId,
+                a.PresentPostOffice,
+                a.PresentPinCode,
+                a.PresentNearestLandmark,
+                a.PresentResidenceYear,
+                a.IsDefault,
+                a.Sequence
+            ))
+            .OrderBy(a => a.Sequence)];
+    }
+
+    private static List<MemberDocument> MapDocumentInfo(Entity entity)
+    {
+        return [.. entity.TblMemberDocuments
+            .Where(d => d.CoBorrowerId == null)
+            .Select(d => new MemberDocument(
+                d.Id,
+                d.MemberId,
+                d.CoBorrowerId,
+                d.KycDocumentId,
+                d.DocumentNo,
+                d.IssueDate,
+                d.ExpiryDate,
+                d.FontSideFileName,
+                d.FontSideFileSequence,
+                d.BackSideFileName,
+                d.BackSideFileSequence,
+                d.IsVerify,
+                d.Remarks,
+                d.CreatedBy,
+                d.CreatedOn,
+                d.LastModifiedBy,
+                d.LastModifiedOn
+            ))];
     }
 }

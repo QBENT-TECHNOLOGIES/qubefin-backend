@@ -14,15 +14,6 @@ public interface IMemberRepository
 
 public class MemberRepository(QubeFinDataContext context) : IMemberRepository
 {
-    public async Task<Member?> GetByIdAsync(Guid id)
-    {
-        var memberEntity = await context.TblMembers
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == id);
-
-        return memberEntity is null ? null : memberEntity.ToDomain();
-    }
-
     public async Task AddAsync(Member member)
     {
         await context.TblMembers.AddAsync(member.ToEntity());
@@ -30,33 +21,47 @@ public class MemberRepository(QubeFinDataContext context) : IMemberRepository
 
     public async Task UpdateAsync(Member member)
     {
-        var entity = await context.TblMembers.FirstOrDefaultAsync(x => x.Id == member.Id);
-        if (entity is null)
+        var existing = await context.TblMembers
+            .FirstOrDefaultAsync(x => x.Id == member.Id);
+
+        if (existing is null)
         {
             return;
         }
 
         var updated = member.ToEntity();
 
-        entity.BranchCode = updated.BranchCode;
-        entity.Salutaion = updated.Salutaion;
-        entity.FirstName = updated.FirstName;
-        entity.MiddleName = updated.MiddleName;
-        entity.LastName = updated.LastName;
-        entity.FullName = updated.FullName;
-        entity.GuardianName = updated.GuardianName;
-        entity.MotherName = updated.MotherName;
-        entity.SpouseName = updated.SpouseName;
-        entity.DateOfBirth = updated.DateOfBirth;
-        entity.Gender = updated.Gender;
-        entity.Religion = updated.Religion;
-        entity.Caste = updated.Caste;
-        entity.Nationality = updated.Nationality;
-        entity.MaritalStatus = updated.MaritalStatus;
-        entity.Qualification = updated.Qualification;
-        entity.MobileNo = updated.MobileNo;
-        entity.AlternateMobileNo = updated.AlternateMobileNo;
-        entity.LastModifiedBy = updated.LastModifiedBy;
-        entity.LastModifiedOn = updated.LastModifiedOn;
+        existing.BranchCode = updated.BranchCode;
+        existing.GroupId = updated.GroupId;
+        existing.Salutaion = updated.Salutaion;
+        existing.FirstName = updated.FirstName;
+        existing.MiddleName = updated.MiddleName;
+        existing.LastName = updated.LastName;
+        existing.FullName = updated.FullName;
+        existing.GuardianName = updated.GuardianName;
+        existing.MotherName = updated.MotherName;
+        existing.SpouseName = updated.SpouseName;
+        existing.DateOfBirth = updated.DateOfBirth;
+        existing.Gender = updated.Gender;
+        existing.Religion = updated.Religion;
+        existing.Caste = updated.Caste;
+        existing.Nationality = updated.Nationality;
+        existing.MaritalStatus = updated.MaritalStatus;
+        existing.Qualification = updated.Qualification;
+        existing.MobileNo = updated.MobileNo;
+        existing.AlternateMobileNo = updated.AlternateMobileNo;
+        existing.LastModifiedBy = updated.LastModifiedBy;
+        existing.LastModifiedOn = updated.LastModifiedOn;
+    }
+
+    public async Task<Member?> GetByIdAsync(Guid id)
+    {
+        var memberEntity = await context.TblMembers
+            .Include(x => x.TblMemberAddresses)
+            .Include(x => x.TblMemberDocuments)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == id);
+
+        return memberEntity is null ? null : memberEntity.ToDomain();
     }
 }
